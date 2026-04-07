@@ -479,8 +479,10 @@ export default function DealDetail() {
             <div className="flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-muted-foreground" />
               <CardTitle className="text-base">Pricing</CardTitle>
-              {['approved', 'ipu_sent', 'ipu_signed_awaiting_funding', 'funded_active', 'repayment_due', 'overdue', 'closed_repaid', 'closed_partial'].includes(deal.status) && (
-                <Badge variant="secondary" className="text-xs bg-success/10 text-success">Locked</Badge>
+              {['approved', 'ready_for_final_approval', 'ipu_sent', 'ipu_signed_awaiting_funding', 'funded_active', 'repayment_due', 'overdue', 'closed_repaid', 'closed_partial'].includes(deal.status) && (
+                <Badge variant="secondary" className="text-xs bg-success/10 text-success">
+                  {deal.status === ('ready_for_final_approval' as DealStatus) ? 'Pending Approval' : 'Locked'}
+                </Badge>
               )}
             </div>
           </CardHeader>
