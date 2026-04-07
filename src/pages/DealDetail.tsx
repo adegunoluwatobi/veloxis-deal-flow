@@ -191,6 +191,7 @@ export default function DealDetail() {
 
   const handleMoveToReview = () => updateStatus('under_review');
   const handleRequestDocs = () => updateStatus('docs_requested');
+  const handleSubmitForFinalApproval = () => updateStatus('ready_for_final_approval' as DealStatus);
 
   const handleApprove = async () => {
     if (!id || !deal) return;
