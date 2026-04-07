@@ -16,7 +16,7 @@ import {
 import { cn } from '@/lib/utils';
 import {
   ArrowLeft, Building2, Shield, ShieldCheck, ShieldX, AlertTriangle,
-  FileText, Copy, ExternalLink, CheckCircle2, XCircle, Clock, Upload,
+  FileText, Copy, ExternalLink, CheckCircle2, XCircle, Clock, Upload, Download, Eye,
 } from 'lucide-react';
 
 const KYC_COLORS: Record<KycStatus, string> = {
@@ -113,34 +113,13 @@ export default function ExporterDetail() {
 
   useEffect(() => { load(); }, [load]);
 
-  const handleVerifyDoc = async (docId: string) => {
-    if (!user) return;
-    const { error } = await supabase.from('exporter_documents').update({
-      document_status: 'verified',
-      verified_by: user.id,
-      verified_at: new Date().toISOString(),
-    }).eq('id', docId);
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
-      toast({ title: 'Document verified' });
-      load();
+  const handleDownload = async (filePath: string) => {
+    const { data, error } = await supabase.storage.from('veloxis-documents').createSignedUrl(filePath, 60);
+    if (error || !data?.signedUrl) {
+      toast({ title: 'Download failed', description: 'Could not generate download link.', variant: 'destructive' });
+      return;
     }
-  };
-
-  const handleRejectDoc = async (docId: string) => {
-    if (!user) return;
-    const { error } = await supabase.from('exporter_documents').update({
-      document_status: 'rejected',
-      verified_by: user.id,
-      verified_at: new Date().toISOString(),
-    }).eq('id', docId);
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
-      toast({ title: 'Document rejected' });
-      load();
-    }
+    window.open(data.signedUrl, '_blank');
   };
 
   const handleVerifyExporter = async () => {
@@ -211,6 +190,11 @@ export default function ExporterDetail() {
       <Button variant="ghost" size="sm" onClick={() => navigate('/exporters')} className="gap-2">
         <ArrowLeft className="h-4 w-4" /> Back to Exporters
       </Button>
+
+      {/* Read-only notice */}
+      <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+        <Eye className="h-4 w-4" /> Read-only view. Document verification is managed by the partner organisation.
+      </div>
 
       {/* KYC Status Banner */}
       <div className={cn(
@@ -363,7 +347,7 @@ export default function ExporterDetail() {
                   <TableHead>Expiry</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Uploaded</TableHead>
-                  {(role === 'deal_manager' || role === 'super_admin') && <TableHead className="text-right">Actions</TableHead>}
+                  {(role === 'deal_manager' || role === 'super_admin') && <TableHead className="text-right">View</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -405,16 +389,9 @@ export default function ExporterDetail() {
                       </TableCell>
                       {(role === 'deal_manager' || role === 'super_admin') && (
                         <TableCell className="text-right">
-                          {!doc.is_superseded && doc.document_status === 'pending_review' && (
-                            <div className="flex justify-end gap-1">
-                              <Button size="sm" variant="ghost" className="h-7 gap-1 text-success" onClick={() => handleVerifyDoc(doc.id)}>
-                                <CheckCircle2 className="h-3.5 w-3.5" /> Verify
-                              </Button>
-                              <Button size="sm" variant="ghost" className="h-7 gap-1 text-destructive" onClick={() => handleRejectDoc(doc.id)}>
-                                <XCircle className="h-3.5 w-3.5" /> Reject
-                              </Button>
-                            </div>
-                          )}
+                          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleDownload(doc.file_path)}>
+                            <Download className="mr-1 h-3 w-3" /> View
+                          </Button>
                         </TableCell>
                       )}
                     </TableRow>
