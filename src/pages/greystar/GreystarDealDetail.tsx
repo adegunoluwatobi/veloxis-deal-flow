@@ -186,6 +186,9 @@ export default function GreystarDealDetail() {
         </CardContent>
       </Card>
 
+      {/* Audit Trail */}
+      <DealAuditTrail dealId={deal.id} viewerRole="partner" />
+
       {/* Request Changes Dialog */}
       <Dialog open={actionDialog === 'changes'} onOpenChange={() => setActionDialog(null)}>
         <DialogContent>
