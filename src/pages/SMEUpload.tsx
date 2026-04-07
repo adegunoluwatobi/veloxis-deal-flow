@@ -88,7 +88,7 @@ export default function SMEUpload() {
 
     try {
       const ext = upload.file.name.split('.').pop() ?? 'pdf';
-      const filePath = `exporter-docs/${info.exporter_id}/${type}/${crypto.randomUUID()}_${upload.file.name}`;
+      const filePath = `exporter-docs/${info.exporter_id}/${type}/${crypto.randomUUID()}_${sanitiseFilename(upload.file.name)}`;
 
       const { error: storageErr } = await supabase.storage
         .from('veloxis-documents')
