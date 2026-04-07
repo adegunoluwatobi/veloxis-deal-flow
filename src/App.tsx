@@ -13,6 +13,7 @@ import ExporterNew from "@/pages/ExporterNew";
 import ExporterDetail from "@/pages/ExporterDetail";
 import DealsList from "@/pages/DealsList";
 import DealNew from "@/pages/DealNew";
+import DealDetail from "@/pages/DealDetail";
 import SMEUpload from "@/pages/SMEUpload";
 import NotFound from "@/pages/NotFound";
 
