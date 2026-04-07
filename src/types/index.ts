@@ -64,6 +64,20 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   closed_partial: 'Closed (Partial)',
 };
 
+// Portal-specific overrides for sent_to_veloxis label
+export const PORTAL_STATUS_OVERRIDES: Record<Portal, Partial<Record<DealStatus, string>>> = {
+  exporter: { sent_to_veloxis: 'Under Review' },
+  partner: { sent_to_veloxis: 'Submitted to Veloxis' },
+  veloxis: { sent_to_veloxis: 'Awaiting Review' },
+};
+
+export function getDealStatusLabel(status: DealStatus, portal?: Portal): string {
+  if (portal && PORTAL_STATUS_OVERRIDES[portal]?.[status]) {
+    return PORTAL_STATUS_OVERRIDES[portal][status]!;
+  }
+  return DEAL_STATUS_LABELS[status];
+}
+
 export const DEAL_STATUS_COLORS: Record<DealStatus, string> = {
   draft: 'bg-muted text-muted-foreground',
   submitted: 'bg-primary/10 text-primary',
