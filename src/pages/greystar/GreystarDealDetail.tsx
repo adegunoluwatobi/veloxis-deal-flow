@@ -338,7 +338,7 @@ export default function GreystarDealDetail() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setRejectOpen(false)}>Cancel</Button>
             <Button variant="destructive" disabled={!rejectReason.trim() || submitting} onClick={handleReject}>
-              {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Reject Deal
+              {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Reject Application
             </Button>
           </DialogFooter>
         </DialogContent>
