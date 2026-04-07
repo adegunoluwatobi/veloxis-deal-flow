@@ -132,7 +132,7 @@ export default function DealDetail() {
   // Notes
   const [newNote, setNewNote] = useState('');
 
-  const isDM = role === 'deal_manager';
+  const isDM = role === 'deal_manager' || role === 'super_admin';
   const currency = deal?.invoice_currency_v2 ?? 'GBP';
   const sym = CURRENCY_SYMBOLS[currency] ?? '£';
 
