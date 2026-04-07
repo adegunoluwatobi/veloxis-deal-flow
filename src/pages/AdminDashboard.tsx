@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import DealStatusBadge from '@/components/DealStatusBadge';
 import { cn } from '@/lib/utils';
+import { computeKycStatus, groupDocumentsByExporter, type KycDocumentLike } from '@/lib/computeKycStatus';
 import {
   LayoutDashboard, TrendingUp, AlertTriangle, ArrowRight, Banknote,
   Users, FileText, ShieldCheck, Clock, XCircle,
 } from 'lucide-react';
-import { KYC_STATUS_LABELS, type DealStatus, type KycStatus } from '@/types';
+import { type DealStatus } from '@/types';
 
 interface DealRow {
   id: string;
