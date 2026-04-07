@@ -212,7 +212,7 @@ export default function ExporterDealDetail() {
             <Button asChild>
               <Link to={`/exporter/deals/${deal.id}/edit`}>
                 <Pencil className="mr-2 h-4 w-4" />
-                Edit Deal
+                Edit Application
               </Link>
             </Button>
             <Button variant="destructive" onClick={handleDeleteDraft}>
