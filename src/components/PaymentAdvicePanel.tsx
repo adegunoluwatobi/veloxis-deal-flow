@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { validateAndScroll } from '@/lib/validation';
+import ValidationSummaryBanner from '@/components/ValidationSummaryBanner';
+import type { ValidationFailure } from '@/lib/validation';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
