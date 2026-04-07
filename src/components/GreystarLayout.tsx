@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard, Users, FileText, LogOut,
-  Menu, X, ChevronRight, Building,
+  Menu, X, ChevronRight, Building, Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

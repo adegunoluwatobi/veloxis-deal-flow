@@ -89,6 +89,7 @@ const App = () => (
             <Route path="/greystar/exporters/new" element={<GreystarRoute><GreystarExporterNew /></GreystarRoute>} />
             <Route path="/greystar/exporters/:id" element={<GreystarRoute><GreystarExporterDetail /></GreystarRoute>} />
             <Route path="/greystar/review" element={<GreystarRoute><GreystarReviewQueue /></GreystarRoute>} />
+            <Route path="/greystar/settings" element={<GreystarRoute><GreystarSettings /></GreystarRoute>} />
 
             {/* Exporter portal routes */}
             <Route path="/exporter" element={<ExporterRoute><ExporterDashboardPage /></ExporterRoute>} />
