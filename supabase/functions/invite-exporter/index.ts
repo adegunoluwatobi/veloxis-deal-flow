@@ -168,48 +168,26 @@ Deno.serve(async (req) => {
           });
         }
 
-        // User already exists — use magiclink to generate a fresh login link
-        // that redirects to /set-password so the exporter can set their password
-        const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
-          type: "magiclink",
-          email,
-          options: {
-            redirectTo: redirectTo,
-          },
-        });
+        // User already exists but hasn't completed onboarding.
+        // Use generateLink(magiclink) to get action_link, then redirect user
+        // to /set-password via that link. generateLink does NOT send the email
+        // automatically, so we also call resetPasswordForEmail to deliver an email.
+        const existingUser = exporter.exporter_user_id
+          ? { id: exporter.exporter_user_id }
+          : await findUserByEmail(adminClient, email);
 
-        if (linkError) {
-          throw linkError;
-        }
-
-        // The generated link contains the hashed_token. We need to redirect
-        // the user via the Supabase auth verify endpoint so a session is created.
-        if (linkData?.properties?.hashed_token) {
-          const verifyUrl = new URL(`${supabaseUrl}/auth/v1/verify`);
-          verifyUrl.searchParams.set("token", linkData.properties.hashed_token);
-          verifyUrl.searchParams.set("type", "magiclink");
-          verifyUrl.searchParams.set("redirect_to", redirectTo);
-
-          // Send the email manually since generateLink doesn't send it
-          // We'll use the Supabase Auth admin API to send a magic link instead
-        }
-
-        // Actually, let's just use admin.generateLink to get the action_link
-        // and then trigger a password reset which DOES work for existing users
-        // and sends an email
-        const { error: resetError } = await adminClient.auth.admin.generateLink({
-          type: "recovery",
-          email,
-          options: {
-            redirectTo: redirectTo,
-          },
+        // Send a password-reset email that redirects to /set-password
+        // This actually sends an email to the user with a valid link
+        const { error: resetError } = await adminClient.auth.resetPasswordForEmail(email, {
+          redirectTo: redirectTo,
         });
 
         if (resetError) {
-          console.error("Recovery link generation failed:", resetError.message);
+          console.error("resetPasswordForEmail error:", resetError.message);
+          throw resetError;
         }
 
-        inviteData = { user: linkData?.user ?? null } as any;
+        inviteData = { user: existingUser } as any;
         inviteError = null;
       } else {
         throw inviteError;
