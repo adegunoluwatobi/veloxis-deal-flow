@@ -8,7 +8,7 @@ export type CommodityType = 'solid_minerals' | 'scrap_metal' | 'manufactured_goo
 
 export type DealStatus =
   | 'draft' | 'submitted' | 'under_review' | 'docs_requested'
-  | 'ready_for_final_approval' | 'approved'
+  | 'ready_for_final_approval' | 'rejection_pending_approval' | 'approved'
   | 'rejected' | 'ipu_sent' | 'ipu_expired' | 'ipu_signed_awaiting_funding'
   | 'funded_active' | 'repayment_due' | 'overdue'
   | 'closed_repaid' | 'closed_partial';
@@ -43,6 +43,7 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   under_review: 'Under Review',
   docs_requested: 'Documents Requested',
   ready_for_final_approval: 'Ready for Final Approval',
+  rejection_pending_approval: 'Rejection Pending Approval',
   approved: 'Approved',
   rejected: 'Rejected',
   ipu_sent: 'IPU Sent',
@@ -61,6 +62,7 @@ export const DEAL_STATUS_COLORS: Record<DealStatus, string> = {
   under_review: 'bg-warning/10 text-warning',
   docs_requested: 'bg-warning/10 text-warning',
   ready_for_final_approval: 'bg-primary/10 text-primary',
+  rejection_pending_approval: 'bg-destructive/10 text-destructive',
   approved: 'bg-success/10 text-success',
   rejected: 'bg-destructive/10 text-destructive',
   ipu_sent: 'bg-primary/10 text-primary',

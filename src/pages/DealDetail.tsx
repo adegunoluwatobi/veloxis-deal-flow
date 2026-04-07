@@ -239,9 +239,19 @@ export default function DealDetail() {
     }
   };
 
-  const handleReject = async () => {
+  const handleRecommendRejection = async () => {
     if (!rejectReason.trim()) {
-      toast({ title: 'Reason required', description: 'You must provide a rejection reason.', variant: 'destructive' });
+      toast({ title: 'Reason required', description: 'You must provide a reason for rejection.', variant: 'destructive' });
+      return;
+    }
+    await updateStatus('rejection_pending_approval' as DealStatus, { rejection_reason: rejectReason.trim() });
+    setRejectOpen(false);
+    setRejectReason('');
+  };
+
+  const handleFinalReject = async () => {
+    if (!rejectReason.trim()) {
+      toast({ title: 'Reason required', description: 'You must provide a reason for rejection.', variant: 'destructive' });
       return;
     }
     await updateStatus('rejected', { rejection_reason: rejectReason.trim() });
@@ -305,6 +315,16 @@ export default function DealDetail() {
           </div>
         </div>
       )}
+      {deal.status === ('rejection_pending_approval' as DealStatus) && deal.rejection_reason && (
+        <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/5 p-4">
+          <AlertTriangle className="mt-0.5 h-5 w-5 text-warning shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Rejection Recommended</p>
+            <p className="text-sm text-muted-foreground">{deal.rejection_reason}</p>
+            <p className="text-xs text-muted-foreground mt-1">Pending Super Admin review before finalisation.</p>
+          </div>
+        </div>
+      )}
 
       {/* Deal Manager Actions */}
       {isDM && (
@@ -321,18 +341,19 @@ export default function DealDetail() {
               )}
               {deal.status === 'under_review' && (
                 <>
-                  {/* Deal manager: recommend / escalate only */}
                   {role === 'deal_manager' && (
                     <>
                       <Button size="sm" onClick={handleSubmitForFinalApproval} disabled={actionLoading} className="gap-1">
-                        <Send className="h-4 w-4" /> Submit for Final Approval
+                        <Send className="h-4 w-4" /> Recommend Approval
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => setRejectOpen(true)} disabled={actionLoading} className="gap-1">
+                        <XCircle className="h-4 w-4" /> Recommend Rejection
                       </Button>
                       <Button size="sm" variant="outline" onClick={handleRequestDocs} disabled={actionLoading} className="gap-1">
                         <FileText className="h-4 w-4" /> Request Docs
                       </Button>
                     </>
                   )}
-                  {/* Super admin: can approve/reject directly from under_review or escalate */}
                   {isSuperAdmin && (
                     <>
                       <Button size="sm" onClick={() => setPricingOverride(true)} disabled={actionLoading} className="gap-1 bg-success hover:bg-success/90">
@@ -361,6 +382,20 @@ export default function DealDetail() {
               )}
               {deal.status === ('ready_for_final_approval' as DealStatus) && role === 'deal_manager' && (
                 <p className="text-sm text-muted-foreground italic">Awaiting final approval from Super Admin.</p>
+              )}
+              {/* Rejection pending approval — super_admin can finalize or send back */}
+              {deal.status === ('rejection_pending_approval' as DealStatus) && isSuperAdmin && (
+                <>
+                  <Button size="sm" variant="destructive" onClick={() => setRejectOpen(true)} disabled={actionLoading} className="gap-1">
+                    <XCircle className="h-4 w-4" /> Confirm Rejection
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => updateStatus('under_review')} disabled={actionLoading} className="gap-1">
+                    <ArrowLeft className="h-4 w-4" /> Send Back to Review
+                  </Button>
+                </>
+              )}
+              {deal.status === ('rejection_pending_approval' as DealStatus) && role === 'deal_manager' && (
+                <p className="text-sm text-muted-foreground italic">Rejection recommendation pending Super Admin decision.</p>
               )}
               {deal.status === 'docs_requested' && (
                 <Button size="sm" onClick={handleMoveToReview} disabled={actionLoading} className="gap-1">
@@ -616,22 +651,35 @@ export default function DealDetail() {
       <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Deal</DialogTitle>
-            <DialogDescription>Provide a mandatory reason for rejecting this deal. This will be visible to the originator.</DialogDescription>
+            <DialogTitle>
+              {role === 'deal_manager' ? 'Recommend Rejection' : 
+               deal?.status === ('rejection_pending_approval' as DealStatus) ? 'Confirm Rejection' : 'Reject Deal'}
+            </DialogTitle>
+            <DialogDescription>
+              {role === 'deal_manager'
+                ? 'Provide a mandatory reason for recommending rejection. This will be reviewed by Super Admin before being sent to the originator.'
+                : 'Provide a mandatory reason for rejecting this deal. This will be visible to the originator.'}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <Label>Rejection Reason</Label>
+            <Label>Reason for rejection</Label>
             <Textarea
               placeholder="Explain why this deal is being rejected…"
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               rows={3}
             />
+            {deal?.rejection_reason && deal.status === ('rejection_pending_approval' as DealStatus) && isSuperAdmin && (
+              <div className="rounded-lg border border-border bg-muted/30 p-3">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Deal Manager's recommendation:</p>
+                <p className="text-sm text-foreground">{deal.rejection_reason}</p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRejectOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleReject} disabled={!rejectReason.trim() || actionLoading}>
-              {actionLoading ? 'Rejecting…' : 'Reject Deal'}
+            <Button variant="destructive" onClick={role === 'deal_manager' ? handleRecommendRejection : handleFinalReject} disabled={!rejectReason.trim() || actionLoading}>
+              {actionLoading ? 'Processing…' : role === 'deal_manager' ? 'Recommend Rejection' : 'Reject Deal'}
             </Button>
           </DialogFooter>
         </DialogContent>
