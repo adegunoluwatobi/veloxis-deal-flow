@@ -100,7 +100,7 @@ export default function ExporterDealDetail() {
         },
       });
 
-      toast({ title: 'Deal resubmitted successfully' });
+      toast({ title: 'Application resubmitted successfully' });
       await loadData();
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
