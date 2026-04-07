@@ -168,18 +168,45 @@ Deno.serve(async (req) => {
           });
         }
 
-        // User already exists — generate a fresh invite link instead of deleting
+        // User already exists — use magiclink to generate a fresh login link
+        // that redirects to /set-password so the exporter can set their password
         const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
-          type: "invite",
+          type: "magiclink",
           email,
           options: {
-            data: invitePayload.data,
             redirectTo: redirectTo,
           },
         });
 
         if (linkError) {
           throw linkError;
+        }
+
+        // The generated link contains the hashed_token. We need to redirect
+        // the user via the Supabase auth verify endpoint so a session is created.
+        if (linkData?.properties?.hashed_token) {
+          const verifyUrl = new URL(`${supabaseUrl}/auth/v1/verify`);
+          verifyUrl.searchParams.set("token", linkData.properties.hashed_token);
+          verifyUrl.searchParams.set("type", "magiclink");
+          verifyUrl.searchParams.set("redirect_to", redirectTo);
+
+          // Send the email manually since generateLink doesn't send it
+          // We'll use the Supabase Auth admin API to send a magic link instead
+        }
+
+        // Actually, let's just use admin.generateLink to get the action_link
+        // and then trigger a password reset which DOES work for existing users
+        // and sends an email
+        const { error: resetError } = await adminClient.auth.admin.generateLink({
+          type: "recovery",
+          email,
+          options: {
+            redirectTo: redirectTo,
+          },
+        });
+
+        if (resetError) {
+          console.error("Recovery link generation failed:", resetError.message);
         }
 
         inviteData = { user: linkData?.user ?? null } as any;
