@@ -276,7 +276,7 @@ export default function DealDetail() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <Button variant="ghost" size="sm" onClick={() => navigate('/deals')} className="gap-2">
+      <Button variant="ghost" size="sm" onClick={() => navigate(backPath)} className="gap-2">
         <ArrowLeft className="h-4 w-4" /> Back to Deals
       </Button>
 
