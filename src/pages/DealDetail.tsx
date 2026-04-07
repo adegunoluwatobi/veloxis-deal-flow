@@ -44,6 +44,8 @@ interface DealRow {
   discount_fee_pct: number | null;
   discount_fee_amount: number | null;
   gross_yield: number | null;
+  net_advance_amount: number | null;
+  repayment_amount: number | null;
   buyer_company_name: string | null;
   buyer_country: string | null;
   buyer_contact_name: string | null;
