@@ -20,53 +20,31 @@ function getSiteUrl(req: Request) {
   return (Deno.env.get("SITE_URL") || `https://id-preview--5aecb038-1cd1-4607-baa8-41e86f61384a.lovable.app`).replace(/\/+$/, "");
 }
 
+function isExistingUserError(message?: string) {
+  return !!message && (message.includes("already been registered") || message.includes("already exists"));
+}
+
+async function findUserByEmail(adminClient: ReturnType<typeof createClient>, email: string) {
+  const { data: { users }, error } = await adminClient.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  if (error) throw error;
+  return users?.find((user: any) => user.email?.toLowerCase() === email.toLowerCase()) ?? null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // Verify the caller is authenticated
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing auth header" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const authHeader = req.headers.get("Authorization") ?? req.headers.get("authorization");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-
-    // Verify caller with anon client
-    const anonClient = createClient(supabaseUrl, anonKey);
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user: caller }, error: authError } = await anonClient.auth.getUser(token);
-    if (authError || !caller) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Check caller has partner_staff or partner_admin role
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
-    const { data: roleData } = await adminClient
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", caller.id)
-      .in("role", ["partner_staff", "partner_admin"])
-      .maybeSingle();
 
-    if (!roleData) {
-      return new Response(JSON.stringify({ error: "Forbidden: requires partner role" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { email, full_name, organisation, exporter_id } = await req.json();
+    const { email: rawEmail, full_name, organisation, exporter_id } = await req.json();
+    const email = typeof rawEmail === "string" ? rawEmail.trim().toLowerCase() : "";
 
     if (!email || !exporter_id) {
       return new Response(JSON.stringify({ error: "email and exporter_id are required" }), {
@@ -75,60 +53,122 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Use admin API to invite user by email (sends magic link / invite email)
-    // Derive redirect URL from the request origin so it matches the user's browser
-    const siteUrl = getSiteUrl(req);
-    const redirectTo = `${siteUrl}/set-password?email=${encodeURIComponent(email)}&exporter_id=${encodeURIComponent(exporter_id)}`;
-    const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
-      data: {
-        full_name: full_name || "",
-        organisation: organisation || "",
-        role: "exporter",
-      },
-      redirectTo,
-    });
+    const { data: exporter, error: exporterError } = await adminClient
+      .from("exporters")
+      .select("id, contact_email, company_name, director_name, onboarding_status, exporter_user_id, invite_sent_at, invite_accepted_at")
+      .eq("id", exporter_id)
+      .maybeSingle();
 
-    if (inviteError) {
-      // If user already exists, try to get their ID and link anyway
-      if (inviteError.message?.includes("already been registered") || inviteError.message?.includes("already exists")) {
-        const { data: { users } } = await adminClient.auth.admin.listUsers();
-        const existingUser = users?.find((u: any) => u.email === email);
-        if (existingUser) {
-          // Link to exporter profile
-          await adminClient.from("exporters").update({
-            exporter_user_id: existingUser.id,
-            invite_sent_at: new Date().toISOString(),
-          } as any).eq("id", exporter_id);
+    if (exporterError) {
+      throw exporterError;
+    }
 
-          // Generate a fresh invite link using admin API (not password recovery)
-          const { error: reinviteError } = await adminClient.auth.admin.generateLink({
-            type: 'invite',
-            email,
-            options: {
-              data: {
-                full_name: full_name || existingUser.user_metadata?.full_name || "",
-                organisation: organisation || existingUser.user_metadata?.organisation || "",
-                role: "exporter",
-              },
-              redirectTo,
-            },
-          });
+    if (!exporter) {
+      return new Response(JSON.stringify({ error: "Exporter not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-          if (reinviteError) {
-            throw reinviteError;
-          }
+    if ((exporter.contact_email ?? "").trim().toLowerCase() !== email) {
+      return new Response(JSON.stringify({ error: "Invite email does not match this exporter" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-          return new Response(JSON.stringify({ 
-            user_id: existingUser.id, 
-            already_existed: true,
-            invited: true,
-            reset_email_sent: false,
-          }), {
+    const isPendingInvite = exporter.onboarding_status === "invited" && !exporter.invite_accepted_at;
+    let hasPartnerAccess = false;
+
+    if (authHeader) {
+      const anonClient = createClient(supabaseUrl, anonKey);
+      const token = authHeader.replace(/^Bearer\s+/i, "");
+      const { data: { user: caller }, error: authError } = await anonClient.auth.getUser(token);
+
+      if (!authError && caller) {
+        const { data: roleData } = await adminClient
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", caller.id)
+          .in("role", ["partner_admin", "partner_staff", "super_admin"])
+          .maybeSingle();
+
+        hasPartnerAccess = !!roleData;
+      }
+    }
+
+    if (!hasPartnerAccess) {
+      if (!isPendingInvite) {
+        return new Response(JSON.stringify({ error: "This invite can no longer be resent automatically. Please contact your administrator." }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (exporter.invite_sent_at) {
+        const lastInviteAt = new Date(exporter.invite_sent_at).getTime();
+        if (Number.isFinite(lastInviteAt) && Date.now() - lastInviteAt < 60_000) {
+          return new Response(JSON.stringify({ error: "A fresh invite was just sent. Please wait a minute and check your inbox." }), {
+            status: 429,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
       }
-      throw inviteError;
+    }
+
+    const siteUrl = getSiteUrl(req);
+    const redirectTo = `${siteUrl}/set-password?email=${encodeURIComponent(email)}&exporter_id=${encodeURIComponent(exporter_id)}`;
+    const invitePayload = {
+      data: {
+        full_name: (typeof full_name === "string" && full_name.trim()) || exporter.director_name || "",
+        organisation: (typeof organisation === "string" && organisation.trim()) || exporter.company_name || "",
+        role: "exporter",
+      },
+      redirectTo,
+    };
+
+    const sendInvite = () => adminClient.auth.admin.inviteUserByEmail(email, invitePayload);
+
+    let { data: inviteData, error: inviteError } = await sendInvite();
+
+    if (inviteError) {
+      if (isExistingUserError(inviteError.message)) {
+        if (!isPendingInvite) {
+          return new Response(JSON.stringify({ error: "This exporter has already accepted the invite. Ask them to sign in instead." }), {
+            status: 409,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const existingUser = exporter.exporter_user_id
+          ? { id: exporter.exporter_user_id }
+          : await findUserByEmail(adminClient, email);
+
+        if (!existingUser?.id) {
+          throw inviteError;
+        }
+
+        const { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(existingUser.id);
+        if (deleteAuthError) {
+          throw deleteAuthError;
+        }
+
+        await Promise.all([
+          adminClient.from("users").delete().eq("id", existingUser.id),
+          adminClient.from("user_roles").delete().eq("user_id", existingUser.id),
+          adminClient.from("exporters").update({ exporter_user_id: null } as any).eq("id", exporter_id),
+        ]);
+
+        const retry = await sendInvite();
+        inviteData = retry.data;
+        inviteError = retry.error;
+
+        if (inviteError) {
+          throw inviteError;
+        }
+      } else {
+        throw inviteError;
+      }
     }
 
     // Link the new user to the exporter profile
@@ -142,6 +182,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ 
       user_id: inviteData?.user?.id,
       invited: true,
+      reset_email_sent: false,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

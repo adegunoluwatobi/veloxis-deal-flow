@@ -176,10 +176,8 @@ export default function GreystarExporterDetail() {
       if (data?.error) throw new Error(data.error);
 
       toast({
-        title: data?.reset_email_sent ? 'Setup email sent' : 'Invite resent',
-        description: data?.reset_email_sent
-          ? `A fresh password setup email was sent to ${exporter.contact_email}.`
-          : `A fresh invitation was sent to ${exporter.contact_email}.`,
+        title: 'Invite resent',
+        description: `A fresh invitation was sent to ${exporter.contact_email}.`,
       });
 
       load();
