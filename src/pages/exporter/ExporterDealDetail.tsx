@@ -206,7 +206,7 @@ export default function ExporterDealDetail() {
           <h1 className="text-2xl font-bold text-foreground">{deal.deal_reference || deal.id.slice(0, 8)}</h1>
           <p className="text-sm text-muted-foreground">Application</p>
         </div>
-        <DealStatusBadge status={deal.status} />
+        <DealStatusBadge status={deal.status} portal="exporter" />
         {deal.status === 'draft' && (
           <>
             <Button asChild>

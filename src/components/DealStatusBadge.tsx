@@ -1,11 +1,11 @@
 import { Badge } from '@/components/ui/badge';
-import { DEAL_STATUS_LABELS, DEAL_STATUS_COLORS, type DealStatus } from '@/types';
+import { getDealStatusLabel, DEAL_STATUS_COLORS, type DealStatus, type Portal } from '@/types';
 import { cn } from '@/lib/utils';
 
-export default function DealStatusBadge({ status }: { status: DealStatus }) {
+export default function DealStatusBadge({ status, portal }: { status: DealStatus; portal?: Portal }) {
   return (
     <Badge variant="secondary" className={cn('font-medium', DEAL_STATUS_COLORS[status])}>
-      {DEAL_STATUS_LABELS[status]}
+      {getDealStatusLabel(status, portal)}
     </Badge>
   );
 }

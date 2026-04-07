@@ -109,7 +109,7 @@ export default function DealsList() {
                     {deal.invoice_value.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
                   </span>
                 )}
-                <DealStatusBadge status={deal.status} />
+                <DealStatusBadge status={deal.status} portal="veloxis" />
               </div>
             </Link>
           ))}

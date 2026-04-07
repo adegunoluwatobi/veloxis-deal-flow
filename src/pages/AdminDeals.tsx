@@ -11,7 +11,7 @@ import DealStatusBadge from '@/components/DealStatusBadge';
 import { cn } from '@/lib/utils';
 import { Search, ArrowUpDown } from 'lucide-react';
 import {
-  DEAL_STATUS_LABELS, COMMODITY_TYPE_LABELS,
+  DEAL_STATUS_LABELS, COMMODITY_TYPE_LABELS, getDealStatusLabel,
   type DealStatus, type CommodityType,
 } from '@/types';
 
@@ -119,7 +119,7 @@ export default function AdminDeals() {
                   : 'border-border bg-card text-muted-foreground hover:bg-muted/50'
               )}
             >
-              {s === 'all' ? 'All' : DEAL_STATUS_LABELS[s]}
+              {s === 'all' ? 'All' : getDealStatusLabel(s, 'veloxis')}
               <span className={cn('rounded-full px-1.5 py-0.5 text-[10px]', isActive ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
                 {count}
               </span>
@@ -133,8 +133,8 @@ export default function AdminDeals() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>
-            {Object.entries(DEAL_STATUS_LABELS).map(([val, label]) => (
-              <SelectItem key={val} value={val}>{label} ({statusCounts[val as DealStatus] ?? 0})</SelectItem>
+            {Object.keys(DEAL_STATUS_LABELS).map((val) => (
+              <SelectItem key={val} value={val}>{getDealStatusLabel(val as DealStatus, 'veloxis')} ({statusCounts[val as DealStatus] ?? 0})</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -201,7 +201,7 @@ export default function AdminDeals() {
                   <TableCell className="text-sm text-muted-foreground">
                     {deal.commodity_type ? COMMODITY_TYPE_LABELS[deal.commodity_type] : '—'}
                   </TableCell>
-                  <TableCell><DealStatusBadge status={deal.status} /></TableCell>
+                  <TableCell><DealStatusBadge status={deal.status} portal="veloxis" /></TableCell>
                   <TableCell className="text-xs text-muted-foreground tabular-nums">
                     {new Date(deal.created_at).toLocaleDateString('en-GB')}
                   </TableCell>

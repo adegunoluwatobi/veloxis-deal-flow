@@ -39,6 +39,8 @@ export type AuditAction =
   | 'exporter_document_verified';
 
 // UI Label Maps
+export type Portal = 'exporter' | 'partner' | 'veloxis';
+
 export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   draft: 'Draft',
   submitted: 'Submitted',
@@ -61,6 +63,20 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   closed_repaid: 'Closed (Repaid)',
   closed_partial: 'Closed (Partial)',
 };
+
+// Portal-specific overrides for sent_to_veloxis label
+export const PORTAL_STATUS_OVERRIDES: Record<Portal, Partial<Record<DealStatus, string>>> = {
+  exporter: { sent_to_veloxis: 'Under Review' },
+  partner: { sent_to_veloxis: 'Submitted to Veloxis' },
+  veloxis: { sent_to_veloxis: 'Awaiting Review' },
+};
+
+export function getDealStatusLabel(status: DealStatus, portal?: Portal): string {
+  if (portal && PORTAL_STATUS_OVERRIDES[portal]?.[status]) {
+    return PORTAL_STATUS_OVERRIDES[portal][status]!;
+  }
+  return DEAL_STATUS_LABELS[status];
+}
 
 export const DEAL_STATUS_COLORS: Record<DealStatus, string> = {
   draft: 'bg-muted text-muted-foreground',
