@@ -224,7 +224,7 @@ export default function DealDetail() {
       await supabase.rpc('insert_audit_log', {
         p_deal_id: id,
         p_user_id: user?.id,
-        p_user_role: 'deal_manager',
+        p_user_role: role as any,
         p_action_type: 'deal_approved',
         p_metadata: { advance_percentage: advPct, ...p },
       });
