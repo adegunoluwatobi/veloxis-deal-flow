@@ -274,28 +274,6 @@ export default function GreystarExporterDetail() {
                 {resendingInvite ? 'Resending…' : 'Resend Invite'}
               </Button>
             )}
-            {isPartner && !isAlreadyForwarded && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span>
-                      <Button size="sm" onClick={handleForwardToVeloxis} disabled={!canForward || forwarding} className="gap-1.5">
-                        <Send className="h-3.5 w-3.5" />
-                        {forwarding ? 'Forwarding…' : 'Forward to Veloxis'}
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  {!canForward && forwardDisabledReason && (
-                    <TooltipContent><p>{forwardDisabledReason}</p></TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            {isAlreadyForwarded && (
-              <Badge variant="outline" className="bg-success/10 text-success gap-1">
-                <CheckCircle2 className="h-3 w-3" /> Forwarded
-              </Badge>
-            )}
           </div>
         </CardHeader>
         <CardContent>
