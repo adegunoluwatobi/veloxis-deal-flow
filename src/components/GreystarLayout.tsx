@@ -21,7 +21,11 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 export default function GreystarLayout({ children }: { children: React.ReactNode }) {
-  const { user, signOut } = useAuth();
+  const { user, role, signOut } = useAuth();
+  const navItems = [
+    ...NAV_ITEMS,
+    ...(role === 'partner_admin' ? [{ label: 'Team', href: '/greystar/settings', icon: Settings }] : []),
+  ];
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
