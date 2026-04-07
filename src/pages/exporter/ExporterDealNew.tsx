@@ -193,6 +193,11 @@ export default function ExporterDealNew() {
       setStep(2);
       return;
     }
+    if (!asDraft && !form.fx_risk_acknowledged) {
+      toast({ title: 'FX Risk Acknowledgement Required', description: 'Please acknowledge the FX risk before submitting.', variant: 'destructive' });
+      setStep(4);
+      return;
+    }
     setSaving(true);
     try {
       let invoiceFilePath: string | null = existingInvoicePath;
