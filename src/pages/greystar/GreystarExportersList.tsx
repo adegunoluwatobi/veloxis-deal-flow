@@ -4,23 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, MailCheck, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { XCircle } from 'lucide-react';
+import { Plus, Search, MailCheck, Clock, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import {
-  KYC_STATUS_LABELS, ENTITY_TYPE_LABELS,
-  type KycStatus, type EntityType, type OnboardingStatus,
-} from '@/types';
+import { ENTITY_TYPE_LABELS, type EntityType, type OnboardingStatus } from '@/types';
 import { cn } from '@/lib/utils';
-
-const KYC_COLORS: Record<KycStatus, string> = {
-  pending_documents: 'bg-muted text-muted-foreground',
-  documents_uploaded: 'bg-primary/10 text-primary',
-  under_review: 'bg-warning/10 text-warning',
-  verified: 'bg-success/10 text-success',
-  kyc_document_expired: 'bg-destructive/10 text-destructive',
-  rejected: 'bg-destructive/10 text-destructive',
-};
+import { computeKycStatus, groupDocumentsByExporter, type KycDocumentLike } from '@/lib/computeKycStatus';
 
 type DisplayStatus = OnboardingStatus | 'invite_expired';
 
@@ -68,7 +56,6 @@ interface ExporterRow {
   rc_number: string;
   entity_type: EntityType;
   director_name: string;
-  kyc_status: KycStatus;
   contact_email: string | null;
   created_at: string;
   forwarded_to_veloxis_at: string | null;
@@ -77,39 +64,66 @@ interface ExporterRow {
   invite_accepted_at: string | null;
 }
 
-function getDisplayStatus(exp: ExporterRow): DisplayStatus {
+interface ExporterDocumentRow extends KycDocumentLike {
+  exporter_id: string;
+  is_superseded: boolean;
+}
+
+function getDisplayStatus(exporter: ExporterRow): DisplayStatus {
   if (
-    exp.onboarding_status === 'invited' &&
-    !exp.invite_accepted_at &&
-    exp.invite_sent_at &&
-    Date.now() - new Date(exp.invite_sent_at).getTime() > 7 * 24 * 60 * 60 * 1000
+    exporter.onboarding_status === 'invited' &&
+    !exporter.invite_accepted_at &&
+    exporter.invite_sent_at &&
+    Date.now() - new Date(exporter.invite_sent_at).getTime() > 7 * 24 * 60 * 60 * 1000
   ) {
     return 'invite_expired';
   }
-  return exp.onboarding_status;
+
+  return exporter.onboarding_status;
 }
 
 export default function GreystarExportersList() {
   const [exporters, setExporters] = useState<ExporterRow[]>([]);
+  const [exporterDocs, setExporterDocs] = useState<ExporterDocumentRow[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase
+      setLoading(true);
+
+      const { data: exporterData } = await supabase
         .from('exporters')
-        .select('id, company_name, rc_number, entity_type, director_name, kyc_status, contact_email, created_at, forwarded_to_veloxis_at, onboarding_status, invite_sent_at, invite_accepted_at')
+        .select('id, company_name, rc_number, entity_type, director_name, contact_email, created_at, forwarded_to_veloxis_at, onboarding_status, invite_sent_at, invite_accepted_at')
         .order('created_at', { ascending: false });
-      setExporters((data as ExporterRow[]) ?? []);
+
+      const exportersList = (exporterData as ExporterRow[]) ?? [];
+      const exporterIds = exportersList.map((exporter) => exporter.id);
+      setExporters(exportersList);
+
+      if (exporterIds.length > 0) {
+        const { data: docsData } = await supabase
+          .from('exporter_documents')
+          .select('exporter_id, document_type, document_status, expiry_status, is_superseded')
+          .in('exporter_id', exporterIds)
+          .eq('is_superseded', false);
+
+        setExporterDocs((docsData as ExporterDocumentRow[]) ?? []);
+      } else {
+        setExporterDocs([]);
+      }
+
       setLoading(false);
     };
+
     load();
   }, []);
 
-  const filtered = exporters.filter((e) =>
-    e.company_name.toLowerCase().includes(search.toLowerCase()) ||
-    e.rc_number.toLowerCase().includes(search.toLowerCase()) ||
-    (e.contact_email ?? '').toLowerCase().includes(search.toLowerCase())
+  const docsByExporter = groupDocumentsByExporter(exporterDocs);
+  const filtered = exporters.filter((exporter) =>
+    exporter.company_name.toLowerCase().includes(search.toLowerCase()) ||
+    exporter.rc_number.toLowerCase().includes(search.toLowerCase()) ||
+    (exporter.contact_email ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -135,41 +149,41 @@ export default function GreystarExportersList() {
         <Card><CardContent className="py-10 text-center text-muted-foreground">{search ? 'No match.' : 'No exporters yet.'}</CardContent></Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map((exp) => (
-            (() => {
-              const statusMeta = EXPORTER_STATUS_META[getDisplayStatus(exp)];
-              return (
-            <Link
-              key={exp.id}
-              to={`/greystar/exporters/${exp.id}`}
-              className="flex items-center justify-between rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted/50"
-            >
-              <div>
-                <p className="font-medium text-foreground">{exp.company_name}</p>
-                <p className="text-sm text-muted-foreground">
-                  RC {exp.rc_number} · {ENTITY_TYPE_LABELS[exp.entity_type]} · {exp.contact_email ?? 'No email'}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className={cn('flex items-center gap-1 text-xs font-medium', statusMeta.className)}>
-                  {statusMeta.icon === 'pending' && <Clock className="h-3 w-3" />}
-                  {statusMeta.icon === 'accepted' && <MailCheck className="h-3 w-3" />}
-                  {statusMeta.icon === 'approved' && <CheckCircle2 className="h-3 w-3" />}
-                  {statusMeta.icon === 'attention' && <AlertTriangle className="h-3 w-3" />}
-                  {statusMeta.icon === 'expired' && <XCircle className="h-3 w-3" />}
-                  {statusMeta.label}
-                </Badge>
-                {exp.forwarded_to_veloxis_at && (
-                  <Badge variant="outline" className="text-xs">Forwarded</Badge>
-                )}
-                <Badge variant="secondary" className={cn('font-medium', KYC_COLORS[exp.kyc_status])}>
-                  {KYC_STATUS_LABELS[exp.kyc_status]}
-                </Badge>
-              </div>
-            </Link>
-              );
-            })()
-          ))}
+          {filtered.map((exporter) => {
+            const statusMeta = EXPORTER_STATUS_META[getDisplayStatus(exporter)];
+            const kyc = computeKycStatus(docsByExporter.get(exporter.id) ?? []);
+
+            return (
+              <Link
+                key={exporter.id}
+                to={`/greystar/exporters/${exporter.id}`}
+                className="flex items-center justify-between rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted/50"
+              >
+                <div>
+                  <p className="font-medium text-foreground">{exporter.company_name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    RC {exporter.rc_number} · {ENTITY_TYPE_LABELS[exporter.entity_type]} · {exporter.contact_email ?? 'No email'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className={cn('flex items-center gap-1 text-xs font-medium', statusMeta.className)}>
+                    {statusMeta.icon === 'pending' && <Clock className="h-3 w-3" />}
+                    {statusMeta.icon === 'accepted' && <MailCheck className="h-3 w-3" />}
+                    {statusMeta.icon === 'approved' && <CheckCircle2 className="h-3 w-3" />}
+                    {statusMeta.icon === 'attention' && <AlertTriangle className="h-3 w-3" />}
+                    {statusMeta.icon === 'expired' && <XCircle className="h-3 w-3" />}
+                    {statusMeta.label}
+                  </Badge>
+                  {exporter.forwarded_to_veloxis_at && (
+                    <Badge variant="outline" className="text-xs">Forwarded</Badge>
+                  )}
+                  <Badge variant="secondary" className={cn('font-medium', kyc.color)}>
+                    {kyc.badgeLabel}
+                  </Badge>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
