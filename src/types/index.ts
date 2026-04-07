@@ -102,6 +102,8 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   docs_requested: 'Documents Requested',
   ready_for_final_approval: 'Ready for Final Approval',
   rejection_pending_approval: 'Rejection Pending Approval',
+  pending_exporter_acceptance: 'Pending Exporter Acceptance',
+  declined_by_exporter: 'Declined by Exporter',
   approved: 'Approved',
   rejected: 'Rejected',
   rejected_by_partner: 'Rejected by Partner',
@@ -118,11 +120,23 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   closed_partial: 'Closed (Partial)',
 };
 
-// Portal-specific overrides for sent_to_veloxis label
+// Portal-specific overrides for status labels
 export const PORTAL_STATUS_OVERRIDES: Record<Portal, Partial<Record<DealStatus, string>>> = {
-  exporter: { sent_to_veloxis: 'Under Review' },
-  partner: { sent_to_veloxis: 'Submitted to Veloxis' },
-  veloxis: { sent_to_veloxis: 'Awaiting Review' },
+  exporter: {
+    sent_to_veloxis: 'Under Review',
+    pending_exporter_acceptance: 'Offer Received',
+    declined_by_exporter: 'Offer Declined',
+  },
+  partner: {
+    sent_to_veloxis: 'Submitted to Veloxis',
+    pending_exporter_acceptance: 'Awaiting Exporter Response',
+    declined_by_exporter: 'Declined by Exporter',
+  },
+  veloxis: {
+    sent_to_veloxis: 'Awaiting Review',
+    pending_exporter_acceptance: 'Pending Exporter Acceptance',
+    declined_by_exporter: 'Declined by Exporter',
+  },
 };
 
 export function getDealStatusLabel(status: DealStatus, portal?: Portal): string {
