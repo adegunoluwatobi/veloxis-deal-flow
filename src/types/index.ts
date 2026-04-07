@@ -1,6 +1,6 @@
 // Veloxis Deal Room — TypeScript Types
 
-export type AppRole = 'super_admin' | 'originator_admin' | 'originator_staff' | 'deal_manager' | 'exporter';
+export type AppRole = 'super_admin' | 'partner_admin' | 'partner_staff' | 'deal_manager' | 'exporter';
 
 export type EntityType = 'limited_company' | 'plc' | 'llp' | 'incorporated_trustee';
 
