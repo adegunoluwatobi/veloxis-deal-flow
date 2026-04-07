@@ -451,7 +451,7 @@ export default function DealDetail() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">KYC</span>
-                  <Badge variant="secondary" className="text-xs">{KYC_STATUS_LABELS[exporter.kyc_status]}</Badge>
+                  <Badge variant="secondary" className={cn("text-xs", computedKyc.color)}>{computedKyc.badgeLabel}</Badge>
                 </div>
               </div>
             ) : <p className="text-sm text-muted-foreground">—</p>}
