@@ -120,7 +120,7 @@ export default function ExporterDealDetail() {
     try {
       const { error } = await supabase.from('deals').delete().eq('id', id!);
       if (error) throw error;
-      toast({ title: 'Draft deal deleted' });
+      toast({ title: 'Draft application deleted' });
       navigate('/exporter/deals');
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
