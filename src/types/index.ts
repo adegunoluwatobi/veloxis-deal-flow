@@ -155,6 +155,8 @@ export const DEAL_STATUS_COLORS: Record<DealStatus, string> = {
   docs_requested: 'bg-warning/10 text-warning',
   ready_for_final_approval: 'bg-primary/10 text-primary',
   rejection_pending_approval: 'bg-destructive/10 text-destructive',
+  pending_exporter_acceptance: 'bg-primary/10 text-primary',
+  declined_by_exporter: 'bg-destructive/10 text-destructive',
   approved: 'bg-success/10 text-success',
   rejected: 'bg-destructive/10 text-destructive',
   rejected_by_partner: 'bg-destructive/10 text-destructive',
