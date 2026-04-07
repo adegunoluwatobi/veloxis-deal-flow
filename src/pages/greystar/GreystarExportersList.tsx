@@ -59,7 +59,7 @@ export default function GreystarExportersList() {
   const [exporters, setExporters] = useState<ExporterRow[]>([]);
   const [exporterDocs, setExporterDocs] = useState<ExporterDocumentRow[]>([]);
   const [search, setSearch] = useState('');
-  const [tab, setTab] = useState<FilterTab>('all');
+  
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
