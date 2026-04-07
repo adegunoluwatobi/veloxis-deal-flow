@@ -79,6 +79,7 @@ export default function ExporterDealNew() {
     export_licence_number: '',
     hs_code: '',
     incoterms: '',
+    fx_risk_acknowledged: false,
   });
 
   useEffect(() => {
@@ -192,6 +193,11 @@ export default function ExporterDealNew() {
       setStep(2);
       return;
     }
+    if (!asDraft && !form.fx_risk_acknowledged) {
+      toast({ title: 'FX Risk Acknowledgement Required', description: 'Please acknowledge the FX risk before submitting.', variant: 'destructive' });
+      setStep(4);
+      return;
+    }
     setSaving(true);
     try {
       let invoiceFilePath: string | null = existingInvoicePath;
@@ -238,6 +244,8 @@ export default function ExporterDealNew() {
         incoterms: form.incoterms,
         export_licence_document_id: exportLicence?.id ?? null,
         licence_name_match: exportLicence ? true : null,
+        fx_risk_acknowledged: form.fx_risk_acknowledged,
+        settlement_currency: form.invoice_currency,
       };
 
       if (!asDraft) {
@@ -569,8 +577,29 @@ export default function ExporterDealNew() {
                 <span className="text-muted-foreground">Buyer</span><span className="font-medium">{form.buyer_company_name}</span>
                 <span className="text-muted-foreground">Destination</span><span className="font-medium">{form.export_destination}</span>
                 <span className="text-muted-foreground">Bank Account</span><span className="font-medium">{form.bank_account_name} ({form.bank_name})</span>
-                <span className="text-muted-foreground">Invoice File</span><span className="font-medium">{form.invoice_file?.name ?? '—'}</span>
+                <span className="text-muted-foreground">Invoice File</span><span className="font-medium">{form.invoice_file?.name ?? (existingInvoicePath ? 'On file' : '—')}</span>
               </div>
+            </div>
+
+            {/* FX Risk Acknowledgement */}
+            <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+              <p className="text-sm font-medium text-foreground">FX Risk Acknowledgement</p>
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="fx-risk"
+                  checked={form.fx_risk_acknowledged}
+                  onCheckedChange={(v) => updateField('fx_risk_acknowledged', v === true)}
+                />
+                <label htmlFor="fx-risk" className="text-xs text-muted-foreground leading-relaxed">
+                  I understand that the advance will be paid in {form.invoice_currency} to my domiciliary account. Veloxis bears no responsibility for fluctuations in the NGN exchange rate. I am solely responsible for all costs and risks of converting to NGN, including CBN regulations on domiciliary account usage.
+                </label>
+              </div>
+              {!form.fx_risk_acknowledged && (
+                <p className="text-xs text-warning flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  You must acknowledge FX risk before submitting
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -248,6 +248,7 @@ export type Database = {
           buyer_name_match: boolean | null
           buyer_sanctions_status: Database["public"]["Enums"]["sanctions_screening_status"]
           buyer_underwriter_notes: string | null
+          cbn_repatriation_deadline: string | null
           commodity_type: Database["public"]["Enums"]["commodity_type"] | null
           created_at: string
           deal_reference: string | null
@@ -264,6 +265,7 @@ export type Database = {
           funded_at: string | null
           fx_rate_at_funding: number | null
           fx_rate_source: string | null
+          fx_risk_acknowledged: boolean
           gbp_equivalent: number | null
           goods_description: string | null
           gross_yield: number | null
@@ -279,6 +281,7 @@ export type Database = {
           invoice_value: number | null
           licence_name_match: boolean | null
           net_advance_amount: number | null
+          ngn_equivalent_at_disbursement: number | null
           originator_id: string
           outstanding_balance: number | null
           overdue_days: number
@@ -292,8 +295,18 @@ export type Database = {
           rejected_at: string | null
           rejection_reason: string | null
           repayment_amount: number | null
+          repayment_currency_received: string | null
           repayment_due_date: string | null
+          repayment_fx_rate: number | null
+          repayment_gbp_equivalent: number | null
+          repayment_reconciliation_status:
+            | Database["public"]["Enums"]["repayment_reconciliation_status"]
+            | null
           sent_to_veloxis_at: string | null
+          settlement_currency: string | null
+          settlement_method:
+            | Database["public"]["Enums"]["settlement_method_type"]
+            | null
           status: Database["public"]["Enums"]["deal_status"]
           submitted_at: string | null
           updated_at: string
@@ -321,6 +334,7 @@ export type Database = {
           buyer_name_match?: boolean | null
           buyer_sanctions_status?: Database["public"]["Enums"]["sanctions_screening_status"]
           buyer_underwriter_notes?: string | null
+          cbn_repatriation_deadline?: string | null
           commodity_type?: Database["public"]["Enums"]["commodity_type"] | null
           created_at?: string
           deal_reference?: string | null
@@ -337,6 +351,7 @@ export type Database = {
           funded_at?: string | null
           fx_rate_at_funding?: number | null
           fx_rate_source?: string | null
+          fx_risk_acknowledged?: boolean
           gbp_equivalent?: number | null
           goods_description?: string | null
           gross_yield?: number | null
@@ -352,6 +367,7 @@ export type Database = {
           invoice_value?: number | null
           licence_name_match?: boolean | null
           net_advance_amount?: number | null
+          ngn_equivalent_at_disbursement?: number | null
           originator_id: string
           outstanding_balance?: number | null
           overdue_days?: number
@@ -365,8 +381,18 @@ export type Database = {
           rejected_at?: string | null
           rejection_reason?: string | null
           repayment_amount?: number | null
+          repayment_currency_received?: string | null
           repayment_due_date?: string | null
+          repayment_fx_rate?: number | null
+          repayment_gbp_equivalent?: number | null
+          repayment_reconciliation_status?:
+            | Database["public"]["Enums"]["repayment_reconciliation_status"]
+            | null
           sent_to_veloxis_at?: string | null
+          settlement_currency?: string | null
+          settlement_method?:
+            | Database["public"]["Enums"]["settlement_method_type"]
+            | null
           status?: Database["public"]["Enums"]["deal_status"]
           submitted_at?: string | null
           updated_at?: string
@@ -394,6 +420,7 @@ export type Database = {
           buyer_name_match?: boolean | null
           buyer_sanctions_status?: Database["public"]["Enums"]["sanctions_screening_status"]
           buyer_underwriter_notes?: string | null
+          cbn_repatriation_deadline?: string | null
           commodity_type?: Database["public"]["Enums"]["commodity_type"] | null
           created_at?: string
           deal_reference?: string | null
@@ -410,6 +437,7 @@ export type Database = {
           funded_at?: string | null
           fx_rate_at_funding?: number | null
           fx_rate_source?: string | null
+          fx_risk_acknowledged?: boolean
           gbp_equivalent?: number | null
           goods_description?: string | null
           gross_yield?: number | null
@@ -425,6 +453,7 @@ export type Database = {
           invoice_value?: number | null
           licence_name_match?: boolean | null
           net_advance_amount?: number | null
+          ngn_equivalent_at_disbursement?: number | null
           originator_id?: string
           outstanding_balance?: number | null
           overdue_days?: number
@@ -438,8 +467,18 @@ export type Database = {
           rejected_at?: string | null
           rejection_reason?: string | null
           repayment_amount?: number | null
+          repayment_currency_received?: string | null
           repayment_due_date?: string | null
+          repayment_fx_rate?: number | null
+          repayment_gbp_equivalent?: number | null
+          repayment_reconciliation_status?:
+            | Database["public"]["Enums"]["repayment_reconciliation_status"]
+            | null
           sent_to_veloxis_at?: string | null
+          settlement_currency?: string | null
+          settlement_method?:
+            | Database["public"]["Enums"]["settlement_method_type"]
+            | null
           status?: Database["public"]["Enums"]["deal_status"]
           submitted_at?: string | null
           updated_at?: string
@@ -545,6 +584,7 @@ export type Database = {
       }
       exporter_bank_accounts: {
         Row: {
+          account_currency: string | null
           account_name: string
           account_number: string
           bank_country: string
@@ -553,10 +593,16 @@ export type Database = {
           exporter_id: string
           id: string
           is_default: boolean
+          is_verified: boolean
+          proof_document_path: string | null
           sort_code_iban: string
+          swift_bic: string | null
           updated_at: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
+          account_currency?: string | null
           account_name: string
           account_number: string
           bank_country: string
@@ -565,10 +611,16 @@ export type Database = {
           exporter_id: string
           id?: string
           is_default?: boolean
+          is_verified?: boolean
+          proof_document_path?: string | null
           sort_code_iban: string
+          swift_bic?: string | null
           updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
+          account_currency?: string | null
           account_name?: string
           account_number?: string
           bank_country?: string
@@ -577,8 +629,13 @@ export type Database = {
           exporter_id?: string
           id?: string
           is_default?: boolean
+          is_verified?: boolean
+          proof_document_path?: string | null
           sort_code_iban?: string
+          swift_bic?: string | null
           updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {
@@ -1306,7 +1363,9 @@ export type Database = {
         | "onboarding_submitted"
         | "onboarding_approved"
         | "onboarding_rejected"
+      repayment_reconciliation_status: "exact" | "short_payment" | "overpayment"
       sanctions_screening_status: "pending_screening" | "clear" | "flagged"
+      settlement_method_type: "dom_account" | "naira_account"
       subscription_tier: "pay_as_you_go" | "veloxis_pro"
     }
     CompositeTypes: {
@@ -1563,7 +1622,13 @@ export const Constants = {
         "onboarding_approved",
         "onboarding_rejected",
       ],
+      repayment_reconciliation_status: [
+        "exact",
+        "short_payment",
+        "overpayment",
+      ],
       sanctions_screening_status: ["pending_screening", "clear", "flagged"],
+      settlement_method_type: ["dom_account", "naira_account"],
       subscription_tier: ["pay_as_you_go", "veloxis_pro"],
     },
   },

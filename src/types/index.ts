@@ -58,6 +58,26 @@ export const BUYER_CREDIT_CHECK_COLORS: Record<BuyerCreditCheckStatus, string> =
   fail: 'bg-destructive/10 text-destructive',
 };
 
+export type SettlementMethod = 'dom_account' | 'naira_account';
+export type RepaymentReconciliationStatus = 'exact' | 'short_payment' | 'overpayment';
+
+export const SETTLEMENT_METHOD_LABELS: Record<SettlementMethod, string> = {
+  dom_account: 'Foreign Currency to Domiciliary Account',
+  naira_account: 'NGN to Naira Account',
+};
+
+export const RECONCILIATION_STATUS_LABELS: Record<RepaymentReconciliationStatus, string> = {
+  exact: 'Exact',
+  short_payment: 'Short Payment',
+  overpayment: 'Overpayment',
+};
+
+export const RECONCILIATION_STATUS_COLORS: Record<RepaymentReconciliationStatus, string> = {
+  exact: 'bg-success/10 text-success',
+  short_payment: 'bg-destructive/10 text-destructive',
+  overpayment: 'bg-warning/10 text-warning',
+};
+
 export type AuditAction =
   | 'deal_created' | 'deal_submitted' | 'document_uploaded' | 'deal_moved_to_under_review'
   | 'document_requested' | 'deal_approved' | 'deal_rejected' | 'ipu_generated' | 'ipu_sent'
