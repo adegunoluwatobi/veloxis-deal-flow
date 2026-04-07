@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import DealStatusBadge from '@/components/DealStatusBadge';
 import DealAuditTrail from '@/components/DealAuditTrail';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle, Send, Loader2, Pencil } from 'lucide-react';
+import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle, Send, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { useConfirm } from '@/components/ConfirmDialog';
 import type { DealStatus } from '@/types';
 import type { FlaggedField } from '@/components/ChangeRequestModal';
 import { CurrencyInput, stripCommas } from '@/components/ui/currency-input';
@@ -17,7 +18,9 @@ import { CurrencyInput, stripCommas } from '@/components/ui/currency-input';
 export default function ExporterDealDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [deal, setDeal] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [pendingCR, setPendingCR] = useState<any>(null);
@@ -106,6 +109,24 @@ export default function ExporterDealDetail() {
     }
   };
 
+  const handleDeleteDraft = async () => {
+    const ok = await confirm({
+      title: 'Delete Draft Deal',
+      description: 'Are you sure you want to delete this draft? This action cannot be undone.',
+      variant: 'warning',
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
+    try {
+      const { error } = await supabase.from('deals').delete().eq('id', id!);
+      if (error) throw error;
+      toast({ title: 'Draft deal deleted' });
+      navigate('/exporter/deals');
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!deal) return <div className="py-20 text-center text-muted-foreground">Deal not found</div>;
 
@@ -187,12 +208,18 @@ export default function ExporterDealDetail() {
         </div>
         <DealStatusBadge status={deal.status} />
         {deal.status === 'draft' && (
-          <Button asChild>
-            <Link to={`/exporter/deals/${deal.id}/edit`}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit Deal
-            </Link>
-          </Button>
+          <>
+            <Button asChild>
+              <Link to={`/exporter/deals/${deal.id}/edit`}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Deal
+              </Link>
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteDraft}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Draft
+            </Button>
+          </>
         )}
       </div>
 
