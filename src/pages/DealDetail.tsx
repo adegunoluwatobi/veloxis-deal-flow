@@ -302,27 +302,9 @@ export default function DealDetail() {
     if (!id || !deal) return;
     setActionLoading(true);
     try {
-      // Recalculate pricing with override percentage
-      const advPct = parseFloat(overrideAdvPct) || 80;
-      const tier = exporter?.subscription_tier ?? 'pay_as_you_go';
-      const { data: pricingData } = await supabase.rpc('calculate_deal_pricing', {
-        p_invoice_value: deal.invoice_value ?? 0,
-        p_advance_percentage: advPct,
-        p_payment_terms_days: deal.payment_terms_days ?? 30,
-        p_subscription_tier: tier as 'pay_as_you_go' | 'veloxis_pro',
-      });
-      const p = pricingData?.[0];
-      if (!p) throw new Error('Pricing calculation failed');
-
       const { error } = await supabase.from('deals').update({
-        status: 'approved',
-        advance_percentage: advPct,
-        advance_amount: p.advance_amount,
-        platform_fee_pct: p.platform_fee_pct,
-        platform_fee_amount: p.platform_fee_amount,
-        discount_fee_pct: p.discount_fee_pct,
-        discount_fee_amount: p.discount_fee_amount,
-        gross_yield: p.gross_expected_yield,
+        status: 'pending_exporter_acceptance' as DealStatus,
+        approved_at: new Date().toISOString(),
       }).eq('id', id);
       if (error) throw error;
 
@@ -331,14 +313,43 @@ export default function DealDetail() {
         p_user_id: user?.id,
         p_user_role: role as any,
         p_action_type: 'deal_approved',
-        p_metadata: { advance_percentage: advPct, ...p },
+        p_metadata: { actor_name: user?.email, next_status: 'pending_exporter_acceptance' },
       });
 
-      toast({ title: 'Deal approved', description: 'Pricing locked.' });
+      toast({ title: 'Deal approved', description: 'Offer sent to exporter for acceptance.' });
       setPricingOverride(false);
       load();
     } catch (err: unknown) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Approval failed', variant: 'destructive' });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleResendOffer = async () => {
+    if (!id || !deal) return;
+    setActionLoading(true);
+    try {
+      const { error } = await supabase.from('deals').update({
+        status: 'pending_exporter_acceptance' as DealStatus,
+        offer_declined_at: null,
+        offer_declined_by: null,
+        offer_decline_reason: null,
+      }).eq('id', id);
+      if (error) throw error;
+
+      await supabase.rpc('insert_audit_log', {
+        p_deal_id: id,
+        p_user_id: user?.id,
+        p_user_role: role as any,
+        p_action_type: 'deal_status_changed' as AuditAction,
+        p_metadata: { actor_name: user?.email, from: 'declined_by_exporter', to: 'pending_exporter_acceptance' },
+      });
+
+      toast({ title: 'Offer re-sent to exporter' });
+      load();
+    } catch (err: unknown) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to re-send offer', variant: 'destructive' });
     } finally {
       setActionLoading(false);
     }
