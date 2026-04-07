@@ -12,13 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Upload, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ExporterDocumentType } from '@/types';
-
-const DOC_TYPE_LABELS: Record<ExporterDocumentType, string> = {
-  cac_certificate: 'CAC Certificate',
-  director_id: 'Director ID',
-  nepc_certificate: 'NEPC Certificate',
-  other: 'Other',
-};
+import { DOC_TYPE_LABELS, buildDocTypeOptions } from '@/lib/docTypeOptions';
 
 export default function ExporterDocuments() {
   const { user } = useAuth();
@@ -55,8 +49,17 @@ export default function ExporterDocuments() {
 
   useEffect(() => { load(); }, [user]);
 
+  const activeDocs = documents.filter((d) => !d.is_superseded);
+  const supersededDocs = documents.filter((d) => d.is_superseded);
+  const docTypeOptions = buildDocTypeOptions(activeDocs);
+  const enabledOptions = docTypeOptions.filter((o) => !o.disabled);
+
   const handleUpload = async () => {
     if (!user || !exporter || !form.file || !form.document_type) return;
+    if (!form.expiry_date) {
+      toast({ title: 'Expiry date required', description: 'Please set an expiry date for this document.', variant: 'destructive' });
+      return;
+    }
     setUploading(true);
     try {
       const file = form.file;
@@ -71,7 +74,7 @@ export default function ExporterDocuments() {
         file_path: filePath,
         file_size_bytes: file.size,
         mime_type: file.type,
-        expiry_date: form.expiry_date || null,
+        expiry_date: form.expiry_date,
         uploaded_by_user_id: user.id,
         uploaded_by_role: 'exporter',
         document_status: 'pending_review',
@@ -100,9 +103,6 @@ export default function ExporterDocuments() {
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading…</div>;
   if (!exporter) return <div className="py-20 text-center"><AlertTriangle className="mx-auto mb-3 h-8 w-8 text-muted-foreground" /><p className="text-muted-foreground">No exporter profile linked.</p></div>;
 
-  const activeDocs = documents.filter((d) => !d.is_superseded);
-  const supersededDocs = documents.filter((d) => d.is_superseded);
-
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -114,33 +114,39 @@ export default function ExporterDocuments() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Upload className="h-4 w-4" /> Upload Document</CardTitle>
-          <CardDescription>Accepted: CAC Certificate, Director ID, NEPC Certificate. All uploads go to Greystar for review.</CardDescription>
+          <CardDescription>Accepted: CAC Certificate, Director ID, NEPC Certificate. All uploads go to your partner for review.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Document Type</Label>
-              <Select value={form.document_type} onValueChange={(v) => setForm({ ...form, document_type: v as ExporterDocumentType })}>
-                <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                <SelectContent>
-                  {(['cac_certificate', 'director_id', 'nepc_certificate'] as ExporterDocumentType[]).map((k) => (
-                    <SelectItem key={k} value={k}>{DOC_TYPE_LABELS[k]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Expiry Date</Label>
-              <Input type="date" value={form.expiry_date} onChange={(e) => setForm({ ...form, expiry_date: e.target.value })} />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>File</Label>
-            <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setForm({ ...form, file: e.target.files?.[0] ?? null })} />
-          </div>
-          <Button onClick={handleUpload} disabled={!form.document_type || !form.file || uploading}>
-            {uploading ? 'Uploading…' : 'Upload'}
-          </Button>
+          {enabledOptions.length === 0 ? (
+            <p className="text-sm text-muted-foreground">All mandatory document types have been uploaded or are pending review.</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Document Type</Label>
+                  <Select value={form.document_type} onValueChange={(v) => setForm({ ...form, document_type: v as ExporterDocumentType })}>
+                    <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                    <SelectContent>
+                      {docTypeOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value} disabled={opt.disabled}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Expiry Date <span className="text-destructive">*</span></Label>
+                  <Input type="date" value={form.expiry_date} onChange={(e) => setForm({ ...form, expiry_date: e.target.value })} required />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>File</Label>
+                <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setForm({ ...form, file: e.target.files?.[0] ?? null })} />
+              </div>
+              <Button onClick={handleUpload} disabled={!form.document_type || !form.file || !form.expiry_date || uploading}>
+                {uploading ? 'Uploading…' : 'Upload'}
+              </Button>
+            </>
+          )}
         </CardContent>
       </Card>
 
