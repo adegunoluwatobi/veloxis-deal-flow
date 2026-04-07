@@ -945,6 +945,16 @@ export default function DealDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Request Docs Modal */}
+      {deal && (
+        <RequestDocsModal
+          open={requestDocsOpen}
+          onOpenChange={setRequestDocsOpen}
+          dealId={deal.id}
+          commodityType={deal.commodity_type}
+          onSent={load}
+        />
+      )}
     </div>
   );
 }
