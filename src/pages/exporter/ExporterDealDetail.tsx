@@ -293,6 +293,90 @@ export default function ExporterDealDetail() {
         )}
       </div>
 
+      {/* Facility Offer Panel — shown when pending exporter acceptance */}
+      {isPendingAcceptance && (
+        <Card className="border-primary">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              Your Facility Offer
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[60%]">Field</TableHead>
+                  <TableHead>Value</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>Invoice Amount</TableCell>
+                  <TableCell className="font-medium">{fmt(deal.invoice_value)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Advance %</TableCell>
+                  <TableCell className="font-medium">{deal.advance_percentage}%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Advance Amount</TableCell>
+                  <TableCell className="font-medium">{fmt(deal.advance_amount)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Platform Fee (one-off)</TableCell>
+                  <TableCell className="font-medium">{fmt(deal.platform_fee_amount)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Discount Fee ({((deal.discount_fee_pct ?? 0) * 100).toFixed(1)}%/month × {deal.payment_terms_days ?? 0} days)</TableCell>
+                  <TableCell className="font-medium">{fmt(deal.discount_fee_amount)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Total Fees</TableCell>
+                  <TableCell className="font-medium">{fmt(deal.gross_yield)}</TableCell>
+                </TableRow>
+                <TableRow className="border-t-2">
+                  <TableCell className="font-semibold">Net Advance to You</TableCell>
+                  <TableCell className="font-bold">{fmt(deal.net_advance_amount)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Payment Terms</TableCell>
+                  <TableCell className="font-medium">{deal.payment_terms_days ?? '—'} days</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Late Penalty Rate</TableCell>
+                  <TableCell className="font-medium">{((deal.demurrage_rate_daily ?? 0.00067) * 100).toFixed(3)}%/day after maturity</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+
+            <div className="flex flex-wrap gap-3 pt-2">
+              <Button
+                onClick={handleAcceptOffer}
+                disabled={submitting}
+                className="gap-2 bg-success hover:bg-success/90"
+              >
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                Accept Offer
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setDeclineOpen(true)}
+                disabled={submitting}
+                className="gap-2 border-destructive text-destructive hover:bg-destructive/5"
+              >
+                <XCircle className="h-4 w-4" />
+                Decline Offer
+              </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground italic">
+              By accepting this offer, you agree to the fee structure above and authorise Veloxis to proceed with the Notice of Assignment and Irrevocable Payment Undertaking process with your buyer.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Change Request Banner */}
       {hasCR && (
         <Card className="border-warning">
