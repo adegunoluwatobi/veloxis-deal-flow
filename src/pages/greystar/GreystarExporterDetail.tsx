@@ -327,7 +327,7 @@ export default function GreystarExporterDetail() {
                     <th className="pb-2 font-medium">Expiry</th>
                     <th className="pb-2 font-medium">Uploaded By</th>
                     <th className="pb-2 font-medium">Status</th>
-                    {isPartner && <th className="pb-2 font-medium">Actions</th>}
+                    <th className="pb-2 font-medium">{isPartner ? 'Actions' : 'View'}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
