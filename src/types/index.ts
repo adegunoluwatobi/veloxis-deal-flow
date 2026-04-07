@@ -7,7 +7,8 @@ export type EntityType = 'limited_company' | 'plc' | 'llp' | 'incorporated_trust
 export type CommodityType = 'solid_minerals' | 'scrap_metal' | 'manufactured_goods' | 'textiles';
 
 export type DealStatus =
-  | 'draft' | 'submitted' | 'under_review' | 'docs_requested' | 'approved'
+  | 'draft' | 'submitted' | 'under_review' | 'docs_requested'
+  | 'ready_for_final_approval' | 'approved'
   | 'rejected' | 'ipu_sent' | 'ipu_expired' | 'ipu_signed_awaiting_funding'
   | 'funded_active' | 'repayment_due' | 'overdue'
   | 'closed_repaid' | 'closed_partial';
@@ -41,6 +42,7 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   submitted: 'Submitted',
   under_review: 'Under Review',
   docs_requested: 'Documents Requested',
+  ready_for_final_approval: 'Ready for Final Approval',
   approved: 'Approved',
   rejected: 'Rejected',
   ipu_sent: 'IPU Sent',
@@ -58,6 +60,7 @@ export const DEAL_STATUS_COLORS: Record<DealStatus, string> = {
   submitted: 'bg-primary/10 text-primary',
   under_review: 'bg-warning/10 text-warning',
   docs_requested: 'bg-warning/10 text-warning',
+  ready_for_final_approval: 'bg-primary/10 text-primary',
   approved: 'bg-success/10 text-success',
   rejected: 'bg-destructive/10 text-destructive',
   ipu_sent: 'bg-primary/10 text-primary',

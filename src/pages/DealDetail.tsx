@@ -93,8 +93,8 @@ const AUDIT_LABELS: Partial<Record<AuditAction, string>> = {
   deal_submitted: 'Submitted for review',
   deal_moved_to_under_review: 'Moved to under review',
   document_requested: 'Documents requested',
-  deal_approved: 'Approved',
-  deal_rejected: 'Rejected',
+  deal_approved: 'Final approval granted',
+  deal_rejected: 'Deal rejected',
   document_uploaded: 'Document uploaded',
   ipu_generated: 'IPU generated',
   ipu_sent: 'IPU sent',
@@ -133,6 +133,7 @@ export default function DealDetail() {
   const [newNote, setNewNote] = useState('');
 
   const isDM = role === 'deal_manager' || role === 'super_admin';
+  const isSuperAdmin = role === 'super_admin';
   const currency = deal?.invoice_currency_v2 ?? 'GBP';
   const sym = CURRENCY_SYMBOLS[currency] ?? '£';
 
@@ -190,6 +191,7 @@ export default function DealDetail() {
 
   const handleMoveToReview = () => updateStatus('under_review');
   const handleRequestDocs = () => updateStatus('docs_requested');
+  const handleSubmitForFinalApproval = () => updateStatus('ready_for_final_approval' as DealStatus);
 
   const handleApprove = async () => {
     if (!id || !deal) return;
@@ -222,7 +224,7 @@ export default function DealDetail() {
       await supabase.rpc('insert_audit_log', {
         p_deal_id: id,
         p_user_id: user?.id,
-        p_user_role: 'deal_manager',
+        p_user_role: role as any,
         p_action_type: 'deal_approved',
         p_metadata: { advance_percentage: advPct, ...p },
       });
@@ -260,7 +262,7 @@ export default function DealDetail() {
       await supabase.rpc('insert_audit_log', {
         p_deal_id: id,
         p_user_id: user.id,
-        p_user_role: 'deal_manager',
+        p_user_role: role as any,
         p_action_type: 'internal_note_added',
         p_metadata: {},
       });
@@ -319,16 +321,46 @@ export default function DealDetail() {
               )}
               {deal.status === 'under_review' && (
                 <>
+                  {/* Deal manager: recommend / escalate only */}
+                  {role === 'deal_manager' && (
+                    <>
+                      <Button size="sm" onClick={handleSubmitForFinalApproval} disabled={actionLoading} className="gap-1">
+                        <Send className="h-4 w-4" /> Submit for Final Approval
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={handleRequestDocs} disabled={actionLoading} className="gap-1">
+                        <FileText className="h-4 w-4" /> Request Docs
+                      </Button>
+                    </>
+                  )}
+                  {/* Super admin: can approve/reject directly from under_review or escalate */}
+                  {isSuperAdmin && (
+                    <>
+                      <Button size="sm" onClick={() => setPricingOverride(true)} disabled={actionLoading} className="gap-1 bg-success hover:bg-success/90">
+                        <CheckCircle2 className="h-4 w-4" /> Approve Deal
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => setRejectOpen(true)} disabled={actionLoading} className="gap-1">
+                        <XCircle className="h-4 w-4" /> Reject Deal
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={handleRequestDocs} disabled={actionLoading} className="gap-1">
+                        <FileText className="h-4 w-4" /> Request Docs
+                      </Button>
+                    </>
+                  )}
+                </>
+              )}
+              {/* Ready for final approval — super_admin only */}
+              {deal.status === ('ready_for_final_approval' as DealStatus) && isSuperAdmin && (
+                <>
                   <Button size="sm" onClick={() => setPricingOverride(true)} disabled={actionLoading} className="gap-1 bg-success hover:bg-success/90">
-                    <CheckCircle2 className="h-4 w-4" /> Approve
+                    <CheckCircle2 className="h-4 w-4" /> Approve Deal
                   </Button>
                   <Button size="sm" variant="destructive" onClick={() => setRejectOpen(true)} disabled={actionLoading} className="gap-1">
-                    <XCircle className="h-4 w-4" /> Reject
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={handleRequestDocs} disabled={actionLoading} className="gap-1">
-                    <FileText className="h-4 w-4" /> Request Docs
+                    <XCircle className="h-4 w-4" /> Reject Deal
                   </Button>
                 </>
+              )}
+              {deal.status === ('ready_for_final_approval' as DealStatus) && role === 'deal_manager' && (
+                <p className="text-sm text-muted-foreground italic">Awaiting final approval from Super Admin.</p>
               )}
               {deal.status === 'docs_requested' && (
                 <Button size="sm" onClick={handleMoveToReview} disabled={actionLoading} className="gap-1">
@@ -447,8 +479,10 @@ export default function DealDetail() {
             <div className="flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-muted-foreground" />
               <CardTitle className="text-base">Pricing</CardTitle>
-              {['approved', 'ipu_sent', 'ipu_signed_awaiting_funding', 'funded_active', 'repayment_due', 'overdue', 'closed_repaid', 'closed_partial'].includes(deal.status) && (
-                <Badge variant="secondary" className="text-xs bg-success/10 text-success">Locked</Badge>
+              {['approved', 'ready_for_final_approval', 'ipu_sent', 'ipu_signed_awaiting_funding', 'funded_active', 'repayment_due', 'overdue', 'closed_repaid', 'closed_partial'].includes(deal.status) && (
+                <Badge variant="secondary" className="text-xs bg-success/10 text-success">
+                  {deal.status === ('ready_for_final_approval' as DealStatus) ? 'Pending Approval' : 'Locked'}
+                </Badge>
               )}
             </div>
           </CardHeader>

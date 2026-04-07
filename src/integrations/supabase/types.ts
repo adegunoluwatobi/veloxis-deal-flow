@@ -822,6 +822,7 @@ export type Database = {
         | "submitted"
         | "under_review"
         | "docs_requested"
+        | "ready_for_final_approval"
         | "approved"
         | "rejected"
         | "ipu_sent"
@@ -1030,6 +1031,7 @@ export const Constants = {
         "submitted",
         "under_review",
         "docs_requested",
+        "ready_for_final_approval",
         "approved",
         "rejected",
         "ipu_sent",
