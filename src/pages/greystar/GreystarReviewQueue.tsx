@@ -111,7 +111,7 @@ export default function GreystarReviewQueue() {
                       <td className="py-3 max-w-[200px] truncate">{doc.file_name}</td>
                       <td className="py-3">
                         <Badge variant="outline" className="text-xs">
-                          {doc.uploaded_by_role === 'greystar_originator' ? 'Greystar' : doc.uploaded_by_role === 'exporter' ? 'Exporter' : 'Token'}
+                          {doc.uploaded_by_role === 'originator_staff' ? 'Greystar' : doc.uploaded_by_role === 'exporter' ? 'Exporter' : 'Token'}
                         </Badge>
                       </td>
                       <td className="py-3 text-muted-foreground">{new Date(doc.uploaded_at).toLocaleDateString()}</td>

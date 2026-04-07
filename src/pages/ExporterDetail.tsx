@@ -403,7 +403,7 @@ export default function ExporterDetail() {
                           {doc.uploaded_by_token_id ? 'via upload link' : 'by originator'}
                         </span>
                       </TableCell>
-                      {role === 'deal_manager' && (
+                      {(role === 'deal_manager' || role === 'super_admin') && (
                         <TableCell className="text-right">
                           {!doc.is_superseded && doc.document_status === 'pending_review' && (
                             <div className="flex justify-end gap-1">
