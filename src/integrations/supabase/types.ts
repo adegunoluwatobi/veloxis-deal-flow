@@ -713,6 +713,9 @@ export type Database = {
         }
         Returns: string
       }
+      is_originator: { Args: { _user_id: string }; Returns: boolean }
+      is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_veloxis_staff: { Args: { _user_id: string }; Returns: boolean }
       validate_status_transition: {
         Args: {
           p_current_status: Database["public"]["Enums"]["deal_status"]
