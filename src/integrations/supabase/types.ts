@@ -317,6 +317,8 @@ export type Database = {
           export_licence_number: string | null
           exporter_id: string
           exporter_receipt_confirmed_at: string | null
+          fee_acceptance_at: string | null
+          fee_acceptance_by: string | null
           funded_at: string | null
           fx_rate_at_funding: number | null
           fx_rate_source: string | null
@@ -376,6 +378,10 @@ export type Database = {
           settlement_method:
             | Database["public"]["Enums"]["settlement_method_type"]
             | null
+          snapshot_advance_rate_pct: number | null
+          snapshot_discount_fee_pct: number | null
+          snapshot_late_penalty_rate_pct: number | null
+          snapshot_platform_fee_pct: number | null
           status: Database["public"]["Enums"]["deal_status"]
           submitted_at: string | null
           updated_at: string
@@ -418,6 +424,8 @@ export type Database = {
           export_licence_number?: string | null
           exporter_id: string
           exporter_receipt_confirmed_at?: string | null
+          fee_acceptance_at?: string | null
+          fee_acceptance_by?: string | null
           funded_at?: string | null
           fx_rate_at_funding?: number | null
           fx_rate_source?: string | null
@@ -477,6 +485,10 @@ export type Database = {
           settlement_method?:
             | Database["public"]["Enums"]["settlement_method_type"]
             | null
+          snapshot_advance_rate_pct?: number | null
+          snapshot_discount_fee_pct?: number | null
+          snapshot_late_penalty_rate_pct?: number | null
+          snapshot_platform_fee_pct?: number | null
           status?: Database["public"]["Enums"]["deal_status"]
           submitted_at?: string | null
           updated_at?: string
@@ -519,6 +531,8 @@ export type Database = {
           export_licence_number?: string | null
           exporter_id?: string
           exporter_receipt_confirmed_at?: string | null
+          fee_acceptance_at?: string | null
+          fee_acceptance_by?: string | null
           funded_at?: string | null
           fx_rate_at_funding?: number | null
           fx_rate_source?: string | null
@@ -578,6 +592,10 @@ export type Database = {
           settlement_method?:
             | Database["public"]["Enums"]["settlement_method_type"]
             | null
+          snapshot_advance_rate_pct?: number | null
+          snapshot_discount_fee_pct?: number | null
+          snapshot_late_penalty_rate_pct?: number | null
+          snapshot_platform_fee_pct?: number | null
           status?: Database["public"]["Enums"]["deal_status"]
           submitted_at?: string | null
           updated_at?: string
@@ -595,6 +613,13 @@ export type Database = {
             columns: ["exporter_id"]
             isOneToOne: false
             referencedRelation: "exporters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_fee_acceptance_by_fkey"
+            columns: ["fee_acceptance_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
@@ -1132,6 +1157,85 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      pricing_config: {
+        Row: {
+          advance_rate_pct: number
+          discount_fee_pct_monthly: number
+          id: string
+          late_penalty_rate_pct_daily: number
+          max_payment_terms_days: number
+          min_payment_terms_days: number
+          platform_fee_pct: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          advance_rate_pct?: number
+          discount_fee_pct_monthly?: number
+          id?: string
+          late_penalty_rate_pct_daily?: number
+          max_payment_terms_days?: number
+          min_payment_terms_days?: number
+          platform_fee_pct?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          advance_rate_pct?: number
+          discount_fee_pct_monthly?: number
+          id?: string
+          late_penalty_rate_pct_daily?: number
+          max_payment_terms_days?: number
+          min_payment_terms_days?: number
+          platform_fee_pct?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_config_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pricing_rate_history: {
+        Row: {
+          changed_by: string
+          created_at: string
+          field_name: string
+          id: string
+          new_value: string
+          old_value: string | null
+        }
+        Insert: {
+          changed_by: string
+          created_at?: string
+          field_name: string
+          id?: string
+          new_value: string
+          old_value?: string | null
+        }
+        Update: {
+          changed_by?: string
+          created_at?: string
+          field_name?: string
+          id?: string
+          new_value?: string
+          old_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_rate_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_config: {
         Row: {
