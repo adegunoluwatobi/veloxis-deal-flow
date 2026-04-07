@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import DealStatusBadge from '@/components/DealStatusBadge';
+import DealAuditTrail from '@/components/DealAuditTrail';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle, CheckCircle2, Send, XCircle, MessageSquare, Loader2 } from 'lucide-react';
 import type { DealStatus } from '@/types';
