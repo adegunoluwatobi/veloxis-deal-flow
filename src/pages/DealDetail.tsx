@@ -1,4 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { validateAndScroll, buildPrerequisiteTooltip, type ValidationRule } from '@/lib/validation';
+import ValidationSummaryBanner from '@/components/ValidationSummaryBanner';
+import type { ValidationFailure } from '@/lib/validation';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
