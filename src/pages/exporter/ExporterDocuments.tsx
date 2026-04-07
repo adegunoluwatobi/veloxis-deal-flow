@@ -216,7 +216,12 @@ export default function ExporterDocuments() {
               {supersededDocs.map((doc) => (
                 <div key={doc.id} className="flex items-center justify-between text-sm text-muted-foreground border-b border-border pb-2">
                   <span>{DOC_TYPE_LABELS[doc.document_type as ExporterDocumentType] ?? doc.document_type} — {doc.file_name}</span>
-                  <Badge variant="outline" className="text-xs">Superseded</Badge>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleDownload(doc.file_path)}>
+                      <Download className="mr-1 h-3 w-3" /> View
+                    </Button>
+                    <Badge variant="outline" className="text-xs">Superseded</Badge>
+                  </div>
                 </div>
               ))}
             </div>
