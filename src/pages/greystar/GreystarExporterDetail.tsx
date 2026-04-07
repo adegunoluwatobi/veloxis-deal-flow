@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Upload, FileText, AlertTriangle, CheckCircle2, XCircle, Clock, Eye } from 'lucide-react';
+import { ArrowLeft, Upload, FileText, AlertTriangle, CheckCircle2, XCircle, Clock, Eye, Download } from 'lucide-react';
 import { KYC_STATUS_LABELS, type KycStatus, type ExporterDocumentType } from '@/types';
 import { cn } from '@/lib/utils';
 import { DOC_TYPE_LABELS, buildDocTypeOptions } from '@/lib/docTypeOptions';
@@ -142,6 +142,15 @@ export default function GreystarExporterDetail() {
     });
     toast({ title: 'Document rejected' });
     load();
+  };
+
+  const handleDownload = async (filePath: string, fileName: string) => {
+    const { data, error } = await supabase.storage.from('veloxis-documents').createSignedUrl(filePath, 60);
+    if (error || !data?.signedUrl) {
+      toast({ title: 'Download failed', description: 'Could not generate download link.', variant: 'destructive' });
+      return;
+    }
+    window.open(data.signedUrl, '_blank');
   };
 
   const handleResendInvite = async () => {
@@ -318,7 +327,7 @@ export default function GreystarExporterDetail() {
                     <th className="pb-2 font-medium">Expiry</th>
                     <th className="pb-2 font-medium">Uploaded By</th>
                     <th className="pb-2 font-medium">Status</th>
-                    {isPartner && <th className="pb-2 font-medium">Actions</th>}
+                    <th className="pb-2 font-medium">{isPartner ? 'Actions' : 'View'}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -339,16 +348,28 @@ export default function GreystarExporterDetail() {
                       </td>
                       {isPartner && (
                         <td className="py-3">
-                          {doc.document_status === 'pending_review' && (
-                            <div className="flex gap-1">
-                              <Button size="sm" variant="ghost" className="h-7 text-xs text-success" onClick={() => handleVerify(doc.id)}>
-                                <CheckCircle2 className="mr-1 h-3 w-3" /> Verify
-                              </Button>
-                              <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive" onClick={() => handleReject(doc.id)}>
-                                <XCircle className="mr-1 h-3 w-3" /> Reject
-                              </Button>
-                            </div>
-                          )}
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleDownload(doc.file_path, doc.file_name)}>
+                              <Download className="mr-1 h-3 w-3" /> View
+                            </Button>
+                            {doc.document_status === 'pending_review' && (
+                              <>
+                                <Button size="sm" variant="ghost" className="h-7 text-xs text-success" onClick={() => handleVerify(doc.id)}>
+                                  <CheckCircle2 className="mr-1 h-3 w-3" /> Verify
+                                </Button>
+                                <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive" onClick={() => handleReject(doc.id)}>
+                                  <XCircle className="mr-1 h-3 w-3" /> Reject
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      )}
+                      {isReadOnly && (
+                        <td className="py-3">
+                          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleDownload(doc.file_path, doc.file_name)}>
+                            <Download className="mr-1 h-3 w-3" /> View
+                          </Button>
                         </td>
                       )}
                     </tr>

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, AlertTriangle } from 'lucide-react';
+import { Upload, AlertTriangle, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ExporterDocumentType } from '@/types';
 import { DOC_TYPE_LABELS, buildDocTypeOptions } from '@/lib/docTypeOptions';
@@ -100,6 +100,15 @@ export default function ExporterDocuments() {
     }
   };
 
+  const handleDownload = async (filePath: string) => {
+    const { data, error } = await supabase.storage.from('veloxis-documents').createSignedUrl(filePath, 60);
+    if (error || !data?.signedUrl) {
+      toast({ title: 'Download failed', description: 'Could not generate download link.', variant: 'destructive' });
+      return;
+    }
+    window.open(data.signedUrl, '_blank');
+  };
+
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading…</div>;
   if (!exporter) return <div className="py-20 text-center"><AlertTriangle className="mx-auto mb-3 h-8 w-8 text-muted-foreground" /><p className="text-muted-foreground">No exporter profile linked.</p></div>;
 
@@ -166,6 +175,7 @@ export default function ExporterDocuments() {
                     <th className="pb-2 font-medium">Expiry</th>
                     <th className="pb-2 font-medium">Status</th>
                     <th className="pb-2 font-medium">Uploaded</th>
+                    <th className="pb-2 font-medium">View</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -184,6 +194,11 @@ export default function ExporterDocuments() {
                         </Badge>
                       </td>
                       <td className="py-3 text-muted-foreground">{new Date(doc.uploaded_at).toLocaleDateString()}</td>
+                      <td className="py-3">
+                        <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleDownload(doc.file_path)}>
+                          <Download className="mr-1 h-3 w-3" /> View
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
