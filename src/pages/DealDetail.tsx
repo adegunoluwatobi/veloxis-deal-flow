@@ -143,6 +143,7 @@ export default function DealDetail() {
   const [rejectReason, setRejectReason] = useState('');
   const [pricingOverride, setPricingOverride] = useState(false);
   const [overrideAdvPct, setOverrideAdvPct] = useState('80');
+  const [requestDocsOpen, setRequestDocsOpen] = useState(false);
 
   // Editable pricing fields
   const [editPlatformFeePct, setEditPlatformFeePct] = useState('0');
