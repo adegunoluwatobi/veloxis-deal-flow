@@ -917,6 +917,10 @@ export type Database = {
         | "overdue"
         | "closed_repaid"
         | "closed_partial"
+        | "changes_requested"
+        | "sent_to_veloxis"
+        | "rejected_by_partner"
+        | "rejected_by_veloxis"
       document_request_status:
         | "pending_upload"
         | "uploaded_pending_review"
@@ -936,7 +940,7 @@ export type Database = {
         | "director_id"
         | "nepc_certificate"
         | "other"
-      invoice_currency: "GBP" | "USD" | "EUR"
+      invoice_currency: "GBP" | "USD" | "EUR" | "NGN"
       kyc_status:
         | "pending_documents"
         | "documents_uploaded"
@@ -1143,6 +1147,10 @@ export const Constants = {
         "overdue",
         "closed_repaid",
         "closed_partial",
+        "changes_requested",
+        "sent_to_veloxis",
+        "rejected_by_partner",
+        "rejected_by_veloxis",
       ],
       document_request_status: [
         "pending_upload",
@@ -1166,7 +1174,7 @@ export const Constants = {
         "nepc_certificate",
         "other",
       ],
-      invoice_currency: ["GBP", "USD", "EUR"],
+      invoice_currency: ["GBP", "USD", "EUR", "NGN"],
       kyc_status: [
         "pending_documents",
         "documents_uploaded",
