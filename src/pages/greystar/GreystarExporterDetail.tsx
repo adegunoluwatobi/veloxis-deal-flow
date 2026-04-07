@@ -9,10 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 import { useToast } from '@/hooks/use-toast';
 import { useConfirm } from '@/components/ConfirmDialog';
-import { ArrowLeft, Upload, FileText, AlertTriangle, CheckCircle2, XCircle, Clock, Eye, Download, Send } from 'lucide-react';
+import { ArrowLeft, Upload, FileText, AlertTriangle, CheckCircle2, XCircle, Clock, Eye, Download } from 'lucide-react';
 import { type KycStatus, type ExporterDocumentType } from '@/types';
 import { cn } from '@/lib/utils';
 import { DOC_TYPE_LABELS, buildDocTypeOptions } from '@/lib/docTypeOptions';
@@ -45,7 +45,7 @@ export default function GreystarExporterDetail() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [resendingInvite, setResendingInvite] = useState(false);
-  const [forwarding, setForwarding] = useState(false);
+  
   const [uploadForm, setUploadForm] = useState({
     document_type: '' as ExporterDocumentType | '',
     expiry_date: '',
@@ -183,55 +183,12 @@ export default function GreystarExporterDetail() {
     }
   };
 
-  const handleForwardToVeloxis = async () => {
-    if (!user || !id || !exporter) return;
-    const confirmed = await confirm({
-      title: 'Forward to Veloxis',
-      description: `You are about to forward ${exporter.company_name} to Veloxis for trade finance processing. This will make the exporter and their documents visible to Veloxis deal managers. Confirm?`,
-      variant: 'info',
-      confirmLabel: 'Forward to Veloxis',
-    });
-    if (!confirmed) return;
-    setForwarding(true);
-    try {
-      const { error } = await supabase.from('exporters').update({
-        forwarded_to_veloxis_at: new Date().toISOString(),
-        forwarded_to_veloxis_by: user.id,
-      } as any).eq('id', id);
-      if (error) throw error;
-      await supabase.rpc('insert_audit_log', {
-        p_exporter_id: id,
-        p_user_id: user.id,
-        p_user_role: (role ?? 'partner_admin') as any,
-        p_action_type: 'exporter_created' as any,
-        p_metadata: { action: 'forwarded_to_veloxis', company_name: exporter.company_name },
-      });
-      toast({ title: 'Forwarded to Veloxis', description: `${exporter.company_name} is now visible in the Veloxis Deal Room.` });
-      load();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to forward';
-      toast({ title: 'Error', description: msg, variant: 'destructive' });
-    } finally {
-      setForwarding(false);
-    }
-  };
 
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading…</div>;
   if (!exporter) return <div className="py-20 text-center text-muted-foreground">Exporter not found.</div>;
 
   const enabledOptions = docTypeOptions.filter((o) => !o.disabled);
   const kycResult = computeKycStatus(activeDocs);
-  const isKycComplete = kycResult.status === 'verified';
-  const isOnboardingApproved = exporter.onboarding_status === 'onboarding_approved';
-  const isAlreadyForwarded = !!exporter.forwarded_to_veloxis_at;
-  const canForward = isPartner && isOnboardingApproved && isKycComplete && !isAlreadyForwarded;
-  const forwardDisabledReason = !isOnboardingApproved
-    ? 'Onboarding must be approved before forwarding'
-    : !isKycComplete
-    ? 'KYC must be complete (all 3 documents verified) before forwarding'
-    : isAlreadyForwarded
-    ? 'Already forwarded to Veloxis'
-    : '';
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -312,28 +269,6 @@ export default function GreystarExporterDetail() {
               <Button variant="outline" size="sm" onClick={handleResendInvite} disabled={resendingInvite}>
                 {resendingInvite ? 'Resending…' : 'Resend Invite'}
               </Button>
-            )}
-            {isPartner && !isAlreadyForwarded && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span>
-                      <Button size="sm" onClick={handleForwardToVeloxis} disabled={!canForward || forwarding} className="gap-1.5">
-                        <Send className="h-3.5 w-3.5" />
-                        {forwarding ? 'Forwarding…' : 'Forward to Veloxis'}
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  {!canForward && forwardDisabledReason && (
-                    <TooltipContent><p>{forwardDisabledReason}</p></TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            {isAlreadyForwarded && (
-              <Badge variant="outline" className="bg-success/10 text-success gap-1">
-                <CheckCircle2 className="h-3 w-3" /> Forwarded
-              </Badge>
             )}
           </div>
         </CardHeader>

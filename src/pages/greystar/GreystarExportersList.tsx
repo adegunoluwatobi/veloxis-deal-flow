@@ -4,8 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, MailCheck, Clock, CheckCircle2, AlertTriangle, XCircle, Send } from 'lucide-react';
+import { Plus, Search, MailCheck, Clock, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ENTITY_TYPE_LABELS, type EntityType, type OnboardingStatus } from '@/types';
 import { cn } from '@/lib/utils';
@@ -54,13 +53,13 @@ function getDisplayStatus(exporter: ExporterRow): DisplayStatus {
   return exporter.onboarding_status;
 }
 
-type FilterTab = 'all' | 'not_forwarded' | 'forwarded';
+type FilterTab = 'all';
 
 export default function GreystarExportersList() {
   const [exporters, setExporters] = useState<ExporterRow[]>([]);
   const [exporterDocs, setExporterDocs] = useState<ExporterDocumentRow[]>([]);
   const [search, setSearch] = useState('');
-  const [tab, setTab] = useState<FilterTab>('all');
+  
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -101,22 +100,9 @@ export default function GreystarExportersList() {
       exporter.company_name.toLowerCase().includes(search.toLowerCase()) ||
       exporter.rc_number.toLowerCase().includes(search.toLowerCase()) ||
       (exporter.contact_email ?? '').toLowerCase().includes(search.toLowerCase());
-    if (!matchesSearch) return false;
-
-    if (tab === 'forwarded') return !!exporter.forwarded_to_veloxis_at;
-    if (tab === 'not_forwarded') {
-      const kyc = computeKycStatus(docsByExporter.get(exporter.id) ?? []);
-      return !exporter.forwarded_to_veloxis_at && kyc.status === 'verified';
-    }
-    return true;
+    return matchesSearch;
   });
 
-  const readyCount = exporters.filter((e) => {
-    const kyc = computeKycStatus(docsByExporter.get(e.id) ?? []);
-    return !e.forwarded_to_veloxis_at && kyc.status === 'verified';
-  }).length;
-
-  const forwardedCount = exporters.filter((e) => !!e.forwarded_to_veloxis_at).length;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -130,13 +116,6 @@ export default function GreystarExportersList() {
         </Button>
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as FilterTab)}>
-        <TabsList>
-          <TabsTrigger value="all">All ({exporters.length})</TabsTrigger>
-          <TabsTrigger value="not_forwarded">Ready to Forward ({readyCount})</TabsTrigger>
-          <TabsTrigger value="forwarded">Forwarded ({forwardedCount})</TabsTrigger>
-        </TabsList>
-      </Tabs>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -174,11 +153,6 @@ export default function GreystarExportersList() {
                     {statusMeta.icon === 'expired' && <XCircle className="h-3 w-3" />}
                     {statusMeta.label}
                   </Badge>
-                  {exporter.forwarded_to_veloxis_at && (
-                    <Badge variant="outline" className="text-xs gap-1 bg-success/10 text-success">
-                      <Send className="h-3 w-3" /> Forwarded
-                    </Badge>
-                  )}
                   <Badge variant="secondary" className={cn('font-medium', kyc.color)}>
                     {kyc.badgeLabel}
                   </Badge>
