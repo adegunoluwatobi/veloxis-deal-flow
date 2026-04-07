@@ -61,8 +61,8 @@ export default function GreystarDeals() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Deals</h1>
-        <p className="text-sm text-muted-foreground">Deals submitted by your exporters</p>
+        <h1 className="text-2xl font-bold text-foreground">Applications</h1>
+        <p className="text-sm text-muted-foreground">Applications submitted by your exporters</p>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
