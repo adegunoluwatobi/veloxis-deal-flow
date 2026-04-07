@@ -11,7 +11,7 @@ import DealStatusBadge from '@/components/DealStatusBadge';
 import { cn } from '@/lib/utils';
 import { Search, ArrowUpDown } from 'lucide-react';
 import {
-  DEAL_STATUS_LABELS, COMMODITY_TYPE_LABELS,
+  DEAL_STATUS_LABELS, COMMODITY_TYPE_LABELS, getDealStatusLabel,
   type DealStatus, type CommodityType,
 } from '@/types';
 
