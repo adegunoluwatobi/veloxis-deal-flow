@@ -641,19 +641,19 @@ export default function DealDetail() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <Label className="text-xs text-muted-foreground">Advance %</Label>
-                    <Input type="number" min="1" max="100" value={editAdvPct} onChange={e => setEditAdvPct(e.target.value)} className="mt-1" />
+                    <Input id="field-advance-pct" type="number" min="1" max="100" value={editAdvPct} onChange={e => setEditAdvPct(e.target.value)} className="mt-1" />
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">Payment Terms (days)</Label>
-                    <Input type="number" min="1" max="365" value={editPaymentTerms} onChange={e => setEditPaymentTerms(e.target.value)} className="mt-1" placeholder="e.g. 30" />
+                    <Input id="field-payment-terms" type="number" min="1" max="365" value={editPaymentTerms} onChange={e => setEditPaymentTerms(e.target.value)} className="mt-1" placeholder="e.g. 30" />
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">Platform Fee % (one-off)</Label>
-                    <Input type="number" min="0" max="100" step="0.1" value={editPlatformFeePct} onChange={e => setEditPlatformFeePct(e.target.value)} className="mt-1" />
+                    <Input id="field-platform-fee" type="number" min="0" max="100" step="0.1" value={editPlatformFeePct} onChange={e => setEditPlatformFeePct(e.target.value)} className="mt-1" />
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">Discount Fee % (per month)</Label>
-                    <Input type="number" min="0" max="100" step="0.1" value={editDiscountFeePct} onChange={e => setEditDiscountFeePct(e.target.value)} className="mt-1" />
+                    <Input id="field-discount-fee" type="number" min="0" max="100" step="0.1" value={editDiscountFeePct} onChange={e => setEditDiscountFeePct(e.target.value)} className="mt-1" />
                   </div>
                 </div>
                 <div className="grid gap-2 text-sm border-t border-border pt-3">
