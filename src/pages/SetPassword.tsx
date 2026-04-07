@@ -223,7 +223,7 @@ export default function SetPassword() {
       if (user) {
         await supabase
           .from('exporters')
-          .update({ onboarding_status: 'password_set' as any })
+          .update({ onboarding_status: 'password_set' as any, invite_accepted_at: new Date().toISOString() } as any)
           .eq('exporter_user_id', user.id);
       }
       
