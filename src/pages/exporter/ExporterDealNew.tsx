@@ -96,7 +96,45 @@ export default function ExporterDealNew() {
           .eq('exporter_id', exp.id)
           .order('is_default', { ascending: false });
         setSavedBankAccounts(banks ?? []);
-        if (banks && banks.length > 0) {
+
+        // If editing an existing draft, load its data
+        if (editDealId) {
+          const { data: deal } = await supabase
+            .from('deals')
+            .select('*')
+            .eq('id', editDealId)
+            .maybeSingle();
+          if (deal && (deal.status === 'draft' || deal.status === 'changes_requested')) {
+            setForm(f => ({
+              ...f,
+              bank_name: deal.bank_name ?? '',
+              bank_account_name: deal.bank_account_name ?? '',
+              bank_account_number: deal.bank_account_number ?? '',
+              bank_sort_code_iban: deal.bank_sort_code_iban ?? '',
+              bank_country: deal.bank_country ?? '',
+              invoice_number: deal.invoice_number ?? '',
+              invoice_date: deal.invoice_date ?? '',
+              invoice_amount: deal.invoice_value ? deal.invoice_value.toLocaleString('en-GB') : '',
+              invoice_currency: deal.invoice_currency_v2 ?? 'GBP',
+              payment_due_date: deal.payment_due_date ?? '',
+              invoice_file: null, // can't restore file, user can re-upload
+              buyer_company_name: deal.buyer_company_name ?? '',
+              buyer_country: deal.buyer_country ?? '',
+              buyer_contact_name: deal.buyer_contact_name ?? '',
+              buyer_contact_email: deal.buyer_contact_email ?? '',
+              buyer_contact_phone: deal.buyer_contact_phone ?? '',
+              goods_description: deal.goods_description ?? '',
+              export_destination: deal.export_destination ?? '',
+              export_licence_number: deal.export_licence_number ?? '',
+              hs_code: deal.hs_code ?? '',
+              incoterms: deal.incoterms ?? '',
+            }));
+            // Mark that we already have an invoice file if one exists
+            if (deal.invoice_file_path) {
+              setExistingInvoicePath(deal.invoice_file_path);
+            }
+          }
+        } else if (banks && banks.length > 0) {
           const def = banks.find((b: any) => b.is_default) || banks[0];
           setForm(f => ({
             ...f,
@@ -107,6 +145,7 @@ export default function ExporterDealNew() {
             bank_country: def.bank_country,
           }));
         }
+
         const { data: licDoc } = await supabase
           .from('exporter_documents')
           .select('id, file_name, document_status')
@@ -118,7 +157,7 @@ export default function ExporterDealNew() {
       }
     };
     load();
-  }, [user]);
+  }, [user, editDealId]);
 
   const updateField = (field: string, value: any) => {
     setForm(f => ({ ...f, [field]: value }));
