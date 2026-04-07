@@ -242,6 +242,7 @@ export default function DealDetail() {
       const { error } = await supabase.from('deals').update({
         advance_percentage: liveAdvPct,
         advance_amount: liveAdvanceAmount,
+        payment_terms_days: livePaymentTerms,
         platform_fee_pct: livePlatformFeePct / 100,
         platform_fee_amount: livePlatformFeeAmount,
         discount_fee_pct: liveDiscountFeePct / 100,
