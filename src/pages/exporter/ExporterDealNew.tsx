@@ -267,15 +267,6 @@ export default function ExporterDealNew() {
         p_metadata: { actor_name: user.email, email: user.email, invoice_number: form.invoice_number },
       });
 
-      // Audit log
-      const actionType = asDraft ? 'deal_created' : 'deal_submitted';
-      await supabase.rpc('insert_audit_log', {
-        p_deal_id: newDeal.id,
-        p_user_id: user.id,
-        p_user_role: 'exporter' as any,
-        p_action_type: actionType as any,
-        p_metadata: { actor_name: user.email, email: user.email, invoice_number: form.invoice_number },
-      });
 
       if (saveBankDetails && savedBankAccounts.length === 0) {
         await supabase.from('exporter_bank_accounts').insert({
