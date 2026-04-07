@@ -14,6 +14,7 @@ import {
   type KycStatus, type EntityType, type ExporterDocumentType, type ExpiryStatus,
 } from '@/types';
 import { cn } from '@/lib/utils';
+import { computeKycStatus } from '@/lib/computeKycStatus';
 import {
   ArrowLeft, Building2, Shield, ShieldCheck, ShieldX, AlertTriangle,
   FileText, Copy, ExternalLink, CheckCircle2, XCircle, Clock, Upload, Download, Eye,
@@ -174,10 +175,11 @@ export default function ExporterDetail() {
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading…</div>;
   if (!exporter) return <div className="py-20 text-center text-muted-foreground">Exporter not found.</div>;
 
-  const KycIcon = KYC_ICONS[exporter.kyc_status];
   const activeDocs = docs.filter(d => !d.is_superseded);
   const supersededDocs = docs.filter(d => d.is_superseded);
   const visibleDocs = showSuperseded ? docs : activeDocs;
+  const kyc = computeKycStatus(activeDocs);
+  const KycIcon = KYC_ICONS[kyc.status === 'expired' ? 'kyc_document_expired' : kyc.status === 'under_review' ? 'under_review' : kyc.status === 'rejected' ? 'rejected' : kyc.status === 'verified' ? 'verified' : 'pending_documents'];
 
   const mandatoryTypes: ExporterDocumentType[] = ['cac_certificate', 'director_id', 'nepc_certificate'];
   const docSummary = mandatoryTypes.map(t => {
@@ -196,28 +198,13 @@ export default function ExporterDetail() {
         <Eye className="h-4 w-4" /> Read-only view. Document verification is managed by the partner organisation.
       </div>
 
-      {/* KYC Status Banner */}
-      <div className={cn(
-        'flex items-center gap-3 rounded-lg border p-4',
-        exporter.kyc_status === 'verified' ? 'border-success/30 bg-success/5' :
-        exporter.kyc_status === 'rejected' || exporter.kyc_status === 'kyc_document_expired' ? 'border-destructive/30 bg-destructive/5' :
-        'border-warning/30 bg-warning/5'
-      )}>
-        <KycIcon className={cn('h-5 w-5', KYC_COLORS[exporter.kyc_status].split(' ')[1])} />
+      {/* KYC Status Banner — derived from documents */}
+      <div className={cn('flex items-center gap-3 rounded-lg border p-4', kyc.borderColor)}>
+        <KycIcon className={cn('h-5 w-5', kyc.color.split(' ')[1])} />
         <div className="flex-1">
-          <p className="text-sm font-medium text-foreground">KYC Status: {KYC_STATUS_LABELS[exporter.kyc_status]}</p>
-          <p className="text-xs text-muted-foreground">
-            {exporter.kyc_status === 'verified' ? 'All mandatory documents verified. This exporter is cleared for deal submission.' :
-             exporter.kyc_status === 'kyc_document_expired' ? 'One or more mandatory documents have expired. Replacement uploads required.' :
-             exporter.kyc_status === 'rejected' ? 'KYC has been rejected.' :
-             'Awaiting document uploads and verification.'}
-          </p>
+          <p className="text-sm font-medium text-foreground">KYC Status: {kyc.label}</p>
+          <p className="text-xs text-muted-foreground">{kyc.description}</p>
         </div>
-        {(role === 'deal_manager' || role === 'super_admin') && exporter.kyc_status !== 'verified' && exporter.kyc_status !== 'rejected' && (
-          <Button size="sm" onClick={handleVerifyExporter} className="gap-1">
-            <ShieldCheck className="h-4 w-4" /> Verify Exporter
-          </Button>
-        )}
       </div>
 
       {/* Company Identity */}
@@ -231,8 +218,8 @@ export default function ExporterDetail() {
               <CardTitle className="text-lg">{exporter.company_name}</CardTitle>
               <CardDescription>RC {exporter.rc_number} · {ENTITY_TYPE_LABELS[exporter.entity_type]}</CardDescription>
             </div>
-            <Badge variant="secondary" className={cn('ml-auto font-medium', KYC_COLORS[exporter.kyc_status])}>
-              {KYC_STATUS_LABELS[exporter.kyc_status]}
+            <Badge variant="secondary" className={cn('ml-auto font-medium', kyc.color)}>
+              {kyc.label}
             </Badge>
           </div>
         </CardHeader>

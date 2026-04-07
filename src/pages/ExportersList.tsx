@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { KYC_STATUS_LABELS, ENTITY_TYPE_LABELS, type KycStatus, type EntityType } from '@/types';
+import { ENTITY_TYPE_LABELS, type KycStatus, type EntityType } from '@/types';
 import { cn } from '@/lib/utils';
+import { computeKycStatus } from '@/lib/computeKycStatus';
 
 interface ExporterRow {
   id: string;
@@ -20,18 +21,19 @@ interface ExporterRow {
   created_at: string;
 }
 
-const KYC_COLORS: Record<KycStatus, string> = {
-  pending_documents: 'bg-muted text-muted-foreground',
-  documents_uploaded: 'bg-primary/10 text-primary',
-  under_review: 'bg-warning/10 text-warning',
-  verified: 'bg-success/10 text-success',
-  kyc_document_expired: 'bg-destructive/10 text-destructive',
-  rejected: 'bg-destructive/10 text-destructive',
-};
+// Docs per exporter for live KYC computation
+interface ExporterDocRow {
+  exporter_id: string;
+  document_type: string;
+  document_status: string;
+  expiry_status: string;
+  is_superseded: boolean;
+}
 
 export default function ExportersList() {
   const { user, role } = useAuth();
   const [exporters, setExporters] = useState<ExporterRow[]>([]);
+  const [exporterDocs, setExporterDocs] = useState<ExporterDocRow[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -44,7 +46,17 @@ export default function ExportersList() {
         query = query.eq('originator_id', user.id);
       }
       const { data } = await query;
+      const ids = (data ?? []).map(e => e.id);
       setExporters((data as ExporterRow[]) ?? []);
+
+      if (ids.length > 0) {
+        const { data: docs } = await supabase
+          .from('exporter_documents')
+          .select('exporter_id, document_type, document_status, expiry_status, is_superseded')
+          .in('exporter_id', ids)
+          .eq('is_superseded', false);
+        setExporterDocs((docs as ExporterDocRow[]) ?? []);
+      }
       setLoading(false);
     };
     load();
@@ -101,9 +113,15 @@ export default function ExportersList() {
                   RC {exp.rc_number} · {ENTITY_TYPE_LABELS[exp.entity_type]} · {exp.director_name}
                 </p>
               </div>
-              <Badge variant="secondary" className={cn('font-medium', KYC_COLORS[exp.kyc_status])}>
-                {KYC_STATUS_LABELS[exp.kyc_status]}
-              </Badge>
+              {(() => {
+                const docs = exporterDocs.filter(d => d.exporter_id === exp.id);
+                const kyc = computeKycStatus(docs);
+                return (
+                  <Badge variant="secondary" className={cn('font-medium', kyc.color)}>
+                    {kyc.label}
+                  </Badge>
+                );
+              })()}
             </Link>
           ))}
         </div>
