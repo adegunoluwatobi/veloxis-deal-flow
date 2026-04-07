@@ -438,6 +438,11 @@ export default function DealDetail() {
         </div>
       )}
 
+      {/* Validation Summary Banner */}
+      {validationFailures.length > 0 && (
+        <ValidationSummaryBanner failures={validationFailures} onDismiss={() => setValidationFailures([])} />
+      )}
+
       {/* Payment Received Banner & Settlement Summary */}
       <SettlementSummaryBanner
         dealId={deal.id}
