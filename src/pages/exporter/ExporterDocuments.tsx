@@ -100,6 +100,15 @@ export default function ExporterDocuments() {
     }
   };
 
+  const handleDownload = async (filePath: string) => {
+    const { data, error } = await supabase.storage.from('veloxis-documents').createSignedUrl(filePath, 60);
+    if (error || !data?.signedUrl) {
+      toast({ title: 'Download failed', description: 'Could not generate download link.', variant: 'destructive' });
+      return;
+    }
+    window.open(data.signedUrl, '_blank');
+  };
+
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading…</div>;
   if (!exporter) return <div className="py-20 text-center"><AlertTriangle className="mx-auto mb-3 h-8 w-8 text-muted-foreground" /><p className="text-muted-foreground">No exporter profile linked.</p></div>;
 
