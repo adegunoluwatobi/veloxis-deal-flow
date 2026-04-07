@@ -315,6 +315,16 @@ export default function DealDetail() {
           </div>
         </div>
       )}
+      {deal.status === ('rejection_pending_approval' as DealStatus) && deal.rejection_reason && (
+        <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/5 p-4">
+          <AlertTriangle className="mt-0.5 h-5 w-5 text-warning shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Rejection Recommended</p>
+            <p className="text-sm text-muted-foreground">{deal.rejection_reason}</p>
+            <p className="text-xs text-muted-foreground mt-1">Pending Super Admin review before finalisation.</p>
+          </div>
+        </div>
+      )}
 
       {/* Deal Manager Actions */}
       {isDM && (
