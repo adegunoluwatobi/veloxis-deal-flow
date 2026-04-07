@@ -45,6 +45,7 @@ export default function GreystarExporterDetail() {
   const [uploadTokenUrl, setUploadTokenUrl] = useState('');
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [resendingInvite, setResendingInvite] = useState(false);
   const [uploadForm, setUploadForm] = useState({
     document_type: '' as ExporterDocumentType | '',
     expiry_date: '',
@@ -158,6 +159,38 @@ export default function GreystarExporterDetail() {
     }
   };
 
+  const handleResendInvite = async () => {
+    if (!id || !exporter?.contact_email) return;
+    setResendingInvite(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('invite-exporter', {
+        body: {
+          email: exporter.contact_email,
+          full_name: exporter.director_name,
+          organisation: exporter.company_name,
+          exporter_id: exporter.id,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({
+        title: data?.reset_email_sent ? 'Setup email sent' : 'Invite resent',
+        description: data?.reset_email_sent
+          ? `A fresh password setup email was sent to ${exporter.contact_email}.`
+          : `A fresh invitation was sent to ${exporter.contact_email}.`,
+      });
+
+      load();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to resend invite';
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
+    } finally {
+      setResendingInvite(false);
+    }
+  };
+
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading…</div>;
   if (!exporter) return <div className="py-20 text-center text-muted-foreground">Exporter not found.</div>;
 
@@ -221,7 +254,17 @@ export default function GreystarExporterDetail() {
 
       {/* Company Identity */}
       <Card>
-        <CardHeader><CardTitle>{exporter.company_name}</CardTitle></CardHeader>
+        <CardHeader className="flex flex-row items-start justify-between gap-4">
+          <div>
+            <CardTitle>{exporter.company_name}</CardTitle>
+            <CardDescription>Review onboarding progress and resend access when the invite is still pending.</CardDescription>
+          </div>
+          {exporter.onboarding_status === 'invited' && exporter.contact_email && (
+            <Button variant="outline" size="sm" onClick={handleResendInvite} disabled={resendingInvite}>
+              {resendingInvite ? 'Resending…' : 'Resend Invite'}
+            </Button>
+          )}
+        </CardHeader>
         <CardContent>
           <dl className="grid grid-cols-2 gap-4 text-sm">
             <div><dt className="text-muted-foreground">RC Number</dt><dd className="font-medium">{exporter.rc_number}</dd></div>

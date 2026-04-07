@@ -19,6 +19,8 @@ export default function SetPassword() {
   const [done, setDone] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [resendEmail, setResendEmail] = useState('');
+  const [resendingInvite, setResendingInvite] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -31,7 +33,39 @@ export default function SetPassword() {
     };
 
     const clearAuthParamsFromUrl = () => {
-      window.history.replaceState({}, document.title, window.location.pathname);
+      const url = new URL(window.location.href);
+      const authSearchKeys = [
+        'code',
+        'token_hash',
+        'type',
+        'error',
+        'error_code',
+        'error_description',
+      ];
+      const authHashKeys = [
+        'access_token',
+        'refresh_token',
+        'expires_at',
+        'expires_in',
+        'token_type',
+        'provider_token',
+        'provider_refresh_token',
+        'type',
+        'error',
+        'error_code',
+        'error_description',
+      ];
+
+      authSearchKeys.forEach((key) => url.searchParams.delete(key));
+
+      const hashParams = new URLSearchParams(url.hash.replace(/^#/, ''));
+      authHashKeys.forEach((key) => hashParams.delete(key));
+
+      const nextSearch = url.searchParams.toString();
+      const nextHash = hashParams.toString();
+      const nextUrl = `${url.pathname}${nextSearch ? `?${nextSearch}` : ''}${nextHash ? `#${nextHash}` : ''}`;
+
+      window.history.replaceState({}, document.title, nextUrl);
     };
 
     const readAuthParam = (
@@ -60,9 +94,14 @@ export default function SetPassword() {
         const otpType = rawType && ['invite', 'recovery', 'magiclink', 'signup', 'email_change'].includes(rawType)
           ? (rawType as EmailOtpType)
           : null;
+        const inviteEmail = readAuthParam(searchParams, hashParams, 'email');
         const accessToken = readAuthParam(searchParams, hashParams, 'access_token');
         const refreshToken = readAuthParam(searchParams, hashParams, 'refresh_token');
         const authError = formatUrlError(readAuthParam(searchParams, hashParams, 'error_description'));
+
+        if (inviteEmail) {
+          setResendEmail(inviteEmail);
+        }
 
         if (authError) {
           updateSessionState(false, authError);
@@ -137,6 +176,29 @@ export default function SetPassword() {
       subscription.unsubscribe();
     };
   }, []);
+
+  const handleResendInvite = async () => {
+    const email = resendEmail.trim();
+    if (!email) {
+      toast({ title: 'Email required', description: 'Enter your invite email to receive a fresh setup link.', variant: 'destructive' });
+      return;
+    }
+
+    setResendingInvite(true);
+    const redirectTo = `${window.location.origin}/set-password?email=${encodeURIComponent(email)}`;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    setResendingInvite(false);
+
+    if (error) {
+      toast({ title: 'Unable to resend invite', description: error.message, variant: 'destructive' });
+      return;
+    }
+
+    toast({
+      title: 'New invite sent',
+      description: 'If the account exists, a fresh setup email is on the way. Open it directly in your browser.',
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -228,6 +290,33 @@ export default function SetPassword() {
                   {loading ? 'Setting Password…' : 'Activate Account'}
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {!sessionReady && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">Need a fresh invite?</CardTitle>
+              <CardDescription>
+                Invite links are single-use. If your mail app or a security scanner opened it first, request a new one below.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="resend-email">Invite Email</Label>
+                <Input
+                  id="resend-email"
+                  type="email"
+                  value={resendEmail}
+                  onChange={(e) => setResendEmail(e.target.value)}
+                  placeholder="exporter@company.ng"
+                  autoComplete="email"
+                />
+              </div>
+              <Button type="button" className="w-full" onClick={handleResendInvite} disabled={resendingInvite || !resendEmail.trim()}>
+                {resendingInvite ? 'Sending…' : 'Send a new invite'}
+              </Button>
             </CardContent>
           </Card>
         )}
