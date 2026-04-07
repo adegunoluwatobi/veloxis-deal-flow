@@ -84,18 +84,34 @@ Deno.serve(async (req) => {
 
     // ── Exporter invite-only flow ──────────────────────────────────────
     if (role === "exporter" && invite_only) {
+      const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/+$/, "") || `https://id-preview--5aecb038-1cd1-4607-baa8-41e86f61384a.lovable.app`;
+      const redirectUrl = `${origin.replace(/\/+$/, "")}/set-password`;
+
       const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
         data: {
           full_name: full_name || "",
           organisation: organisation || "",
           role: "exporter",
         },
-        redirectTo: `${supabaseUrl.replace('.supabase.co', '.lovable.app')}/set-password`,
+        redirectTo: redirectUrl,
       });
 
       if (inviteError) {
         if (inviteError.message?.includes("already been registered") || inviteError.message?.includes("already exists")) {
-          return jsonResponse({ error: "This email is already registered. The user may already have an account." }, 400);
+          // User already exists — find them and return their ID so the caller can link them
+          const { data: { users }, error: listErr } = await adminClient.auth.admin.listUsers();
+          if (listErr) throw listErr;
+          const existing = users.find((u: any) => u.email === email);
+          if (existing) {
+            // Re-send the invite to generate a fresh link
+            await adminClient.auth.admin.inviteUserByEmail(email, {
+              data: { full_name: full_name || "", organisation: organisation || "", role: "exporter" },
+              redirectTo: redirectUrl,
+            }).catch(() => {/* already invited, ignore */});
+
+            return jsonResponse({ success: true, user_id: existing.id, email, already_existed: true, invited: true });
+          }
+          return jsonResponse({ error: "User exists but could not be found" }, 400);
         }
         throw inviteError;
       }
