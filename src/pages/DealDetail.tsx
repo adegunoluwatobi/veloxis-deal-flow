@@ -698,6 +698,19 @@ export default function DealDetail() {
         </Card>
       </div>
 
+      {/* Buyer Compliance — visible to partner admin and Veloxis only, not exporter */}
+      {isDM && (
+        <BuyerComplianceSection
+          dealId={deal.id}
+          buyerCountryOfIncorporation={(deal as any).buyer_country_of_incorporation ?? null}
+          buyerSanctionsStatus={((deal as any).buyer_sanctions_status ?? 'pending_screening') as SanctionsScreeningStatus}
+          buyerCreditCheckStatus={((deal as any).buyer_credit_check_status ?? 'pending') as BuyerCreditCheckStatus}
+          buyerUnderwriterNotes={(deal as any).buyer_underwriter_notes ?? null}
+          isVeloxis={isDM}
+          onReload={load}
+        />
+      )}
+
       {/* Document Vault */}
       <Card>
         <CardHeader className="pb-3">
