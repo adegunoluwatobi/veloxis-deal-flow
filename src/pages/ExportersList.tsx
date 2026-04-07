@@ -113,9 +113,15 @@ export default function ExportersList() {
                   RC {exp.rc_number} · {ENTITY_TYPE_LABELS[exp.entity_type]} · {exp.director_name}
                 </p>
               </div>
-              <Badge variant="secondary" className={cn('font-medium', KYC_COLORS[exp.kyc_status])}>
-                {KYC_STATUS_LABELS[exp.kyc_status]}
-              </Badge>
+              {(() => {
+                const docs = exporterDocs.filter(d => d.exporter_id === exp.id);
+                const kyc = computeKycStatus(docs);
+                return (
+                  <Badge variant="secondary" className={cn('font-medium', kyc.color)}>
+                    {kyc.label}
+                  </Badge>
+                );
+              })()}
             </Link>
           ))}
         </div>
