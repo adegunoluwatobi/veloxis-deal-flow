@@ -45,7 +45,7 @@ export default function GreystarExporterDetail() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [resendingInvite, setResendingInvite] = useState(false);
-  const [forwarding, setForwarding] = useState(false);
+  
   const [uploadForm, setUploadForm] = useState({
     document_type: '' as ExporterDocumentType | '',
     expiry_date: '',
