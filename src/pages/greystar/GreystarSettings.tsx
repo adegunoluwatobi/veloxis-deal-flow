@@ -140,7 +140,7 @@ export default function GreystarSettings() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Team Management</h1>
           <p className="text-sm text-muted-foreground">
-            {orgName ? `Manage staff for ${orgName}` : 'Manage your organisation's staff'}
+            {orgName ? `Manage staff for ${orgName}` : "Manage your organisation\u2019s staff"}
           </p>
         </div>
       </div>
