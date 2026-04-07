@@ -119,6 +119,7 @@ const App = () => (
             <Route path="/exporter" element={<ExporterRoute><ExporterDashboardPage /></ExporterRoute>} />
             <Route path="/exporter/deals" element={<ExporterRoute><ExporterDeals /></ExporterRoute>} />
             <Route path="/exporter/deals/new" element={<ExporterRoute><ExporterDealNew /></ExporterRoute>} />
+            <Route path="/exporter/deals/:id/edit" element={<ExporterRoute><ExporterDealNew /></ExporterRoute>} />
             <Route path="/exporter/deals/:id" element={<ExporterRoute><ExporterDealDetail /></ExporterRoute>} />
             <Route path="/exporter/documents" element={<ExporterRoute><ExporterDocuments /></ExporterRoute>} />
 

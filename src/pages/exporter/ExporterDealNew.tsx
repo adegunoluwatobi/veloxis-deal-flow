@@ -298,7 +298,7 @@ export default function ExporterDealNew() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Submit a Deal</h1>
+          <h1 className="text-2xl font-bold text-foreground">{isEditing ? 'Edit Deal' : 'Submit a Deal'}</h1>
           <p className="text-sm text-muted-foreground">Step {step + 1} of {STEPS.length}: {STEPS[step]}</p>
         </div>
       </div>

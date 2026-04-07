@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import DealStatusBadge from '@/components/DealStatusBadge';
 import DealAuditTrail from '@/components/DealAuditTrail';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle, Send, Loader2 } from 'lucide-react';
+import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle, Send, Loader2, Pencil } from 'lucide-react';
 import type { DealStatus } from '@/types';
 import type { FlaggedField } from '@/components/ChangeRequestModal';
 import { CurrencyInput, stripCommas } from '@/components/ui/currency-input';
