@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { validateAndScroll } from '@/lib/validation';
+import ValidationSummaryBanner from '@/components/ValidationSummaryBanner';
+import type { ValidationFailure } from '@/lib/validation';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -42,6 +45,7 @@ export default function PaymentAdvicePanel({
   const [amountReceived, setAmountReceived] = useState('');
   const [paymentFile, setPaymentFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [paymentValidationFailures, setPaymentValidationFailures] = useState<ValidationFailure[]>([]);
 
   const isSuperAdminOrDM = role === 'super_admin' || role === 'deal_manager';
   const isFunded = ['funded_active', 'repayment_due', 'overdue'].includes(dealStatus);
@@ -70,10 +74,17 @@ export default function PaymentAdvicePanel({
   const residual = received - (advanceAmount ?? 0) - (platformFeeAmount ?? 0) - (discountFeeAmount ?? 0) - latePenalty;
 
   const handleSubmit = async () => {
-    if (!paymentDate || !amountReceived || !paymentFile || !user) {
-      toast({ title: 'All fields required', description: 'Please fill in payment date, amount, and upload payment advice.', variant: 'destructive' });
+    const failures = validateAndScroll([
+      { fieldId: 'field-payment-date', label: 'Payment Date', condition: !!paymentDate },
+      { fieldId: 'field-amount-received', label: 'Amount Received', condition: !!amountReceived && parseFloat(amountReceived) > 0 },
+      { fieldId: 'field-payment-file', label: 'Payment Advice Document', condition: !!paymentFile },
+    ]);
+    if (failures.length > 0) {
+      setPaymentValidationFailures(failures);
       return;
     }
+    if (!user) return;
+    setPaymentValidationFailures([]);
     setSubmitting(true);
     try {
       // Upload payment advice document
@@ -141,14 +152,18 @@ export default function PaymentAdvicePanel({
         <CardDescription>Record payment received from the buyer to initiate deal closure.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {paymentValidationFailures.length > 0 && (
+          <ValidationSummaryBanner failures={paymentValidationFailures} onDismiss={() => setPaymentValidationFailures([])} />
+        )}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">Payment Date</Label>
-            <Input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="h-8" />
+            <Input id="field-payment-date" type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="h-8" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">Amount Received ({invoiceCurrency ?? 'GBP'})</Label>
             <Input
+              id="field-amount-received"
               type="number"
               step="0.01"
               value={amountReceived}
@@ -162,6 +177,7 @@ export default function PaymentAdvicePanel({
         <div className="space-y-1">
           <Label className="text-xs text-muted-foreground">Payment Advice Document (SWIFT advice / bank confirmation)</Label>
           <Input
+            id="field-payment-file"
             type="file"
             accept=".pdf,.jpg,.jpeg,.png"
             onChange={e => setPaymentFile(e.target.files?.[0] ?? null)}

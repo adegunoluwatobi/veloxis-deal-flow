@@ -1,4 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { validateAndScroll, buildPrerequisiteTooltip, type ValidationRule } from '@/lib/validation';
+import ValidationSummaryBanner from '@/components/ValidationSummaryBanner';
+import type { ValidationFailure } from '@/lib/validation';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -154,6 +157,7 @@ export default function DealDetail() {
 
   // Notes
   const [newNote, setNewNote] = useState('');
+  const [validationFailures, setValidationFailures] = useState<ValidationFailure[]>([]);
 
   const isDM = role === 'deal_manager' || role === 'super_admin';
   const isSuperAdmin = role === 'super_admin';
@@ -248,6 +252,17 @@ export default function DealDetail() {
 
   const handleSavePricing = async () => {
     if (!id || !deal) return;
+    const failures = validateAndScroll([
+      { fieldId: 'field-advance-pct', label: 'Advance %', condition: !!editAdvPct && parseFloat(editAdvPct) > 0 },
+      { fieldId: 'field-payment-terms', label: 'Payment Terms (days)', condition: !!editPaymentTerms && parseInt(editPaymentTerms) > 0 },
+      { fieldId: 'field-platform-fee', label: 'Platform Fee %', condition: editPlatformFeePct !== '' },
+      { fieldId: 'field-discount-fee', label: 'Discount Fee %', condition: editDiscountFeePct !== '' },
+    ]);
+    if (failures.length > 0) {
+      setValidationFailures(failures);
+      return;
+    }
+    setValidationFailures([]);
     setPricingSaving(true);
     try {
       const { error } = await supabase.from('deals').update({
@@ -330,20 +345,20 @@ export default function DealDetail() {
   };
 
   const handleRecommendRejection = async () => {
-    if (!rejectReason.trim()) {
-      toast({ title: 'Reason required', description: 'You must provide a reason for rejection.', variant: 'destructive' });
-      return;
-    }
+    const failures = validateAndScroll([
+      { fieldId: 'reject-reason-field', label: 'Rejection reason', condition: !!rejectReason.trim() },
+    ]);
+    if (failures.length > 0) return;
     await updateStatus('rejection_pending_approval' as DealStatus, { rejection_reason: rejectReason.trim() });
     setRejectOpen(false);
     setRejectReason('');
   };
 
   const handleFinalReject = async () => {
-    if (!rejectReason.trim()) {
-      toast({ title: 'Reason required', description: 'You must provide a reason for rejection.', variant: 'destructive' });
-      return;
-    }
+    const failures = validateAndScroll([
+      { fieldId: 'reject-reason-field', label: 'Rejection reason', condition: !!rejectReason.trim() },
+    ]);
+    if (failures.length > 0) return;
     await updateStatus('rejected', { rejection_reason: rejectReason.trim() });
     setRejectOpen(false);
     setRejectReason('');
@@ -376,6 +391,13 @@ export default function DealDetail() {
 
   const activeDocs = docs.filter(d => !d.is_superseded);
 
+  // Approve prerequisites tooltip
+  const approvePrereqs: ValidationRule[] = [
+    { fieldId: 'pricing-card', label: 'Pricing must be saved', condition: !!(deal?.advance_amount && deal?.payment_terms_days) },
+    { fieldId: 'ipu-section', label: 'IPU must be uploaded and verified', condition: !!(deal as any)?.ipu_verified },
+  ];
+  const approveTooltip = buildPrerequisiteTooltip(approvePrereqs);
+  const approveDisabled = actionLoading || approvePrereqs.some(r => !r.condition);
   return (
     <div className="space-y-6 animate-fade-in">
       <Button variant="ghost" size="sm" onClick={() => navigate(backPath)} className="gap-2">
@@ -414,6 +436,11 @@ export default function DealDetail() {
             <p className="text-xs text-muted-foreground mt-1">Pending Super Admin review before finalisation.</p>
           </div>
         </div>
+      )}
+
+      {/* Validation Summary Banner */}
+      {validationFailures.length > 0 && (
+        <ValidationSummaryBanner failures={validationFailures} onDismiss={() => setValidationFailures([])} />
       )}
 
       {/* Payment Received Banner & Settlement Summary */}
@@ -461,7 +488,7 @@ export default function DealDetail() {
                   )}
                   {isSuperAdmin && (
                     <>
-                      <Button size="sm" onClick={() => setPricingOverride(true)} disabled={actionLoading || !(deal as any).ipu_verified} className="gap-1 bg-success hover:bg-success/90" title={!(deal as any).ipu_verified ? 'Upload and verify signed IPU before approving' : undefined}>
+                      <Button size="sm" onClick={() => setPricingOverride(true)} disabled={approveDisabled} className="gap-1 bg-success hover:bg-success/90" title={approveTooltip ?? undefined}>
                         <CheckCircle2 className="h-4 w-4" /> Approve Deal
                       </Button>
                       <Button size="sm" variant="destructive" onClick={() => setRejectOpen(true)} disabled={actionLoading} className="gap-1">
@@ -477,7 +504,7 @@ export default function DealDetail() {
               {/* Ready for final approval — super_admin only */}
               {deal.status === ('ready_for_final_approval' as DealStatus) && isSuperAdmin && (
                 <>
-                  <Button size="sm" onClick={() => setPricingOverride(true)} disabled={actionLoading || !(deal as any).ipu_verified} className="gap-1 bg-success hover:bg-success/90" title={!(deal as any).ipu_verified ? 'Upload and verify signed IPU before approving' : undefined}>
+                  <Button size="sm" onClick={() => setPricingOverride(true)} disabled={approveDisabled} className="gap-1 bg-success hover:bg-success/90" title={approveTooltip ?? undefined}>
                     <CheckCircle2 className="h-4 w-4" /> Approve Deal
                   </Button>
                   <Button size="sm" variant="destructive" onClick={() => setRejectOpen(true)} disabled={actionLoading} className="gap-1">
@@ -637,19 +664,19 @@ export default function DealDetail() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <Label className="text-xs text-muted-foreground">Advance %</Label>
-                    <Input type="number" min="1" max="100" value={editAdvPct} onChange={e => setEditAdvPct(e.target.value)} className="mt-1" />
+                    <Input id="field-advance-pct" type="number" min="1" max="100" value={editAdvPct} onChange={e => setEditAdvPct(e.target.value)} className="mt-1" />
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">Payment Terms (days)</Label>
-                    <Input type="number" min="1" max="365" value={editPaymentTerms} onChange={e => setEditPaymentTerms(e.target.value)} className="mt-1" placeholder="e.g. 30" />
+                    <Input id="field-payment-terms" type="number" min="1" max="365" value={editPaymentTerms} onChange={e => setEditPaymentTerms(e.target.value)} className="mt-1" placeholder="e.g. 30" />
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">Platform Fee % (one-off)</Label>
-                    <Input type="number" min="0" max="100" step="0.1" value={editPlatformFeePct} onChange={e => setEditPlatformFeePct(e.target.value)} className="mt-1" />
+                    <Input id="field-platform-fee" type="number" min="0" max="100" step="0.1" value={editPlatformFeePct} onChange={e => setEditPlatformFeePct(e.target.value)} className="mt-1" />
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">Discount Fee % (per month)</Label>
-                    <Input type="number" min="0" max="100" step="0.1" value={editDiscountFeePct} onChange={e => setEditDiscountFeePct(e.target.value)} className="mt-1" />
+                    <Input id="field-discount-fee" type="number" min="0" max="100" step="0.1" value={editDiscountFeePct} onChange={e => setEditDiscountFeePct(e.target.value)} className="mt-1" />
                   </div>
                 </div>
                 <div className="grid gap-2 text-sm border-t border-border pt-3">
@@ -879,6 +906,7 @@ export default function DealDetail() {
           <div className="space-y-3">
             <Label>Reason for rejection</Label>
             <Textarea
+              id="reject-reason-field"
               placeholder="Explain why this deal is being rejected…"
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}

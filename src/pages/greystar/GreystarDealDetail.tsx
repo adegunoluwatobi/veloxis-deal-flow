@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { validateAndScroll, buildPrerequisiteTooltip } from '@/lib/validation';
+import ValidationSummaryBanner from '@/components/ValidationSummaryBanner';
+import type { ValidationFailure } from '@/lib/validation';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,6 +30,7 @@ export default function GreystarDealDetail() {
   const [rejectReason, setRejectReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [pendingCR, setPendingCR] = useState<any>(null);
+  const [validationFailures, setValidationFailures] = useState<ValidationFailure[]>([]);
 
   const loadDeal = async () => {
     if (!id) return;
@@ -126,6 +130,10 @@ export default function GreystarDealDetail() {
   };
 
   const handleReject = async () => {
+    const failures = validateAndScroll([
+      { fieldId: 'partner-reject-reason', label: 'Rejection reason', condition: !!rejectReason.trim() },
+    ]);
+    if (failures.length > 0) return;
     setSubmitting(true);
     try {
       await supabase.from('deals').update({
@@ -154,6 +162,19 @@ export default function GreystarDealDetail() {
   };
 
   const handleSubmitToVeloxis = async () => {
+    // Validate required fields before submission
+    const rules = [
+      { fieldId: 'field-buyer-company', label: 'Buyer Company Name', condition: !!deal?.buyer_company_name },
+      { fieldId: 'field-buyer-country', label: 'Buyer Country', condition: !!deal?.buyer_country },
+      { fieldId: 'field-invoice-number', label: 'Invoice Number', condition: !!deal?.invoice_number },
+      { fieldId: 'field-invoice-value', label: 'Invoice Value', condition: !!(deal?.invoice_value && deal.invoice_value > 0) },
+    ];
+    const failures = validateAndScroll(rules);
+    if (failures.length > 0) {
+      setValidationFailures(failures);
+      return;
+    }
+    setValidationFailures([]);
     setSubmitting(true);
     try {
       await supabase.from('deals').update({
@@ -197,6 +218,16 @@ export default function GreystarDealDetail() {
 
   const canSubmitToVeloxis = deal.status === 'submitted' && deal.bank_name_match !== false;
 
+  // Submit to Veloxis prerequisites tooltip
+  const submitPrereqs = [
+    { fieldId: 'field-buyer-company', label: 'Buyer company name required', condition: !!deal?.buyer_company_name },
+    { fieldId: 'field-buyer-country', label: 'Buyer country required', condition: !!deal?.buyer_country },
+    { fieldId: 'field-invoice-number', label: 'Invoice number required', condition: !!deal?.invoice_number },
+    { fieldId: 'field-invoice-value', label: 'Invoice value required', condition: !!(deal?.invoice_value && deal.invoice_value > 0) },
+    { fieldId: 'field-bank-match', label: 'Bank name must match company name', condition: deal?.bank_name_match !== false },
+  ];
+  const submitTooltip = canSubmitToVeloxis ? buildPrerequisiteTooltip(submitPrereqs) : 'Application must be in Submitted status';
+
   // Show pending CR info
   const crFields: FlaggedField[] = pendingCR?.fields_flagged ?? [];
 
@@ -212,6 +243,10 @@ export default function GreystarDealDetail() {
         </div>
         <DealStatusBadge status={deal.status} portal="partner" />
       </div>
+      {/* Validation Summary Banner */}
+      {validationFailures.length > 0 && (
+        <ValidationSummaryBanner failures={validationFailures} onDismiss={() => setValidationFailures([])} />
+      )}
 
       {/* Actions */}
       {(deal.status === 'submitted' || deal.status === 'changes_requested') && (
@@ -229,7 +264,7 @@ export default function GreystarDealDetail() {
               <XCircle className="mr-2 h-4 w-4" />Reject Application
             </Button>
             {canSubmitToVeloxis && (
-              <Button onClick={handleSubmitToVeloxis} disabled={submitting}>
+              <Button onClick={handleSubmitToVeloxis} disabled={submitting || !canSubmitToVeloxis} title={submitTooltip ?? undefined}>
                 <Send className="mr-2 h-4 w-4" />Submit to Underwriter
               </Button>
             )}
@@ -353,7 +388,7 @@ export default function GreystarDealDetail() {
           </DialogHeader>
           <div className="space-y-2">
             <Label>Rejection reason *</Label>
-            <Textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Reason for rejection..." rows={4} />
+            <Textarea id="partner-reject-reason" value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Reason for rejection..." rows={4} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRejectOpen(false)}>Cancel</Button>
