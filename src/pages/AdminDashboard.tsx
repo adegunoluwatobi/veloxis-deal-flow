@@ -26,22 +26,16 @@ interface DealRow {
 interface ExporterRow {
   id: string;
   company_name: string;
-  kyc_status: KycStatus;
 }
 
-interface SystemConfig {
-  key: string;
-  value: string;
+interface ExporterDocRow extends KycDocumentLike {
+  exporter_id: string;
+  is_superseded: boolean;
 }
 
-const KYC_COLORS: Record<KycStatus, string> = {
-  pending_documents: 'bg-muted text-muted-foreground',
-  documents_uploaded: 'bg-primary/10 text-primary',
-  under_review: 'bg-warning/10 text-warning',
-  verified: 'bg-success/10 text-success',
-  kyc_document_expired: 'bg-destructive/10 text-destructive',
-  rejected: 'bg-destructive/10 text-destructive',
-};
+interface ExporterWithKyc extends ExporterRow {
+  kyc: ReturnType<typeof computeKycStatus>;
+}
 
 export default function AdminDashboard() {
   const [deals, setDeals] = useState<DealRow[]>([]);
