@@ -102,3 +102,14 @@
     background: linear-gradient(135deg, hsl(40 70% 50%), hsl(40 80% 55%));
   }
 }
+
+/* Validation error highlight animation */
+@keyframes validation-pulse {
+  0%, 100% { border-color: hsl(var(--destructive)); box-shadow: 0 0 0 0 hsl(var(--destructive) / 0.3); }
+  50% { border-color: hsl(var(--destructive)); box-shadow: 0 0 0 4px hsl(var(--destructive) / 0.15); }
+}
+
+.validation-error-highlight {
+  border-color: hsl(var(--destructive)) !important;
+  animation: validation-pulse 1s ease-in-out 3;
+}
