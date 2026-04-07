@@ -202,7 +202,7 @@ export default function GreystarDealDetail() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setActionDialog(null)}>Cancel</Button>
-            <Button disabled={!actionNote.trim() || submitting} onClick={() => updateStatus('changes_requested' as DealStatus, { partner_notes: actionNote })}>
+            <Button disabled={!actionNote.trim() || submitting} onClick={() => updateStatus('changes_requested' as DealStatus, { partner_notes: actionNote }, 'deal_changes_requested')}>
               {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Send Request
             </Button>
           </DialogFooter>
