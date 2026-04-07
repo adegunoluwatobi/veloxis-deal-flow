@@ -21,6 +21,10 @@ function getSiteUrl(req: Request) {
   return `https://id-preview--5aecb038-1cd1-4607-baa8-41e86f61384a.lovable.app`;
 }
 
+function isExistingUserError(message?: string) {
+  return !!message && (message.includes("already been registered") || message.includes("already exists"));
+}
+
 function jsonResponse(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -116,19 +120,13 @@ Deno.serve(async (req) => {
       });
 
       if (inviteError) {
-        if (inviteError.message?.includes("already been registered") || inviteError.message?.includes("already exists")) {
+        if (isExistingUserError(inviteError.message)) {
           // User already exists — find them and return their ID so the caller can link them
           const { data: { users }, error: listErr } = await adminClient.auth.admin.listUsers();
           if (listErr) throw listErr;
           const existing = users.find((u: any) => u.email === email);
           if (existing) {
-            const { error: resetError } = await publicClient.auth.resetPasswordForEmail(email, {
-              redirectTo: redirectUrl,
-            });
-
-            if (resetError) throw resetError;
-
-            return jsonResponse({ success: true, user_id: existing.id, email, already_existed: true, invited: false, reset_email_sent: true });
+            return jsonResponse({ error: "This email already belongs to an existing account. Please create exporters from the exporter flow so they receive a proper invitation." }, 409);
           }
           return jsonResponse({ error: "User exists but could not be found" }, 400);
         }
