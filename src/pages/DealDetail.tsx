@@ -138,6 +138,7 @@ export default function DealDetail() {
   const [editPlatformFeePct, setEditPlatformFeePct] = useState('0');
   const [editDiscountFeePct, setEditDiscountFeePct] = useState('0');
   const [editAdvPct, setEditAdvPct] = useState('80');
+  const [editPaymentTerms, setEditPaymentTerms] = useState('');
   const [pricingSaving, setPricingSaving] = useState(false);
 
   // Notes
