@@ -7,7 +7,8 @@ export type EntityType = 'limited_company' | 'plc' | 'llp' | 'incorporated_trust
 export type CommodityType = 'solid_minerals' | 'scrap_metal' | 'manufactured_goods' | 'textiles';
 
 export type DealStatus =
-  | 'draft' | 'submitted' | 'under_review' | 'docs_requested' | 'approved'
+  | 'draft' | 'submitted' | 'under_review' | 'docs_requested'
+  | 'ready_for_final_approval' | 'approved'
   | 'rejected' | 'ipu_sent' | 'ipu_expired' | 'ipu_signed_awaiting_funding'
   | 'funded_active' | 'repayment_due' | 'overdue'
   | 'closed_repaid' | 'closed_partial';
