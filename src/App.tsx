@@ -43,6 +43,7 @@ const App = () => (
             <Route path="/exporters/:id" element={<AuthenticatedLayout><ExporterDetail /></AuthenticatedLayout>} />
             <Route path="/deals" element={<AuthenticatedLayout><DealsList /></AuthenticatedLayout>} />
             <Route path="/deals/new" element={<AuthenticatedLayout><DealNew /></AuthenticatedLayout>} />
+            <Route path="/deals/:id" element={<AuthenticatedLayout><DealDetail /></AuthenticatedLayout>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
