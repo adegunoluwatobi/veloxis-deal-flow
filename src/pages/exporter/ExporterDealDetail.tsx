@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import DealStatusBadge from '@/components/DealStatusBadge';
 import DealAuditTrail from '@/components/DealAuditTrail';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle, Send, Loader2 } from 'lucide-react';
+import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle, Send, Loader2, Pencil } from 'lucide-react';
 import type { DealStatus } from '@/types';
 import type { FlaggedField } from '@/components/ChangeRequestModal';
 import { CurrencyInput, stripCommas } from '@/components/ui/currency-input';
@@ -186,6 +186,14 @@ export default function ExporterDealDetail() {
           <p className="text-sm text-muted-foreground">Deal Application</p>
         </div>
         <DealStatusBadge status={deal.status} />
+        {deal.status === 'draft' && (
+          <Button asChild>
+            <Link to={`/exporter/deals/${deal.id}/edit`}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit Deal
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Change Request Banner */}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { sanitiseFilename } from '@/lib/sanitiseFilename';
@@ -44,6 +44,7 @@ interface ExportLicenceDoc {
 
 export default function ExporterDealNew() {
   const { user } = useAuth();
+  const { id: editDealId } = useParams<{ id?: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [step, setStep] = useState(0);
@@ -53,6 +54,8 @@ export default function ExporterDealNew() {
   const [savedBankAccounts, setSavedBankAccounts] = useState<any[]>([]);
   const [saveBankDetails, setSaveBankDetails] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [existingInvoicePath, setExistingInvoicePath] = useState<string | null>(null);
+  const isEditing = !!editDealId;
 
   const [form, setForm] = useState({
     bank_name: '',
@@ -94,7 +97,45 @@ export default function ExporterDealNew() {
           .eq('exporter_id', exp.id)
           .order('is_default', { ascending: false });
         setSavedBankAccounts(banks ?? []);
-        if (banks && banks.length > 0) {
+
+        // If editing an existing draft, load its data
+        if (editDealId) {
+          const { data: deal } = await supabase
+            .from('deals')
+            .select('*')
+            .eq('id', editDealId)
+            .maybeSingle();
+          if (deal && (deal.status === 'draft' || deal.status === 'changes_requested')) {
+            setForm(f => ({
+              ...f,
+              bank_name: deal.bank_name ?? '',
+              bank_account_name: deal.bank_account_name ?? '',
+              bank_account_number: deal.bank_account_number ?? '',
+              bank_sort_code_iban: deal.bank_sort_code_iban ?? '',
+              bank_country: deal.bank_country ?? '',
+              invoice_number: deal.invoice_number ?? '',
+              invoice_date: deal.invoice_date ?? '',
+              invoice_amount: deal.invoice_value ? deal.invoice_value.toLocaleString('en-GB') : '',
+              invoice_currency: deal.invoice_currency_v2 ?? 'GBP',
+              payment_due_date: deal.payment_due_date ?? '',
+              invoice_file: null, // can't restore file, user can re-upload
+              buyer_company_name: deal.buyer_company_name ?? '',
+              buyer_country: deal.buyer_country ?? '',
+              buyer_contact_name: deal.buyer_contact_name ?? '',
+              buyer_contact_email: deal.buyer_contact_email ?? '',
+              buyer_contact_phone: deal.buyer_contact_phone ?? '',
+              goods_description: deal.goods_description ?? '',
+              export_destination: deal.export_destination ?? '',
+              export_licence_number: deal.export_licence_number ?? '',
+              hs_code: deal.hs_code ?? '',
+              incoterms: deal.incoterms ?? '',
+            }));
+            // Mark that we already have an invoice file if one exists
+            if (deal.invoice_file_path) {
+              setExistingInvoicePath(deal.invoice_file_path);
+            }
+          }
+        } else if (banks && banks.length > 0) {
           const def = banks.find((b: any) => b.is_default) || banks[0];
           setForm(f => ({
             ...f,
@@ -105,6 +146,7 @@ export default function ExporterDealNew() {
             bank_country: def.bank_country,
           }));
         }
+
         const { data: licDoc } = await supabase
           .from('exporter_documents')
           .select('id, file_name, document_status')
@@ -116,7 +158,7 @@ export default function ExporterDealNew() {
       }
     };
     load();
-  }, [user]);
+  }, [user, editDealId]);
 
   const updateField = (field: string, value: any) => {
     setForm(f => ({ ...f, [field]: value }));
@@ -135,7 +177,7 @@ export default function ExporterDealNew() {
   const canProceed = (s: number) => {
     switch (s) {
       case 0: return form.bank_name && form.bank_account_name && form.bank_account_number && form.bank_sort_code_iban && form.bank_country;
-      case 1: return form.invoice_number && form.invoice_date && form.invoice_amount && form.invoice_currency && form.payment_due_date && form.invoice_file;
+      case 1: return form.invoice_number && form.invoice_date && form.invoice_amount && form.invoice_currency && form.payment_due_date && (form.invoice_file || existingInvoicePath);
       case 2: return form.buyer_company_name && form.buyer_country && form.buyer_contact_name && form.buyer_contact_email && isValidEmail(form.buyer_contact_email) && form.buyer_contact_phone;
       case 3: return form.goods_description && form.export_destination && form.export_licence_number && form.hs_code && form.incoterms;
       default: return true;
@@ -152,7 +194,7 @@ export default function ExporterDealNew() {
     }
     setSaving(true);
     try {
-      let invoiceFilePath: string | null = null;
+      let invoiceFilePath: string | null = existingInvoicePath;
       if (form.invoice_file) {
         const safeName = sanitiseFilename(form.invoice_file.name);
         const path = `deals/${exporter.id}/${Date.now()}_${safeName}`;
@@ -202,18 +244,29 @@ export default function ExporterDealNew() {
         dealData.submitted_at = new Date().toISOString();
       }
 
-      const { data: newDeal, error } = await supabase.from('deals').insert(dealData).select('id').single();
-      if (error) throw error;
+      let dealId: string;
+      if (isEditing) {
+        const { error } = await supabase.from('deals').update(dealData as any).eq('id', editDealId!);
+        if (error) throw error;
+        dealId = editDealId!;
+      } else {
+        const { data: newDeal, error } = await supabase.from('deals').insert(dealData).select('id').single();
+        if (error) throw error;
+        dealId = newDeal.id;
+      }
 
       // Audit log
-      const actionType = asDraft ? 'deal_created' : 'deal_submitted';
+      const actionType = isEditing
+        ? (asDraft ? 'deal_field_edited' : 'deal_submitted')
+        : (asDraft ? 'deal_created' : 'deal_submitted');
       await supabase.rpc('insert_audit_log', {
-        p_deal_id: newDeal.id,
+        p_deal_id: dealId,
         p_user_id: user.id,
         p_user_role: 'exporter' as any,
         p_action_type: actionType as any,
         p_metadata: { actor_name: user.email, email: user.email, invoice_number: form.invoice_number },
       });
+
 
       if (saveBankDetails && savedBankAccounts.length === 0) {
         await supabase.from('exporter_bank_accounts').insert({
@@ -245,7 +298,7 @@ export default function ExporterDealNew() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Submit a Deal</h1>
+          <h1 className="text-2xl font-bold text-foreground">{isEditing ? 'Edit Deal' : 'Submit a Deal'}</h1>
           <p className="text-sm text-muted-foreground">Step {step + 1} of {STEPS.length}: {STEPS[step]}</p>
         </div>
       </div>
