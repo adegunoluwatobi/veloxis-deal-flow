@@ -22,6 +22,9 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import AdminDeals from "@/pages/AdminDeals";
 import SMEUpload from "@/pages/SMEUpload";
 import SettingsPage from "@/pages/SettingsPage";
+import CapitalPool from "@/pages/CapitalPool";
+import PartnersPage from "@/pages/PartnersPage";
+import PartnerDetail from "@/pages/PartnerDetail";
 import NotFound from "@/pages/NotFound";
 
 // Greystar pages
