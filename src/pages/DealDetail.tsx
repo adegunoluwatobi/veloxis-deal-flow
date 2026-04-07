@@ -641,22 +641,35 @@ export default function DealDetail() {
       <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Deal</DialogTitle>
-            <DialogDescription>Provide a mandatory reason for rejecting this deal. This will be visible to the originator.</DialogDescription>
+            <DialogTitle>
+              {role === 'deal_manager' ? 'Recommend Rejection' : 
+               deal?.status === ('rejection_pending_approval' as DealStatus) ? 'Confirm Rejection' : 'Reject Deal'}
+            </DialogTitle>
+            <DialogDescription>
+              {role === 'deal_manager'
+                ? 'Provide a mandatory reason for recommending rejection. This will be reviewed by Super Admin before being sent to the originator.'
+                : 'Provide a mandatory reason for rejecting this deal. This will be visible to the originator.'}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <Label>Rejection Reason</Label>
+            <Label>Reason for rejection</Label>
             <Textarea
               placeholder="Explain why this deal is being rejected…"
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               rows={3}
             />
+            {deal?.rejection_reason && deal.status === ('rejection_pending_approval' as DealStatus) && isSuperAdmin && (
+              <div className="rounded-lg border border-border bg-muted/30 p-3">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Deal Manager's recommendation:</p>
+                <p className="text-sm text-foreground">{deal.rejection_reason}</p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRejectOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleReject} disabled={!rejectReason.trim() || actionLoading}>
-              {actionLoading ? 'Rejecting…' : 'Reject Deal'}
+            <Button variant="destructive" onClick={role === 'deal_manager' ? handleRecommendRejection : handleFinalReject} disabled={!rejectReason.trim() || actionLoading}>
+              {actionLoading ? 'Processing…' : role === 'deal_manager' ? 'Recommend Rejection' : 'Reject Deal'}
             </Button>
           </DialogFooter>
         </DialogContent>
