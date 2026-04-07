@@ -345,20 +345,20 @@ export default function DealDetail() {
   };
 
   const handleRecommendRejection = async () => {
-    if (!rejectReason.trim()) {
-      toast({ title: 'Reason required', description: 'You must provide a reason for rejection.', variant: 'destructive' });
-      return;
-    }
+    const failures = validateAndScroll([
+      { fieldId: 'reject-reason-field', label: 'Rejection reason', condition: !!rejectReason.trim() },
+    ]);
+    if (failures.length > 0) return;
     await updateStatus('rejection_pending_approval' as DealStatus, { rejection_reason: rejectReason.trim() });
     setRejectOpen(false);
     setRejectReason('');
   };
 
   const handleFinalReject = async () => {
-    if (!rejectReason.trim()) {
-      toast({ title: 'Reason required', description: 'You must provide a reason for rejection.', variant: 'destructive' });
-      return;
-    }
+    const failures = validateAndScroll([
+      { fieldId: 'reject-reason-field', label: 'Rejection reason', condition: !!rejectReason.trim() },
+    ]);
+    if (failures.length > 0) return;
     await updateStatus('rejected', { rejection_reason: rejectReason.trim() });
     setRejectOpen(false);
     setRejectReason('');
