@@ -30,6 +30,7 @@ import GreystarExportersList from "@/pages/greystar/GreystarExportersList";
 import GreystarExporterNew from "@/pages/greystar/GreystarExporterNew";
 import GreystarExporterDetail from "@/pages/greystar/GreystarExporterDetail";
 import GreystarReviewQueue from "@/pages/greystar/GreystarReviewQueue";
+import GreystarSettings from "@/pages/greystar/GreystarSettings";
 
 // Exporter portal pages
 import ExporterDashboardPage from "@/pages/exporter/ExporterDashboard";
