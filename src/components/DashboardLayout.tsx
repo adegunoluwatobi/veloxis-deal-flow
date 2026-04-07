@@ -12,7 +12,7 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ElementType;
-  roles: ('originator' | 'deal_manager')[];
+  roles: string[];
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -32,8 +32,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const filteredNav = NAV_ITEMS.filter((item) => role && item.roles.includes(role));
-  const filteredAdmin = ADMIN_NAV.filter((item) => role && item.roles.includes(role));
+  const filteredNav = NAV_ITEMS.filter((item) => role && item.roles.includes(role as string));
+  const filteredAdmin = ADMIN_NAV.filter((item) => role && item.roles.includes(role as string));
 
   const handleSignOut = async () => {
     await signOut();

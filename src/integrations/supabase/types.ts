@@ -285,6 +285,7 @@ export type Database = {
           is_superseded: boolean
           mime_type: string | null
           uploaded_at: string
+          uploaded_by_role: string | null
           uploaded_by_token_id: string | null
           uploaded_by_user_id: string | null
           verified_at: string | null
@@ -303,6 +304,7 @@ export type Database = {
           is_superseded?: boolean
           mime_type?: string | null
           uploaded_at?: string
+          uploaded_by_role?: string | null
           uploaded_by_token_id?: string | null
           uploaded_by_user_id?: string | null
           verified_at?: string | null
@@ -321,6 +323,7 @@ export type Database = {
           is_superseded?: boolean
           mime_type?: string | null
           uploaded_at?: string
+          uploaded_by_role?: string | null
           uploaded_by_token_id?: string | null
           uploaded_by_user_id?: string | null
           verified_at?: string | null
@@ -408,10 +411,14 @@ export type Database = {
       exporters: {
         Row: {
           company_name: string
+          contact_email: string | null
           country: string
           created_at: string
           director_name: string
           entity_type: Database["public"]["Enums"]["entity_type"]
+          exporter_user_id: string | null
+          forwarded_to_veloxis_at: string | null
+          forwarded_to_veloxis_by: string | null
           id: string
           is_active: boolean
           kyc_status: Database["public"]["Enums"]["kyc_status"]
@@ -424,10 +431,14 @@ export type Database = {
         }
         Insert: {
           company_name: string
+          contact_email?: string | null
           country?: string
           created_at?: string
           director_name: string
           entity_type: Database["public"]["Enums"]["entity_type"]
+          exporter_user_id?: string | null
+          forwarded_to_veloxis_at?: string | null
+          forwarded_to_veloxis_by?: string | null
           id?: string
           is_active?: boolean
           kyc_status?: Database["public"]["Enums"]["kyc_status"]
@@ -440,10 +451,14 @@ export type Database = {
         }
         Update: {
           company_name?: string
+          contact_email?: string | null
           country?: string
           created_at?: string
           director_name?: string
           entity_type?: Database["public"]["Enums"]["entity_type"]
+          exporter_user_id?: string | null
+          forwarded_to_veloxis_at?: string | null
+          forwarded_to_veloxis_by?: string | null
           id?: string
           is_active?: boolean
           kyc_status?: Database["public"]["Enums"]["kyc_status"]
@@ -717,7 +732,11 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "originator" | "deal_manager"
+      app_role:
+        | "originator"
+        | "deal_manager"
+        | "greystar_originator"
+        | "exporter"
       audit_action:
         | "deal_created"
         | "deal_submitted"
@@ -915,7 +934,12 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["originator", "deal_manager"],
+      app_role: [
+        "originator",
+        "deal_manager",
+        "greystar_originator",
+        "exporter",
+      ],
       audit_action: [
         "deal_created",
         "deal_submitted",
