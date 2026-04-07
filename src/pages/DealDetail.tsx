@@ -449,6 +449,44 @@ export default function DealDetail() {
         </div>
       )}
 
+      {/* Exporter accepted offer banner */}
+      {deal.status === 'approved' && (deal as any).offer_accepted_at && (
+        <div className="flex items-start gap-3 rounded-lg border border-success/30 bg-success/5 p-4">
+          <CheckCircle2 className="mt-0.5 h-5 w-5 text-success shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Exporter Accepted Offer</p>
+            <p className="text-sm text-muted-foreground">
+              Accepted on {new Date((deal as any).offer_accepted_at).toLocaleDateString('en-GB')} at {new Date((deal as any).offer_accepted_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}. Proceed with sending the IPU to the buyer.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Exporter declined offer banner */}
+      {deal.status === ('declined_by_exporter' as DealStatus) && (
+        <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+          <XCircle className="mt-0.5 h-5 w-5 text-destructive shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Exporter Declined Offer</p>
+            {(deal as any).offer_decline_reason && (
+              <p className="text-sm text-muted-foreground mt-1">Reason: {(deal as any).offer_decline_reason}</p>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">You may revise pricing and re-send the offer.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Pending exporter acceptance banner */}
+      {deal.status === ('pending_exporter_acceptance' as DealStatus) && (
+        <div className="flex items-start gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
+          <Clock className="mt-0.5 h-5 w-5 text-primary shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Awaiting Exporter Response</p>
+            <p className="text-sm text-muted-foreground">The facility offer has been sent to the exporter. Waiting for them to accept or decline.</p>
+          </div>
+        </div>
+      )}
+
       {/* Validation Summary Banner */}
       {validationFailures.length > 0 && (
         <ValidationSummaryBanner failures={validationFailures} onDismiss={() => setValidationFailures([])} />
