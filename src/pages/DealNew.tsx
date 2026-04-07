@@ -177,7 +177,7 @@ export default function DealNew() {
 
       // Upload documents
       const uploadDoc = async (file: File, docType: 'commercial_invoice' | 'bill_of_lading') => {
-        const filePath = `deal-docs/${deal.id}/${docType}/${crypto.randomUUID()}_${file.name}`;
+        const filePath = `deal-docs/${deal.id}/${docType}/${crypto.randomUUID()}_${sanitiseFilename(file.name)}`;
         const { error: storErr } = await supabase.storage.from('veloxis-documents').upload(filePath, file, { contentType: file.type });
         if (storErr) throw storErr;
         const { error: dbErr } = await supabase.from('deal_documents').insert({
