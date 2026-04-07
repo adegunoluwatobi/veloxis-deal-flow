@@ -78,7 +78,7 @@ export default function GreystarDeals() {
       ) : filtered.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-muted-foreground">
-            No deals found.
+            No applications found.
           </CardContent>
         </Card>
       ) : (

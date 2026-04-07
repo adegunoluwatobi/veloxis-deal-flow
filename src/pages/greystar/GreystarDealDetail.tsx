@@ -225,7 +225,7 @@ export default function GreystarDealDetail() {
               </Button>
             )}
             <Button variant="destructive" onClick={() => setRejectOpen(true)}>
-              <XCircle className="mr-2 h-4 w-4" />Reject Deal
+              <XCircle className="mr-2 h-4 w-4" />Reject Application
             </Button>
             {canSubmitToVeloxis && (
               <Button onClick={handleSubmitToVeloxis} disabled={submitting}>

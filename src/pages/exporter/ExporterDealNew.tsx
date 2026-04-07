@@ -588,7 +588,7 @@ export default function ExporterDealNew() {
                 {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Save as Draft
               </Button>
               <Button disabled={saving} onClick={() => handleSubmit(false)}>
-                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Submit Deal
+                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Submit Application
               </Button>
             </>
           ) : (
