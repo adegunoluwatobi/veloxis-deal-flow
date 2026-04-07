@@ -76,6 +76,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/set-password" element={<SetPassword />} />
             <Route path="/upload/:token" element={<SMEUpload />} />
 
             {/* Greystar routes */}
