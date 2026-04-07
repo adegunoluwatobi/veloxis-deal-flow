@@ -17,7 +17,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/greystar', icon: LayoutDashboard },
   { label: 'Exporters', href: '/greystar/exporters', icon: Users },
-  { label: 'Deals', href: '/greystar/deals', icon: Briefcase },
+  { label: 'Applications', href: '/greystar/deals', icon: Briefcase },
   { label: 'Review Queue', href: '/greystar/review', icon: FileText },
 ];
 

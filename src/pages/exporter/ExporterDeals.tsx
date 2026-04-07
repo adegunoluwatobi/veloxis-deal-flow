@@ -70,9 +70,9 @@ export default function ExporterDeals() {
       ) : deals.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
-            <p className="text-muted-foreground mb-4">You have no deals yet. Submit your first deal to get started.</p>
+            <p className="text-muted-foreground mb-4">You have no applications yet. Submit your first application to get started.</p>
             <Button asChild>
-              <Link to="/exporter/deals/new"><Plus className="mr-2 h-4 w-4" />Submit Deal</Link>
+              <Link to="/exporter/deals/new"><Plus className="mr-2 h-4 w-4" />Submit Application</Link>
             </Button>
           </CardContent>
         </Card>

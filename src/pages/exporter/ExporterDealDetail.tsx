@@ -128,7 +128,7 @@ export default function ExporterDealDetail() {
   };
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-  if (!deal) return <div className="py-20 text-center text-muted-foreground">Deal not found</div>;
+  if (!deal) return <div className="py-20 text-center text-muted-foreground">Application not found</div>;
 
   const isFlagged = (field: string) => flaggedSet.has(field);
 
