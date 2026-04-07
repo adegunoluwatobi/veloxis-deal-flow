@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -23,20 +23,19 @@ const ROLE_COLORS: Record<string, string> = {
   exporter: 'bg-muted text-muted-foreground',
 };
 
-// Roles that super_admin can create (partner_staff is delegated to partner_admin)
-const SUPER_ADMIN_CREATABLE_ROLES: { value: AppRole; label: string }[] = [
-  { value: 'super_admin', label: 'Super Admin' },
-  { value: 'partner_admin', label: 'Partner Admin' },
-  { value: 'deal_manager', label: 'Deal Manager' },
-  { value: 'exporter', label: 'Exporter (Invite Only)' },
-];
-
 const ALL_ROLE_OPTIONS: { value: AppRole; label: string }[] = [
   { value: 'super_admin', label: 'Super Admin' },
   { value: 'partner_admin', label: 'Partner Admin' },
   { value: 'partner_staff', label: 'Partner Staff' },
   { value: 'deal_manager', label: 'Deal Manager' },
   { value: 'exporter', label: 'Exporter' },
+];
+
+// super_admin can create: partner_admin, deal_manager, exporter (invite)
+const SUPER_ADMIN_CREATABLE_ROLES: { value: AppRole; label: string }[] = [
+  { value: 'partner_admin', label: 'Partner Admin' },
+  { value: 'deal_manager', label: 'Deal Manager' },
+  { value: 'exporter', label: 'Exporter (Invite Only)' },
 ];
 
 export default function SettingsPage() {
@@ -48,7 +47,7 @@ export default function SettingsPage() {
   const [createUserOpen, setCreateUserOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
     email: '', password: '', role: 'deal_manager' as AppRole,
-    full_name: '', organisation: '', partner_organisation_id: '',
+    full_name: '', organisation: '',
   });
   const [createLoading, setCreateLoading] = useState(false);
 
@@ -95,16 +94,19 @@ export default function SettingsPage() {
   };
 
   const isExporterRole = createForm.role === 'exporter';
-  const isPartnerRole = createForm.role === 'partner_admin' || createForm.role === 'partner_staff';
+  const isPartnerAdmin = createForm.role === 'partner_admin';
 
   const handleCreateUser = async () => {
     if (!createForm.email) {
       toast({ title: 'Error', description: 'Email is required', variant: 'destructive' });
       return;
     }
+    if (!createForm.full_name.trim()) {
+      toast({ title: 'Error', description: 'Full name is required', variant: 'destructive' });
+      return;
+    }
 
     if (isExporterRole) {
-      // Exporter invite flow — no password needed
       const ok = await confirm({
         title: 'Send Exporter Invite',
         description: `Send an invitation email to ${createForm.email}? They will set their own password.`,
@@ -113,8 +115,6 @@ export default function SettingsPage() {
       if (!ok) return;
       setCreateLoading(true);
       try {
-        // For exporter invites we need an exporter profile first or use a lightweight invite
-        // Use create-user with a special flag to trigger invite flow
         const { data, error } = await supabase.functions.invoke('create-user', {
           body: {
             email: createForm.email,
@@ -137,18 +137,51 @@ export default function SettingsPage() {
       } finally {
         setCreateLoading(false);
       }
-    } else {
-      // Internal user creation — needs password
-      if (!createForm.password) {
-        toast({ title: 'Error', description: 'Password is required for internal users', variant: 'destructive' });
+    } else if (isPartnerAdmin) {
+      // partner_admin creation: organisation name is required, becomes the partner org
+      if (!createForm.organisation.trim()) {
+        toast({ title: 'Error', description: 'Organisation name is required for Partner Admin', variant: 'destructive' });
         return;
       }
-      if (createForm.password.length < 8) {
+      if (!createForm.password || createForm.password.length < 8) {
         toast({ title: 'Error', description: 'Password must be at least 8 characters', variant: 'destructive' });
         return;
       }
-      if (isPartnerRole && !createForm.partner_organisation_id) {
-        toast({ title: 'Error', description: 'Please select a partner organisation', variant: 'destructive' });
+      const ok = await confirm({
+        title: 'Create Partner Admin',
+        description: `Create ${createForm.email} as Partner Admin for "${createForm.organisation}"? A partner organisation record will be created automatically.`,
+        variant: 'info',
+      });
+      if (!ok) return;
+      setCreateLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('create-user', {
+          body: {
+            email: createForm.email,
+            password: createForm.password,
+            role: 'partner_admin',
+            full_name: createForm.full_name,
+            organisation: createForm.organisation,
+          },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        toast({ title: 'Partner Admin created', description: `${createForm.email} is now admin for ${createForm.organisation}.` });
+        setCreateUserOpen(false);
+        resetForm();
+        queryClient.invalidateQueries({ queryKey: ['admin_users'] });
+        queryClient.invalidateQueries({ queryKey: ['admin_user_roles'] });
+        queryClient.invalidateQueries({ queryKey: ['partner_organisations'] });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Failed to create user';
+        toast({ title: 'Error', description: msg, variant: 'destructive' });
+      } finally {
+        setCreateLoading(false);
+      }
+    } else {
+      // deal_manager or other internal roles
+      if (!createForm.password || createForm.password.length < 8) {
+        toast({ title: 'Error', description: 'Password must be at least 8 characters', variant: 'destructive' });
         return;
       }
       const ok = await confirm({
@@ -166,7 +199,6 @@ export default function SettingsPage() {
             role: createForm.role,
             full_name: createForm.full_name,
             organisation: createForm.organisation,
-            partner_organisation_id: isPartnerRole ? createForm.partner_organisation_id : undefined,
           },
         });
         if (error) throw error;
@@ -186,7 +218,7 @@ export default function SettingsPage() {
   };
 
   const resetForm = () => {
-    setCreateForm({ email: '', password: '', role: 'deal_manager', full_name: '', organisation: '', partner_organisation_id: '' });
+    setCreateForm({ email: '', password: '', role: 'deal_manager', full_name: '', organisation: '' });
   };
 
   const handleRoleChange = async (userId: string, newRole: string, email: string) => {
@@ -305,7 +337,7 @@ export default function SettingsPage() {
       <Dialog open={createUserOpen} onOpenChange={(open) => { setCreateUserOpen(open); if (!open) resetForm(); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{isExporterRole ? 'Invite Exporter' : 'Create New User'}</DialogTitle>
+            <DialogTitle>{isExporterRole ? 'Invite Exporter' : isPartnerAdmin ? 'Create Partner Admin' : 'Create New User'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
@@ -329,6 +361,15 @@ export default function SettingsPage() {
               </div>
             )}
 
+            {isPartnerAdmin && (
+              <div className="flex items-start gap-2 rounded-md border border-border bg-muted/50 p-3">
+                <Info className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                <p className="text-xs text-muted-foreground">
+                  Each organisation can have only one Partner Admin. A partner organisation record will be created automatically from the organisation name.
+                </p>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Email *</Label>
               <Input type="email" value={createForm.email} onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })} placeholder="user@example.com" />
@@ -342,35 +383,25 @@ export default function SettingsPage() {
             )}
 
             <div className="space-y-2">
-              <Label>Full Name</Label>
+              <Label>Full Name *</Label>
               <Input value={createForm.full_name} onChange={(e) => setCreateForm({ ...createForm, full_name: e.target.value })} placeholder="John Doe" />
             </div>
-            <div className="space-y-2">
-              <Label>Organisation</Label>
-              <Input value={createForm.organisation} onChange={(e) => setCreateForm({ ...createForm, organisation: e.target.value })} placeholder="Company name" />
-            </div>
 
-            {isPartnerRole && (
-              <div className="space-y-2">
-                <Label>Partner Organisation *</Label>
-                <Select value={createForm.partner_organisation_id} onValueChange={(v) => setCreateForm({ ...createForm, partner_organisation_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Select organisation" /></SelectTrigger>
-                  <SelectContent>
-                    {(partnerOrgs ?? []).map((org) => (
-                      <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>{isPartnerAdmin ? 'Organisation Name *' : 'Organisation'}</Label>
+              <Input value={createForm.organisation} onChange={(e) => setCreateForm({ ...createForm, organisation: e.target.value })} placeholder={isPartnerAdmin ? 'e.g. Greystar Nigeria' : 'Company name'} />
+              {isPartnerAdmin && (
+                <p className="text-xs text-muted-foreground">This will create a new partner organisation record in the system.</p>
+              )}
+            </div>
 
             <Button
               onClick={handleCreateUser}
-              disabled={createLoading || !createForm.email || (!isExporterRole && !createForm.password)}
+              disabled={createLoading || !createForm.email || !createForm.full_name.trim() || (!isExporterRole && !createForm.password) || (isPartnerAdmin && !createForm.organisation.trim())}
               className="w-full gap-2"
             >
               {createLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : isExporterRole ? <Mail className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-              {createLoading ? (isExporterRole ? 'Sending Invite…' : 'Creating…') : isExporterRole ? 'Send Invite' : 'Create User'}
+              {createLoading ? (isExporterRole ? 'Sending Invite…' : 'Creating…') : isExporterRole ? 'Send Invite' : isPartnerAdmin ? 'Create Partner Admin' : 'Create User'}
             </Button>
           </div>
         </DialogContent>

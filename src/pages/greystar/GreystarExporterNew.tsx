@@ -73,7 +73,7 @@ export default function GreystarExporterNew() {
       await supabase.rpc('insert_audit_log', {
         p_exporter_id: exporter.id,
         p_user_id: user.id,
-        p_user_role: 'greystar_originator' as any,
+        p_user_role: 'partner_staff' as any,
         p_action_type: 'exporter_created' as any,
         p_metadata: { company_name: form.company_name.trim(), contact_email: form.contact_email.trim() },
       });
