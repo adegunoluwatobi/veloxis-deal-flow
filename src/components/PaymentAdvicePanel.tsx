@@ -177,6 +177,7 @@ export default function PaymentAdvicePanel({
         <div className="space-y-1">
           <Label className="text-xs text-muted-foreground">Payment Advice Document (SWIFT advice / bank confirmation)</Label>
           <Input
+            id="field-payment-file"
             type="file"
             accept=".pdf,.jpg,.jpeg,.png"
             onChange={e => setPaymentFile(e.target.files?.[0] ?? null)}
