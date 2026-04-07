@@ -21,14 +21,14 @@ interface ExporterRow {
   created_at: string;
 }
 
-const KYC_COLORS: Record<KycStatus, string> = {
-  pending_documents: 'bg-muted text-muted-foreground',
-  documents_uploaded: 'bg-primary/10 text-primary',
-  under_review: 'bg-warning/10 text-warning',
-  verified: 'bg-success/10 text-success',
-  kyc_document_expired: 'bg-destructive/10 text-destructive',
-  rejected: 'bg-destructive/10 text-destructive',
-};
+// Docs per exporter for live KYC computation
+interface ExporterDocRow {
+  exporter_id: string;
+  document_type: string;
+  document_status: string;
+  expiry_status: string;
+  is_superseded: boolean;
+}
 
 export default function ExportersList() {
   const { user, role } = useAuth();
