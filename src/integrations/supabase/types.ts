@@ -737,6 +737,9 @@ export type Database = {
         | "deal_manager"
         | "greystar_originator"
         | "exporter"
+        | "super_admin"
+        | "originator_admin"
+        | "originator_staff"
       audit_action:
         | "deal_created"
         | "deal_submitted"
@@ -939,6 +942,9 @@ export const Constants = {
         "deal_manager",
         "greystar_originator",
         "exporter",
+        "super_admin",
+        "originator_admin",
+        "originator_staff",
       ],
       audit_action: [
         "deal_created",
