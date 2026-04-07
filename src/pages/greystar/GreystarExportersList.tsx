@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, MailCheck, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   KYC_STATUS_LABELS, ENTITY_TYPE_LABELS,
@@ -12,6 +12,8 @@ import {
   type KycStatus, type EntityType, type OnboardingStatus,
 } from '@/types';
 import { cn } from '@/lib/utils';
+
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const KYC_COLORS: Record<KycStatus, string> = {
   pending_documents: 'bg-muted text-muted-foreground',
@@ -94,6 +96,25 @@ export default function GreystarExportersList() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                {exp.onboarding_status === 'invited' ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
+                        <Clock className="h-3 w-3" /> Invite Pending
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Exporter has not accepted their invite yet</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
+                        <MailCheck className="h-3 w-3" /> Accepted
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Invite accepted — {ONBOARDING_STATUS_LABELS[exp.onboarding_status]}</TooltipContent>
+                  </Tooltip>
+                )}
                 <Badge variant="secondary" className={cn('text-xs font-medium', ONBOARDING_STATUS_COLORS[exp.onboarding_status])}>
                   {ONBOARDING_STATUS_LABELS[exp.onboarding_status]}
                 </Badge>
