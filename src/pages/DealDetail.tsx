@@ -335,7 +335,8 @@ export default function DealDetail() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {deal.status === 'submitted' && (
+              {/* Veloxis can only act on deals at sent_to_veloxis or beyond */}
+              {deal.status === ('sent_to_veloxis' as DealStatus) && (
                 <Button size="sm" onClick={handleMoveToReview} disabled={actionLoading} className="gap-1">
                   <Clock className="h-4 w-4" /> Move to Review
                 </Button>
@@ -402,6 +403,10 @@ export default function DealDetail() {
                 <Button size="sm" onClick={handleMoveToReview} disabled={actionLoading} className="gap-1">
                   <Clock className="h-4 w-4" /> Back to Review
                 </Button>
+              )}
+              {/* Pre-Veloxis statuses should never appear here due to RLS, but show info if they do */}
+              {['draft', 'submitted', 'changes_requested'].includes(deal.status) && (
+                <p className="text-sm text-muted-foreground italic">This deal has not been submitted to Veloxis by the partner yet. No actions available.</p>
               )}
             </div>
           </CardContent>
