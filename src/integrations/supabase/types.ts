@@ -424,6 +424,7 @@ export type Database = {
           kyc_status: Database["public"]["Enums"]["kyc_status"]
           kyc_verified_at: string | null
           kyc_verified_by: string | null
+          onboarding_status: Database["public"]["Enums"]["onboarding_status"]
           originator_id: string
           rc_number: string
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
@@ -444,6 +445,7 @@ export type Database = {
           kyc_status?: Database["public"]["Enums"]["kyc_status"]
           kyc_verified_at?: string | null
           kyc_verified_by?: string | null
+          onboarding_status?: Database["public"]["Enums"]["onboarding_status"]
           originator_id: string
           rc_number: string
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
@@ -464,6 +466,7 @@ export type Database = {
           kyc_status?: Database["public"]["Enums"]["kyc_status"]
           kyc_verified_at?: string | null
           kyc_verified_by?: string | null
+          onboarding_status?: Database["public"]["Enums"]["onboarding_status"]
           originator_id?: string
           rc_number?: string
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
@@ -811,6 +814,9 @@ export type Database = {
         | "upload_token_generated"
         | "exporter_document_uploaded"
         | "exporter_document_verified"
+        | "onboarding_submitted"
+        | "onboarding_approved"
+        | "onboarding_rejected"
       commodity_type:
         | "solid_minerals"
         | "scrap_metal"
@@ -855,6 +861,13 @@ export type Database = {
         | "verified"
         | "kyc_document_expired"
         | "rejected"
+      onboarding_status:
+        | "invited"
+        | "password_set"
+        | "onboarding_in_progress"
+        | "onboarding_submitted"
+        | "onboarding_approved"
+        | "onboarding_rejected"
       subscription_tier: "pay_as_you_go" | "veloxis_pro"
     }
     CompositeTypes: {
@@ -1019,6 +1032,9 @@ export const Constants = {
         "upload_token_generated",
         "exporter_document_uploaded",
         "exporter_document_verified",
+        "onboarding_submitted",
+        "onboarding_approved",
+        "onboarding_rejected",
       ],
       commodity_type: [
         "solid_minerals",
@@ -1068,6 +1084,14 @@ export const Constants = {
         "verified",
         "kyc_document_expired",
         "rejected",
+      ],
+      onboarding_status: [
+        "invited",
+        "password_set",
+        "onboarding_in_progress",
+        "onboarding_submitted",
+        "onboarding_approved",
+        "onboarding_rejected",
       ],
       subscription_tier: ["pay_as_you_go", "veloxis_pro"],
     },
