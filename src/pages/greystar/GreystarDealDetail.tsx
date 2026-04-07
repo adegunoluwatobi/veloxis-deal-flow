@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { validateAndScroll, buildPrerequisiteTooltip } from '@/lib/validation';
+import ValidationSummaryBanner from '@/components/ValidationSummaryBanner';
+import type { ValidationFailure } from '@/lib/validation';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
