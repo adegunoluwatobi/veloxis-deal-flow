@@ -1,0 +1,525 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { sanitiseFilename } from '@/lib/sanitiseFilename';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Upload, Loader2, ShieldCheck } from 'lucide-react';
+import { BUYER_COUNTRY_WHITELIST } from '@/types';
+
+const STEPS = ['Bank Account', 'Invoice Details', 'Buyer Details', 'Export Details', 'Review & Submit'];
+const INCOTERMS = ['EXW', 'FOB', 'CIF', 'DAP', 'DDP', 'Other'] as const;
+const BANK_COUNTRIES = ['Nigeria', 'United Kingdom', 'United States', 'Ghana', 'Kenya', 'South Africa'] as const;
+const CURRENCIES = [
+  { value: 'GBP', label: '£ GBP' },
+  { value: 'USD', label: '$ USD' },
+  { value: 'EUR', label: '€ EUR' },
+  { value: 'NGN', label: '₦ NGN' },
+] as const;
+
+const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+const MAX_SIZE = 20 * 1024 * 1024;
+
+interface ExporterProfile {
+  id: string;
+  company_name: string;
+  originator_id: string;
+}
+
+interface ExportLicenceDoc {
+  id: string;
+  file_name: string;
+  document_status: string;
+}
+
+export default function ExporterDealNew() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [step, setStep] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [exporter, setExporter] = useState<ExporterProfile | null>(null);
+  const [exportLicence, setExportLicence] = useState<ExportLicenceDoc | null>(null);
+  const [savedBankAccounts, setSavedBankAccounts] = useState<any[]>([]);
+  const [saveBankDetails, setSaveBankDetails] = useState(true);
+
+  const [form, setForm] = useState({
+    // Bank
+    bank_name: '',
+    bank_account_name: '',
+    bank_account_number: '',
+    bank_sort_code_iban: '',
+    bank_country: '',
+    // Invoice
+    invoice_number: '',
+    invoice_date: '',
+    invoice_amount: '',
+    invoice_currency: 'GBP',
+    payment_due_date: '',
+    invoice_file: null as File | null,
+    // Buyer
+    buyer_company_name: '',
+    buyer_country: '',
+    buyer_contact_name: '',
+    buyer_contact_email: '',
+    buyer_contact_phone: '',
+    // Export
+    goods_description: '',
+    export_destination: '',
+    export_licence_number: '',
+    hs_code: '',
+    incoterms: '',
+  });
+
+  useEffect(() => {
+    if (!user) return;
+    const load = async () => {
+      const { data: exp } = await supabase
+        .from('exporters')
+        .select('id, company_name, originator_id')
+        .eq('exporter_user_id', user.id)
+        .maybeSingle();
+      if (exp) {
+        setExporter(exp);
+        // Load saved bank accounts
+        const { data: banks } = await supabase
+          .from('exporter_bank_accounts')
+          .select('*')
+          .eq('exporter_id', exp.id)
+          .order('is_default', { ascending: false });
+        setSavedBankAccounts(banks ?? []);
+        if (banks && banks.length > 0) {
+          const def = banks.find((b: any) => b.is_default) || banks[0];
+          setForm(f => ({
+            ...f,
+            bank_name: def.bank_name,
+            bank_account_name: def.account_name,
+            bank_account_number: def.account_number,
+            bank_sort_code_iban: def.sort_code_iban,
+            bank_country: def.bank_country,
+          }));
+        }
+        // Load NEPC certificate (export licence) on file
+        const { data: licDoc } = await supabase
+          .from('exporter_documents')
+          .select('id, file_name, document_status')
+          .eq('exporter_id', exp.id)
+          .eq('document_type', 'nepc_certificate')
+          .eq('is_superseded', false)
+          .maybeSingle();
+        setExportLicence(licDoc as ExportLicenceDoc | null);
+      }
+    };
+    load();
+  }, [user]);
+
+  const updateField = (field: string, value: any) =>
+    setForm(f => ({ ...f, [field]: value }));
+
+  const bankNameMatch = exporter
+    ? form.bank_account_name.trim().toLowerCase() === exporter.company_name.trim().toLowerCase()
+    : null;
+
+  const canProceed = (s: number) => {
+    switch (s) {
+      case 0: return form.bank_name && form.bank_account_name && form.bank_account_number && form.bank_sort_code_iban && form.bank_country;
+      case 1: return form.invoice_number && form.invoice_date && form.invoice_amount && form.invoice_currency && form.payment_due_date && form.invoice_file;
+      case 2: return form.buyer_company_name && form.buyer_country && form.buyer_contact_name && form.buyer_contact_email && form.buyer_contact_phone;
+      case 3: return form.goods_description && form.export_destination && form.export_licence_number && form.hs_code && form.incoterms;
+      default: return true;
+    }
+  };
+
+  const handleSubmit = async (asDraft: boolean) => {
+    if (!exporter || !user) return;
+    setSaving(true);
+    try {
+      // Upload invoice file
+      let invoiceFilePath: string | null = null;
+      if (form.invoice_file) {
+        const safeName = sanitiseFilename(form.invoice_file.name);
+        const path = `deals/${exporter.id}/${Date.now()}_${safeName}`;
+        const { error: upErr } = await supabase.storage
+          .from('veloxis-documents')
+          .upload(path, form.invoice_file);
+        if (upErr) throw upErr;
+        invoiceFilePath = path;
+      }
+
+      // Get partner org
+      const { data: orgData } = await supabase
+        .rpc('get_partner_org_id', { _user_id: exporter.originator_id });
+
+      const dealData: any = {
+        exporter_id: exporter.id,
+        originator_id: exporter.originator_id,
+        partner_organisation_id: orgData,
+        status: asDraft ? 'draft' : 'submitted',
+        // Bank
+        bank_name: form.bank_name,
+        bank_account_name: form.bank_account_name,
+        bank_account_number: form.bank_account_number,
+        bank_sort_code_iban: form.bank_sort_code_iban,
+        bank_country: form.bank_country,
+        bank_name_match: bankNameMatch,
+        // Invoice
+        invoice_number: form.invoice_number,
+        invoice_date: form.invoice_date,
+        invoice_value: parseFloat(form.invoice_amount),
+        invoice_currency_v2: form.invoice_currency,
+        payment_due_date: form.payment_due_date,
+        invoice_file_path: invoiceFilePath,
+        // Buyer
+        buyer_company_name: form.buyer_company_name,
+        buyer_country: form.buyer_country,
+        buyer_contact_name: form.buyer_contact_name,
+        buyer_contact_email: form.buyer_contact_email,
+        buyer_contact_phone: form.buyer_contact_phone,
+        buyer_name_match: true, // simplified for now
+        // Export
+        goods_description: form.goods_description,
+        export_destination: form.export_destination,
+        export_licence_number: form.export_licence_number,
+        hs_code: form.hs_code,
+        incoterms: form.incoterms,
+        export_licence_document_id: exportLicence?.id ?? null,
+        licence_name_match: exportLicence ? true : null,
+      };
+
+      if (!asDraft) {
+        dealData.submitted_at = new Date().toISOString();
+      }
+
+      const { error } = await supabase.from('deals').insert(dealData);
+      if (error) throw error;
+
+      // Save bank details if checkbox is on
+      if (saveBankDetails && savedBankAccounts.length === 0) {
+        await supabase.from('exporter_bank_accounts').insert({
+          exporter_id: exporter.id,
+          bank_name: form.bank_name,
+          account_name: form.bank_account_name,
+          account_number: form.bank_account_number,
+          sort_code_iban: form.bank_sort_code_iban,
+          bank_country: form.bank_country,
+          is_default: true,
+        });
+      }
+
+      toast({ title: asDraft ? 'Deal saved as draft' : 'Deal submitted successfully' });
+      navigate('/exporter/deals');
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!exporter) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-6 animate-fade-in">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/exporter/deals')}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Submit a Deal</h1>
+          <p className="text-sm text-muted-foreground">Step {step + 1} of {STEPS.length}: {STEPS[step]}</p>
+        </div>
+      </div>
+
+      {/* Progress */}
+      <div className="flex gap-1">
+        {STEPS.map((_, i) => (
+          <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i <= step ? 'bg-primary' : 'bg-muted'}`} />
+        ))}
+      </div>
+
+      {/* Step 0: Bank Account */}
+      {step === 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Business Bank Account</CardTitle>
+            <CardDescription>Enter your bank details for receiving funds</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Bank Name *</Label>
+              <Input value={form.bank_name} onChange={e => updateField('bank_name', e.target.value)} placeholder="e.g. First Bank of Nigeria" />
+            </div>
+            <div className="space-y-2">
+              <Label>Account Name *</Label>
+              <Input value={form.bank_account_name} onChange={e => updateField('bank_account_name', e.target.value)} placeholder="Must match your company name" />
+              {form.bank_account_name && bankNameMatch === false && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  Account name must match your registered company name: {exporter.company_name}
+                </p>
+              )}
+              {form.bank_account_name && bankNameMatch === true && (
+                <p className="text-xs text-success flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3" />Name matches company name
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label>Account Number *</Label>
+              <Input value={form.bank_account_number} onChange={e => updateField('bank_account_number', e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Sort Code / IBAN / SWIFT *</Label>
+              <Input value={form.bank_sort_code_iban} onChange={e => updateField('bank_sort_code_iban', e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Bank Country *</Label>
+              <Select value={form.bank_country} onValueChange={v => updateField('bank_country', v)}>
+                <SelectTrigger><SelectValue placeholder="Select country" /></SelectTrigger>
+                <SelectContent>
+                  {BANK_COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="save-bank" checked={saveBankDetails} onCheckedChange={(v) => setSaveBankDetails(v === true)} />
+              <label htmlFor="save-bank" className="text-sm text-muted-foreground">Save bank details for future deals</label>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 1: Invoice Details */}
+      {step === 1 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Invoice Details</CardTitle>
+            <CardDescription>Provide details of the trade invoice</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Invoice Number *</Label>
+              <Input value={form.invoice_number} onChange={e => updateField('invoice_number', e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Invoice Date *</Label>
+              <Input type="date" value={form.invoice_date} onChange={e => updateField('invoice_date', e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Invoice Amount *</Label>
+                <Input type="number" step="0.01" value={form.invoice_amount} onChange={e => updateField('invoice_amount', e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Currency *</Label>
+                <Select value={form.invoice_currency} onValueChange={v => updateField('invoice_currency', v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CURRENCIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Payment Due Date *</Label>
+              <Input type="date" value={form.payment_due_date} onChange={e => updateField('payment_due_date', e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Upload Invoice File * (PDF or image)</Label>
+              <Input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,.webp"
+                onChange={e => {
+                  const f = e.target.files?.[0];
+                  if (f && !ALLOWED_MIME.includes(f.type)) {
+                    toast({ title: 'Invalid file type', variant: 'destructive' });
+                    return;
+                  }
+                  if (f && f.size > MAX_SIZE) {
+                    toast({ title: 'File too large (max 20 MB)', variant: 'destructive' });
+                    return;
+                  }
+                  updateField('invoice_file', f ?? null);
+                }}
+              />
+              {form.invoice_file && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Upload className="h-3 w-3" />{form.invoice_file.name}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 2: Buyer Details */}
+      {step === 2 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Buyer Details</CardTitle>
+            <CardDescription>Information about the buyer / importer</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Buyer Company Name *</Label>
+              <Input value={form.buyer_company_name} onChange={e => updateField('buyer_company_name', e.target.value)} placeholder="Must match name on invoice" />
+            </div>
+            <div className="space-y-2">
+              <Label>Buyer Country *</Label>
+              <Select value={form.buyer_country} onValueChange={v => updateField('buyer_country', v)}>
+                <SelectTrigger><SelectValue placeholder="Select country" /></SelectTrigger>
+                <SelectContent>
+                  {BUYER_COUNTRY_WHITELIST.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Contact Name *</Label>
+              <Input value={form.buyer_contact_name} onChange={e => updateField('buyer_contact_name', e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Contact Email *</Label>
+              <Input type="email" value={form.buyer_contact_email} onChange={e => updateField('buyer_contact_email', e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Contact Phone *</Label>
+              <Input value={form.buyer_contact_phone} onChange={e => updateField('buyer_contact_phone', e.target.value)} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 3: Export Details */}
+      {step === 3 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Export Details</CardTitle>
+            <CardDescription>Trade and export information</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Goods / Commodity Description *</Label>
+              <Textarea value={form.goods_description} onChange={e => updateField('goods_description', e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Export Destination Country *</Label>
+              <Select value={form.export_destination} onValueChange={v => updateField('export_destination', v)}>
+                <SelectTrigger><SelectValue placeholder="Select country" /></SelectTrigger>
+                <SelectContent>
+                  {BUYER_COUNTRY_WHITELIST.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Export Licence Number *</Label>
+              <Input value={form.export_licence_number} onChange={e => updateField('export_licence_number', e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>HS Code *</Label>
+              <Input value={form.hs_code} onChange={e => updateField('hs_code', e.target.value)} placeholder="e.g. 2601.11" />
+            </div>
+            <div className="space-y-2">
+              <Label>Incoterms *</Label>
+              <Select value={form.incoterms} onValueChange={v => updateField('incoterms', v)}>
+                <SelectTrigger><SelectValue placeholder="Select incoterms" /></SelectTrigger>
+                <SelectContent>
+                  {INCOTERMS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Export licence on file */}
+            <div className="rounded-lg border border-border bg-muted/30 p-4">
+              <p className="text-sm font-medium text-foreground mb-1">Export Licence on File</p>
+              {exportLicence ? (
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-success" />
+                  {exportLicence.file_name} — {exportLicence.document_status === 'verified' ? 'Verified ✅' : 'Pending Review'}
+                </p>
+              ) : (
+                <p className="text-sm text-destructive flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  No NEPC certificate on file. Please upload it in your Documents section first.
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 4: Review & Submit */}
+      {step === 4 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Review & Submit</CardTitle>
+            <CardDescription>Review your deal application before submitting</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Name matching summary */}
+            <div className="rounded-lg border border-border p-4 space-y-2">
+              <p className="text-sm font-medium text-foreground mb-2">Name Matching Validation</p>
+              <div className="flex items-center gap-2 text-sm">
+                {bankNameMatch ? <CheckCircle2 className="h-4 w-4 text-success" /> : <AlertTriangle className="h-4 w-4 text-destructive" />}
+                <span>Bank account name vs company name</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-success" />
+                <span>Buyer name vs invoice buyer</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                {exportLicence ? <CheckCircle2 className="h-4 w-4 text-success" /> : <AlertTriangle className="h-4 w-4 text-destructive" />}
+                <span>Export licence on file</span>
+              </div>
+              {(!bankNameMatch || !exportLicence) && (
+                <p className="text-xs text-destructive mt-2">
+                  ⚠️ Please ensure all names match before submitting. Mismatches may cause your deal to be rejected.
+                </p>
+              )}
+            </div>
+
+            {/* Summary sections */}
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-2 gap-2">
+                <span className="text-muted-foreground">Invoice Number</span><span className="font-medium">{form.invoice_number}</span>
+                <span className="text-muted-foreground">Invoice Amount</span><span className="font-medium">{form.invoice_currency} {parseFloat(form.invoice_amount || '0').toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                <span className="text-muted-foreground">Buyer</span><span className="font-medium">{form.buyer_company_name}</span>
+                <span className="text-muted-foreground">Destination</span><span className="font-medium">{form.export_destination}</span>
+                <span className="text-muted-foreground">Bank Account</span><span className="font-medium">{form.bank_account_name} ({form.bank_name})</span>
+                <span className="text-muted-foreground">Invoice File</span><span className="font-medium">{form.invoice_file?.name ?? '—'}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Navigation buttons */}
+      <div className="flex justify-between">
+        <Button variant="outline" disabled={step === 0} onClick={() => setStep(s => s - 1)}>
+          <ArrowLeft className="mr-2 h-4 w-4" />Back
+        </Button>
+        <div className="flex gap-2">
+          {step === STEPS.length - 1 ? (
+            <>
+              <Button variant="outline" disabled={saving} onClick={() => handleSubmit(true)}>
+                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Save as Draft
+              </Button>
+              <Button disabled={saving} onClick={() => handleSubmit(false)}>
+                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Submit Deal
+              </Button>
+            </>
+          ) : (
+            <Button disabled={!canProceed(step)} onClick={() => setStep(s => s + 1)}>
+              Next<ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

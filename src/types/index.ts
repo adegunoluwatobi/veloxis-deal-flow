@@ -7,9 +7,11 @@ export type EntityType = 'limited_company' | 'plc' | 'llp' | 'incorporated_trust
 export type CommodityType = 'solid_minerals' | 'scrap_metal' | 'manufactured_goods' | 'textiles';
 
 export type DealStatus =
-  | 'draft' | 'submitted' | 'under_review' | 'docs_requested'
+  | 'draft' | 'submitted' | 'changes_requested' | 'sent_to_veloxis'
+  | 'under_review' | 'docs_requested'
   | 'ready_for_final_approval' | 'rejection_pending_approval' | 'approved'
-  | 'rejected' | 'ipu_sent' | 'ipu_expired' | 'ipu_signed_awaiting_funding'
+  | 'rejected' | 'rejected_by_partner' | 'rejected_by_veloxis'
+  | 'ipu_sent' | 'ipu_expired' | 'ipu_signed_awaiting_funding'
   | 'funded_active' | 'repayment_due' | 'overdue'
   | 'closed_repaid' | 'closed_partial';
 
@@ -21,7 +23,7 @@ export type ExpiryStatus = 'valid' | 'expiring_soon_60' | 'expiring_soon_30' | '
 
 export type SubscriptionTier = 'pay_as_you_go' | 'veloxis_pro';
 
-export type InvoiceCurrency = 'GBP' | 'USD' | 'EUR';
+export type InvoiceCurrency = 'GBP' | 'USD' | 'EUR' | 'NGN';
 
 export type ExporterDocumentType = 'cac_certificate' | 'director_id' | 'nepc_certificate' | 'other';
 
@@ -40,12 +42,16 @@ export type AuditAction =
 export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   draft: 'Draft',
   submitted: 'Submitted',
+  changes_requested: 'Changes Requested',
+  sent_to_veloxis: 'Sent to Veloxis',
   under_review: 'Under Review',
   docs_requested: 'Documents Requested',
   ready_for_final_approval: 'Ready for Final Approval',
   rejection_pending_approval: 'Rejection Pending Approval',
   approved: 'Approved',
   rejected: 'Rejected',
+  rejected_by_partner: 'Rejected by Partner',
+  rejected_by_veloxis: 'Rejected by Veloxis',
   ipu_sent: 'IPU Sent',
   ipu_expired: 'IPU Expired',
   ipu_signed_awaiting_funding: 'IPU Signed — Awaiting Funding',
@@ -59,12 +65,16 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
 export const DEAL_STATUS_COLORS: Record<DealStatus, string> = {
   draft: 'bg-muted text-muted-foreground',
   submitted: 'bg-primary/10 text-primary',
+  changes_requested: 'bg-warning/10 text-warning',
+  sent_to_veloxis: 'bg-primary/10 text-primary',
   under_review: 'bg-warning/10 text-warning',
   docs_requested: 'bg-warning/10 text-warning',
   ready_for_final_approval: 'bg-primary/10 text-primary',
   rejection_pending_approval: 'bg-destructive/10 text-destructive',
   approved: 'bg-success/10 text-success',
   rejected: 'bg-destructive/10 text-destructive',
+  rejected_by_partner: 'bg-destructive/10 text-destructive',
+  rejected_by_veloxis: 'bg-destructive/10 text-destructive',
   ipu_sent: 'bg-primary/10 text-primary',
   ipu_expired: 'bg-destructive/10 text-destructive',
   ipu_signed_awaiting_funding: 'bg-success/10 text-success',
@@ -102,6 +112,7 @@ export const CURRENCY_SYMBOLS: Record<InvoiceCurrency, string> = {
   GBP: '£',
   USD: '$',
   EUR: '€',
+  NGN: '₦',
 };
 
 export const BUYER_COUNTRY_WHITELIST = [

@@ -31,12 +31,17 @@ import GreystarExporterNew from "@/pages/greystar/GreystarExporterNew";
 import GreystarExporterDetail from "@/pages/greystar/GreystarExporterDetail";
 import GreystarReviewQueue from "@/pages/greystar/GreystarReviewQueue";
 import GreystarSettings from "@/pages/greystar/GreystarSettings";
+import GreystarDeals from "@/pages/greystar/GreystarDeals";
+import GreystarDealDetail from "@/pages/greystar/GreystarDealDetail";
 
 // Exporter portal pages
 import ExporterDashboardPage from "@/pages/exporter/ExporterDashboard";
 import ExporterDocuments from "@/pages/exporter/ExporterDocuments";
 import ExporterOnboarding from "@/pages/exporter/ExporterOnboarding";
 import ExporterPendingApproval from "@/pages/exporter/ExporterPendingApproval";
+import ExporterDeals from "@/pages/exporter/ExporterDeals";
+import ExporterDealNew from "@/pages/exporter/ExporterDealNew";
+import ExporterDealDetail from "@/pages/exporter/ExporterDealDetail";
 
 const queryClient = new QueryClient();
 
@@ -102,11 +107,16 @@ const App = () => (
             <Route path="/greystar/exporters" element={<GreystarRoute><GreystarExportersList /></GreystarRoute>} />
             <Route path="/greystar/exporters/new" element={<GreystarRoute><GreystarExporterNew /></GreystarRoute>} />
             <Route path="/greystar/exporters/:id" element={<GreystarRoute><GreystarExporterDetail /></GreystarRoute>} />
+            <Route path="/greystar/deals" element={<GreystarRoute><GreystarDeals /></GreystarRoute>} />
+            <Route path="/greystar/deals/:id" element={<GreystarRoute><GreystarDealDetail /></GreystarRoute>} />
             <Route path="/greystar/review" element={<GreystarRoute><GreystarReviewQueue /></GreystarRoute>} />
             <Route path="/greystar/settings" element={<GreystarRoute><GreystarSettings /></GreystarRoute>} />
 
             {/* Exporter portal routes (require approved onboarding) */}
             <Route path="/exporter" element={<ExporterRoute><ExporterDashboardPage /></ExporterRoute>} />
+            <Route path="/exporter/deals" element={<ExporterRoute><ExporterDeals /></ExporterRoute>} />
+            <Route path="/exporter/deals/new" element={<ExporterRoute><ExporterDealNew /></ExporterRoute>} />
+            <Route path="/exporter/deals/:id" element={<ExporterRoute><ExporterDealDetail /></ExporterRoute>} />
             <Route path="/exporter/documents" element={<ExporterRoute><ExporterDocuments /></ExporterRoute>} />
 
             {/* Admin routes */}

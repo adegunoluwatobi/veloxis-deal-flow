@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
-  LayoutDashboard, Users, FileText, LogOut,
+  LayoutDashboard, Users, FileText, LogOut, Briefcase,
   Menu, X, ChevronRight, Building, Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -17,6 +17,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/greystar', icon: LayoutDashboard },
   { label: 'Exporters', href: '/greystar/exporters', icon: Users },
+  { label: 'Deals', href: '/greystar/deals', icon: Briefcase },
   { label: 'Review Queue', href: '/greystar/review', icon: FileText },
 ];
 
