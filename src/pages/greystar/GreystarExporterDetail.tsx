@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { sanitiseFilename } from '@/lib/sanitiseFilename';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -76,7 +77,7 @@ export default function GreystarExporterDetail() {
     setUploading(true);
     try {
       const file = uploadForm.file;
-      const filePath = `exporters/${id}/${Date.now()}_${file.name}`;
+      const filePath = `exporters/${id}/${Date.now()}_${sanitiseFilename(file.name)}`;
       const { error: storageErr } = await supabase.storage.from('veloxis-documents').upload(filePath, file);
       if (storageErr) throw storageErr;
 
