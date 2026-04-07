@@ -35,17 +35,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check caller has greystar_originator role
+    // Check caller has originator_staff or originator_admin role
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
     const { data: roleData } = await adminClient
       .from("user_roles")
       .select("role")
       .eq("user_id", caller.id)
-      .eq("role", "greystar_originator")
+      .in("role", ["originator_staff", "originator_admin"])
       .maybeSingle();
 
     if (!roleData) {
-      return new Response(JSON.stringify({ error: "Forbidden: requires greystar_originator role" }), {
+      return new Response(JSON.stringify({ error: "Forbidden: requires originator role" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

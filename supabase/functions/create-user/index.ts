@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
       user_metadata: {
         full_name: full_name || "",
         organisation: organisation || "",
-        role: role || "originator",
+        role: role || "deal_manager",
       },
     });
 
