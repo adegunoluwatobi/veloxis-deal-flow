@@ -29,6 +29,9 @@ import {
 import BuyerComplianceSection from '@/components/BuyerComplianceSection';
 import SettlementFxSection from '@/components/SettlementFxSection';
 import RepaymentFxSection from '@/components/RepaymentFxSection';
+import PaymentAdvicePanel from '@/components/PaymentAdvicePanel';
+import SettlementSummaryBanner from '@/components/SettlementSummaryBanner';
+import IpuUploadSection from '@/components/IpuUploadSection';
 import type { SettlementMethod, RepaymentReconciliationStatus } from '@/types';
 
 interface DealRow {
