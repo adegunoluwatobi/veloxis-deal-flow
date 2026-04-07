@@ -52,15 +52,12 @@ export default function BuyerComplianceSection({
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updates: Record<string, unknown> = {};
-      if (isSuperAdminOrDM) {
-        updates.buyer_sanctions_status = sanctions;
-        updates.buyer_credit_check_status = creditCheck;
-        updates.buyer_underwriter_notes = notes.trim() || null;
-      }
-      updates.buyer_country_of_incorporation = country.trim() || null;
-
-      const { error } = await supabase.from('deals').update(updates).eq('id', dealId);
+      const { error } = await supabase.from('deals').update({
+        buyer_sanctions_status: isSuperAdminOrDM ? sanctions : buyerSanctionsStatus,
+        buyer_credit_check_status: isSuperAdminOrDM ? creditCheck : buyerCreditCheckStatus,
+        buyer_underwriter_notes: isSuperAdminOrDM ? (notes.trim() || null) : buyerUnderwriterNotes,
+        buyer_country_of_incorporation: country.trim() || null,
+      } as any).eq('id', dealId);
       if (error) throw error;
       toast({ title: 'Buyer compliance updated' });
       onReload();
