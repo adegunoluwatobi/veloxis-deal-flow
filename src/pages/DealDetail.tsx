@@ -178,7 +178,7 @@ export default function DealDetail() {
         p_user_id: user?.id,
         p_user_role: role as any,
         p_action_type: `deal_status_changed` as AuditAction,
-        p_metadata: { from: deal.status, to: newStatus, ...extraFields },
+        p_metadata: { actor_name: user?.email, from: deal.status, to: newStatus, ...extraFields },
       });
 
       toast({ title: `Deal ${DEAL_STATUS_LABELS[newStatus].toLowerCase()}` });
