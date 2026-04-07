@@ -391,6 +391,13 @@ export default function DealDetail() {
 
   const activeDocs = docs.filter(d => !d.is_superseded);
 
+  // Approve prerequisites tooltip
+  const approvePrereqs: ValidationRule[] = [
+    { fieldId: 'pricing-card', label: 'Pricing must be saved', condition: !!(deal?.advance_amount && deal?.payment_terms_days) },
+    { fieldId: 'ipu-section', label: 'IPU must be uploaded and verified', condition: !!(deal as any)?.ipu_verified },
+  ];
+  const approveTooltip = buildPrerequisiteTooltip(approvePrereqs);
+  const approveDisabled = actionLoading || approvePrereqs.some(r => !r.condition);
   return (
     <div className="space-y-6 animate-fade-in">
       <Button variant="ghost" size="sm" onClick={() => navigate(backPath)} className="gap-2">
