@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import DealStatusBadge from '@/components/DealStatusBadge';
+import DealAuditTrail from '@/components/DealAuditTrail';
 import { cn } from '@/lib/utils';
 import {
   DEAL_STATUS_LABELS, KYC_STATUS_LABELS, ENTITY_TYPE_LABELS,
