@@ -49,10 +49,10 @@ export default function ExportersList() {
           'rejection_pending_approval', 'approved', 'rejected', 'ipu_sent', 'ipu_expired',
           'ipu_signed_awaiting_funding', 'funded_active', 'repayment_due', 'overdue',
           'closed_repaid', 'closed_partial', 'rejected_by_veloxis',
-        ];
+        ] as const;
         const { data: deals } = await supabase.from('deals')
           .select('exporter_id')
-          .in('status', veloxisStatuses);
+          .in('status', [...veloxisStatuses]);
         const exporterIds = [...new Set((deals ?? []).map(d => d.exporter_id))];
 
         if (exporterIds.length === 0) {
