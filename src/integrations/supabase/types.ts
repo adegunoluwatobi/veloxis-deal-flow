@@ -170,6 +170,60 @@ export type Database = {
           },
         ]
       }
+      deal_doc_requests: {
+        Row: {
+          created_at: string
+          deal_id: string
+          document_type: string
+          id: string
+          label: string
+          notes: string | null
+          requested_by: string
+          status: string
+          updated_at: string
+          uploaded_doc_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          deal_id: string
+          document_type: string
+          id?: string
+          label: string
+          notes?: string | null
+          requested_by: string
+          status?: string
+          updated_at?: string
+          uploaded_doc_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string
+          document_type?: string
+          id?: string
+          label?: string
+          notes?: string | null
+          requested_by?: string
+          status?: string
+          updated_at?: string
+          uploaded_doc_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_doc_requests_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_doc_requests_uploaded_doc_id_fkey"
+            columns: ["uploaded_doc_id"]
+            isOneToOne: false
+            referencedRelation: "deal_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deal_documents: {
         Row: {
           deal_id: string

@@ -15,6 +15,7 @@ import type { DealStatus } from '@/types';
 import type { FlaggedField } from '@/components/ChangeRequestModal';
 import { CurrencyInput, stripCommas } from '@/components/ui/currency-input';
 import SettlementSummaryBanner from '@/components/SettlementSummaryBanner';
+import ExporterDocRequestBanner from '@/components/ExporterDocRequestBanner';
 
 export default function ExporterDealDetail() {
   const { id } = useParams<{ id: string }>();
@@ -256,6 +257,9 @@ export default function ExporterDealDetail() {
           </CardContent>
         </Card>
       )}
+
+      {/* Document Request Banner */}
+      <ExporterDocRequestBanner dealId={deal.id} dealStatus={deal.status} onReload={loadData} />
 
       {/* Payment Received Banner & Settlement Summary */}
       <SettlementSummaryBanner

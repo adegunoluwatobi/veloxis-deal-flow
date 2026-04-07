@@ -34,6 +34,7 @@ import SettlementSummaryBanner from '@/components/SettlementSummaryBanner';
 import IpuUploadSection from '@/components/IpuUploadSection';
 import TradePackChecklist from '@/components/TradePackChecklist';
 import OverdueActionsPanel from '@/components/OverdueActionsPanel';
+import RequestDocsModal from '@/components/RequestDocsModal';
 import type { SettlementMethod, RepaymentReconciliationStatus } from '@/types';
 
 interface DealRow {
@@ -142,6 +143,7 @@ export default function DealDetail() {
   const [rejectReason, setRejectReason] = useState('');
   const [pricingOverride, setPricingOverride] = useState(false);
   const [overrideAdvPct, setOverrideAdvPct] = useState('80');
+  const [requestDocsOpen, setRequestDocsOpen] = useState(false);
 
   // Editable pricing fields
   const [editPlatformFeePct, setEditPlatformFeePct] = useState('0');
@@ -224,7 +226,7 @@ export default function DealDetail() {
     }
   };
 
-  const handleRequestDocs = () => updateStatus('docs_requested');
+  const handleRequestDocs = () => setRequestDocsOpen(true);
   const handleSubmitForFinalApproval = () => updateStatus('ready_for_final_approval' as DealStatus);
 
   // Live pricing calculations
@@ -943,6 +945,16 @@ export default function DealDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Request Docs Modal */}
+      {deal && (
+        <RequestDocsModal
+          open={requestDocsOpen}
+          onOpenChange={setRequestDocsOpen}
+          dealId={deal.id}
+          commodityType={deal.commodity_type}
+          onSent={load}
+        />
+      )}
     </div>
   );
 }
