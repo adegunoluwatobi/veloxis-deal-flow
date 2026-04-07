@@ -204,7 +204,7 @@ export default function ExporterDealDetail() {
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-foreground">{deal.deal_reference || deal.id.slice(0, 8)}</h1>
-          <p className="text-sm text-muted-foreground">Deal Application</p>
+          <p className="text-sm text-muted-foreground">Application</p>
         </div>
         <DealStatusBadge status={deal.status} />
         {deal.status === 'draft' && (
