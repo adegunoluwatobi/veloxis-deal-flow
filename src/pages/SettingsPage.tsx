@@ -94,7 +94,7 @@ export default function SettingsPage() {
       if (data?.error) throw new Error(data.error);
       toast({ title: 'User created', description: `${createForm.email} has been added.` });
       setCreateUserOpen(false);
-      setCreateForm({ email: '', password: '', role: 'originator', full_name: '', organisation: '' });
+      setCreateForm({ email: '', password: '', role: 'deal_manager', full_name: '', organisation: '' });
       queryClient.invalidateQueries({ queryKey: ['admin_users'] });
       queryClient.invalidateQueries({ queryKey: ['admin_user_roles'] });
     } catch (err: unknown) {
