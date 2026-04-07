@@ -20,6 +20,7 @@ import { computeKycStatus } from '@/lib/computeKycStatus';
 import DocumentRequestSection from '@/components/DocumentRequestSection';
 import UboDeclarationForm from '@/components/UboDeclarationForm';
 import ExporterComplianceSection from '@/components/ExporterComplianceSection';
+import BankAccountVerification from '@/components/BankAccountVerification';
 
 const DOC_STATUS_COLORS: Record<string, string> = {
   pending_review: 'bg-warning/10 text-warning',
