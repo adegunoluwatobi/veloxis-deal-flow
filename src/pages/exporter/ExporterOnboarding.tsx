@@ -171,7 +171,7 @@ export default function ExporterOnboarding() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="contact_email">Contact Email *</Label>
-              <Input id="contact_email" type="email" placeholder="exporter@company.ng" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} />
+              <EmailInput id="contact_email" placeholder="exporter@company.ng" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} />
             </div>
             <Button onClick={handleSubmit} disabled={!isValid || submitting} className="w-full">
               {submitting ? 'Submitting…' : 'Submit Onboarding'}

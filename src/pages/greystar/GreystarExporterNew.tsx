@@ -179,7 +179,7 @@ export default function GreystarExporterNew() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="contact_email">Exporter Contact Email</Label>
-            <Input id="contact_email" type="email" placeholder="exporter@company.ng" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} />
+            <EmailInput id="contact_email" placeholder="exporter@company.ng" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} />
             <p className="text-xs text-muted-foreground">An account invitation will be sent to this email automatically.</p>
           </div>
           <Button onClick={handleSubmit} disabled={!isValid || loading} className="w-full">
