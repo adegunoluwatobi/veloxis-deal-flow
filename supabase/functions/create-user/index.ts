@@ -8,7 +8,6 @@ const corsHeaders = {
 
 const disallowedAuthCallbackHostPatterns = [
   /\.lovableproject\.com$/i,
-  /\.lovable\.app$/i,
   /^localhost$/i,
   /^127(?:\.\d{1,3}){3}$/i,
   /^\[::1\]$/i,
@@ -33,7 +32,10 @@ function getSiteUrl() {
     throw new Error("SITE_URL must use https://.");
   }
 
-  if (disallowedAuthCallbackHostPatterns.some((pattern) => pattern.test(siteUrl.hostname))) {
+  const normalizedHostname = siteUrl.hostname.trim().toLowerCase();
+  const isLovablePreviewHost = normalizedHostname.endsWith(".lovable.app") && normalizedHostname.includes("preview--");
+
+  if (isLovablePreviewHost || disallowedAuthCallbackHostPatterns.some((pattern) => pattern.test(normalizedHostname))) {
     throw new Error("SITE_URL must be a stable public domain, not a preview or local URL.");
   }
 
