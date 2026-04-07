@@ -208,12 +208,18 @@ export default function ExporterDealDetail() {
         </div>
         <DealStatusBadge status={deal.status} />
         {deal.status === 'draft' && (
-          <Button asChild>
-            <Link to={`/exporter/deals/${deal.id}/edit`}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit Deal
-            </Link>
-          </Button>
+          <>
+            <Button asChild>
+              <Link to={`/exporter/deals/${deal.id}/edit`}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Deal
+              </Link>
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteDraft}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Draft
+            </Button>
+          </>
         )}
       </div>
 
