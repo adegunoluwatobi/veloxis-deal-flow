@@ -161,39 +161,34 @@ Deno.serve(async (req) => {
 
     if (inviteError) {
       if (isExistingUserError(inviteError.message)) {
-        if (!isPendingInvite) {
+        if (!isPendingInvite && !hasPartnerAccess) {
           return new Response(JSON.stringify({ error: "This exporter has already accepted the invite. Ask them to sign in instead." }), {
             status: 409,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
 
+        // User already exists but hasn't completed onboarding.
+        // Use generateLink(magiclink) to get action_link, then redirect user
+        // to /set-password via that link. generateLink does NOT send the email
+        // automatically, so we also call resetPasswordForEmail to deliver an email.
         const existingUser = exporter.exporter_user_id
           ? { id: exporter.exporter_user_id }
           : await findUserByEmail(adminClient, email);
 
-        if (!existingUser?.id) {
-          throw inviteError;
+        // Send a password-reset email that redirects to /set-password
+        // This actually sends an email to the user with a valid link
+        const { error: resetError } = await adminClient.auth.resetPasswordForEmail(email, {
+          redirectTo: redirectTo,
+        });
+
+        if (resetError) {
+          console.error("resetPasswordForEmail error:", resetError.message);
+          throw resetError;
         }
 
-        const { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(existingUser.id);
-        if (deleteAuthError) {
-          throw deleteAuthError;
-        }
-
-        await Promise.all([
-          adminClient.from("users").delete().eq("id", existingUser.id),
-          adminClient.from("user_roles").delete().eq("user_id", existingUser.id),
-          adminClient.from("exporters").update({ exporter_user_id: null } as any).eq("id", exporter_id),
-        ]);
-
-        const retry = await sendInvite();
-        inviteData = retry.data;
-        inviteError = retry.error;
-
-        if (inviteError) {
-          throw inviteError;
-        }
+        inviteData = { user: existingUser } as any;
+        inviteError = null;
       } else {
         throw inviteError;
       }
