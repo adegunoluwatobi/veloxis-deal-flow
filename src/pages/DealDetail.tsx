@@ -134,6 +134,12 @@ export default function DealDetail() {
   const [pricingOverride, setPricingOverride] = useState(false);
   const [overrideAdvPct, setOverrideAdvPct] = useState('80');
 
+  // Editable pricing fields
+  const [editPlatformFeePct, setEditPlatformFeePct] = useState('0');
+  const [editDiscountFeePct, setEditDiscountFeePct] = useState('0');
+  const [editAdvPct, setEditAdvPct] = useState('80');
+  const [pricingSaving, setPricingSaving] = useState(false);
+
   // Notes
   const [newNote, setNewNote] = useState('');
 
