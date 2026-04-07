@@ -19,6 +19,7 @@ import {
   ArrowLeft, Building2, Shield, ShieldCheck, ShieldX, AlertTriangle,
   FileText, Copy, ExternalLink, CheckCircle2, XCircle, Clock, Upload, Download, Eye,
 } from 'lucide-react';
+import DocumentRequestSection from '@/components/DocumentRequestSection';
 
 const KYC_COLORS: Record<KycStatus, string> = {
   pending_documents: 'bg-muted text-muted-foreground',
