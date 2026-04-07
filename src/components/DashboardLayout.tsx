@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
   Shield, LayoutDashboard, Users, FileText, Settings, LogOut,
-  Menu, X, ChevronRight,
+  Menu, X, ChevronRight, ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -19,7 +19,11 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['originator', 'deal_manager'] },
   { label: 'Exporters', href: '/exporters', icon: Users, roles: ['originator', 'deal_manager'] },
   { label: 'Deals', href: '/deals', icon: FileText, roles: ['originator', 'deal_manager'] },
-  { label: 'Settings', href: '/settings', icon: Settings, roles: ['deal_manager'] },
+];
+
+const ADMIN_NAV: NavItem[] = [
+  { label: 'Admin Dashboard', href: '/admin', icon: ShieldCheck, roles: ['deal_manager'] },
+  { label: 'All Deals', href: '/admin/deals', icon: FileText, roles: ['deal_manager'] },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -29,6 +33,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const filteredNav = NAV_ITEMS.filter((item) => role && item.roles.includes(role));
+  const filteredAdmin = ADMIN_NAV.filter((item) => role && item.roles.includes(role));
 
   const handleSignOut = async () => {
     await signOut();
@@ -36,6 +41,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const roleLabel = role === 'deal_manager' ? 'Deal Manager' : 'Originator';
+
+  const isActive = (href: string) =>
+    location.pathname === href || (href !== '/' && href !== '/admin' && location.pathname.startsWith(href));
+
+  const renderNavLink = (item: NavItem) => {
+    const active = isActive(item.href);
+    return (
+      <Link
+        key={item.href}
+        to={item.href}
+        onClick={() => setSidebarOpen(false)}
+        className={cn(
+          'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+          active
+            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+        )}
+      >
+        <item.icon className="h-4 w-4" />
+        {item.label}
+        {active && <ChevronRight className="ml-auto h-4 w-4 opacity-50" />}
+      </Link>
+    );
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -59,28 +88,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
         </div>
 
-        <nav className="flex-1 space-y-1 px-3 py-4">
-          {filteredNav.map((item) => {
-            const isActive = location.pathname === item.href ||
-              (item.href !== '/' && location.pathname.startsWith(item.href));
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                    : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
-                )}
-              >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-                {isActive && <ChevronRight className="ml-auto h-4 w-4 opacity-50" />}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
+          {filteredNav.map(renderNavLink)}
+
+          {filteredAdmin.length > 0 && (
+            <>
+              <div className="my-3 border-t border-sidebar-border" />
+              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-sidebar-muted">Admin</p>
+              {filteredAdmin.map(renderNavLink)}
+            </>
+          )}
         </nav>
 
         <div className="border-t border-sidebar-border p-4">
