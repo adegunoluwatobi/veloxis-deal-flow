@@ -168,7 +168,7 @@ export default function GreystarDealDetail() {
         p_metadata: { actor_name: user!.email },
       });
 
-      toast({ title: 'Deal submitted to Veloxis' });
+      toast({ title: 'Deal submitted to underwriter' });
       await loadDeal();
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
