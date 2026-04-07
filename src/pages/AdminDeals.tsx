@@ -133,8 +133,8 @@ export default function AdminDeals() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>
-            {Object.entries(DEAL_STATUS_LABELS).map(([val, label]) => (
-              <SelectItem key={val} value={val}>{label} ({statusCounts[val as DealStatus] ?? 0})</SelectItem>
+            {Object.keys(DEAL_STATUS_LABELS).map((val) => (
+              <SelectItem key={val} value={val}>{getDealStatusLabel(val as DealStatus, 'veloxis')} ({statusCounts[val as DealStatus] ?? 0})</SelectItem>
             ))}
           </SelectContent>
         </Select>
