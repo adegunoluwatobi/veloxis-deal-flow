@@ -252,6 +252,17 @@ export default function DealDetail() {
 
   const handleSavePricing = async () => {
     if (!id || !deal) return;
+    const failures = validateAndScroll([
+      { fieldId: 'field-advance-pct', label: 'Advance %', condition: !!editAdvPct && parseFloat(editAdvPct) > 0 },
+      { fieldId: 'field-payment-terms', label: 'Payment Terms (days)', condition: !!editPaymentTerms && parseInt(editPaymentTerms) > 0 },
+      { fieldId: 'field-platform-fee', label: 'Platform Fee %', condition: editPlatformFeePct !== '' },
+      { fieldId: 'field-discount-fee', label: 'Discount Fee %', condition: editDiscountFeePct !== '' },
+    ]);
+    if (failures.length > 0) {
+      setValidationFailures(failures);
+      return;
+    }
+    setValidationFailures([]);
     setPricingSaving(true);
     try {
       const { error } = await supabase.from('deals').update({
