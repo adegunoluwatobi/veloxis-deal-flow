@@ -38,7 +38,7 @@ export default function SettingsPage() {
   const { toast } = useToast();
 
   const [createUserOpen, setCreateUserOpen] = useState(false);
-  const [createForm, setCreateForm] = useState({ email: '', password: '', role: 'originator' as AppRole, full_name: '', organisation: '' });
+  const [createForm, setCreateForm] = useState({ email: '', password: '', role: 'deal_manager' as AppRole, full_name: '', organisation: '' });
   const [createLoading, setCreateLoading] = useState(false);
 
   const { data: users, isLoading: usersLoading } = useQuery({
