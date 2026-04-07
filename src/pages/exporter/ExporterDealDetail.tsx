@@ -130,6 +130,9 @@ export default function ExporterDealDetail() {
           <Field label="Incoterms" value={deal.incoterms} />
         </CardContent>
       </Card>
+
+      {/* Audit Trail */}
+      <DealAuditTrail dealId={deal.id} viewerRole="exporter" />
     </div>
   );
 }
