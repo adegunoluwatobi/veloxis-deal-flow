@@ -84,7 +84,7 @@ export default function ExporterOnboarding() {
     return null;
   }
 
-  const isValid = form.company_name.trim() && form.rc_number.trim() && form.entity_type && form.director_name.trim() && form.contact_email.trim();
+  const isValid = form.company_name.trim() && form.rc_number.trim() && form.entity_type && form.director_name.trim() && form.contact_email.trim() && isValidEmail(form.contact_email);
 
   const handleSubmit = async () => {
     if (!user || !exporter || !isValid) return;
