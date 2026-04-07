@@ -396,24 +396,30 @@ export default function GreystarExporterDetail() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-muted-foreground">
                 <thead>
-                  <tr className="border-b text-left">
-                    <th className="pb-2 font-medium">Type</th>
-                    <th className="pb-2 font-medium">File</th>
-                    <th className="pb-2 font-medium">Expiry</th>
-                    <th className="pb-2 font-medium">Uploaded</th>
-                    <th className="pb-2 font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {supersededDocs.map((doc) => (
-                    <tr key={doc.id}>
-                      <td className="py-2">{DOC_TYPE_LABELS[doc.document_type as ExporterDocumentType] ?? doc.document_type}</td>
-                      <td className="py-2 max-w-[200px] truncate">{doc.file_name}</td>
-                      <td className="py-2">{doc.expiry_date ? new Date(doc.expiry_date).toLocaleDateString() : '—'}</td>
-                      <td className="py-2">{new Date(doc.uploaded_at).toLocaleDateString()}</td>
-                      <td className="py-2"><Badge variant="outline" className="text-xs">Superseded</Badge></td>
-                    </tr>
-                  ))}
+                   <tr className="border-b text-left">
+                     <th className="pb-2 font-medium">Type</th>
+                     <th className="pb-2 font-medium">File</th>
+                     <th className="pb-2 font-medium">Expiry</th>
+                     <th className="pb-2 font-medium">Uploaded</th>
+                     <th className="pb-2 font-medium">Status</th>
+                     <th className="pb-2 font-medium">View</th>
+                   </tr>
+                 </thead>
+                 <tbody className="divide-y">
+                   {supersededDocs.map((doc) => (
+                     <tr key={doc.id}>
+                       <td className="py-2">{DOC_TYPE_LABELS[doc.document_type as ExporterDocumentType] ?? doc.document_type}</td>
+                       <td className="py-2 max-w-[200px] truncate">{doc.file_name}</td>
+                       <td className="py-2">{doc.expiry_date ? new Date(doc.expiry_date).toLocaleDateString() : '—'}</td>
+                       <td className="py-2">{new Date(doc.uploaded_at).toLocaleDateString()}</td>
+                       <td className="py-2"><Badge variant="outline" className="text-xs">Superseded</Badge></td>
+                       <td className="py-2">
+                         <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleDownload(doc.file_path, doc.file_name)}>
+                           <Download className="mr-1 h-3 w-3" /> View
+                         </Button>
+                       </td>
+                     </tr>
+                   ))}
                 </tbody>
               </table>
             </div>
