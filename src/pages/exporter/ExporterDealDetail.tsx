@@ -135,8 +135,70 @@ export default function ExporterDealDetail() {
     }
   };
 
+  const handleAcceptOffer = async () => {
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from('deals').update({
+        status: 'approved' as any,
+        offer_accepted_at: new Date().toISOString(),
+        offer_accepted_by: user!.id,
+      }).eq('id', id!);
+      if (error) throw error;
+
+      await supabase.rpc('insert_audit_log', {
+        p_deal_id: id!,
+        p_user_id: user!.id,
+        p_user_role: 'exporter' as any,
+        p_action_type: 'deal_status_changed' as any,
+        p_metadata: { actor_name: user!.email, from: 'pending_exporter_acceptance', to: 'approved', action: 'offer_accepted' },
+      });
+
+      toast({ title: 'Offer accepted', description: 'Your facility offer has been accepted.' });
+      await loadData();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeclineOffer = async () => {
+    if (!declineReason.trim()) return;
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from('deals').update({
+        status: 'declined_by_exporter' as any,
+        offer_declined_at: new Date().toISOString(),
+        offer_declined_by: user!.id,
+        offer_decline_reason: declineReason.trim(),
+      }).eq('id', id!);
+      if (error) throw error;
+
+      await supabase.rpc('insert_audit_log', {
+        p_deal_id: id!,
+        p_user_id: user!.id,
+        p_user_role: 'exporter' as any,
+        p_action_type: 'deal_status_changed' as any,
+        p_metadata: { actor_name: user!.email, from: 'pending_exporter_acceptance', to: 'declined_by_exporter', reason: declineReason.trim() },
+      });
+
+      toast({ title: 'Offer declined' });
+      setDeclineOpen(false);
+      setDeclineReason('');
+      await loadData();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!deal) return <div className="py-20 text-center text-muted-foreground">Application not found</div>;
+
+  const isPendingAcceptance = deal.status === 'pending_exporter_acceptance';
+  const sym = CURRENCY_SYMBOLS[(deal.invoice_currency_v2 as InvoiceCurrency) ?? 'GBP'] ?? '£';
+  const fmt = (v: number | null) => v != null ? `${sym}${Number(v).toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—';
 
   const isFlagged = (field: string) => flaggedSet.has(field);
 
