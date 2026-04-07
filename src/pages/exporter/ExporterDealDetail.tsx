@@ -57,7 +57,7 @@ export default function ExporterDealDetail() {
 
   useEffect(() => { loadData(); }, [user, id]);
 
-  const flaggedFields: FlaggedField[] = pendingCR?.fields_flagged ?? [];
+  const flaggedFields = (pendingCR?.fields_flagged ?? []) as unknown as FlaggedField[];
   const flaggedSet = new Set(flaggedFields.map(f => f.field));
   const hasCR = deal?.status === 'changes_requested' && flaggedFields.length > 0;
 
