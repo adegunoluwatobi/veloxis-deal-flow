@@ -1,0 +1,249 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import DealStatusBadge from '@/components/DealStatusBadge';
+import { cn } from '@/lib/utils';
+import {
+  LayoutDashboard, TrendingUp, AlertTriangle, ArrowRight, Banknote,
+  Users, FileText, ShieldCheck, Clock, XCircle,
+} from 'lucide-react';
+import { KYC_STATUS_LABELS, type DealStatus, type KycStatus } from '@/types';
+
+interface DealRow {
+  id: string;
+  status: DealStatus;
+  invoice_number: string | null;
+  invoice_value: number | null;
+  gbp_equivalent: number | null;
+  buyer_company_name: string | null;
+  created_at: string;
+}
+
+interface ExporterRow {
+  id: string;
+  company_name: string;
+  kyc_status: KycStatus;
+}
+
+interface SystemConfig {
+  key: string;
+  value: string;
+}
+
+const KYC_COLORS: Record<KycStatus, string> = {
+  pending_documents: 'bg-muted text-muted-foreground',
+  documents_uploaded: 'bg-primary/10 text-primary',
+  under_review: 'bg-warning/10 text-warning',
+  verified: 'bg-success/10 text-success',
+  kyc_document_expired: 'bg-destructive/10 text-destructive',
+  rejected: 'bg-destructive/10 text-destructive',
+};
+
+export default function AdminDashboard() {
+  const [deals, setDeals] = useState<DealRow[]>([]);
+  const [exporters, setExporters] = useState<ExporterRow[]>([]);
+  const [config, setConfig] = useState<SystemConfig[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      const [dealsRes, exportersRes, configRes] = await Promise.all([
+        supabase.from('deals')
+          .select('id, status, invoice_number, invoice_value, gbp_equivalent, buyer_company_name, created_at')
+          .order('created_at', { ascending: false }).limit(100),
+        supabase.from('exporters')
+          .select('id, company_name, kyc_status')
+          .order('created_at', { ascending: false }),
+        supabase.from('system_config').select('key, value'),
+      ]);
+      setDeals((dealsRes.data as DealRow[]) ?? []);
+      setExporters((exportersRes.data as ExporterRow[]) ?? []);
+      setConfig((configRes.data as SystemConfig[]) ?? []);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const poolGbp = Number(config.find(c => c.key === 'pilot_pool_gbp')?.value ?? 150000);
+  const activeStatuses: DealStatus[] = ['funded_active', 'repayment_due', 'overdue'];
+  const deployed = deals
+    .filter(d => activeStatuses.includes(d.status))
+    .reduce((sum, d) => sum + (d.gbp_equivalent ?? 0), 0);
+  const available = poolGbp - deployed;
+  const utilization = poolGbp > 0 ? (deployed / poolGbp) * 100 : 0;
+
+  const pendingReview = deals.filter(d => d.status === 'submitted').length;
+  const underReview = deals.filter(d => d.status === 'under_review').length;
+  const overdueCount = deals.filter(d => d.status === 'overdue').length;
+  const docsRequested = deals.filter(d => d.status === 'docs_requested').length;
+  const verifiedExporters = exporters.filter(e => e.kyc_status === 'verified').length;
+  const pendingKyc = exporters.filter(e => e.kyc_status !== 'verified' && e.kyc_status !== 'rejected').length;
+
+  if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading…</div>;
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
+        <p className="text-sm text-muted-foreground">Capital pool & pipeline overview</p>
+      </div>
+
+      {/* Pool Metrics */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pool Size</CardTitle>
+            <Banknote className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">£{poolGbp.toLocaleString()}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Deployed</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">£{deployed.toLocaleString()}</div>
+            <div className="mt-1 h-1.5 rounded-full bg-muted overflow-hidden">
+              <div
+                className={cn('h-full rounded-full', utilization > 90 ? 'bg-destructive' : utilization > 75 ? 'bg-warning' : 'bg-success')}
+                style={{ width: `${Math.min(utilization, 100)}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">{utilization.toFixed(1)}% utilization</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Available</CardTitle>
+            <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className={cn('text-2xl font-bold', available > 0 ? 'text-success' : 'text-destructive')}>
+              £{available.toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Attention</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-warning" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1 text-sm">
+              {pendingReview > 0 && <p className="text-foreground"><span className="font-bold">{pendingReview}</span> pending review</p>}
+              {underReview > 0 && <p className="text-foreground"><span className="font-bold">{underReview}</span> under review</p>}
+              {docsRequested > 0 && <p className="text-warning"><span className="font-bold">{docsRequested}</span> docs requested</p>}
+              {overdueCount > 0 && <p className="text-destructive"><span className="font-bold">{overdueCount}</span> overdue</p>}
+              {pendingReview === 0 && underReview === 0 && docsRequested === 0 && overdueCount === 0 && (
+                <p className="text-muted-foreground">No items need attention</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {utilization > 90 && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          Pool utilization is above 90%. New deal approvals may be blocked.
+        </div>
+      )}
+
+      <div className="rounded-lg border border-border bg-warning/5 p-3 text-sm text-warning">
+        Non-GBP deals are converted to GBP at manually recorded FX rates. Exchange rate movement between advance and repayment is not hedged.
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Recent Deals */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-base">Recent Deals</CardTitle>
+            </div>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/admin/deals">View all <ArrowRight className="ml-1 h-4 w-4" /></Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {deals.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">No deals in the system.</p>
+            ) : (
+              <div className="space-y-1.5">
+                {deals.slice(0, 8).map(deal => (
+                  <Link
+                    key={deal.id}
+                    to={`/admin/deals/${deal.id}`}
+                    className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <span className="font-medium text-foreground">{deal.invoice_number || deal.id.slice(0, 8)}</span>
+                      <span className="ml-2 text-muted-foreground">{deal.buyer_company_name || ''}</span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                      {deal.invoice_value != null && (
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {deal.invoice_value.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
+                        </span>
+                      )}
+                      <DealStatusBadge status={deal.status} />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Exporters Overview */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-base">Exporters</CardTitle>
+            </div>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/exporters">Manage <ArrowRight className="ml-1 h-4 w-4" /></Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-4 grid grid-cols-3 gap-3 text-center">
+              <div className="rounded-lg border border-border p-2">
+                <p className="text-lg font-bold text-foreground">{exporters.length}</p>
+                <p className="text-xs text-muted-foreground">Total</p>
+              </div>
+              <div className="rounded-lg border border-success/30 bg-success/5 p-2">
+                <p className="text-lg font-bold text-success">{verifiedExporters}</p>
+                <p className="text-xs text-muted-foreground">Verified</p>
+              </div>
+              <div className="rounded-lg border border-warning/30 bg-warning/5 p-2">
+                <p className="text-lg font-bold text-warning">{pendingKyc}</p>
+                <p className="text-xs text-muted-foreground">Pending KYC</p>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              {exporters.slice(0, 6).map(exp => (
+                <Link
+                  key={exp.id}
+                  to={`/exporters/${exp.id}`}
+                  className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
+                >
+                  <span className="font-medium text-foreground">{exp.company_name}</span>
+                  <Badge variant="secondary" className={cn('text-xs', KYC_COLORS[exp.kyc_status])}>
+                    {KYC_STATUS_LABELS[exp.kyc_status]}
+                  </Badge>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

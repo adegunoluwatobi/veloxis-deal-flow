@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -111,7 +111,9 @@ export default function DealDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, role } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const backPath = location.pathname.startsWith('/admin') ? '/admin/deals' : '/deals';
 
   const [deal, setDeal] = useState<DealRow | null>(null);
   const [exporter, setExporter] = useState<ExporterRow | null>(null);
@@ -274,7 +276,7 @@ export default function DealDetail() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <Button variant="ghost" size="sm" onClick={() => navigate('/deals')} className="gap-2">
+      <Button variant="ghost" size="sm" onClick={() => navigate(backPath)} className="gap-2">
         <ArrowLeft className="h-4 w-4" /> Back to Deals
       </Button>
 
