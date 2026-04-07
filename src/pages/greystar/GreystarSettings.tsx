@@ -299,7 +299,7 @@ export default function GreystarSettings() {
 
             <Button
               onClick={handleCreate}
-              disabled={loading || !form.email.trim() || !form.full_name.trim() || (!isExporter && (!form.password || form.password.length < 8))}
+              disabled={loading || !form.email.trim() || !form.full_name.trim() || (isExporter && !form.organisation.trim()) || (!isExporter && (!form.password || form.password.length < 8))}
               className="w-full gap-2"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : isExporter ? <Mail className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
