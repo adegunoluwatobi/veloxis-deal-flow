@@ -33,8 +33,8 @@ interface ExporterDocRow {
 export default function ExportersList() {
   const { user, role } = useAuth();
   const [exporters, setExporters] = useState<ExporterRow[]>([]);
+  const [exporterDocs, setExporterDocs] = useState<ExporterDocRow[]>([]);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
