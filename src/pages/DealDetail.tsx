@@ -604,17 +604,21 @@ export default function DealDetail() {
           <CardContent>
             {pricingEditable ? (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <Label className="text-xs text-muted-foreground">Advance %</Label>
                     <Input type="number" min="1" max="100" value={editAdvPct} onChange={e => setEditAdvPct(e.target.value)} className="mt-1" />
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Platform Fee %</Label>
+                    <Label className="text-xs text-muted-foreground">Payment Terms (days)</Label>
+                    <Input type="number" min="1" max="365" value={editPaymentTerms} onChange={e => setEditPaymentTerms(e.target.value)} className="mt-1" placeholder="e.g. 30" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Platform Fee % (one-off)</Label>
                     <Input type="number" min="0" max="100" step="0.1" value={editPlatformFeePct} onChange={e => setEditPlatformFeePct(e.target.value)} className="mt-1" />
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Discount Fee %</Label>
+                    <Label className="text-xs text-muted-foreground">Discount Fee % (per month)</Label>
                     <Input type="number" min="0" max="100" step="0.1" value={editDiscountFeePct} onChange={e => setEditDiscountFeePct(e.target.value)} className="mt-1" />
                   </div>
                 </div>
@@ -624,11 +628,11 @@ export default function DealDetail() {
                     <span className="font-medium text-foreground">{sym}{liveAdvanceAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Platform Fee ({livePlatformFeePct}%)</span>
+                    <span className="text-muted-foreground">Platform Fee ({livePlatformFeePct}%, one-off)</span>
                     <span className="font-medium text-foreground">{sym}{livePlatformFeeAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Discount Fee ({liveDiscountFeePct}%)</span>
+                    <span className="text-muted-foreground">Discount Fee ({liveDiscountFeePct}%/month × {livePaymentTerms} days)</span>
                     <span className="font-medium text-foreground">{sym}{liveDiscountFeeAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div className="flex justify-between">
@@ -648,9 +652,14 @@ export default function DealDetail() {
                     <span className="font-semibold text-foreground">{sym}{liveRepaymentAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
                   </div>
                 </div>
-                <Button size="sm" onClick={handleSavePricing} disabled={pricingSaving} className="gap-1">
-                  {pricingSaving ? 'Saving…' : 'Save Pricing'}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" onClick={handleSavePricing} disabled={pricingSaving || !pricingCanSave} className="gap-1">
+                    {pricingSaving ? 'Saving…' : 'Save Pricing'}
+                  </Button>
+                  {!pricingCanSave && (
+                    <span className="text-xs text-muted-foreground">Enter Payment Terms to calculate pricing</span>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="grid gap-2 text-sm">
