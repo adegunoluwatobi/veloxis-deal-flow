@@ -21,6 +21,7 @@ import DealDetail from "@/pages/DealDetail";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminDeals from "@/pages/AdminDeals";
 import SMEUpload from "@/pages/SMEUpload";
+import SettingsPage from "@/pages/SettingsPage";
 import NotFound from "@/pages/NotFound";
 
 // Greystar pages
