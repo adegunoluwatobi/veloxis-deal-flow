@@ -717,7 +717,11 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "originator" | "deal_manager"
+      app_role:
+        | "originator"
+        | "deal_manager"
+        | "greystar_originator"
+        | "exporter"
       audit_action:
         | "deal_created"
         | "deal_submitted"
@@ -915,7 +919,12 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["originator", "deal_manager"],
+      app_role: [
+        "originator",
+        "deal_manager",
+        "greystar_originator",
+        "exporter",
+      ],
       audit_action: [
         "deal_created",
         "deal_submitted",
