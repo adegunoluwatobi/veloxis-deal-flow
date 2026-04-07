@@ -62,7 +62,7 @@ export default function ExportersList() {
           <h1 className="text-2xl font-bold text-foreground">Exporters</h1>
           <p className="text-sm text-muted-foreground">Nigerian SME profiles</p>
         </div>
-        {role === 'originator' && (
+        {(role === 'originator_staff' || role === 'originator_admin') && (
           <Button asChild>
             <Link to="/exporters/new"><Plus className="mr-2 h-4 w-4" />New Exporter</Link>
           </Button>

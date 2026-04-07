@@ -41,7 +41,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     navigate('/login');
   };
 
-  const roleLabel = role === 'deal_manager' ? 'Deal Manager' : 'Originator';
+  const roleLabel = role === 'super_admin' ? 'Super Admin' : role === 'deal_manager' ? 'Deal Manager' : 'Staff';
 
   const isActive = (href: string) =>
     location.pathname === href || (href !== '/' && href !== '/admin' && location.pathname.startsWith(href));

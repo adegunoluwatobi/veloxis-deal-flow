@@ -56,9 +56,9 @@ export default function DealsList() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Deals</h1>
-          <p className="text-sm text-muted-foreground">{role === 'deal_manager' ? 'All deals' : 'Your deal pipeline'}</p>
+          <p className="text-sm text-muted-foreground">{(role === 'super_admin' || role === 'deal_manager') ? 'All deals' : 'Your deal pipeline'}</p>
         </div>
-        {role === 'originator' && (
+        {(role === 'originator_staff' || role === 'originator_admin') && (
           <Button asChild>
             <Link to="/deals/new"><Plus className="mr-2 h-4 w-4" />New Deal</Link>
           </Button>

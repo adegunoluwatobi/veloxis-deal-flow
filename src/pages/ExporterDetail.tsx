@@ -280,7 +280,7 @@ export default function ExporterDetail() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">KYC Document Checklist</CardTitle>
             <div className="flex gap-2">
-              {(role === 'originator') && (
+              {(role === 'originator_staff' || role === 'originator_admin') && (
                 <Button variant="outline" size="sm" onClick={generateUploadToken} disabled={generatingToken}>
                   {generatingToken ? 'Generating…' : 'Generate Upload Link'}
                 </Button>

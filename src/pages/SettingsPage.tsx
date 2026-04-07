@@ -126,10 +126,10 @@ export default function SettingsPage() {
     }
   };
 
-  if (role !== 'deal_manager') {
+  if (role !== 'super_admin') {
     return (
       <div className="flex items-center justify-center h-64 text-muted-foreground">
-        <Shield className="h-8 w-8 mr-3" /> Access restricted to Deal Managers only.
+        <Shield className="h-8 w-8 mr-3" /> Access restricted to Super Admins only.
       </div>
     );
   }

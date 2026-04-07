@@ -47,7 +47,7 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
 
 function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ProtectedRoute allowedRoles={['deal_manager']}>
+    <ProtectedRoute allowedRoles={['super_admin', 'deal_manager']}>
       <DashboardLayout>{children}</DashboardLayout>
     </ProtectedRoute>
   );
@@ -55,7 +55,7 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
 
 function GreystarRoute({ children }: { children: React.ReactNode }) {
   return (
-    <ProtectedRoute allowedRoles={['greystar_originator']}>
+    <ProtectedRoute allowedRoles={['originator_admin', 'originator_staff']}>
       <GreystarLayout>{children}</GreystarLayout>
     </ProtectedRoute>
   );
