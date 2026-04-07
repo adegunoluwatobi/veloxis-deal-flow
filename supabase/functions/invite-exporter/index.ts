@@ -5,19 +5,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-function getSiteUrl(req: Request) {
-  const origin = req.headers.get("origin");
-  if (origin) return origin.replace(/\/+$/, "");
-
-  const referer = req.headers.get("referer");
-  if (referer) {
-    try {
-      return new URL(referer).origin.replace(/\/+$/, "");
-    } catch {
-    }
-  }
-
-  return (Deno.env.get("SITE_URL") || `https://id-preview--5aecb038-1cd1-4607-baa8-41e86f61384a.lovable.app`).replace(/\/+$/, "");
+function getSiteUrl(_req: Request) {
+  // Always use the stable public preview URL — never the iframe origin
+  return (Deno.env.get("SITE_URL") || "https://id-preview--5aecb038-1cd1-4607-baa8-41e86f61384a.lovable.app").replace(/\/+$/, "");
 }
 
 function isExistingUserError(message?: string) {
