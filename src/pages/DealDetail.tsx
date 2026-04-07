@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import DealStatusBadge from '@/components/DealStatusBadge';
 import DealAuditTrail from '@/components/DealAuditTrail';
 import { cn } from '@/lib/utils';
+import { computeKycStatus, type KycDocumentLike } from '@/lib/computeKycStatus';
 import {
   DEAL_STATUS_LABELS, KYC_STATUS_LABELS, ENTITY_TYPE_LABELS,
   COMMODITY_TYPE_LABELS, CURRENCY_SYMBOLS,
