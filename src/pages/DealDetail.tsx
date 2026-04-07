@@ -373,7 +373,7 @@ export default function DealDetail() {
             Created {new Date(deal.created_at).toLocaleDateString('en-GB')}
           </p>
         </div>
-        <DealStatusBadge status={deal.status} />
+        <DealStatusBadge status={deal.status} portal="veloxis" />
       </div>
 
       {/* Rejection banner */}

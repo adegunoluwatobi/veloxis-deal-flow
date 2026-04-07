@@ -201,7 +201,7 @@ export default function AdminDeals() {
                   <TableCell className="text-sm text-muted-foreground">
                     {deal.commodity_type ? COMMODITY_TYPE_LABELS[deal.commodity_type] : '—'}
                   </TableCell>
-                  <TableCell><DealStatusBadge status={deal.status} /></TableCell>
+                  <TableCell><DealStatusBadge status={deal.status} portal="veloxis" /></TableCell>
                   <TableCell className="text-xs text-muted-foreground tabular-nums">
                     {new Date(deal.created_at).toLocaleDateString('en-GB')}
                   </TableCell>

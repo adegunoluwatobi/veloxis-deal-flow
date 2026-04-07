@@ -96,7 +96,7 @@ export default function ExporterDeals() {
                     {currencySymbol(deal.invoice_currency_v2)}{deal.invoice_value.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
                   </span>
                 )}
-                <DealStatusBadge status={deal.status} />
+                <DealStatusBadge status={deal.status} portal="exporter" />
               </div>
             </Link>
           ))}

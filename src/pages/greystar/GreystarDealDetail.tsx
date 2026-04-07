@@ -209,7 +209,7 @@ export default function GreystarDealDetail() {
           <h1 className="text-2xl font-bold text-foreground">{deal.deal_reference || deal.id.slice(0, 8)}</h1>
           <p className="text-sm text-muted-foreground">{exporter?.company_name ?? 'Unknown Exporter'}</p>
         </div>
-        <DealStatusBadge status={deal.status} />
+        <DealStatusBadge status={deal.status} portal="partner" />
       </div>
 
       {/* Actions */}
