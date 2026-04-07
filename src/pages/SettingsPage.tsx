@@ -16,16 +16,18 @@ import { Settings, Users, Plus, Shield, Loader2 } from 'lucide-react';
 import type { AppRole } from '@/types';
 
 const ROLE_OPTIONS: { value: AppRole; label: string }[] = [
+  { value: 'super_admin', label: 'Super Admin' },
+  { value: 'originator_admin', label: 'Originator Admin' },
+  { value: 'originator_staff', label: 'Originator Staff' },
   { value: 'deal_manager', label: 'Deal Manager' },
-  { value: 'greystar_originator', label: 'Greystar Originator' },
-  { value: 'originator', label: 'Originator' },
   { value: 'exporter', label: 'Exporter' },
 ];
 
 const ROLE_COLORS: Record<string, string> = {
+  super_admin: 'bg-destructive/10 text-destructive',
+  originator_admin: 'bg-success/10 text-success',
+  originator_staff: 'bg-success/10 text-success',
   deal_manager: 'bg-primary/10 text-primary',
-  greystar_originator: 'bg-success/10 text-success',
-  originator: 'bg-warning/10 text-warning',
   exporter: 'bg-muted text-muted-foreground',
 };
 
