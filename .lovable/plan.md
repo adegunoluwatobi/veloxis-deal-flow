@@ -1,56 +1,41 @@
-## Veloxis Deal Room — Build Plan (React + Vite + Lovable Cloud)
+## Deal Submission Flow — Implementation Plan
 
-### Architecture Adaptation
-- **No Next.js**: All pages are React client components with react-router-dom
-- **No Server Actions**: Mutations go through Supabase client SDK (with RLS) or Edge Functions (for service-role operations like audit logging, token validation)
-- **No API routes**: Replaced by Edge Functions (e.g., upload handler, HelloSign webhook)
+This is a large feature spanning database changes, three portals, and workflow logic. I'll implement it in phases.
 
-### Step 1: Database Schema (enums, tables, RLS, functions, triggers)
-Deploy the full schema via migrations:
-- All enums (user_role, entity_type, commodity_type, deal_status, etc.)
-- All tables (users, exporters, deals, deal_documents, exporter_documents, ipus, audit_logs, internal_notes, system_config, exporter_upload_tokens)
-- RLS policies per your spec
-- DB functions (insert_audit_log, calculate_deal_pricing, validate_status_transition, etc.)
-- Triggers (audit log immutability, auto-supersede docs, user sync)
-- Seed system_config defaults
+### Phase 0 — Database Schema Changes
+1. **Add new deal statuses** to the `deal_status` enum: `changes_requested`, `sent_to_veloxis`, `rejected_by_partner`, `rejected_by_veloxis`
+2. **Add new columns to `deals` table**: `deal_reference`, `buyer_contact_phone`, `export_destination`, `export_licence_number`, `hs_code`, `incoterms`, `export_licence_document_id`, `bank_name`, `bank_account_name`, `bank_account_number`, `bank_sort_code_iban`, `bank_country`, `bank_name_match`, `buyer_name_match`, `licence_name_match`, `submitted_at`, `sent_to_veloxis_at`, `approved_at`, `funded_at`, `rejected_at`, `partner_notes`, `payment_due_date`, `invoice_file_url`, `advance_currency`, `fx_rate`, `repayment_due_date`, `repayment_amount`, `partner_organisation_id`
+3. **Create `exporter_bank_accounts` table**: `id`, `exporter_id`, `bank_name`, `account_name`, `account_number`, `sort_code_iban`, `bank_country`, `is_default`, `created_at`
+4. **Auto-generate deal reference** via trigger: `VLX-YYYY-NNNN`
+5. **Update RLS policies** for exporter access to deals
 
-### Step 2: Design System + Auth + Layout
-- Professional finance-themed design system (navy/slate/gold accents)
-- Login page (email/password)
-- Auth context with role-based routing
-- Dashboard shell with sidebar navigation
-- Role-based route guards (originator vs deal_manager)
+### Phase 1 — Exporter Portal: Submit a Deal
+1. Add "Deals" nav item to exporter sidebar
+2. Create **Exporter Deals List** page (`/exporter/deals`)
+3. Create **Exporter Deal Submission** form (`/exporter/deals/new`) — 5-step wizard:
+   - Step 1: Bank Account Details (with name match warning)
+   - Step 2: Invoice Details (with file upload)
+   - Step 3: Buyer Details
+   - Step 4: Export Details (with verified export licence reference)
+   - Step 5: Review & Submit (name match summary, save draft or submit)
+4. Create **Exporter Deal Detail** page (`/exporter/deals/:id`) — read-only view with status
 
-### Step 3: Originator Workflow
-- Originator dashboard (my deals, my exporters)
-- Create exporter form
-- Generate upload token + shareable link
-- SME upload page (/upload/:token) — public, no auth
-- Edge Function for token-validated uploads
-- 4-step deal submission wizard with live pricing preview
-- Deal list with status filters
+### Phase 2 — Partner Admin Portal: Deal Review
+1. Add "Deals" nav item to Greystar sidebar
+2. Create **Partner Deals List** page (`/greystar/deals`) with filter tabs
+3. Create **Partner Deal Detail** page (`/greystar/deals/:id`) with:
+   - Full deal data view
+   - Name matching summary
+   - Actions: Request Changes, Request Documents, Reject, Submit to Veloxis
 
-### Step 4: Deal Manager Workflow (Phase 3 from spec)
-- Admin dashboard with all deals table
-- Deal detail page (exporter, buyer, docs, pricing, audit, notes)
-- Approval/rejection flows
-- Document request flow
-- Internal notes
-- Advance % override + pricing recalculation
+### Phase 3 — Veloxis Deal Room
+1. Update existing **DealDetail** page to show new fields (bank details, export details, name matches)
+2. Add actions: Approve, Reject, Request Documents, Mark as Funded
+3. Update deals list to show new statuses
 
-### Step 5: IPU, Funding, Capital (Phases 4-5)
-- IPU generation + HelloSign integration (Edge Function + webhook)
-- Funding recording form
-- Repayment recording
-- Capital dashboard
-- Settings screen
+### Update types and status maps
+- Add new statuses to `DealStatus`, `DEAL_STATUS_LABELS`, `DEAL_STATUS_COLORS`
+- Add `InvoiceCurrency` to include `NGN`
 
-### Step 6: Polish (Phase 6)
-- Document expiry system
-- Email notifications
-- Audit log export
-- Exporter profile detail page
-
----
-
-**Shall I start with Step 1 (database schema migration)?** This is the foundation everything depends on.
+### Notifications
+- Deferred to a follow-up — will use toast notifications for now, email notifications can be added later with the email infrastructure
