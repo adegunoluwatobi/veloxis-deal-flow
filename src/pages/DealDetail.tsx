@@ -714,6 +714,39 @@ export default function DealDetail() {
         />
       )}
 
+      {/* Settlement & FX */}
+      {isDM && (
+        <SettlementFxSection
+          dealId={deal.id}
+          invoiceCurrency={deal.invoice_currency_v2}
+          settlementCurrency={(deal as any).settlement_currency ?? null}
+          settlementMethod={((deal as any).settlement_method ?? null) as SettlementMethod | null}
+          fxRateAtFunding={(deal as any).fx_rate_at_funding ?? null}
+          ngnEquivalent={(deal as any).ngn_equivalent_at_disbursement ?? null}
+          advanceAmount={deal.advance_amount}
+          fxRiskAcknowledged={(deal as any).fx_risk_acknowledged ?? false}
+          cbnRepatriationDeadline={(deal as any).cbn_repatriation_deadline ?? null}
+          dealStatus={deal.status}
+          isVeloxis={isDM}
+          isExporter={false}
+          onReload={load}
+        />
+      )}
+
+      {/* Repayment FX Reconciliation */}
+      <RepaymentFxSection
+        dealId={deal.id}
+        invoiceCurrency={deal.invoice_currency_v2}
+        repaymentAmount={deal.repayment_amount}
+        actualRepaymentAmount={(deal as any).actual_repayment_amount ?? null}
+        repaymentCurrencyReceived={(deal as any).repayment_currency_received ?? null}
+        repaymentFxRate={(deal as any).repayment_fx_rate ?? null}
+        repaymentGbpEquivalent={(deal as any).repayment_gbp_equivalent ?? null}
+        reconciliationStatus={((deal as any).repayment_reconciliation_status ?? null) as RepaymentReconciliationStatus | null}
+        dealStatus={deal.status}
+        onReload={load}
+      />
+
       {/* Document Vault */}
       <Card>
         <CardHeader className="pb-3">
