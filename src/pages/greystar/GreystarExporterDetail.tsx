@@ -248,14 +248,13 @@ export default function GreystarExporterDetail() {
 
       {/* KYC Banner — derived from documents */}
       {(() => {
-        const kyc = computeKycStatus(activeDocs);
         return (
-          <div className={cn('rounded-lg border p-4', kyc.borderColor)}>
+          <div className={cn('rounded-lg border p-4', kycResult.borderColor)}>
             <div className="flex items-center gap-2">
-              {kyc.status === 'verified' ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
-              <span className="font-semibold">KYC Status: {kyc.label}</span>
+              {kycResult.status === 'verified' ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+              <span className="font-semibold">KYC Status: {kycResult.label}</span>
             </div>
-            <p className="mt-1 text-sm">{kyc.description}</p>
+            <p className="mt-1 text-sm">{kycResult.description}</p>
           </div>
         );
       })()}
