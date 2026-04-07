@@ -109,6 +109,24 @@ export default function ExporterDealDetail() {
     }
   };
 
+  const handleDeleteDraft = async () => {
+    const ok = await confirm({
+      title: 'Delete Draft Deal',
+      description: 'Are you sure you want to delete this draft? This action cannot be undone.',
+      variant: 'warning',
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
+    try {
+      const { error } = await supabase.from('deals').delete().eq('id', id!);
+      if (error) throw error;
+      toast({ title: 'Draft deal deleted' });
+      navigate('/exporter/deals');
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!deal) return <div className="py-20 text-center text-muted-foreground">Deal not found</div>;
 
