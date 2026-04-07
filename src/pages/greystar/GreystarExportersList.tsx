@@ -6,7 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { KYC_STATUS_LABELS, ENTITY_TYPE_LABELS, type KycStatus, type EntityType } from '@/types';
+import {
+  KYC_STATUS_LABELS, ENTITY_TYPE_LABELS,
+  ONBOARDING_STATUS_LABELS, ONBOARDING_STATUS_COLORS,
+  type KycStatus, type EntityType, type OnboardingStatus,
+} from '@/types';
 import { cn } from '@/lib/utils';
 
 const KYC_COLORS: Record<KycStatus, string> = {
@@ -28,6 +32,7 @@ interface ExporterRow {
   contact_email: string | null;
   created_at: string;
   forwarded_to_veloxis_at: string | null;
+  onboarding_status: OnboardingStatus;
 }
 
 export default function GreystarExportersList() {
@@ -39,7 +44,7 @@ export default function GreystarExportersList() {
     const load = async () => {
       const { data } = await supabase
         .from('exporters')
-        .select('id, company_name, rc_number, entity_type, director_name, kyc_status, contact_email, created_at, forwarded_to_veloxis_at')
+        .select('id, company_name, rc_number, entity_type, director_name, kyc_status, contact_email, created_at, forwarded_to_veloxis_at, onboarding_status')
         .order('created_at', { ascending: false });
       setExporters((data as ExporterRow[]) ?? []);
       setLoading(false);
@@ -58,7 +63,7 @@ export default function GreystarExportersList() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Exporters</h1>
-          <p className="text-sm text-muted-foreground">Nigerian SME profiles managed by Greystar</p>
+          <p className="text-sm text-muted-foreground">Nigerian SME profiles managed by your organisation</p>
         </div>
         <Button asChild>
           <Link to="/greystar/exporters/new"><Plus className="mr-2 h-4 w-4" />New Exporter</Link>
@@ -89,6 +94,9 @@ export default function GreystarExportersList() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                <Badge variant="secondary" className={cn('text-xs font-medium', ONBOARDING_STATUS_COLORS[exp.onboarding_status])}>
+                  {ONBOARDING_STATUS_LABELS[exp.onboarding_status]}
+                </Badge>
                 {exp.forwarded_to_veloxis_at && (
                   <Badge variant="outline" className="text-xs">Forwarded</Badge>
                 )}

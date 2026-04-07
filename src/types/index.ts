@@ -120,3 +120,23 @@ export const ROLE_LABELS: Record<AppRole, string> = {
   deal_manager: 'Deal Manager',
   exporter: 'Exporter',
 };
+
+export type OnboardingStatus = 'invited' | 'password_set' | 'onboarding_in_progress' | 'onboarding_submitted' | 'onboarding_approved' | 'onboarding_rejected';
+
+export const ONBOARDING_STATUS_LABELS: Record<OnboardingStatus, string> = {
+  invited: 'Invite Pending',
+  password_set: 'Password Set',
+  onboarding_in_progress: 'Onboarding In Progress',
+  onboarding_submitted: 'Onboarding Submitted',
+  onboarding_approved: 'Approved',
+  onboarding_rejected: 'Rejected',
+};
+
+export const ONBOARDING_STATUS_COLORS: Record<OnboardingStatus, string> = {
+  invited: 'bg-warning/10 text-warning',
+  password_set: 'bg-primary/10 text-primary',
+  onboarding_in_progress: 'bg-primary/10 text-primary',
+  onboarding_submitted: 'bg-warning/10 text-warning',
+  onboarding_approved: 'bg-success/10 text-success',
+  onboarding_rejected: 'bg-destructive/10 text-destructive',
+};
