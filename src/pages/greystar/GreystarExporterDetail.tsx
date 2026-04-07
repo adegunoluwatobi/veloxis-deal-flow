@@ -178,6 +178,47 @@ export default function GreystarExporterDetail() {
         </div>
       </div>
 
+      {/* Onboarding Approval Banner */}
+      {exporter.onboarding_status === 'onboarding_submitted' && (
+        <Card className="border-warning">
+          <CardContent className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <Clock className="h-5 w-5 text-warning" />
+              <div>
+                <p className="font-semibold text-foreground">Onboarding Pending Approval</p>
+                <p className="text-xs text-muted-foreground">This exporter has submitted their onboarding details and is awaiting your approval.</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className="text-destructive" onClick={async () => {
+                if (!user || !id) return;
+                await supabase.from('exporters').update({ onboarding_status: 'onboarding_rejected' as any }).eq('id', id);
+                await supabase.rpc('insert_audit_log', {
+                  p_exporter_id: id, p_user_id: user.id, p_user_role: 'partner_staff' as any,
+                  p_action_type: 'onboarding_rejected' as any, p_metadata: {},
+                });
+                toast({ title: 'Onboarding rejected', description: 'Exporter can revise and resubmit.' });
+                load();
+              }}>
+                <XCircle className="mr-1 h-3.5 w-3.5" /> Reject
+              </Button>
+              <Button size="sm" onClick={async () => {
+                if (!user || !id) return;
+                await supabase.from('exporters').update({ onboarding_status: 'onboarding_approved' as any }).eq('id', id);
+                await supabase.rpc('insert_audit_log', {
+                  p_exporter_id: id, p_user_id: user.id, p_user_role: 'partner_staff' as any,
+                  p_action_type: 'onboarding_approved' as any, p_metadata: {},
+                });
+                toast({ title: 'Onboarding approved', description: 'Exporter now has full platform access.' });
+                load();
+              }}>
+                <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Approve Onboarding
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Company Identity */}
       <Card>
         <CardHeader><CardTitle>{exporter.company_name}</CardTitle></CardHeader>
@@ -187,7 +228,7 @@ export default function GreystarExporterDetail() {
             <div><dt className="text-muted-foreground">Entity Type</dt><dd className="font-medium">{exporter.entity_type}</dd></div>
             <div><dt className="text-muted-foreground">Director</dt><dd className="font-medium">{exporter.director_name}</dd></div>
             <div><dt className="text-muted-foreground">Contact Email</dt><dd className="font-medium">{exporter.contact_email ?? '—'}</dd></div>
-            <div><dt className="text-muted-foreground">Account Status</dt><dd className="font-medium">{exporter.exporter_user_id ? 'Invited' : 'No account'}</dd></div>
+            <div><dt className="text-muted-foreground">Onboarding</dt><dd className="font-medium capitalize">{(exporter.onboarding_status || 'invited').replace(/_/g, ' ')}</dd></div>
             <div><dt className="text-muted-foreground">Forwarded to Veloxis</dt><dd className="font-medium">{exporter.forwarded_to_veloxis_at ? new Date(exporter.forwarded_to_veloxis_at).toLocaleDateString() : 'Not yet'}</dd></div>
           </dl>
         </CardContent>

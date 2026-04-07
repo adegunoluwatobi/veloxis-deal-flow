@@ -292,8 +292,8 @@ export default function GreystarSettings() {
 
             {isExporter && (
               <div className="space-y-2">
-                <Label>Company / Organisation</Label>
-                <Input value={form.organisation} onChange={(e) => setForm({ ...form, organisation: e.target.value })} placeholder="Exporter company name" />
+                <Label>Company / Organisation *</Label>
+                <Input value={form.organisation} onChange={(e) => setForm({ ...form, organisation: e.target.value })} placeholder="Exporter company name" required />
               </div>
             )}
 
