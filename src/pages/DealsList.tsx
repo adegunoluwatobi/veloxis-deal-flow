@@ -58,7 +58,7 @@ export default function DealsList() {
           <h1 className="text-2xl font-bold text-foreground">Deals</h1>
           <p className="text-sm text-muted-foreground">{(role === 'super_admin' || role === 'deal_manager') ? 'All deals' : 'Your deal pipeline'}</p>
         </div>
-        {(role === 'originator_staff' || role === 'originator_admin') && (
+        {(role === 'partner_staff' || role === 'partner_admin') && (
           <Button asChild>
             <Link to="/deals/new"><Plus className="mr-2 h-4 w-4" />New Deal</Link>
           </Button>
