@@ -113,34 +113,13 @@ export default function ExporterDetail() {
 
   useEffect(() => { load(); }, [load]);
 
-  const handleVerifyDoc = async (docId: string) => {
-    if (!user) return;
-    const { error } = await supabase.from('exporter_documents').update({
-      document_status: 'verified',
-      verified_by: user.id,
-      verified_at: new Date().toISOString(),
-    }).eq('id', docId);
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
-      toast({ title: 'Document verified' });
-      load();
+  const handleDownload = async (filePath: string) => {
+    const { data, error } = await supabase.storage.from('veloxis-documents').createSignedUrl(filePath, 60);
+    if (error || !data?.signedUrl) {
+      toast({ title: 'Download failed', description: 'Could not generate download link.', variant: 'destructive' });
+      return;
     }
-  };
-
-  const handleRejectDoc = async (docId: string) => {
-    if (!user) return;
-    const { error } = await supabase.from('exporter_documents').update({
-      document_status: 'rejected',
-      verified_by: user.id,
-      verified_at: new Date().toISOString(),
-    }).eq('id', docId);
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
-      toast({ title: 'Document rejected' });
-      load();
-    }
+    window.open(data.signedUrl, '_blank');
   };
 
   const handleVerifyExporter = async () => {
