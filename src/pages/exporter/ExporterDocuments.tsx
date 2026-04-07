@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, AlertTriangle } from 'lucide-react';
+import { Upload, AlertTriangle, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ExporterDocumentType } from '@/types';
 import { DOC_TYPE_LABELS, buildDocTypeOptions } from '@/lib/docTypeOptions';
