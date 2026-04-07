@@ -43,6 +43,9 @@ export default function SMEUpload() {
     cac_certificate: { file: null, expiryDate: '', uploaded: false, uploading: false },
     director_id: { file: null, expiryDate: '', uploaded: false, uploading: false },
     nepc_certificate: { file: null, expiryDate: '', uploaded: false, uploading: false },
+    ubo_declaration_doc: { file: null, expiryDate: '', uploaded: false, uploading: false },
+    source_of_funds_doc: { file: null, expiryDate: '', uploaded: false, uploading: false },
+    bank_statements: { file: null, expiryDate: '', uploaded: false, uploading: false },
     other: { file: null, expiryDate: '', uploaded: false, uploading: false },
   });
 

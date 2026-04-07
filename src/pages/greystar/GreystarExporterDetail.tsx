@@ -13,11 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { ArrowLeft, Upload, FileText, AlertTriangle, CheckCircle2, XCircle, Clock, Eye, Download } from 'lucide-react';
-import { type KycStatus, type ExporterDocumentType } from '@/types';
+import { type KycStatus, type ExporterDocumentType, type SanctionsScreeningStatus } from '@/types';
 import { cn } from '@/lib/utils';
 import { DOC_TYPE_LABELS, buildDocTypeOptions } from '@/lib/docTypeOptions';
 import { computeKycStatus } from '@/lib/computeKycStatus';
 import DocumentRequestSection from '@/components/DocumentRequestSection';
+import UboDeclarationForm from '@/components/UboDeclarationForm';
+import ExporterComplianceSection from '@/components/ExporterComplianceSection';
 
 const DOC_STATUS_COLORS: Record<string, string> = {
   pending_review: 'bg-warning/10 text-warning',
@@ -402,6 +404,20 @@ export default function GreystarExporterDetail() {
           )}
         </CardContent>
       </Card>
+
+      {/* UBO Declarations */}
+      <UboDeclarationForm exporterId={id!} readOnly={isReadOnly} />
+
+      {/* Sanctions & EDD — Veloxis only editable */}
+      <ExporterComplianceSection
+        exporterId={id!}
+        sanctionsStatus={(exporter.sanctions_screening_status ?? 'pending_screening') as SanctionsScreeningStatus}
+        eddRequired={exporter.edd_required ?? true}
+        eddCompleted={exporter.edd_completed ?? false}
+        sourceOfFundsStatement={exporter.source_of_funds_statement ?? null}
+        isVeloxis={isReadOnly}
+        onReload={load}
+      />
 
       {/* Requested Documents */}
       <DocumentRequestSection exporterId={id!} mode={isPartner ? 'admin' : 'admin'} />

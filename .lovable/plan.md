@@ -1,41 +1,56 @@
-## Deal Submission Flow — Implementation Plan
 
-This is a large feature spanning database changes, three portals, and workflow logic. I'll implement it in phases.
+# Onboarding & KYC Compliance
 
-### Phase 0 — Database Schema Changes
-1. **Add new deal statuses** to the `deal_status` enum: `changes_requested`, `sent_to_veloxis`, `rejected_by_partner`, `rejected_by_veloxis`
-2. **Add new columns to `deals` table**: `deal_reference`, `buyer_contact_phone`, `export_destination`, `export_licence_number`, `hs_code`, `incoterms`, `export_licence_document_id`, `bank_name`, `bank_account_name`, `bank_account_number`, `bank_sort_code_iban`, `bank_country`, `bank_name_match`, `buyer_name_match`, `licence_name_match`, `submitted_at`, `sent_to_veloxis_at`, `approved_at`, `funded_at`, `rejected_at`, `partner_notes`, `payment_due_date`, `invoice_file_url`, `advance_currency`, `fx_rate`, `repayment_due_date`, `repayment_amount`, `partner_organisation_id`
-3. **Create `exporter_bank_accounts` table**: `id`, `exporter_id`, `bank_name`, `account_name`, `account_number`, `sort_code_iban`, `bank_country`, `is_default`, `created_at`
-4. **Auto-generate deal reference** via trigger: `VLX-YYYY-NNNN`
-5. **Update RLS policies** for exporter access to deals
+## Phase 1: Database Changes
 
-### Phase 1 — Exporter Portal: Submit a Deal
-1. Add "Deals" nav item to exporter sidebar
-2. Create **Exporter Deals List** page (`/exporter/deals`)
-3. Create **Exporter Deal Submission** form (`/exporter/deals/new`) — 5-step wizard:
-   - Step 1: Bank Account Details (with name match warning)
-   - Step 2: Invoice Details (with file upload)
-   - Step 3: Buyer Details
-   - Step 4: Export Details (with verified export licence reference)
-   - Step 5: Review & Submit (name match summary, save draft or submit)
-4. Create **Exporter Deal Detail** page (`/exporter/deals/:id`) — read-only view with status
+### New enums
+- `sanctions_screening_status`: pending_screening, clear, flagged
+- `buyer_credit_check_status`: pending, pass, refer, fail
 
-### Phase 2 — Partner Admin Portal: Deal Review
-1. Add "Deals" nav item to Greystar sidebar
-2. Create **Partner Deals List** page (`/greystar/deals`) with filter tabs
-3. Create **Partner Deal Detail** page (`/greystar/deals/:id`) with:
-   - Full deal data view
-   - Name matching summary
-   - Actions: Request Changes, Request Documents, Reject, Submit to Veloxis
+### New columns on `exporters` table
+- `source_of_funds_statement` (text) — free-text description
+- `sanctions_screening_status` (enum, default: pending_screening)
+- `edd_required` (boolean, default: true)
+- `edd_completed` (boolean, default: false)
 
-### Phase 3 — Veloxis Deal Room
-1. Update existing **DealDetail** page to show new fields (bank details, export details, name matches)
-2. Add actions: Approve, Reject, Request Documents, Mark as Funded
-3. Update deals list to show new statuses
+### New table: `ubo_declarations`
+- id, exporter_id, full_name, nationality, date_of_birth, residential_address, ownership_percentage
+- RLS: exporter can CRUD own, partner can view org, Veloxis can view all
 
-### Update types and status maps
-- Add new statuses to `DealStatus`, `DEAL_STATUS_LABELS`, `DEAL_STATUS_COLORS`
-- Add `InvoiceCurrency` to include `NGN`
+### New exporter_document_type enum values
+- `ubo_declaration_doc`
+- `source_of_funds_doc`
+- `bank_statements`
 
-### Notifications
-- Deferred to a follow-up — will use toast notifications for now, email notifications can be added later with the email infrastructure
+### New columns on `deals` table (Buyer KYC)
+- `buyer_country_of_incorporation` (text)
+- `buyer_sanctions_status` (sanctions_screening_status enum, default: pending_screening)
+- `buyer_credit_check_status` (buyer_credit_check_status enum, default: pending)
+- `buyer_underwriter_notes` (text)
+
+### New deal_document_type enum values
+- `buyer_registration_doc`
+
+## Phase 2: UI Changes
+
+### Exporter Onboarding page
+- Add "Compliance & Due Diligence" section with:
+  - UBO Declaration form (add/remove UBO persons)
+  - Source of Funds free-text + upload
+  - Bank Statements multi-file upload
+
+### Exporter Detail pages (Partner + Veloxis)
+- Show compliance docs in a dedicated section
+- Veloxis-only: Sanctions/PEP status dropdown, EDD toggle
+
+### Deal Detail page (Partner + Veloxis)
+- Add "Buyer Compliance" sub-section (hidden from exporter)
+- Buyer registration doc upload
+- Buyer country of incorporation
+- Buyer sanctions status (Veloxis only)
+- Buyer credit check status (Veloxis only)
+- Underwriter notes (Veloxis only)
+
+## Phase 3: Gating Logic
+- EDD flag blocks deal approval until edd_completed = true
+- Sanctions "flagged" status shows warning on deal detail

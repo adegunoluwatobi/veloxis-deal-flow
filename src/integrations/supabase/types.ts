@@ -243,7 +243,11 @@ export type Database = {
           buyer_contact_name: string | null
           buyer_contact_phone: string | null
           buyer_country: string | null
+          buyer_country_of_incorporation: string | null
+          buyer_credit_check_status: Database["public"]["Enums"]["buyer_credit_check_status"]
           buyer_name_match: boolean | null
+          buyer_sanctions_status: Database["public"]["Enums"]["sanctions_screening_status"]
+          buyer_underwriter_notes: string | null
           commodity_type: Database["public"]["Enums"]["commodity_type"] | null
           created_at: string
           deal_reference: string | null
@@ -312,7 +316,11 @@ export type Database = {
           buyer_contact_name?: string | null
           buyer_contact_phone?: string | null
           buyer_country?: string | null
+          buyer_country_of_incorporation?: string | null
+          buyer_credit_check_status?: Database["public"]["Enums"]["buyer_credit_check_status"]
           buyer_name_match?: boolean | null
+          buyer_sanctions_status?: Database["public"]["Enums"]["sanctions_screening_status"]
+          buyer_underwriter_notes?: string | null
           commodity_type?: Database["public"]["Enums"]["commodity_type"] | null
           created_at?: string
           deal_reference?: string | null
@@ -381,7 +389,11 @@ export type Database = {
           buyer_contact_name?: string | null
           buyer_contact_phone?: string | null
           buyer_country?: string | null
+          buyer_country_of_incorporation?: string | null
+          buyer_credit_check_status?: Database["public"]["Enums"]["buyer_credit_check_status"]
           buyer_name_match?: boolean | null
+          buyer_sanctions_status?: Database["public"]["Enums"]["sanctions_screening_status"]
+          buyer_underwriter_notes?: string | null
           commodity_type?: Database["public"]["Enums"]["commodity_type"] | null
           created_at?: string
           deal_reference?: string | null
@@ -732,6 +744,8 @@ export type Database = {
           country: string
           created_at: string
           director_name: string
+          edd_completed: boolean
+          edd_required: boolean
           entity_type: Database["public"]["Enums"]["entity_type"]
           exporter_user_id: string | null
           forwarded_to_veloxis_at: string | null
@@ -746,6 +760,8 @@ export type Database = {
           onboarding_status: Database["public"]["Enums"]["onboarding_status"]
           originator_id: string
           rc_number: string
+          sanctions_screening_status: Database["public"]["Enums"]["sanctions_screening_status"]
+          source_of_funds_statement: string | null
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
           updated_at: string
         }
@@ -755,6 +771,8 @@ export type Database = {
           country?: string
           created_at?: string
           director_name: string
+          edd_completed?: boolean
+          edd_required?: boolean
           entity_type: Database["public"]["Enums"]["entity_type"]
           exporter_user_id?: string | null
           forwarded_to_veloxis_at?: string | null
@@ -769,6 +787,8 @@ export type Database = {
           onboarding_status?: Database["public"]["Enums"]["onboarding_status"]
           originator_id: string
           rc_number: string
+          sanctions_screening_status?: Database["public"]["Enums"]["sanctions_screening_status"]
+          source_of_funds_statement?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string
         }
@@ -778,6 +798,8 @@ export type Database = {
           country?: string
           created_at?: string
           director_name?: string
+          edd_completed?: boolean
+          edd_required?: boolean
           entity_type?: Database["public"]["Enums"]["entity_type"]
           exporter_user_id?: string | null
           forwarded_to_veloxis_at?: string | null
@@ -792,6 +814,8 @@ export type Database = {
           onboarding_status?: Database["public"]["Enums"]["onboarding_status"]
           originator_id?: string
           rc_number?: string
+          sanctions_screening_status?: Database["public"]["Enums"]["sanctions_screening_status"]
+          source_of_funds_statement?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string
         }
@@ -977,6 +1001,50 @@ export type Database = {
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ubo_declarations: {
+        Row: {
+          created_at: string
+          date_of_birth: string
+          exporter_id: string
+          full_name: string
+          id: string
+          nationality: string
+          ownership_percentage: number
+          residential_address: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_of_birth: string
+          exporter_id: string
+          full_name: string
+          id?: string
+          nationality: string
+          ownership_percentage: number
+          residential_address: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_of_birth?: string
+          exporter_id?: string
+          full_name?: string
+          id?: string
+          nationality?: string
+          ownership_percentage?: number
+          residential_address?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ubo_declarations_exporter_id_fkey"
+            columns: ["exporter_id"]
+            isOneToOne: false
+            referencedRelation: "exporters"
             referencedColumns: ["id"]
           },
         ]
@@ -1168,13 +1236,18 @@ export type Database = {
         | "deal_field_edited"
         | "deal_document_requested"
         | "deal_document_uploaded"
+      buyer_credit_check_status: "pending" | "pass" | "refer" | "fail"
       change_request_status: "pending" | "resolved" | "cancelled"
       commodity_type:
         | "solid_minerals"
         | "scrap_metal"
         | "manufactured_goods"
         | "textiles"
-      deal_document_type: "commercial_invoice" | "bill_of_lading" | "other"
+      deal_document_type:
+        | "commercial_invoice"
+        | "bill_of_lading"
+        | "other"
+        | "buyer_registration_doc"
       deal_status:
         | "draft"
         | "submitted"
@@ -1215,6 +1288,9 @@ export type Database = {
         | "director_id"
         | "nepc_certificate"
         | "other"
+        | "ubo_declaration_doc"
+        | "source_of_funds_doc"
+        | "bank_statements"
       invoice_currency: "GBP" | "USD" | "EUR" | "NGN"
       kyc_status:
         | "pending_documents"
@@ -1230,6 +1306,7 @@ export type Database = {
         | "onboarding_submitted"
         | "onboarding_approved"
         | "onboarding_rejected"
+      sanctions_screening_status: "pending_screening" | "clear" | "flagged"
       subscription_tier: "pay_as_you_go" | "veloxis_pro"
     }
     CompositeTypes: {
@@ -1408,6 +1485,7 @@ export const Constants = {
         "deal_document_requested",
         "deal_document_uploaded",
       ],
+      buyer_credit_check_status: ["pending", "pass", "refer", "fail"],
       change_request_status: ["pending", "resolved", "cancelled"],
       commodity_type: [
         "solid_minerals",
@@ -1415,7 +1493,12 @@ export const Constants = {
         "manufactured_goods",
         "textiles",
       ],
-      deal_document_type: ["commercial_invoice", "bill_of_lading", "other"],
+      deal_document_type: [
+        "commercial_invoice",
+        "bill_of_lading",
+        "other",
+        "buyer_registration_doc",
+      ],
       deal_status: [
         "draft",
         "submitted",
@@ -1459,6 +1542,9 @@ export const Constants = {
         "director_id",
         "nepc_certificate",
         "other",
+        "ubo_declaration_doc",
+        "source_of_funds_doc",
+        "bank_statements",
       ],
       invoice_currency: ["GBP", "USD", "EUR", "NGN"],
       kyc_status: [
@@ -1477,6 +1563,7 @@ export const Constants = {
         "onboarding_approved",
         "onboarding_rejected",
       ],
+      sanctions_screening_status: ["pending_screening", "clear", "flagged"],
       subscription_tier: ["pay_as_you_go", "veloxis_pro"],
     },
   },
