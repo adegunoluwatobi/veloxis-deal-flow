@@ -177,7 +177,7 @@ export default function ExporterDealNew() {
   const canProceed = (s: number) => {
     switch (s) {
       case 0: return form.bank_name && form.bank_account_name && form.bank_account_number && form.bank_sort_code_iban && form.bank_country;
-      case 1: return form.invoice_number && form.invoice_date && form.invoice_amount && form.invoice_currency && form.payment_due_date && form.invoice_file;
+      case 1: return form.invoice_number && form.invoice_date && form.invoice_amount && form.invoice_currency && form.payment_due_date && (form.invoice_file || existingInvoicePath);
       case 2: return form.buyer_company_name && form.buyer_country && form.buyer_contact_name && form.buyer_contact_email && isValidEmail(form.buyer_contact_email) && form.buyer_contact_phone;
       case 3: return form.goods_description && form.export_destination && form.export_licence_number && form.hs_code && form.incoterms;
       default: return true;
