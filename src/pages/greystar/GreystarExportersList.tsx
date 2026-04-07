@@ -100,14 +100,7 @@ export default function GreystarExportersList() {
       exporter.company_name.toLowerCase().includes(search.toLowerCase()) ||
       exporter.rc_number.toLowerCase().includes(search.toLowerCase()) ||
       (exporter.contact_email ?? '').toLowerCase().includes(search.toLowerCase());
-    if (!matchesSearch) return false;
-
-    if (tab === 'forwarded') return !!exporter.forwarded_to_veloxis_at;
-    if (tab === 'not_forwarded') {
-      const kyc = computeKycStatus(docsByExporter.get(exporter.id) ?? []);
-      return !exporter.forwarded_to_veloxis_at && kyc.status === 'verified';
-    }
-    return true;
+    return matchesSearch;
   });
 
   const readyCount = exporters.filter((e) => {
