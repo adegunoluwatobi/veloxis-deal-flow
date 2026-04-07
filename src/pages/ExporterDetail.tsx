@@ -198,28 +198,13 @@ export default function ExporterDetail() {
         <Eye className="h-4 w-4" /> Read-only view. Document verification is managed by the partner organisation.
       </div>
 
-      {/* KYC Status Banner */}
-      <div className={cn(
-        'flex items-center gap-3 rounded-lg border p-4',
-        exporter.kyc_status === 'verified' ? 'border-success/30 bg-success/5' :
-        exporter.kyc_status === 'rejected' || exporter.kyc_status === 'kyc_document_expired' ? 'border-destructive/30 bg-destructive/5' :
-        'border-warning/30 bg-warning/5'
-      )}>
-        <KycIcon className={cn('h-5 w-5', KYC_COLORS[exporter.kyc_status].split(' ')[1])} />
+      {/* KYC Status Banner — derived from documents */}
+      <div className={cn('flex items-center gap-3 rounded-lg border p-4', kyc.borderColor)}>
+        <KycIcon className={cn('h-5 w-5', kyc.color.split(' ')[1])} />
         <div className="flex-1">
-          <p className="text-sm font-medium text-foreground">KYC Status: {KYC_STATUS_LABELS[exporter.kyc_status]}</p>
-          <p className="text-xs text-muted-foreground">
-            {exporter.kyc_status === 'verified' ? 'All mandatory documents verified. This exporter is cleared for deal submission.' :
-             exporter.kyc_status === 'kyc_document_expired' ? 'One or more mandatory documents have expired. Replacement uploads required.' :
-             exporter.kyc_status === 'rejected' ? 'KYC has been rejected.' :
-             'Awaiting document uploads and verification.'}
-          </p>
+          <p className="text-sm font-medium text-foreground">KYC Status: {kyc.label}</p>
+          <p className="text-xs text-muted-foreground">{kyc.description}</p>
         </div>
-        {(role === 'deal_manager' || role === 'super_admin') && exporter.kyc_status !== 'verified' && exporter.kyc_status !== 'rejected' && (
-          <Button size="sm" onClick={handleVerifyExporter} className="gap-1">
-            <ShieldCheck className="h-4 w-4" /> Verify Exporter
-          </Button>
-        )}
       </div>
 
       {/* Company Identity */}
