@@ -328,8 +328,8 @@ export default function GreystarDealDetail() {
       <Dialog open={rejectOpen} onOpenChange={() => setRejectOpen(false)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Deal</DialogTitle>
-            <DialogDescription>Provide a reason for rejecting this deal.</DialogDescription>
+            <DialogTitle>Reject Application</DialogTitle>
+            <DialogDescription>Provide a reason for rejecting this application.</DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             <Label>Rejection reason *</Label>
