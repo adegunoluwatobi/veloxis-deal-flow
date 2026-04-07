@@ -189,13 +189,6 @@ export default function GreystarExporterDetail() {
 
   const enabledOptions = docTypeOptions.filter((o) => !o.disabled);
   const kycResult = computeKycStatus(activeDocs);
-  const isKycComplete = kycResult.status === 'verified';
-  const isOnboardingApproved = exporter.onboarding_status === 'onboarding_approved';
-  const isAlreadyForwarded = !!exporter.forwarded_to_veloxis_at;
-  const canForward = isPartner && isOnboardingApproved && isKycComplete && !isAlreadyForwarded;
-  const forwardDisabledReason = !isOnboardingApproved
-    ? 'Onboarding must be approved before forwarding'
-    : !isKycComplete
     ? 'KYC must be complete (all 3 documents verified) before forwarding'
     : isAlreadyForwarded
     ? 'Already forwarded to Veloxis'
