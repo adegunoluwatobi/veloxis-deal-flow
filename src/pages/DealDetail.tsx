@@ -138,6 +138,7 @@ export default function DealDetail() {
   const [editPlatformFeePct, setEditPlatformFeePct] = useState('0');
   const [editDiscountFeePct, setEditDiscountFeePct] = useState('0');
   const [editAdvPct, setEditAdvPct] = useState('80');
+  const [editPaymentTerms, setEditPaymentTerms] = useState('');
   const [pricingSaving, setPricingSaving] = useState(false);
 
   // Notes
@@ -165,6 +166,7 @@ export default function DealDetail() {
       setEditAdvPct(String(d.advance_percentage));
       setEditPlatformFeePct(String((d.platform_fee_pct ?? 0) * 100));
       setEditDiscountFeePct(String((d.discount_fee_pct ?? 0) * 100));
+      setEditPaymentTerms(String(d.payment_terms_days ?? ''));
       // Load exporter
       const { data: exp } = await supabase.from('exporters').select('*').eq('id', d.exporter_id).single();
       if (exp) {
@@ -219,14 +221,19 @@ export default function DealDetail() {
   // Live pricing calculations
   const pricingEditable = isDM && (deal?.status === ('sent_to_veloxis' as DealStatus) || deal?.status === 'under_review');
   const liveAdvPct = parseFloat(editAdvPct) || 80;
-  const liveAdvanceAmount = (deal?.invoice_value ?? 0) * (liveAdvPct / 100);
+  const liveInvoiceValue = deal?.invoice_value ?? 0;
+  const liveAdvanceAmount = liveInvoiceValue * (liveAdvPct / 100);
   const livePlatformFeePct = parseFloat(editPlatformFeePct) || 0;
   const liveDiscountFeePct = parseFloat(editDiscountFeePct) || 0;
-  const livePlatformFeeAmount = liveAdvanceAmount * (livePlatformFeePct / 100);
-  const liveDiscountFeeAmount = liveAdvanceAmount * (liveDiscountFeePct / 100);
+  const livePaymentTerms = parseInt(editPaymentTerms) || 0;
+  // Platform fee: one-off on invoice face value
+  const livePlatformFeeAmount = liveInvoiceValue * (livePlatformFeePct / 100);
+  // Discount fee: per-month rate on advance amount, prorated by tenor
+  const liveDiscountFeeAmount = liveAdvanceAmount * (liveDiscountFeePct / 100) * (livePaymentTerms / 30);
   const liveTotalFees = livePlatformFeeAmount + liveDiscountFeeAmount;
   const liveNetAdvance = liveAdvanceAmount - liveTotalFees;
-  const liveRepaymentAmount = deal?.invoice_value ?? 0;
+  const liveRepaymentAmount = liveInvoiceValue;
+  const pricingCanSave = livePaymentTerms > 0;
 
   const handleSavePricing = async () => {
     if (!id || !deal) return;
@@ -235,6 +242,7 @@ export default function DealDetail() {
       const { error } = await supabase.from('deals').update({
         advance_percentage: liveAdvPct,
         advance_amount: liveAdvanceAmount,
+        payment_terms_days: livePaymentTerms,
         platform_fee_pct: livePlatformFeePct / 100,
         platform_fee_amount: livePlatformFeeAmount,
         discount_fee_pct: liveDiscountFeePct / 100,
@@ -596,17 +604,21 @@ export default function DealDetail() {
           <CardContent>
             {pricingEditable ? (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <Label className="text-xs text-muted-foreground">Advance %</Label>
                     <Input type="number" min="1" max="100" value={editAdvPct} onChange={e => setEditAdvPct(e.target.value)} className="mt-1" />
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Platform Fee %</Label>
+                    <Label className="text-xs text-muted-foreground">Payment Terms (days)</Label>
+                    <Input type="number" min="1" max="365" value={editPaymentTerms} onChange={e => setEditPaymentTerms(e.target.value)} className="mt-1" placeholder="e.g. 30" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Platform Fee % (one-off)</Label>
                     <Input type="number" min="0" max="100" step="0.1" value={editPlatformFeePct} onChange={e => setEditPlatformFeePct(e.target.value)} className="mt-1" />
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Discount Fee %</Label>
+                    <Label className="text-xs text-muted-foreground">Discount Fee % (per month)</Label>
                     <Input type="number" min="0" max="100" step="0.1" value={editDiscountFeePct} onChange={e => setEditDiscountFeePct(e.target.value)} className="mt-1" />
                   </div>
                 </div>
@@ -616,11 +628,11 @@ export default function DealDetail() {
                     <span className="font-medium text-foreground">{sym}{liveAdvanceAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Platform Fee ({livePlatformFeePct}%)</span>
+                    <span className="text-muted-foreground">Platform Fee ({livePlatformFeePct}%, one-off)</span>
                     <span className="font-medium text-foreground">{sym}{livePlatformFeeAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Discount Fee ({liveDiscountFeePct}%)</span>
+                    <span className="text-muted-foreground">Discount Fee ({liveDiscountFeePct}%/month × {livePaymentTerms} days)</span>
                     <span className="font-medium text-foreground">{sym}{liveDiscountFeeAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div className="flex justify-between">
@@ -640,9 +652,14 @@ export default function DealDetail() {
                     <span className="font-semibold text-foreground">{sym}{liveRepaymentAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
                   </div>
                 </div>
-                <Button size="sm" onClick={handleSavePricing} disabled={pricingSaving} className="gap-1">
-                  {pricingSaving ? 'Saving…' : 'Save Pricing'}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" onClick={handleSavePricing} disabled={pricingSaving || !pricingCanSave} className="gap-1">
+                    {pricingSaving ? 'Saving…' : 'Save Pricing'}
+                  </Button>
+                  {!pricingCanSave && (
+                    <span className="text-xs text-muted-foreground">Enter Payment Terms to calculate pricing</span>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="grid gap-2 text-sm">
@@ -651,11 +668,11 @@ export default function DealDetail() {
                   <span className="font-medium text-foreground">{deal.advance_amount ? `${sym}${deal.advance_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Platform Fee ({((deal.platform_fee_pct ?? 0) * 100).toFixed(1)}%)</span>
+                  <span className="text-muted-foreground">Platform Fee ({((deal.platform_fee_pct ?? 0) * 100).toFixed(1)}%, one-off)</span>
                   <span className="font-medium text-foreground">{deal.platform_fee_amount ? `${sym}${deal.platform_fee_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Discount Fee ({((deal.discount_fee_pct ?? 0) * 100).toFixed(1)}%)</span>
+                  <span className="text-muted-foreground">Discount Fee ({((deal.discount_fee_pct ?? 0) * 100).toFixed(1)}%/month × {deal.payment_terms_days ?? 0} days)</span>
                   <span className="font-medium text-foreground">{deal.discount_fee_amount ? `${sym}${deal.discount_fee_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
                 </div>
                 <div className="flex justify-between">
