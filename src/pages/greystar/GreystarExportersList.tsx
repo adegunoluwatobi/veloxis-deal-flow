@@ -103,12 +103,6 @@ export default function GreystarExportersList() {
     return matchesSearch;
   });
 
-  const readyCount = exporters.filter((e) => {
-    const kyc = computeKycStatus(docsByExporter.get(e.id) ?? []);
-    return !e.forwarded_to_veloxis_at && kyc.status === 'verified';
-  }).length;
-
-  const forwardedCount = exporters.filter((e) => !!e.forwarded_to_veloxis_at).length;
 
   return (
     <div className="space-y-6 animate-fade-in">
