@@ -29,6 +29,9 @@ import {
 import BuyerComplianceSection from '@/components/BuyerComplianceSection';
 import SettlementFxSection from '@/components/SettlementFxSection';
 import RepaymentFxSection from '@/components/RepaymentFxSection';
+import PaymentAdvicePanel from '@/components/PaymentAdvicePanel';
+import SettlementSummaryBanner from '@/components/SettlementSummaryBanner';
+import IpuUploadSection from '@/components/IpuUploadSection';
 import type { SettlementMethod, RepaymentReconciliationStatus } from '@/types';
 
 interface DealRow {
@@ -409,6 +412,25 @@ export default function DealDetail() {
         </div>
       )}
 
+      {/* Payment Received Banner & Settlement Summary */}
+      <SettlementSummaryBanner
+        dealId={deal.id}
+        dealReference={(deal as any).deal_reference ?? null}
+        invoiceCurrency={deal.invoice_currency_v2}
+        paymentDate={(deal as any).payment_date ?? null}
+        paymentAmountReceived={(deal as any).payment_amount_received ?? null}
+        advanceAmount={deal.advance_amount}
+        platformFeeAmount={deal.platform_fee_amount}
+        discountFeeAmount={deal.discount_fee_amount}
+        latePenaltyAmount={(deal as any).late_penalty_amount ?? null}
+        overdueDaysAtPayment={(deal as any).overdue_days_at_payment ?? null}
+        residualBalance={(deal as any).residual_balance ?? null}
+        paymentAdviceDocId={(deal as any).payment_advice_doc_id ?? null}
+        exporterReceiptConfirmedAt={(deal as any).exporter_receipt_confirmed_at ?? null}
+        dealStatus={deal.status}
+        onReload={load}
+      />
+
       {/* Deal Manager Actions */}
       {isDM && (
         <Card>
@@ -435,7 +457,7 @@ export default function DealDetail() {
                   )}
                   {isSuperAdmin && (
                     <>
-                      <Button size="sm" onClick={() => setPricingOverride(true)} disabled={actionLoading} className="gap-1 bg-success hover:bg-success/90">
+                      <Button size="sm" onClick={() => setPricingOverride(true)} disabled={actionLoading || !(deal as any).ipu_verified} className="gap-1 bg-success hover:bg-success/90" title={!(deal as any).ipu_verified ? 'Upload and verify signed IPU before approving' : undefined}>
                         <CheckCircle2 className="h-4 w-4" /> Approve Deal
                       </Button>
                       <Button size="sm" variant="destructive" onClick={() => setRejectOpen(true)} disabled={actionLoading} className="gap-1">
@@ -451,7 +473,7 @@ export default function DealDetail() {
               {/* Ready for final approval — super_admin only */}
               {deal.status === ('ready_for_final_approval' as DealStatus) && isSuperAdmin && (
                 <>
-                  <Button size="sm" onClick={() => setPricingOverride(true)} disabled={actionLoading} className="gap-1 bg-success hover:bg-success/90">
+                  <Button size="sm" onClick={() => setPricingOverride(true)} disabled={actionLoading || !(deal as any).ipu_verified} className="gap-1 bg-success hover:bg-success/90" title={!(deal as any).ipu_verified ? 'Upload and verify signed IPU before approving' : undefined}>
                     <CheckCircle2 className="h-4 w-4" /> Approve Deal
                   </Button>
                   <Button size="sm" variant="destructive" onClick={() => setRejectOpen(true)} disabled={actionLoading} className="gap-1">
@@ -713,6 +735,32 @@ export default function DealDetail() {
           onReload={load}
         />
       )}
+
+      {/* IPU Upload & Verification */}
+      {isDM && (
+        <IpuUploadSection
+          dealId={deal.id}
+          ipuVerified={(deal as any).ipu_verified ?? false}
+          ipuVerifiedAt={(deal as any).ipu_verified_at ?? null}
+          ipuDocuments={activeDocs.filter(d => d.document_type === 'ipu_signed').map(d => ({ id: d.id, file_name: d.file_name, uploaded_at: d.uploaded_at }))}
+          dealStatus={deal.status}
+          onReload={load}
+        />
+      )}
+
+      {/* Record Buyer Payment */}
+      <PaymentAdvicePanel
+        dealId={deal.id}
+        invoiceCurrency={deal.invoice_currency_v2}
+        advanceAmount={deal.advance_amount}
+        invoiceValue={deal.invoice_value}
+        platformFeeAmount={deal.platform_fee_amount}
+        discountFeeAmount={deal.discount_fee_amount}
+        repaymentDueDate={(deal as any).repayment_due_date ?? null}
+        dealStatus={deal.status}
+        discountFeePct={deal.discount_fee_pct}
+        onReload={load}
+      />
 
       {/* Settlement & FX */}
       {isDM && (

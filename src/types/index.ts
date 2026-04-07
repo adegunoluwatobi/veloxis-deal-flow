@@ -12,7 +12,7 @@ export type DealStatus =
   | 'ready_for_final_approval' | 'rejection_pending_approval' | 'approved'
   | 'rejected' | 'rejected_by_partner' | 'rejected_by_veloxis'
   | 'ipu_sent' | 'ipu_expired' | 'ipu_signed_awaiting_funding'
-  | 'funded_active' | 'repayment_due' | 'overdue'
+  | 'funded_active' | 'repayment_due' | 'overdue' | 'payment_received'
   | 'closed_repaid' | 'closed_partial';
 
 export type KycStatus =
@@ -27,7 +27,7 @@ export type InvoiceCurrency = 'GBP' | 'USD' | 'EUR' | 'NGN';
 
 export type ExporterDocumentType = 'cac_certificate' | 'director_id' | 'nepc_certificate' | 'ubo_declaration_doc' | 'source_of_funds_doc' | 'bank_statements' | 'other';
 
-export type DealDocumentType = 'commercial_invoice' | 'bill_of_lading' | 'buyer_registration_doc' | 'other';
+export type DealDocumentType = 'commercial_invoice' | 'bill_of_lading' | 'buyer_registration_doc' | 'ipu_signed' | 'payment_advice' | 'other';
 
 export type SanctionsScreeningStatus = 'pending_screening' | 'clear' | 'flagged';
 export type BuyerCreditCheckStatus = 'pending' | 'pass' | 'refer' | 'fail';
@@ -109,6 +109,7 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   funded_active: 'Funded (Active)',
   repayment_due: 'Repayment Due',
   overdue: 'Overdue',
+  payment_received: 'Payment Received — Pending Closure',
   closed_repaid: 'Closed (Repaid)',
   closed_partial: 'Closed (Partial)',
 };
@@ -146,6 +147,7 @@ export const DEAL_STATUS_COLORS: Record<DealStatus, string> = {
   funded_active: 'bg-success/10 text-success',
   repayment_due: 'bg-warning/10 text-warning',
   overdue: 'bg-destructive/10 text-destructive',
+  payment_received: 'bg-success/10 text-success',
   closed_repaid: 'bg-muted text-muted-foreground',
   closed_partial: 'bg-muted text-muted-foreground',
 };
