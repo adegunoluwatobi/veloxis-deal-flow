@@ -128,126 +128,214 @@ export type Database = {
           actual_repayment_amount: number | null
           actual_repayment_date: string | null
           advance_amount: number | null
+          advance_currency: string | null
           advance_percentage: number
+          approved_at: string | null
+          bank_account_name: string | null
+          bank_account_number: string | null
+          bank_country: string | null
+          bank_name: string | null
+          bank_name_match: boolean | null
+          bank_sort_code_iban: string | null
           buyer_company_name: string | null
           buyer_contact_email: string | null
           buyer_contact_name: string | null
+          buyer_contact_phone: string | null
           buyer_country: string | null
+          buyer_name_match: boolean | null
           commodity_type: Database["public"]["Enums"]["commodity_type"] | null
           created_at: string
+          deal_reference: string | null
           demurrage_amount: number
           demurrage_rate_daily: number
           disbursement_date: string | null
           discount_fee_amount: number | null
           discount_fee_pct: number | null
           expected_settlement_date: string | null
+          export_destination: string | null
+          export_licence_document_id: string | null
+          export_licence_number: string | null
           exporter_id: string
+          funded_at: string | null
           fx_rate_at_funding: number | null
           fx_rate_source: string | null
           gbp_equivalent: number | null
           goods_description: string | null
           gross_yield: number | null
+          hs_code: string | null
           id: string
+          incoterms: string | null
           invoice_currency_v2:
             | Database["public"]["Enums"]["invoice_currency"]
             | null
           invoice_date: string | null
+          invoice_file_path: string | null
           invoice_number: string | null
           invoice_value: number | null
+          licence_name_match: boolean | null
           originator_id: string
           outstanding_balance: number | null
           overdue_days: number
           parent_deal_id: string | null
+          partner_notes: string | null
+          partner_organisation_id: string | null
+          payment_due_date: string | null
           payment_terms_days: number | null
           platform_fee_amount: number | null
           platform_fee_pct: number | null
+          rejected_at: string | null
           rejection_reason: string | null
+          repayment_amount: number | null
+          repayment_due_date: string | null
+          sent_to_veloxis_at: string | null
           status: Database["public"]["Enums"]["deal_status"]
+          submitted_at: string | null
           updated_at: string
         }
         Insert: {
           actual_repayment_amount?: number | null
           actual_repayment_date?: string | null
           advance_amount?: number | null
+          advance_currency?: string | null
           advance_percentage?: number
+          approved_at?: string | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_country?: string | null
+          bank_name?: string | null
+          bank_name_match?: boolean | null
+          bank_sort_code_iban?: string | null
           buyer_company_name?: string | null
           buyer_contact_email?: string | null
           buyer_contact_name?: string | null
+          buyer_contact_phone?: string | null
           buyer_country?: string | null
+          buyer_name_match?: boolean | null
           commodity_type?: Database["public"]["Enums"]["commodity_type"] | null
           created_at?: string
+          deal_reference?: string | null
           demurrage_amount?: number
           demurrage_rate_daily?: number
           disbursement_date?: string | null
           discount_fee_amount?: number | null
           discount_fee_pct?: number | null
           expected_settlement_date?: string | null
+          export_destination?: string | null
+          export_licence_document_id?: string | null
+          export_licence_number?: string | null
           exporter_id: string
+          funded_at?: string | null
           fx_rate_at_funding?: number | null
           fx_rate_source?: string | null
           gbp_equivalent?: number | null
           goods_description?: string | null
           gross_yield?: number | null
+          hs_code?: string | null
           id?: string
+          incoterms?: string | null
           invoice_currency_v2?:
             | Database["public"]["Enums"]["invoice_currency"]
             | null
           invoice_date?: string | null
+          invoice_file_path?: string | null
           invoice_number?: string | null
           invoice_value?: number | null
+          licence_name_match?: boolean | null
           originator_id: string
           outstanding_balance?: number | null
           overdue_days?: number
           parent_deal_id?: string | null
+          partner_notes?: string | null
+          partner_organisation_id?: string | null
+          payment_due_date?: string | null
           payment_terms_days?: number | null
           platform_fee_amount?: number | null
           platform_fee_pct?: number | null
+          rejected_at?: string | null
           rejection_reason?: string | null
+          repayment_amount?: number | null
+          repayment_due_date?: string | null
+          sent_to_veloxis_at?: string | null
           status?: Database["public"]["Enums"]["deal_status"]
+          submitted_at?: string | null
           updated_at?: string
         }
         Update: {
           actual_repayment_amount?: number | null
           actual_repayment_date?: string | null
           advance_amount?: number | null
+          advance_currency?: string | null
           advance_percentage?: number
+          approved_at?: string | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_country?: string | null
+          bank_name?: string | null
+          bank_name_match?: boolean | null
+          bank_sort_code_iban?: string | null
           buyer_company_name?: string | null
           buyer_contact_email?: string | null
           buyer_contact_name?: string | null
+          buyer_contact_phone?: string | null
           buyer_country?: string | null
+          buyer_name_match?: boolean | null
           commodity_type?: Database["public"]["Enums"]["commodity_type"] | null
           created_at?: string
+          deal_reference?: string | null
           demurrage_amount?: number
           demurrage_rate_daily?: number
           disbursement_date?: string | null
           discount_fee_amount?: number | null
           discount_fee_pct?: number | null
           expected_settlement_date?: string | null
+          export_destination?: string | null
+          export_licence_document_id?: string | null
+          export_licence_number?: string | null
           exporter_id?: string
+          funded_at?: string | null
           fx_rate_at_funding?: number | null
           fx_rate_source?: string | null
           gbp_equivalent?: number | null
           goods_description?: string | null
           gross_yield?: number | null
+          hs_code?: string | null
           id?: string
+          incoterms?: string | null
           invoice_currency_v2?:
             | Database["public"]["Enums"]["invoice_currency"]
             | null
           invoice_date?: string | null
+          invoice_file_path?: string | null
           invoice_number?: string | null
           invoice_value?: number | null
+          licence_name_match?: boolean | null
           originator_id?: string
           outstanding_balance?: number | null
           overdue_days?: number
           parent_deal_id?: string | null
+          partner_notes?: string | null
+          partner_organisation_id?: string | null
+          payment_due_date?: string | null
           payment_terms_days?: number | null
           platform_fee_amount?: number | null
           platform_fee_pct?: number | null
+          rejected_at?: string | null
           rejection_reason?: string | null
+          repayment_amount?: number | null
+          repayment_due_date?: string | null
+          sent_to_veloxis_at?: string | null
           status?: Database["public"]["Enums"]["deal_status"]
+          submitted_at?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "deals_export_licence_document_id_fkey"
+            columns: ["export_licence_document_id"]
+            isOneToOne: false
+            referencedRelation: "exporter_documents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "deals_exporter_id_fkey"
             columns: ["exporter_id"]
@@ -267,6 +355,13 @@ export type Database = {
             columns: ["parent_deal_id"]
             isOneToOne: false
             referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_partner_organisation_id_fkey"
+            columns: ["partner_organisation_id"]
+            isOneToOne: false
+            referencedRelation: "partner_organisations"
             referencedColumns: ["id"]
           },
         ]
@@ -328,6 +423,53 @@ export type Database = {
             columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exporter_bank_accounts: {
+        Row: {
+          account_name: string
+          account_number: string
+          bank_country: string
+          bank_name: string
+          created_at: string
+          exporter_id: string
+          id: string
+          is_default: boolean
+          sort_code_iban: string
+          updated_at: string
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          bank_country: string
+          bank_name: string
+          created_at?: string
+          exporter_id: string
+          id?: string
+          is_default?: boolean
+          sort_code_iban: string
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          bank_country?: string
+          bank_name?: string
+          created_at?: string
+          exporter_id?: string
+          id?: string
+          is_default?: boolean
+          sort_code_iban?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exporter_bank_accounts_exporter_id_fkey"
+            columns: ["exporter_id"]
+            isOneToOne: false
+            referencedRelation: "exporters"
             referencedColumns: ["id"]
           },
         ]
