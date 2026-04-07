@@ -405,6 +405,20 @@ export default function GreystarExporterDetail() {
         </CardContent>
       </Card>
 
+      {/* UBO Declarations */}
+      <UboDeclarationForm exporterId={id!} readOnly={isReadOnly} />
+
+      {/* Sanctions & EDD — Veloxis only editable */}
+      <ExporterComplianceSection
+        exporterId={id!}
+        sanctionsStatus={(exporter.sanctions_screening_status ?? 'pending_screening') as SanctionsScreeningStatus}
+        eddRequired={exporter.edd_required ?? true}
+        eddCompleted={exporter.edd_completed ?? false}
+        sourceOfFundsStatement={exporter.source_of_funds_statement ?? null}
+        isVeloxis={isReadOnly}
+        onReload={load}
+      />
+
       {/* Requested Documents */}
       <DocumentRequestSection exporterId={id!} mode={isPartner ? 'admin' : 'admin'} />
 

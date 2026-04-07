@@ -19,13 +19,14 @@ import {
   DEAL_STATUS_LABELS, KYC_STATUS_LABELS, ENTITY_TYPE_LABELS,
   COMMODITY_TYPE_LABELS, CURRENCY_SYMBOLS,
   type DealStatus, type KycStatus, type EntityType, type CommodityType, type InvoiceCurrency,
-  type AuditAction,
+  type AuditAction, type SanctionsScreeningStatus, type BuyerCreditCheckStatus,
 } from '@/types';
 import {
   ArrowLeft, Building2, ShieldCheck, FileText, Clock, User,
   CheckCircle2, XCircle, AlertTriangle, MessageSquare, Send,
   DollarSign, Globe, Package, Calendar, Percent,
 } from 'lucide-react';
+import BuyerComplianceSection from '@/components/BuyerComplianceSection';
 
 interface DealRow {
   id: string;
