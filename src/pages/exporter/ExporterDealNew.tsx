@@ -356,7 +356,7 @@ export default function ExporterDealNew() {
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox id="save-bank" checked={saveBankDetails} onCheckedChange={(v) => setSaveBankDetails(v === true)} />
-              <label htmlFor="save-bank" className="text-sm text-muted-foreground">Save bank details for future deals</label>
+              <label htmlFor="save-bank" className="text-sm text-muted-foreground">Save bank details for future applications</label>
             </div>
           </CardContent>
         </Card>
