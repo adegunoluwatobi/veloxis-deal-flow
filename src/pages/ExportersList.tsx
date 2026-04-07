@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { KYC_STATUS_LABELS, ENTITY_TYPE_LABELS, type KycStatus, type EntityType } from '@/types';
+import { ENTITY_TYPE_LABELS, type KycStatus, type EntityType } from '@/types';
 import { cn } from '@/lib/utils';
+import { computeKycStatus } from '@/lib/computeKycStatus';
 
 interface ExporterRow {
   id: string;
