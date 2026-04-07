@@ -32,6 +32,8 @@ import RepaymentFxSection from '@/components/RepaymentFxSection';
 import PaymentAdvicePanel from '@/components/PaymentAdvicePanel';
 import SettlementSummaryBanner from '@/components/SettlementSummaryBanner';
 import IpuUploadSection from '@/components/IpuUploadSection';
+import TradePackChecklist from '@/components/TradePackChecklist';
+import OverdueActionsPanel from '@/components/OverdueActionsPanel';
 import type { SettlementMethod, RepaymentReconciliationStatus } from '@/types';
 
 interface DealRow {
