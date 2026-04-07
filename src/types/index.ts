@@ -13,6 +13,7 @@ export type DealStatus =
   | 'rejected' | 'rejected_by_partner' | 'rejected_by_veloxis'
   | 'ipu_sent' | 'ipu_expired' | 'ipu_signed_awaiting_funding'
   | 'funded_active' | 'repayment_due' | 'overdue' | 'payment_received'
+  | 'in_collections'
   | 'closed_repaid' | 'closed_partial';
 
 export type KycStatus =
