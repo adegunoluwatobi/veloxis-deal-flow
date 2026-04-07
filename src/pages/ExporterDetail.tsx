@@ -311,6 +311,9 @@ export default function ExporterDetail() {
         </CardContent>
       </Card>
 
+      {/* Requested Documents */}
+      <DocumentRequestSection exporterId={id!} mode="admin" />
+
       {/* Document History Table */}
       <Card>
         <CardHeader className="pb-3">

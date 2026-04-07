@@ -209,6 +209,9 @@ export default function ExporterDocuments() {
         </CardContent>
       </Card>
 
+      {/* Requested Documents */}
+      {exporter && <DocumentRequestSection exporterId={exporter.id} mode="exporter" />}
+
       {supersededDocs.length > 0 && (
         <Card>
           <CardHeader><CardTitle className="text-sm text-muted-foreground">Previous Versions ({supersededDocs.length})</CardTitle></CardHeader>

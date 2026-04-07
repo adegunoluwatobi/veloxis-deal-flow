@@ -36,9 +36,21 @@ export function groupDocumentsByExporter<T extends { exporter_id?: string | null
 
 /**
  * Derive KYC status live from the active (non-superseded) documents list.
- * Priority: rejected > expired > pending_review > pending upload > verified
+ * Priority: outstanding requests > rejected > expired > pending_review > pending upload > verified
  */
-export function computeKycStatus(activeDocs: KycDocumentLike[]): ComputedKyc {
+export function computeKycStatus(activeDocs: KycDocumentLike[], pendingRequestCount = 0): ComputedKyc {
+  if (pendingRequestCount > 0) {
+    return {
+      status: 'rejected',
+      label: 'Action Required',
+      badgeLabel: 'Action Required',
+      description: 'Additional documents have been requested. Please log in to upload them.',
+      color: 'bg-destructive/10 text-destructive',
+      borderColor: 'border-destructive/30 bg-destructive/5',
+      icon: 'destructive',
+    };
+  }
+
   const byType = new Map<string, KycDocumentLike>();
 
   for (const doc of activeDocs) {

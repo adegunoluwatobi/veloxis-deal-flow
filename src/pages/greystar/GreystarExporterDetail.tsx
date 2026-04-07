@@ -389,6 +389,9 @@ export default function GreystarExporterDetail() {
         </CardContent>
       </Card>
 
+      {/* Requested Documents */}
+      <DocumentRequestSection exporterId={id!} mode={isPartner ? 'admin' : 'admin'} />
+
       {/* Superseded Documents */}
       {supersededDocs.length > 0 && (
         <Card>
