@@ -14,6 +14,7 @@ import {
   type KycStatus, type EntityType, type ExporterDocumentType, type ExpiryStatus,
 } from '@/types';
 import { cn } from '@/lib/utils';
+import { computeKycStatus } from '@/lib/computeKycStatus';
 import {
   ArrowLeft, Building2, Shield, ShieldCheck, ShieldX, AlertTriangle,
   FileText, Copy, ExternalLink, CheckCircle2, XCircle, Clock, Upload, Download, Eye,
