@@ -557,7 +557,7 @@ export default function ExporterDealNew() {
               </div>
               {(!bankNameMatch || !exportLicence) && (
                 <p className="text-xs text-destructive mt-2">
-                  ⚠️ Please ensure all names match before submitting. Mismatches may cause your deal to be rejected.
+                  ⚠️ Please ensure all names match before submitting. Mismatches may cause your application to be rejected.
                 </p>
               )}
             </div>
