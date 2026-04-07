@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Only deal_manager can change roles
+    // Only super_admin can change roles
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
@@ -37,11 +37,11 @@ Deno.serve(async (req) => {
       .from("user_roles")
       .select("role")
       .eq("user_id", caller.id)
-      .eq("role", "deal_manager")
+      .eq("role", "super_admin")
       .maybeSingle();
 
     if (!roleData) {
-      return new Response(JSON.stringify({ error: "Forbidden: deal_manager only" }), {
+      return new Response(JSON.stringify({ error: "Forbidden: super_admin only" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
