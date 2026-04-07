@@ -262,6 +262,7 @@ export type Database = {
           export_licence_document_id: string | null
           export_licence_number: string | null
           exporter_id: string
+          exporter_receipt_confirmed_at: string | null
           funded_at: string | null
           fx_rate_at_funding: number | null
           fx_rate_source: string | null
@@ -279,15 +280,23 @@ export type Database = {
           invoice_file_path: string | null
           invoice_number: string | null
           invoice_value: number | null
+          ipu_verified: boolean
+          ipu_verified_at: string | null
+          ipu_verified_by: string | null
+          late_penalty_amount: number | null
           licence_name_match: boolean | null
           net_advance_amount: number | null
           ngn_equivalent_at_disbursement: number | null
           originator_id: string
           outstanding_balance: number | null
           overdue_days: number
+          overdue_days_at_payment: number | null
           parent_deal_id: string | null
           partner_notes: string | null
           partner_organisation_id: string | null
+          payment_advice_doc_id: string | null
+          payment_amount_received: number | null
+          payment_date: string | null
           payment_due_date: string | null
           payment_terms_days: number | null
           platform_fee_amount: number | null
@@ -302,6 +311,7 @@ export type Database = {
           repayment_reconciliation_status:
             | Database["public"]["Enums"]["repayment_reconciliation_status"]
             | null
+          residual_balance: number | null
           sent_to_veloxis_at: string | null
           settlement_currency: string | null
           settlement_method:
@@ -348,6 +358,7 @@ export type Database = {
           export_licence_document_id?: string | null
           export_licence_number?: string | null
           exporter_id: string
+          exporter_receipt_confirmed_at?: string | null
           funded_at?: string | null
           fx_rate_at_funding?: number | null
           fx_rate_source?: string | null
@@ -365,15 +376,23 @@ export type Database = {
           invoice_file_path?: string | null
           invoice_number?: string | null
           invoice_value?: number | null
+          ipu_verified?: boolean
+          ipu_verified_at?: string | null
+          ipu_verified_by?: string | null
+          late_penalty_amount?: number | null
           licence_name_match?: boolean | null
           net_advance_amount?: number | null
           ngn_equivalent_at_disbursement?: number | null
           originator_id: string
           outstanding_balance?: number | null
           overdue_days?: number
+          overdue_days_at_payment?: number | null
           parent_deal_id?: string | null
           partner_notes?: string | null
           partner_organisation_id?: string | null
+          payment_advice_doc_id?: string | null
+          payment_amount_received?: number | null
+          payment_date?: string | null
           payment_due_date?: string | null
           payment_terms_days?: number | null
           platform_fee_amount?: number | null
@@ -388,6 +407,7 @@ export type Database = {
           repayment_reconciliation_status?:
             | Database["public"]["Enums"]["repayment_reconciliation_status"]
             | null
+          residual_balance?: number | null
           sent_to_veloxis_at?: string | null
           settlement_currency?: string | null
           settlement_method?:
@@ -434,6 +454,7 @@ export type Database = {
           export_licence_document_id?: string | null
           export_licence_number?: string | null
           exporter_id?: string
+          exporter_receipt_confirmed_at?: string | null
           funded_at?: string | null
           fx_rate_at_funding?: number | null
           fx_rate_source?: string | null
@@ -451,15 +472,23 @@ export type Database = {
           invoice_file_path?: string | null
           invoice_number?: string | null
           invoice_value?: number | null
+          ipu_verified?: boolean
+          ipu_verified_at?: string | null
+          ipu_verified_by?: string | null
+          late_penalty_amount?: number | null
           licence_name_match?: boolean | null
           net_advance_amount?: number | null
           ngn_equivalent_at_disbursement?: number | null
           originator_id?: string
           outstanding_balance?: number | null
           overdue_days?: number
+          overdue_days_at_payment?: number | null
           parent_deal_id?: string | null
           partner_notes?: string | null
           partner_organisation_id?: string | null
+          payment_advice_doc_id?: string | null
+          payment_amount_received?: number | null
+          payment_date?: string | null
           payment_due_date?: string | null
           payment_terms_days?: number | null
           platform_fee_amount?: number | null
@@ -474,6 +503,7 @@ export type Database = {
           repayment_reconciliation_status?:
             | Database["public"]["Enums"]["repayment_reconciliation_status"]
             | null
+          residual_balance?: number | null
           sent_to_veloxis_at?: string | null
           settlement_currency?: string | null
           settlement_method?:
@@ -517,6 +547,13 @@ export type Database = {
             columns: ["partner_organisation_id"]
             isOneToOne: false
             referencedRelation: "partner_organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_payment_advice_doc_id_fkey"
+            columns: ["payment_advice_doc_id"]
+            isOneToOne: false
+            referencedRelation: "deal_documents"
             referencedColumns: ["id"]
           },
         ]
@@ -1293,6 +1330,9 @@ export type Database = {
         | "deal_field_edited"
         | "deal_document_requested"
         | "deal_document_uploaded"
+        | "payment_advice_submitted"
+        | "ipu_verified"
+        | "exporter_receipt_confirmed"
       buyer_credit_check_status: "pending" | "pass" | "refer" | "fail"
       change_request_status: "pending" | "resolved" | "cancelled"
       commodity_type:
@@ -1304,6 +1344,8 @@ export type Database = {
         | "commercial_invoice"
         | "bill_of_lading"
         | "other"
+        | "ipu_signed"
+        | "payment_advice"
         | "buyer_registration_doc"
       deal_status:
         | "draft"
@@ -1320,6 +1362,7 @@ export type Database = {
         | "funded_active"
         | "repayment_due"
         | "overdue"
+        | "payment_received"
         | "closed_repaid"
         | "closed_partial"
         | "changes_requested"
@@ -1543,6 +1586,9 @@ export const Constants = {
         "deal_field_edited",
         "deal_document_requested",
         "deal_document_uploaded",
+        "payment_advice_submitted",
+        "ipu_verified",
+        "exporter_receipt_confirmed",
       ],
       buyer_credit_check_status: ["pending", "pass", "refer", "fail"],
       change_request_status: ["pending", "resolved", "cancelled"],
@@ -1556,6 +1602,8 @@ export const Constants = {
         "commercial_invoice",
         "bill_of_lading",
         "other",
+        "ipu_signed",
+        "payment_advice",
         "buyer_registration_doc",
       ],
       deal_status: [
@@ -1573,6 +1621,7 @@ export const Constants = {
         "funded_active",
         "repayment_due",
         "overdue",
+        "payment_received",
         "closed_repaid",
         "closed_partial",
         "changes_requested",
