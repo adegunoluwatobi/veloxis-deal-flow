@@ -69,6 +69,44 @@ export type Database = {
           },
         ]
       }
+      deal_change_requests: {
+        Row: {
+          created_at: string
+          deal_id: string
+          fields_flagged: Json
+          id: string
+          requested_by: string
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["change_request_status"]
+        }
+        Insert: {
+          created_at?: string
+          deal_id: string
+          fields_flagged?: Json
+          id?: string
+          requested_by: string
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["change_request_status"]
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string
+          fields_flagged?: Json
+          id?: string
+          requested_by?: string
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["change_request_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_change_requests_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deal_documents: {
         Row: {
           deal_id: string
@@ -1046,6 +1084,7 @@ export type Database = {
         | "deal_field_edited"
         | "deal_document_requested"
         | "deal_document_uploaded"
+      change_request_status: "pending" | "resolved" | "cancelled"
       commodity_type:
         | "solid_minerals"
         | "scrap_metal"
@@ -1285,6 +1324,7 @@ export const Constants = {
         "deal_document_requested",
         "deal_document_uploaded",
       ],
+      change_request_status: ["pending", "resolved", "cancelled"],
       commodity_type: [
         "solid_minerals",
         "scrap_metal",

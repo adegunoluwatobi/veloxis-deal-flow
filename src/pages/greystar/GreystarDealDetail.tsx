@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,21 +9,23 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import DealStatusBadge from '@/components/DealStatusBadge';
 import DealAuditTrail from '@/components/DealAuditTrail';
+import ChangeRequestModal, { type FlaggedField } from '@/components/ChangeRequestModal';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle, CheckCircle2, Send, XCircle, MessageSquare, Loader2 } from 'lucide-react';
+import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle, CheckCircle2, Send, XCircle, Loader2 } from 'lucide-react';
 import type { DealStatus } from '@/types';
 
 export default function GreystarDealDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [deal, setDeal] = useState<any>(null);
   const [exporter, setExporter] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [actionDialog, setActionDialog] = useState<'changes' | 'reject' | null>(null);
-  const [actionNote, setActionNote] = useState('');
+  const [changeRequestOpen, setChangeRequestOpen] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [pendingCR, setPendingCR] = useState<any>(null);
 
   const loadDeal = async () => {
     if (!id) return;
@@ -36,41 +38,138 @@ export default function GreystarDealDetail() {
       setDeal(data);
       setExporter((data as any).exporters);
     }
+
+    // Load pending change request
+    const { data: crData } = await supabase
+      .from('deal_change_requests')
+      .select('*')
+      .eq('deal_id', id)
+      .eq('status', 'pending')
+      .maybeSingle();
+    setPendingCR(crData);
+
     setLoading(false);
   };
 
   useEffect(() => { loadDeal(); }, [id]);
 
-  const updateStatus = async (status: DealStatus, extra: Record<string, any> = {}, auditAction?: string) => {
+  const handleChangeRequest = async (fields: FlaggedField[]) => {
     setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('deals')
-        .update({ status, ...extra })
-        .eq('id', id!);
-      if (error) throw error;
-
-      // Audit log
-      if (user) {
-        const action = auditAction || 'deal_status_changed';
-        await supabase.rpc('insert_audit_log', {
-          p_deal_id: id!,
-          p_user_id: user.id,
-          p_user_role: 'partner_admin' as any,
-          p_action_type: action as any,
-          p_metadata: {
-            actor_name: user.email,
-            new_status: status,
-            ...(extra.partner_notes ? { note: extra.partner_notes } : {}),
-            ...(extra.rejection_reason ? { reason: extra.rejection_reason } : {}),
-          },
-        });
+      // If there's already a pending CR, merge fields
+      if (pendingCR) {
+        const existing = (pendingCR.fields_flagged as FlaggedField[]) || [];
+        const merged = [...existing];
+        for (const f of fields) {
+          const idx = merged.findIndex(m => m.field === f.field);
+          if (idx >= 0) merged[idx] = f;
+          else merged.push(f);
+        }
+        await supabase
+          .from('deal_change_requests')
+          .update({ fields_flagged: merged as any })
+          .eq('id', pendingCR.id);
+      } else {
+        await supabase
+          .from('deal_change_requests')
+          .insert({
+            deal_id: id!,
+            requested_by: user!.id,
+            fields_flagged: fields as any,
+            status: 'pending' as any,
+          });
       }
 
-      toast({ title: `Deal ${status.replace(/_/g, ' ')}` });
+      // Update deal status
+      await supabase.from('deals').update({ status: 'changes_requested' as any }).eq('id', id!);
+
+      // Audit log
+      await supabase.rpc('insert_audit_log', {
+        p_deal_id: id!,
+        p_user_id: user!.id,
+        p_user_role: 'partner_admin' as any,
+        p_action_type: 'deal_changes_requested' as any,
+        p_metadata: {
+          actor_name: user!.email,
+          flagged_fields: fields.map(f => f.label),
+          note: fields.map(f => `${f.label}: ${f.note || '(no note)'}`).join('; '),
+        },
+      });
+
+      toast({ title: 'Change request sent' });
+      setChangeRequestOpen(false);
       await loadDeal();
-      setActionDialog(null);
-      setActionNote('');
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCancelCR = async () => {
+    if (!pendingCR) return;
+    setSubmitting(true);
+    try {
+      await supabase
+        .from('deal_change_requests')
+        .update({ status: 'cancelled' as any })
+        .eq('id', pendingCR.id);
+      await supabase.from('deals').update({ status: 'submitted' as any }).eq('id', id!);
+      toast({ title: 'Change request cancelled' });
+      await loadDeal();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleReject = async () => {
+    setSubmitting(true);
+    try {
+      await supabase.from('deals').update({
+        status: 'rejected_by_partner' as any,
+        rejection_reason: rejectReason,
+        rejected_at: new Date().toISOString(),
+      }).eq('id', id!);
+
+      await supabase.rpc('insert_audit_log', {
+        p_deal_id: id!,
+        p_user_id: user!.id,
+        p_user_role: 'partner_admin' as any,
+        p_action_type: 'deal_rejected_by_partner' as any,
+        p_metadata: { actor_name: user!.email, reason: rejectReason },
+      });
+
+      toast({ title: 'Deal rejected' });
+      setRejectOpen(false);
+      setRejectReason('');
+      await loadDeal();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmitToVeloxis = async () => {
+    setSubmitting(true);
+    try {
+      await supabase.from('deals').update({
+        status: 'sent_to_veloxis' as any,
+        sent_to_veloxis_at: new Date().toISOString(),
+      }).eq('id', id!);
+
+      await supabase.rpc('insert_audit_log', {
+        p_deal_id: id!,
+        p_user_id: user!.id,
+        p_user_role: 'partner_admin' as any,
+        p_action_type: 'deal_sent_to_veloxis' as any,
+        p_metadata: { actor_name: user!.email },
+      });
+
+      toast({ title: 'Deal submitted to Veloxis' });
+      await loadDeal();
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     } finally {
@@ -97,6 +196,9 @@ export default function GreystarDealDetail() {
 
   const canSubmitToVeloxis = deal.status === 'submitted' && deal.bank_name_match !== false;
 
+  // Show pending CR info
+  const crFields: FlaggedField[] = pendingCR?.fields_flagged ?? [];
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center gap-4">
@@ -114,17 +216,42 @@ export default function GreystarDealDetail() {
       {(deal.status === 'submitted' || deal.status === 'changes_requested') && (
         <Card>
           <CardContent className="py-4 flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => setActionDialog('changes')}>
-              <MessageSquare className="mr-2 h-4 w-4" />Request Changes
+            <Button variant="outline" onClick={() => setChangeRequestOpen(true)}>
+              Request Changes
             </Button>
-            <Button variant="destructive" onClick={() => setActionDialog('reject')}>
+            {pendingCR && deal.status === 'changes_requested' && (
+              <Button variant="ghost" onClick={handleCancelCR} disabled={submitting}>
+                Cancel Change Request
+              </Button>
+            )}
+            <Button variant="destructive" onClick={() => setRejectOpen(true)}>
               <XCircle className="mr-2 h-4 w-4" />Reject Deal
             </Button>
             {canSubmitToVeloxis && (
-              <Button onClick={() => updateStatus('sent_to_veloxis' as DealStatus, { sent_to_veloxis_at: new Date().toISOString() }, 'deal_sent_to_veloxis')}>
+              <Button onClick={handleSubmitToVeloxis} disabled={submitting}>
                 <Send className="mr-2 h-4 w-4" />Submit to Veloxis
               </Button>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Pending Change Request Summary */}
+      {pendingCR && crFields.length > 0 && (
+        <Card className="border-warning">
+          <CardContent className="py-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">Active Change Request — {crFields.length} field{crFields.length !== 1 ? 's' : ''} flagged</p>
+                {crFields.map(f => (
+                  <p key={f.field} className="text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">{f.label}</span>
+                    {f.note ? `: ${f.note}` : ''}
+                  </p>
+                ))}
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -189,28 +316,16 @@ export default function GreystarDealDetail() {
       {/* Audit Trail */}
       <DealAuditTrail dealId={deal.id} viewerRole="partner" />
 
-      {/* Request Changes Dialog */}
-      <Dialog open={actionDialog === 'changes'} onOpenChange={() => setActionDialog(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Request Changes</DialogTitle>
-            <DialogDescription>Send a note to the exporter explaining what needs to be changed.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label>Note to exporter *</Label>
-            <Textarea value={actionNote} onChange={e => setActionNote(e.target.value)} placeholder="Please update..." rows={4} />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setActionDialog(null)}>Cancel</Button>
-            <Button disabled={!actionNote.trim() || submitting} onClick={() => updateStatus('changes_requested' as DealStatus, { partner_notes: actionNote }, 'deal_changes_requested')}>
-              {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Send Request
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Change Request Modal */}
+      <ChangeRequestModal
+        open={changeRequestOpen}
+        onClose={() => setChangeRequestOpen(false)}
+        onSubmit={handleChangeRequest}
+        submitting={submitting}
+      />
 
       {/* Reject Dialog */}
-      <Dialog open={actionDialog === 'reject'} onOpenChange={() => setActionDialog(null)}>
+      <Dialog open={rejectOpen} onOpenChange={() => setRejectOpen(false)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Reject Deal</DialogTitle>
@@ -218,11 +333,11 @@ export default function GreystarDealDetail() {
           </DialogHeader>
           <div className="space-y-2">
             <Label>Rejection reason *</Label>
-            <Textarea value={actionNote} onChange={e => setActionNote(e.target.value)} placeholder="Reason for rejection..." rows={4} />
+            <Textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Reason for rejection..." rows={4} />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setActionDialog(null)}>Cancel</Button>
-            <Button variant="destructive" disabled={!actionNote.trim() || submitting} onClick={() => updateStatus('rejected_by_partner' as DealStatus, { rejection_reason: actionNote, rejected_at: new Date().toISOString() }, 'deal_rejected_by_partner')}>
+            <Button variant="outline" onClick={() => setRejectOpen(false)}>Cancel</Button>
+            <Button variant="destructive" disabled={!rejectReason.trim() || submitting} onClick={handleReject}>
               {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Reject Deal
             </Button>
           </DialogFooter>
