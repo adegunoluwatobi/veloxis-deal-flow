@@ -15,6 +15,7 @@ import { type KycStatus, type ExporterDocumentType } from '@/types';
 import { cn } from '@/lib/utils';
 import { DOC_TYPE_LABELS, buildDocTypeOptions } from '@/lib/docTypeOptions';
 import { computeKycStatus } from '@/lib/computeKycStatus';
+import DocumentRequestSection from '@/components/DocumentRequestSection';
 
 const DOC_STATUS_COLORS: Record<string, string> = {
   pending_review: 'bg-warning/10 text-warning',
@@ -387,6 +388,9 @@ export default function GreystarExporterDetail() {
           )}
         </CardContent>
       </Card>
+
+      {/* Requested Documents */}
+      <DocumentRequestSection exporterId={id!} mode={isPartner ? 'admin' : 'admin'} />
 
       {/* Superseded Documents */}
       {supersededDocs.length > 0 && (

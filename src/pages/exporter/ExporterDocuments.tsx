@@ -13,6 +13,7 @@ import { Upload, AlertTriangle, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ExporterDocumentType } from '@/types';
 import { DOC_TYPE_LABELS, buildDocTypeOptions } from '@/lib/docTypeOptions';
+import DocumentRequestSection from '@/components/DocumentRequestSection';
 
 export default function ExporterDocuments() {
   const { user } = useAuth();
@@ -207,6 +208,9 @@ export default function ExporterDocuments() {
           )}
         </CardContent>
       </Card>
+
+      {/* Requested Documents */}
+      {exporter && <DocumentRequestSection exporterId={exporter.id} mode="exporter" />}
 
       {supersededDocs.length > 0 && (
         <Card>
