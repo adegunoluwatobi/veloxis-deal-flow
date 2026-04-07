@@ -14,16 +14,780 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_logs: {
+        Row: {
+          action_type: Database["public"]["Enums"]["audit_action"]
+          created_at: string
+          deal_id: string | null
+          exporter_id: string | null
+          id: string
+          metadata: Json
+          user_id: string | null
+          user_role: Database["public"]["Enums"]["app_role"] | null
+        }
+        Insert: {
+          action_type: Database["public"]["Enums"]["audit_action"]
+          created_at?: string
+          deal_id?: string | null
+          exporter_id?: string | null
+          id?: string
+          metadata?: Json
+          user_id?: string | null
+          user_role?: Database["public"]["Enums"]["app_role"] | null
+        }
+        Update: {
+          action_type?: Database["public"]["Enums"]["audit_action"]
+          created_at?: string
+          deal_id?: string | null
+          exporter_id?: string | null
+          id?: string
+          metadata?: Json
+          user_id?: string | null
+          user_role?: Database["public"]["Enums"]["app_role"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_exporter_id_fkey"
+            columns: ["exporter_id"]
+            isOneToOne: false
+            referencedRelation: "exporters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_documents: {
+        Row: {
+          deal_id: string
+          document_type: Database["public"]["Enums"]["deal_document_type"]
+          file_name: string
+          file_path: string
+          file_size_bytes: number | null
+          id: string
+          is_superseded: boolean
+          mime_type: string | null
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          deal_id: string
+          document_type: Database["public"]["Enums"]["deal_document_type"]
+          file_name: string
+          file_path: string
+          file_size_bytes?: number | null
+          id?: string
+          is_superseded?: boolean
+          mime_type?: string | null
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          deal_id?: string
+          document_type?: Database["public"]["Enums"]["deal_document_type"]
+          file_name?: string
+          file_path?: string
+          file_size_bytes?: number | null
+          id?: string
+          is_superseded?: boolean
+          mime_type?: string | null
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_documents_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deals: {
+        Row: {
+          actual_repayment_amount: number | null
+          actual_repayment_date: string | null
+          advance_amount: number | null
+          advance_percentage: number
+          buyer_company_name: string | null
+          buyer_contact_email: string | null
+          buyer_contact_name: string | null
+          buyer_country: string | null
+          commodity_type: Database["public"]["Enums"]["commodity_type"] | null
+          created_at: string
+          demurrage_amount: number
+          demurrage_rate_daily: number
+          disbursement_date: string | null
+          discount_fee_amount: number | null
+          discount_fee_pct: number | null
+          expected_settlement_date: string | null
+          exporter_id: string
+          fx_rate_at_funding: number | null
+          fx_rate_source: string | null
+          gbp_equivalent: number | null
+          goods_description: string | null
+          gross_yield: number | null
+          id: string
+          invoice_currency_v2:
+            | Database["public"]["Enums"]["invoice_currency"]
+            | null
+          invoice_date: string | null
+          invoice_number: string | null
+          invoice_value: number | null
+          originator_id: string
+          outstanding_balance: number | null
+          overdue_days: number
+          parent_deal_id: string | null
+          payment_terms_days: number | null
+          platform_fee_amount: number | null
+          platform_fee_pct: number | null
+          rejection_reason: string | null
+          status: Database["public"]["Enums"]["deal_status"]
+          updated_at: string
+        }
+        Insert: {
+          actual_repayment_amount?: number | null
+          actual_repayment_date?: string | null
+          advance_amount?: number | null
+          advance_percentage?: number
+          buyer_company_name?: string | null
+          buyer_contact_email?: string | null
+          buyer_contact_name?: string | null
+          buyer_country?: string | null
+          commodity_type?: Database["public"]["Enums"]["commodity_type"] | null
+          created_at?: string
+          demurrage_amount?: number
+          demurrage_rate_daily?: number
+          disbursement_date?: string | null
+          discount_fee_amount?: number | null
+          discount_fee_pct?: number | null
+          expected_settlement_date?: string | null
+          exporter_id: string
+          fx_rate_at_funding?: number | null
+          fx_rate_source?: string | null
+          gbp_equivalent?: number | null
+          goods_description?: string | null
+          gross_yield?: number | null
+          id?: string
+          invoice_currency_v2?:
+            | Database["public"]["Enums"]["invoice_currency"]
+            | null
+          invoice_date?: string | null
+          invoice_number?: string | null
+          invoice_value?: number | null
+          originator_id: string
+          outstanding_balance?: number | null
+          overdue_days?: number
+          parent_deal_id?: string | null
+          payment_terms_days?: number | null
+          platform_fee_amount?: number | null
+          platform_fee_pct?: number | null
+          rejection_reason?: string | null
+          status?: Database["public"]["Enums"]["deal_status"]
+          updated_at?: string
+        }
+        Update: {
+          actual_repayment_amount?: number | null
+          actual_repayment_date?: string | null
+          advance_amount?: number | null
+          advance_percentage?: number
+          buyer_company_name?: string | null
+          buyer_contact_email?: string | null
+          buyer_contact_name?: string | null
+          buyer_country?: string | null
+          commodity_type?: Database["public"]["Enums"]["commodity_type"] | null
+          created_at?: string
+          demurrage_amount?: number
+          demurrage_rate_daily?: number
+          disbursement_date?: string | null
+          discount_fee_amount?: number | null
+          discount_fee_pct?: number | null
+          expected_settlement_date?: string | null
+          exporter_id?: string
+          fx_rate_at_funding?: number | null
+          fx_rate_source?: string | null
+          gbp_equivalent?: number | null
+          goods_description?: string | null
+          gross_yield?: number | null
+          id?: string
+          invoice_currency_v2?:
+            | Database["public"]["Enums"]["invoice_currency"]
+            | null
+          invoice_date?: string | null
+          invoice_number?: string | null
+          invoice_value?: number | null
+          originator_id?: string
+          outstanding_balance?: number | null
+          overdue_days?: number
+          parent_deal_id?: string | null
+          payment_terms_days?: number | null
+          platform_fee_amount?: number | null
+          platform_fee_pct?: number | null
+          rejection_reason?: string | null
+          status?: Database["public"]["Enums"]["deal_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_exporter_id_fkey"
+            columns: ["exporter_id"]
+            isOneToOne: false
+            referencedRelation: "exporters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_originator_id_fkey"
+            columns: ["originator_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_parent_deal_id_fkey"
+            columns: ["parent_deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exporter_documents: {
+        Row: {
+          document_status: string
+          document_type: Database["public"]["Enums"]["exporter_document_type"]
+          expiry_date: string | null
+          expiry_status: Database["public"]["Enums"]["expiry_status"]
+          exporter_id: string
+          file_name: string
+          file_path: string
+          file_size_bytes: number | null
+          id: string
+          is_superseded: boolean
+          mime_type: string | null
+          uploaded_at: string
+          uploaded_by_token_id: string | null
+          uploaded_by_user_id: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          document_status?: string
+          document_type: Database["public"]["Enums"]["exporter_document_type"]
+          expiry_date?: string | null
+          expiry_status?: Database["public"]["Enums"]["expiry_status"]
+          exporter_id: string
+          file_name: string
+          file_path: string
+          file_size_bytes?: number | null
+          id?: string
+          is_superseded?: boolean
+          mime_type?: string | null
+          uploaded_at?: string
+          uploaded_by_token_id?: string | null
+          uploaded_by_user_id?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          document_status?: string
+          document_type?: Database["public"]["Enums"]["exporter_document_type"]
+          expiry_date?: string | null
+          expiry_status?: Database["public"]["Enums"]["expiry_status"]
+          exporter_id?: string
+          file_name?: string
+          file_path?: string
+          file_size_bytes?: number | null
+          id?: string
+          is_superseded?: boolean
+          mime_type?: string | null
+          uploaded_at?: string
+          uploaded_by_token_id?: string | null
+          uploaded_by_user_id?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exporter_documents_exporter_id_fkey"
+            columns: ["exporter_id"]
+            isOneToOne: false
+            referencedRelation: "exporters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exporter_documents_uploaded_by_token_id_fkey"
+            columns: ["uploaded_by_token_id"]
+            isOneToOne: false
+            referencedRelation: "exporter_upload_tokens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exporter_documents_uploaded_by_user_id_fkey"
+            columns: ["uploaded_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exporter_documents_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exporter_upload_tokens: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          exporter_id: string
+          first_used_at: string | null
+          id: string
+          is_active: boolean
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at: string
+          exporter_id: string
+          first_used_at?: string | null
+          id?: string
+          is_active?: boolean
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          exporter_id?: string
+          first_used_at?: string | null
+          id?: string
+          is_active?: boolean
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exporter_upload_tokens_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exporter_upload_tokens_exporter_id_fkey"
+            columns: ["exporter_id"]
+            isOneToOne: false
+            referencedRelation: "exporters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exporters: {
+        Row: {
+          company_name: string
+          country: string
+          created_at: string
+          director_name: string
+          entity_type: Database["public"]["Enums"]["entity_type"]
+          id: string
+          is_active: boolean
+          kyc_status: Database["public"]["Enums"]["kyc_status"]
+          kyc_verified_at: string | null
+          kyc_verified_by: string | null
+          originator_id: string
+          rc_number: string
+          subscription_tier: Database["public"]["Enums"]["subscription_tier"]
+          updated_at: string
+        }
+        Insert: {
+          company_name: string
+          country?: string
+          created_at?: string
+          director_name: string
+          entity_type: Database["public"]["Enums"]["entity_type"]
+          id?: string
+          is_active?: boolean
+          kyc_status?: Database["public"]["Enums"]["kyc_status"]
+          kyc_verified_at?: string | null
+          kyc_verified_by?: string | null
+          originator_id: string
+          rc_number: string
+          subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string
+          country?: string
+          created_at?: string
+          director_name?: string
+          entity_type?: Database["public"]["Enums"]["entity_type"]
+          id?: string
+          is_active?: boolean
+          kyc_status?: Database["public"]["Enums"]["kyc_status"]
+          kyc_verified_at?: string | null
+          kyc_verified_by?: string | null
+          originator_id?: string
+          rc_number?: string
+          subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exporters_kyc_verified_by_fkey"
+            columns: ["kyc_verified_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exporters_originator_id_fkey"
+            columns: ["originator_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      internal_notes: {
+        Row: {
+          author_id: string
+          created_at: string
+          deal_id: string
+          id: string
+          note_body: string
+        }
+        Insert: {
+          author_id: string
+          created_at?: string
+          deal_id: string
+          id?: string
+          note_body: string
+        }
+        Update: {
+          author_id?: string
+          created_at?: string
+          deal_id?: string
+          id?: string
+          note_body?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internal_notes_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_notes_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ipus: {
+        Row: {
+          created_at: string
+          deal_id: string
+          expires_at: string | null
+          hellosign_audit_cert_path: string | null
+          hellosign_request_id: string | null
+          id: string
+          ipu_pdf_path: string | null
+          is_active: boolean
+          sent_at: string | null
+          sent_to_email: string | null
+          signed_at: string | null
+          signer_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          deal_id: string
+          expires_at?: string | null
+          hellosign_audit_cert_path?: string | null
+          hellosign_request_id?: string | null
+          id?: string
+          ipu_pdf_path?: string | null
+          is_active?: boolean
+          sent_at?: string | null
+          sent_to_email?: string | null
+          signed_at?: string | null
+          signer_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string
+          expires_at?: string | null
+          hellosign_audit_cert_path?: string | null
+          hellosign_request_id?: string | null
+          id?: string
+          ipu_pdf_path?: string | null
+          is_active?: boolean
+          sent_at?: string | null
+          sent_to_email?: string | null
+          signed_at?: string | null
+          signer_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ipus_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_config: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: string
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: string
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_config_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          is_active: boolean
+          organisation: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          is_active?: boolean
+          organisation?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          is_active?: boolean
+          organisation?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      accrue_demurrage: { Args: { p_deal_id: string }; Returns: undefined }
+      calculate_deal_pricing: {
+        Args: {
+          p_advance_percentage?: number
+          p_invoice_value: number
+          p_payment_terms_days?: number
+          p_subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+        }
+        Returns: {
+          advance_amount: number
+          discount_fee_amount: number
+          discount_fee_pct: number
+          gross_expected_yield: number
+          net_repayment_target: number
+          platform_fee_amount: number
+          platform_fee_pct: number
+        }[]
+      }
+      check_pool_availability: {
+        Args: { p_advance_amount_gbp: number }
+        Returns: {
+          available_gbp: number
+          deployed_gbp: number
+          hard_blocked: boolean
+          pool_gbp: number
+          warning_triggered: boolean
+          would_deploy_gbp: number
+        }[]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      insert_audit_log: {
+        Args: {
+          p_action_type?: Database["public"]["Enums"]["audit_action"]
+          p_deal_id?: string
+          p_exporter_id?: string
+          p_metadata?: Json
+          p_user_id?: string
+          p_user_role?: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: string
+      }
+      validate_status_transition: {
+        Args: {
+          p_current_status: Database["public"]["Enums"]["deal_status"]
+          p_new_status: Database["public"]["Enums"]["deal_status"]
+          p_user_role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
+      validate_upload_token: {
+        Args: { p_token: string }
+        Returns: {
+          company_name: string
+          exporter_id: string
+          is_valid: boolean
+          token_id: string
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "originator" | "deal_manager"
+      audit_action:
+        | "deal_created"
+        | "deal_submitted"
+        | "document_uploaded"
+        | "deal_moved_to_under_review"
+        | "document_requested"
+        | "deal_approved"
+        | "deal_rejected"
+        | "ipu_generated"
+        | "ipu_sent"
+        | "ipu_signed"
+        | "ipu_expired"
+        | "ipu_resent"
+        | "funding_recorded"
+        | "repayment_recorded"
+        | "demurrage_updated"
+        | "internal_note_added"
+        | "deal_closed"
+        | "deal_status_changed"
+        | "pricing_recalculated"
+        | "document_superseded"
+        | "exporter_created"
+        | "kyc_verified"
+        | "kyc_rejected"
+        | "upload_token_generated"
+        | "exporter_document_uploaded"
+        | "exporter_document_verified"
+      commodity_type:
+        | "solid_minerals"
+        | "scrap_metal"
+        | "manufactured_goods"
+        | "textiles"
+      deal_document_type: "commercial_invoice" | "bill_of_lading" | "other"
+      deal_status:
+        | "draft"
+        | "submitted"
+        | "under_review"
+        | "docs_requested"
+        | "approved"
+        | "rejected"
+        | "ipu_sent"
+        | "ipu_expired"
+        | "ipu_signed_awaiting_funding"
+        | "funded_active"
+        | "repayment_due"
+        | "overdue"
+        | "closed_repaid"
+        | "closed_partial"
+      entity_type: "limited_company" | "plc" | "llp" | "incorporated_trustee"
+      expiry_status:
+        | "valid"
+        | "expiring_soon_60"
+        | "expiring_soon_30"
+        | "expiring_soon_7"
+        | "expired"
+        | "no_expiry"
+      exporter_document_type:
+        | "cac_certificate"
+        | "director_id"
+        | "nepc_certificate"
+        | "other"
+      invoice_currency: "GBP" | "USD" | "EUR"
+      kyc_status:
+        | "pending_documents"
+        | "documents_uploaded"
+        | "under_review"
+        | "verified"
+        | "kyc_document_expired"
+        | "rejected"
+      subscription_tier: "pay_as_you_go" | "veloxis_pro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +914,84 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["originator", "deal_manager"],
+      audit_action: [
+        "deal_created",
+        "deal_submitted",
+        "document_uploaded",
+        "deal_moved_to_under_review",
+        "document_requested",
+        "deal_approved",
+        "deal_rejected",
+        "ipu_generated",
+        "ipu_sent",
+        "ipu_signed",
+        "ipu_expired",
+        "ipu_resent",
+        "funding_recorded",
+        "repayment_recorded",
+        "demurrage_updated",
+        "internal_note_added",
+        "deal_closed",
+        "deal_status_changed",
+        "pricing_recalculated",
+        "document_superseded",
+        "exporter_created",
+        "kyc_verified",
+        "kyc_rejected",
+        "upload_token_generated",
+        "exporter_document_uploaded",
+        "exporter_document_verified",
+      ],
+      commodity_type: [
+        "solid_minerals",
+        "scrap_metal",
+        "manufactured_goods",
+        "textiles",
+      ],
+      deal_document_type: ["commercial_invoice", "bill_of_lading", "other"],
+      deal_status: [
+        "draft",
+        "submitted",
+        "under_review",
+        "docs_requested",
+        "approved",
+        "rejected",
+        "ipu_sent",
+        "ipu_expired",
+        "ipu_signed_awaiting_funding",
+        "funded_active",
+        "repayment_due",
+        "overdue",
+        "closed_repaid",
+        "closed_partial",
+      ],
+      entity_type: ["limited_company", "plc", "llp", "incorporated_trustee"],
+      expiry_status: [
+        "valid",
+        "expiring_soon_60",
+        "expiring_soon_30",
+        "expiring_soon_7",
+        "expired",
+        "no_expiry",
+      ],
+      exporter_document_type: [
+        "cac_certificate",
+        "director_id",
+        "nepc_certificate",
+        "other",
+      ],
+      invoice_currency: ["GBP", "USD", "EUR"],
+      kyc_status: [
+        "pending_documents",
+        "documents_uploaded",
+        "under_review",
+        "verified",
+        "kyc_document_expired",
+        "rejected",
+      ],
+      subscription_tier: ["pay_as_you_go", "veloxis_pro"],
+    },
   },
 } as const
