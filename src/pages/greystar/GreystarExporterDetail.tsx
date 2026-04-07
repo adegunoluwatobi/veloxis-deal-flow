@@ -144,6 +144,15 @@ export default function GreystarExporterDetail() {
     load();
   };
 
+  const handleDownload = async (filePath: string, fileName: string) => {
+    const { data, error } = await supabase.storage.from('veloxis-documents').createSignedUrl(filePath, 60);
+    if (error || !data?.signedUrl) {
+      toast({ title: 'Download failed', description: 'Could not generate download link.', variant: 'destructive' });
+      return;
+    }
+    window.open(data.signedUrl, '_blank');
+  };
+
   const handleResendInvite = async () => {
     if (!id || !exporter?.contact_email) return;
     setResendingInvite(true);
