@@ -307,11 +307,35 @@ export default function GreystarExporterDetail() {
             <CardTitle>{exporter.company_name}</CardTitle>
             <CardDescription>Review onboarding progress and resend access when the invite is still pending.</CardDescription>
           </div>
-          {isPartner && exporter.onboarding_status === 'invited' && exporter.contact_email && (
-            <Button variant="outline" size="sm" onClick={handleResendInvite} disabled={resendingInvite}>
-              {resendingInvite ? 'Resending…' : 'Resend Invite'}
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {isPartner && exporter.onboarding_status === 'invited' && exporter.contact_email && (
+              <Button variant="outline" size="sm" onClick={handleResendInvite} disabled={resendingInvite}>
+                {resendingInvite ? 'Resending…' : 'Resend Invite'}
+              </Button>
+            )}
+            {isPartner && !isAlreadyForwarded && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Button size="sm" onClick={handleForwardToVeloxis} disabled={!canForward || forwarding} className="gap-1.5">
+                        <Send className="h-3.5 w-3.5" />
+                        {forwarding ? 'Forwarding…' : 'Forward to Veloxis'}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {!canForward && forwardDisabledReason && (
+                    <TooltipContent><p>{forwardDisabledReason}</p></TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {isAlreadyForwarded && (
+              <Badge variant="outline" className="bg-success/10 text-success gap-1">
+                <CheckCircle2 className="h-3 w-3" /> Forwarded
+              </Badge>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <dl className="grid grid-cols-2 gap-4 text-sm">
@@ -320,7 +344,14 @@ export default function GreystarExporterDetail() {
             <div><dt className="text-muted-foreground">Director</dt><dd className="font-medium">{exporter.director_name}</dd></div>
             <div><dt className="text-muted-foreground">Contact Email</dt><dd className="font-medium">{exporter.contact_email ?? '—'}</dd></div>
             <div><dt className="text-muted-foreground">Onboarding</dt><dd className="font-medium capitalize">{(exporter.onboarding_status || 'invited').replace(/_/g, ' ')}</dd></div>
-            <div><dt className="text-muted-foreground">Forwarded to Veloxis</dt><dd className="font-medium">{exporter.forwarded_to_veloxis_at ? new Date(exporter.forwarded_to_veloxis_at).toLocaleDateString() : 'Not yet'}</dd></div>
+            <div>
+              <dt className="text-muted-foreground">Forwarded to Veloxis</dt>
+              <dd className="font-medium">
+                {exporter.forwarded_to_veloxis_at
+                  ? new Date(exporter.forwarded_to_veloxis_at).toLocaleDateString()
+                  : 'Not yet'}
+              </dd>
+            </div>
           </dl>
         </CardContent>
       </Card>
