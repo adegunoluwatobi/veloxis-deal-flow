@@ -158,7 +158,7 @@ export default function PaymentAdvicePanel({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">Payment Date</Label>
-            <Input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="h-8" />
+            <Input id="field-payment-date" type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="h-8" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">Amount Received ({invoiceCurrency ?? 'GBP'})</Label>
