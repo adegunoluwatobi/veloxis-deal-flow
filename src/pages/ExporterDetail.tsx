@@ -175,10 +175,11 @@ export default function ExporterDetail() {
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading…</div>;
   if (!exporter) return <div className="py-20 text-center text-muted-foreground">Exporter not found.</div>;
 
-  const KycIcon = KYC_ICONS[exporter.kyc_status];
   const activeDocs = docs.filter(d => !d.is_superseded);
   const supersededDocs = docs.filter(d => d.is_superseded);
   const visibleDocs = showSuperseded ? docs : activeDocs;
+  const kyc = computeKycStatus(activeDocs);
+  const KycIcon = KYC_ICONS[kyc.status === 'expired' ? 'kyc_document_expired' : kyc.status === 'under_review' ? 'under_review' : kyc.status === 'rejected' ? 'rejected' : kyc.status === 'verified' ? 'verified' : 'pending_documents'];
 
   const mandatoryTypes: ExporterDocumentType[] = ['cac_certificate', 'director_id', 'nepc_certificate'];
   const docSummary = mandatoryTypes.map(t => {
