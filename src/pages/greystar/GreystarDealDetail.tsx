@@ -222,7 +222,7 @@ export default function GreystarDealDetail() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setActionDialog(null)}>Cancel</Button>
-            <Button variant="destructive" disabled={!actionNote.trim() || submitting} onClick={() => updateStatus('rejected_by_partner' as DealStatus, { rejection_reason: actionNote, rejected_at: new Date().toISOString() })}>
+            <Button variant="destructive" disabled={!actionNote.trim() || submitting} onClick={() => updateStatus('rejected_by_partner' as DealStatus, { rejection_reason: actionNote, rejected_at: new Date().toISOString() }, 'deal_rejected_by_partner')}>
               {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Reject Deal
             </Button>
           </DialogFooter>
