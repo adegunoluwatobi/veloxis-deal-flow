@@ -20,7 +20,7 @@ const EVENT_CONFIG: Record<string, { label: string; icon: typeof FileText; color
   deal_submitted: { label: 'Deal Submitted', icon: Send, color: 'text-primary' },
   deal_changes_requested: { label: 'Changes Requested', icon: PenLine, color: 'text-warning' },
   deal_resubmitted: { label: 'Deal Resubmitted', icon: Send, color: 'text-primary' },
-  deal_sent_to_veloxis: { label: 'Submitted to Veloxis', icon: Send, color: 'text-primary' },
+  deal_sent_to_veloxis: { label: 'Submitted to Underwriter', icon: Send, color: 'text-primary' },
   deal_rejected_by_partner: { label: 'Rejected by Partner', icon: XCircle, color: 'text-destructive' },
   deal_rejected_by_veloxis: { label: 'Rejected by Veloxis', icon: XCircle, color: 'text-destructive' },
   deal_rejected: { label: 'Deal Rejected', icon: XCircle, color: 'text-destructive' },

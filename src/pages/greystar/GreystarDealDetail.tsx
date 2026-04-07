@@ -168,7 +168,7 @@ export default function GreystarDealDetail() {
         p_metadata: { actor_name: user!.email },
       });
 
-      toast({ title: 'Deal submitted to Veloxis' });
+      toast({ title: 'Deal submitted to underwriter' });
       await loadDeal();
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -229,7 +229,7 @@ export default function GreystarDealDetail() {
             </Button>
             {canSubmitToVeloxis && (
               <Button onClick={handleSubmitToVeloxis} disabled={submitting}>
-                <Send className="mr-2 h-4 w-4" />Submit to Veloxis
+                <Send className="mr-2 h-4 w-4" />Submit to Underwriter
               </Button>
             )}
           </CardContent>

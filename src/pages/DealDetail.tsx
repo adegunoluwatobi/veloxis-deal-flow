@@ -44,6 +44,8 @@ interface DealRow {
   discount_fee_pct: number | null;
   discount_fee_amount: number | null;
   gross_yield: number | null;
+  net_advance_amount: number | null;
+  repayment_amount: number | null;
   buyer_company_name: string | null;
   buyer_country: string | null;
   buyer_contact_name: string | null;
@@ -132,6 +134,12 @@ export default function DealDetail() {
   const [pricingOverride, setPricingOverride] = useState(false);
   const [overrideAdvPct, setOverrideAdvPct] = useState('80');
 
+  // Editable pricing fields
+  const [editPlatformFeePct, setEditPlatformFeePct] = useState('0');
+  const [editDiscountFeePct, setEditDiscountFeePct] = useState('0');
+  const [editAdvPct, setEditAdvPct] = useState('80');
+  const [pricingSaving, setPricingSaving] = useState(false);
+
   // Notes
   const [newNote, setNewNote] = useState('');
 
@@ -154,6 +162,9 @@ export default function DealDetail() {
       const d = dealRes.data as unknown as DealRow;
       setDeal(d);
       setOverrideAdvPct(String(d.advance_percentage));
+      setEditAdvPct(String(d.advance_percentage));
+      setEditPlatformFeePct(String((d.platform_fee_pct ?? 0) * 100));
+      setEditDiscountFeePct(String((d.discount_fee_pct ?? 0) * 100));
       // Load exporter
       const { data: exp } = await supabase.from('exporters').select('*').eq('id', d.exporter_id).single();
       if (exp) {
@@ -202,9 +213,56 @@ export default function DealDetail() {
     }
   };
 
-  const handleMoveToReview = () => updateStatus('under_review');
   const handleRequestDocs = () => updateStatus('docs_requested');
   const handleSubmitForFinalApproval = () => updateStatus('ready_for_final_approval' as DealStatus);
+
+  // Live pricing calculations
+  const pricingEditable = isDM && (deal?.status === ('sent_to_veloxis' as DealStatus) || deal?.status === 'under_review');
+  const liveAdvPct = parseFloat(editAdvPct) || 80;
+  const liveAdvanceAmount = (deal?.invoice_value ?? 0) * (liveAdvPct / 100);
+  const livePlatformFeePct = parseFloat(editPlatformFeePct) || 0;
+  const liveDiscountFeePct = parseFloat(editDiscountFeePct) || 0;
+  const livePlatformFeeAmount = liveAdvanceAmount * (livePlatformFeePct / 100);
+  const liveDiscountFeeAmount = liveAdvanceAmount * (liveDiscountFeePct / 100);
+  const liveTotalFees = livePlatformFeeAmount + liveDiscountFeeAmount;
+  const liveNetAdvance = liveAdvanceAmount - liveTotalFees;
+  const liveRepaymentAmount = deal?.invoice_value ?? 0;
+
+  const handleSavePricing = async () => {
+    if (!id || !deal) return;
+    setPricingSaving(true);
+    try {
+      const { error } = await supabase.from('deals').update({
+        advance_percentage: liveAdvPct,
+        advance_amount: liveAdvanceAmount,
+        platform_fee_pct: livePlatformFeePct / 100,
+        platform_fee_amount: livePlatformFeeAmount,
+        discount_fee_pct: liveDiscountFeePct / 100,
+        discount_fee_amount: liveDiscountFeeAmount,
+        gross_yield: liveTotalFees,
+        net_advance_amount: liveNetAdvance,
+        repayment_amount: liveRepaymentAmount,
+      }).eq('id', id);
+      if (error) throw error;
+      await supabase.rpc('insert_audit_log', {
+        p_deal_id: id,
+        p_user_id: user?.id,
+        p_user_role: role as any,
+        p_action_type: 'pricing_recalculated' as AuditAction,
+        p_metadata: {
+          advance_pct: liveAdvPct,
+          platform_fee_pct: livePlatformFeePct,
+          discount_fee_pct: liveDiscountFeePct,
+        },
+      });
+      toast({ title: 'Pricing saved' });
+      load();
+    } catch (err: unknown) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Save failed', variant: 'destructive' });
+    } finally {
+      setPricingSaving(false);
+    }
+  };
 
   const handleApprove = async () => {
     if (!id || !deal) return;
@@ -347,13 +405,8 @@ export default function DealDetail() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {/* Veloxis can only act on deals at sent_to_veloxis or beyond */}
-              {deal.status === ('sent_to_veloxis' as DealStatus) && (
-                <Button size="sm" onClick={handleMoveToReview} disabled={actionLoading} className="gap-1">
-                  <Clock className="h-4 w-4" /> Move to Review
-                </Button>
-              )}
-              {deal.status === 'under_review' && (
+              {/* sent_to_veloxis and under_review both show review actions (no separate "Move to Review" step) */}
+              {(deal.status === ('sent_to_veloxis' as DealStatus) || deal.status === 'under_review') && (
                 <>
                   {role === 'deal_manager' && (
                     <>
@@ -412,7 +465,7 @@ export default function DealDetail() {
                 <p className="text-sm text-muted-foreground italic">Rejection recommendation pending Super Admin decision.</p>
               )}
               {deal.status === 'docs_requested' && (
-                <Button size="sm" onClick={handleMoveToReview} disabled={actionLoading} className="gap-1">
+                <Button size="sm" onClick={() => updateStatus('under_review')} disabled={actionLoading} className="gap-1">
                   <Clock className="h-4 w-4" /> Back to Review
                 </Button>
               )}
@@ -527,37 +580,102 @@ export default function DealDetail() {
         </Card>
 
         {/* Pricing Summary */}
-        <Card>
+        <Card className="lg:col-span-2">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-muted-foreground" />
               <CardTitle className="text-base">Pricing</CardTitle>
-              {['approved', 'ready_for_final_approval', 'ipu_sent', 'ipu_signed_awaiting_funding', 'funded_active', 'repayment_due', 'overdue', 'closed_repaid', 'closed_partial'].includes(deal.status) && (
-                <Badge variant="secondary" className="text-xs bg-success/10 text-success">
-                  {deal.status === ('ready_for_final_approval' as DealStatus) ? 'Pending Approval' : 'Locked'}
-                </Badge>
+              {!pricingEditable && ['approved', 'ready_for_final_approval', 'ipu_sent', 'ipu_signed_awaiting_funding', 'funded_active', 'repayment_due', 'overdue', 'closed_repaid', 'closed_partial'].includes(deal.status) && (
+                <Badge variant="secondary" className="text-xs bg-success/10 text-success">Locked</Badge>
+              )}
+              {pricingEditable && (
+                <Badge variant="secondary" className="text-xs bg-warning/10 text-warning">Editable</Badge>
               )}
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Advance ({deal.advance_percentage}%)</span>
-                <span className="font-medium text-foreground">{deal.advance_amount ? `${sym}${deal.advance_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+            {pricingEditable ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Advance %</Label>
+                    <Input type="number" min="1" max="100" value={editAdvPct} onChange={e => setEditAdvPct(e.target.value)} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Platform Fee %</Label>
+                    <Input type="number" min="0" max="100" step="0.1" value={editPlatformFeePct} onChange={e => setEditPlatformFeePct(e.target.value)} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Discount Fee %</Label>
+                    <Input type="number" min="0" max="100" step="0.1" value={editDiscountFeePct} onChange={e => setEditDiscountFeePct(e.target.value)} className="mt-1" />
+                  </div>
+                </div>
+                <div className="grid gap-2 text-sm border-t border-border pt-3">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Advance Amount ({liveAdvPct}%)</span>
+                    <span className="font-medium text-foreground">{sym}{liveAdvanceAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Platform Fee ({livePlatformFeePct}%)</span>
+                    <span className="font-medium text-foreground">{sym}{livePlatformFeeAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Discount Fee ({liveDiscountFeePct}%)</span>
+                    <span className="font-medium text-foreground">{sym}{liveDiscountFeeAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total Fees</span>
+                    <span className="font-medium text-foreground">{sym}{liveTotalFees.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-border pt-2">
+                    <span className="text-muted-foreground font-medium">Net Advance to Exporter</span>
+                    <span className="font-semibold text-foreground">{sym}{liveNetAdvance.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground font-medium">Expected Yield</span>
+                    <span className="font-semibold text-foreground">{sym}{liveTotalFees.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground font-medium">Repayment Amount</span>
+                    <span className="font-semibold text-foreground">{sym}{liveRepaymentAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+                <Button size="sm" onClick={handleSavePricing} disabled={pricingSaving} className="gap-1">
+                  {pricingSaving ? 'Saving…' : 'Save Pricing'}
+                </Button>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Platform Fee ({((deal.platform_fee_pct ?? 0) * 100).toFixed(1)}%)</span>
-                <span className="font-medium text-foreground">{deal.platform_fee_amount ? `${sym}${deal.platform_fee_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+            ) : (
+              <div className="grid gap-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Advance ({deal.advance_percentage}%)</span>
+                  <span className="font-medium text-foreground">{deal.advance_amount ? `${sym}${deal.advance_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Platform Fee ({((deal.platform_fee_pct ?? 0) * 100).toFixed(1)}%)</span>
+                  <span className="font-medium text-foreground">{deal.platform_fee_amount ? `${sym}${deal.platform_fee_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Discount Fee ({((deal.discount_fee_pct ?? 0) * 100).toFixed(1)}%)</span>
+                  <span className="font-medium text-foreground">{deal.discount_fee_amount ? `${sym}${deal.discount_fee_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total Fees</span>
+                  <span className="font-medium text-foreground">{sym}{((deal.platform_fee_amount ?? 0) + (deal.discount_fee_amount ?? 0)).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between border-t border-border pt-2">
+                  <span className="text-muted-foreground font-medium">Net Advance to Exporter</span>
+                  <span className="font-semibold text-foreground">{deal.net_advance_amount ? `${sym}${deal.net_advance_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground font-medium">Expected Yield</span>
+                  <span className="font-semibold text-foreground">{deal.gross_yield ? `${sym}${deal.gross_yield.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground font-medium">Repayment Amount</span>
+                  <span className="font-semibold text-foreground">{deal.repayment_amount ? `${sym}${deal.repayment_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Discount Fee ({((deal.discount_fee_pct ?? 0) * 100).toFixed(1)}%)</span>
-                <span className="font-medium text-foreground">{deal.discount_fee_amount ? `${sym}${deal.discount_fee_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
-              </div>
-              <div className="flex justify-between border-t border-border pt-2">
-                <span className="text-muted-foreground font-medium">Expected Yield</span>
-                <span className="font-semibold text-foreground">{deal.gross_yield ? `${sym}${deal.gross_yield.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>

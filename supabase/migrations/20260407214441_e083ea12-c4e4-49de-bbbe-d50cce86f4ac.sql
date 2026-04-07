@@ -1,0 +1,1 @@
+ALTER TABLE public.deals ADD COLUMN IF NOT EXISTS net_advance_amount numeric;

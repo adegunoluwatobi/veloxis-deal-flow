@@ -274,6 +274,7 @@ export type Database = {
           invoice_number: string | null
           invoice_value: number | null
           licence_name_match: boolean | null
+          net_advance_amount: number | null
           originator_id: string
           outstanding_balance: number | null
           overdue_days: number
@@ -342,6 +343,7 @@ export type Database = {
           invoice_number?: string | null
           invoice_value?: number | null
           licence_name_match?: boolean | null
+          net_advance_amount?: number | null
           originator_id: string
           outstanding_balance?: number | null
           overdue_days?: number
@@ -410,6 +412,7 @@ export type Database = {
           invoice_number?: string | null
           invoice_value?: number | null
           licence_name_match?: boolean | null
+          net_advance_amount?: number | null
           originator_id?: string
           outstanding_balance?: number | null
           overdue_days?: number
