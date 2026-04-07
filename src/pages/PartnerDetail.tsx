@@ -241,7 +241,7 @@ export default function PartnerDetail() {
                     <TableCell><Link to={`/admin/deals/${d.id}`} className="font-medium text-primary hover:underline">{d.deal_reference || d.id.slice(0, 8)}</Link></TableCell>
                     <TableCell>{d.buyer_company_name || '—'}</TableCell>
                     <TableCell className="text-right">{d.invoice_value ? `${d.invoice_value.toLocaleString()}` : '—'}</TableCell>
-                    <TableCell><DealStatusBadge status={d.status as DealStatus} /></TableCell>
+                    <TableCell><DealStatusBadge status={d.status as DealStatus} portal="veloxis" /></TableCell>
                     <TableCell className="text-sm text-muted-foreground">{format(new Date(d.created_at), 'dd MMM yyyy')}</TableCell>
                   </TableRow>
                 ))}

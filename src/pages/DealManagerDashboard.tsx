@@ -131,7 +131,7 @@ export default function DealManagerDashboard() {
                     <p className="font-medium text-foreground">{deal.invoice_number || deal.id.slice(0, 8)}</p>
                     <p className="text-sm text-muted-foreground">{deal.buyer_company_name || '—'}</p>
                   </div>
-                  <DealStatusBadge status={deal.status} />
+                  <DealStatusBadge status={deal.status} portal="veloxis" />
                 </Link>
               ))}
             </div>
