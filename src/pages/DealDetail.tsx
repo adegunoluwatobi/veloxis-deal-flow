@@ -120,6 +120,7 @@ export default function DealDetail() {
   const [deal, setDeal] = useState<DealRow | null>(null);
   const [exporter, setExporter] = useState<ExporterRow | null>(null);
   const [docs, setDocs] = useState<DocRow[]>([]);
+  const [exporterDocs, setExporterDocs] = useState<KycDocumentLike[]>([]);
   const [notes, setNotes] = useState<NoteRow[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(true);
