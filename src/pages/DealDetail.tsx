@@ -111,7 +111,9 @@ export default function DealDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, role } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const backPath = location.pathname.startsWith('/admin') ? '/admin/deals' : '/deals';
 
   const [deal, setDeal] = useState<DealRow | null>(null);
   const [exporter, setExporter] = useState<ExporterRow | null>(null);
