@@ -264,7 +264,7 @@ export default function GreystarDealDetail() {
               <XCircle className="mr-2 h-4 w-4" />Reject Application
             </Button>
             {canSubmitToVeloxis && (
-              <Button onClick={handleSubmitToVeloxis} disabled={submitting}>
+              <Button onClick={handleSubmitToVeloxis} disabled={submitting || !canSubmitToVeloxis} title={submitTooltip ?? undefined}>
                 <Send className="mr-2 h-4 w-4" />Submit to Underwriter
               </Button>
             )}
