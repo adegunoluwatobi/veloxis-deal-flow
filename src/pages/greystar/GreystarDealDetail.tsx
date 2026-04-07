@@ -229,7 +229,7 @@ export default function GreystarDealDetail() {
             </Button>
             {canSubmitToVeloxis && (
               <Button onClick={handleSubmitToVeloxis} disabled={submitting}>
-                <Send className="mr-2 h-4 w-4" />Submit to Veloxis
+                <Send className="mr-2 h-4 w-4" />Submit to Underwriter
               </Button>
             )}
           </CardContent>
