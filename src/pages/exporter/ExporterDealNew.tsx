@@ -280,7 +280,7 @@ export default function ExporterDealNew() {
         });
       }
 
-      toast({ title: asDraft ? 'Deal saved as draft' : 'Deal submitted successfully' });
+      toast({ title: asDraft ? 'Application saved as draft' : 'Application submitted successfully' });
       navigate('/exporter/deals');
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
