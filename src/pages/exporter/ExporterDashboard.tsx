@@ -5,18 +5,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { KYC_STATUS_LABELS, type KycStatus } from '@/types';
 import { AlertTriangle, CheckCircle2, FileText, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const KYC_COLORS: Record<KycStatus, string> = {
-  pending_documents: 'bg-muted text-muted-foreground',
-  documents_uploaded: 'bg-primary/10 text-primary',
-  under_review: 'bg-warning/10 text-warning',
-  verified: 'bg-success/10 text-success',
-  kyc_document_expired: 'bg-destructive/10 text-destructive',
-  rejected: 'bg-destructive/10 text-destructive',
-};
+import { computeKycStatus } from '@/lib/computeKycStatus';
 
 export default function ExporterDashboard() {
   const { user } = useAuth();
@@ -27,7 +18,6 @@ export default function ExporterDashboard() {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      // Find the exporter linked to this user
       const { data: exp } = await supabase
         .from('exporters')
         .select('*')
@@ -69,6 +59,8 @@ export default function ExporterDashboard() {
     other: 'Other',
   };
 
+  const kyc = computeKycStatus(documents);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -76,15 +68,13 @@ export default function ExporterDashboard() {
         <p className="text-sm text-muted-foreground">RC {exporter.rc_number} · {exporter.director_name}</p>
       </div>
 
-      {/* KYC Banner */}
-      <div className={cn('rounded-lg border p-4', KYC_COLORS[exporter.kyc_status as KycStatus])}>
+      {/* KYC Banner — derived from documents */}
+      <div className={cn('rounded-lg border p-4', kyc.borderColor)}>
         <div className="flex items-center gap-2">
-          {exporter.kyc_status === 'verified' ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
-          <span className="font-semibold">KYC Status: {KYC_STATUS_LABELS[exporter.kyc_status as KycStatus]}</span>
+          {kyc.status === 'verified' ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+          <span className="font-semibold">KYC Status: {kyc.label}</span>
         </div>
-        {exporter.kyc_status === 'pending_documents' && (
-          <p className="mt-1 text-sm">Please upload your CAC Certificate, Director ID, and NEPC Certificate.</p>
-        )}
+        <p className="mt-1 text-sm">{kyc.description}</p>
       </div>
 
       {/* Documents Summary */}

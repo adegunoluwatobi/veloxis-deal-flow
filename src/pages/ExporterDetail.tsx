@@ -218,8 +218,8 @@ export default function ExporterDetail() {
               <CardTitle className="text-lg">{exporter.company_name}</CardTitle>
               <CardDescription>RC {exporter.rc_number} · {ENTITY_TYPE_LABELS[exporter.entity_type]}</CardDescription>
             </div>
-            <Badge variant="secondary" className={cn('ml-auto font-medium', KYC_COLORS[exporter.kyc_status])}>
-              {KYC_STATUS_LABELS[exporter.kyc_status]}
+            <Badge variant="secondary" className={cn('ml-auto font-medium', kyc.color)}>
+              {kyc.label}
             </Badge>
           </div>
         </CardHeader>
