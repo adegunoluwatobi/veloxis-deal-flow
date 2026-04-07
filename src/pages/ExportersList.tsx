@@ -40,22 +40,60 @@ export default function ExportersList() {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      let query = supabase.from('exporters').select('id, company_name, rc_number, entity_type, director_name, kyc_status, created_at')
-        .order('created_at', { ascending: false });
-      if (role === 'partner_staff' || role === 'partner_admin') {
-        query = query.eq('originator_id', user.id);
-      }
-      const { data } = await query;
-      const ids = (data ?? []).map(e => e.id);
-      setExporters((data as ExporterRow[]) ?? []);
+      const isVeloxis = role === 'super_admin' || role === 'deal_manager';
 
-      if (ids.length > 0) {
-        const { data: docs } = await supabase
-          .from('exporter_documents')
-          .select('exporter_id, document_type, document_status, expiry_status, is_superseded')
-          .in('exporter_id', ids)
-          .eq('is_superseded', false);
-        setExporterDocs((docs as ExporterDocRow[]) ?? []);
+      if (isVeloxis) {
+        // Only show exporters who have at least one deal at sent_to_veloxis or beyond
+        const veloxisStatuses = [
+          'sent_to_veloxis', 'under_review', 'docs_requested', 'ready_for_final_approval',
+          'rejection_pending_approval', 'approved', 'rejected', 'ipu_sent', 'ipu_expired',
+          'ipu_signed_awaiting_funding', 'funded_active', 'repayment_due', 'overdue',
+          'closed_repaid', 'closed_partial', 'rejected_by_veloxis',
+        ] as const;
+        const { data: deals } = await supabase.from('deals')
+          .select('exporter_id')
+          .in('status', [...veloxisStatuses]);
+        const exporterIds = [...new Set((deals ?? []).map(d => d.exporter_id))];
+
+        if (exporterIds.length === 0) {
+          setExporters([]);
+          setLoading(false);
+          return;
+        }
+
+        const { data } = await supabase.from('exporters')
+          .select('id, company_name, rc_number, entity_type, director_name, kyc_status, created_at')
+          .in('id', exporterIds)
+          .order('created_at', { ascending: false });
+        setExporters((data as ExporterRow[]) ?? []);
+
+        const ids = (data ?? []).map(e => e.id);
+        if (ids.length > 0) {
+          const { data: docs } = await supabase
+            .from('exporter_documents')
+            .select('exporter_id, document_type, document_status, expiry_status, is_superseded')
+            .in('exporter_id', ids)
+            .eq('is_superseded', false);
+          setExporterDocs((docs as ExporterDocRow[]) ?? []);
+        }
+      } else {
+        let query = supabase.from('exporters').select('id, company_name, rc_number, entity_type, director_name, kyc_status, created_at')
+          .order('created_at', { ascending: false });
+        if (role === 'partner_staff' || role === 'partner_admin') {
+          query = query.eq('originator_id', user.id);
+        }
+        const { data } = await query;
+        const ids = (data ?? []).map(e => e.id);
+        setExporters((data as ExporterRow[]) ?? []);
+
+        if (ids.length > 0) {
+          const { data: docs } = await supabase
+            .from('exporter_documents')
+            .select('exporter_id, document_type, document_status, expiry_status, is_superseded')
+            .in('exporter_id', ids)
+            .eq('is_superseded', false);
+          setExporterDocs((docs as ExporterDocRow[]) ?? []);
+        }
       }
       setLoading(false);
     };

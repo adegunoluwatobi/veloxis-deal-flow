@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
   Shield, LayoutDashboard, Users, FileText, Settings, LogOut,
-  Menu, X, ChevronRight, ShieldCheck,
+  Menu, X, ChevronRight, ShieldCheck, Banknote, Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,6 +24,8 @@ const NAV_ITEMS: NavItem[] = [
 const ADMIN_NAV: NavItem[] = [
   { label: 'Admin Dashboard', href: '/admin', icon: ShieldCheck, roles: ['super_admin', 'deal_manager'] },
   { label: 'All Deals', href: '/admin/deals', icon: FileText, roles: ['super_admin', 'deal_manager'] },
+  { label: 'Capital Pool', href: '/admin/capital', icon: Banknote, roles: ['super_admin', 'deal_manager'] },
+  { label: 'Partners', href: '/admin/partners', icon: Building2, roles: ['super_admin'] },
   { label: 'User Management', href: '/admin/settings', icon: Settings, roles: ['super_admin'] },
 ];
 
