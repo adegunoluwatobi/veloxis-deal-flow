@@ -420,6 +420,8 @@ export type Database = {
           forwarded_to_veloxis_at: string | null
           forwarded_to_veloxis_by: string | null
           id: string
+          invite_accepted_at: string | null
+          invite_sent_at: string | null
           is_active: boolean
           kyc_status: Database["public"]["Enums"]["kyc_status"]
           kyc_verified_at: string | null
@@ -441,6 +443,8 @@ export type Database = {
           forwarded_to_veloxis_at?: string | null
           forwarded_to_veloxis_by?: string | null
           id?: string
+          invite_accepted_at?: string | null
+          invite_sent_at?: string | null
           is_active?: boolean
           kyc_status?: Database["public"]["Enums"]["kyc_status"]
           kyc_verified_at?: string | null
@@ -462,6 +466,8 @@ export type Database = {
           forwarded_to_veloxis_at?: string | null
           forwarded_to_veloxis_by?: string | null
           id?: string
+          invite_accepted_at?: string | null
+          invite_sent_at?: string | null
           is_active?: boolean
           kyc_status?: Database["public"]["Enums"]["kyc_status"]
           kyc_verified_at?: string | null
