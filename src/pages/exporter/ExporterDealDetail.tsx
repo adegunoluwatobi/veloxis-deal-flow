@@ -186,7 +186,14 @@ export default function ExporterDealDetail() {
           <p className="text-sm text-muted-foreground">Deal Application</p>
         </div>
         <DealStatusBadge status={deal.status} />
-      </div>
+        {deal.status === 'draft' && (
+          <Button asChild>
+            <Link to={`/exporter/deals/${deal.id}/edit`}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit Deal
+            </Link>
+          </Button>
+        )}
 
       {/* Change Request Banner */}
       {hasCR && (
