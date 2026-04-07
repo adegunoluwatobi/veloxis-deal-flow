@@ -488,7 +488,7 @@ export default function DealDetail() {
                   )}
                   {isSuperAdmin && (
                     <>
-                      <Button size="sm" onClick={() => setPricingOverride(true)} disabled={actionLoading || !(deal as any).ipu_verified} className="gap-1 bg-success hover:bg-success/90" title={!(deal as any).ipu_verified ? 'Upload and verify signed IPU before approving' : undefined}>
+                      <Button size="sm" onClick={() => setPricingOverride(true)} disabled={approveDisabled} className="gap-1 bg-success hover:bg-success/90" title={approveTooltip ?? undefined}>
                         <CheckCircle2 className="h-4 w-4" /> Approve Deal
                       </Button>
                       <Button size="sm" variant="destructive" onClick={() => setRejectOpen(true)} disabled={actionLoading} className="gap-1">
