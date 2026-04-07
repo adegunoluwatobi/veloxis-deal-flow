@@ -13,6 +13,7 @@ import ChangeRequestModal, { type FlaggedField } from '@/components/ChangeReques
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle, CheckCircle2, Send, XCircle, Loader2 } from 'lucide-react';
 import type { DealStatus } from '@/types';
+import SettlementSummaryBanner from '@/components/SettlementSummaryBanner';
 
 export default function GreystarDealDetail() {
   const { id } = useParams<{ id: string }>();
