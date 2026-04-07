@@ -9,7 +9,9 @@ export type CommodityType = 'solid_minerals' | 'scrap_metal' | 'manufactured_goo
 export type DealStatus =
   | 'draft' | 'submitted' | 'changes_requested' | 'sent_to_veloxis'
   | 'under_review' | 'docs_requested'
-  | 'ready_for_final_approval' | 'rejection_pending_approval' | 'approved'
+  | 'ready_for_final_approval' | 'rejection_pending_approval'
+  | 'pending_exporter_acceptance' | 'declined_by_exporter'
+  | 'approved'
   | 'rejected' | 'rejected_by_partner' | 'rejected_by_veloxis'
   | 'ipu_sent' | 'ipu_expired' | 'ipu_signed_awaiting_funding'
   | 'funded_active' | 'repayment_due' | 'overdue' | 'payment_received'
