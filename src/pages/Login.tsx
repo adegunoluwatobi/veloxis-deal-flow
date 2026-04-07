@@ -76,23 +76,6 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        {/* Portal indicator */}
-        <Card className="border-dashed">
-          <CardContent className="py-4">
-            <p className="mb-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">You'll be directed to your portal</p>
-            <div className="space-y-2">
-              {PORTAL_INFO.map((p) => (
-                <div key={p.role} className="flex items-center gap-3 rounded-md border border-border px-3 py-2">
-                  <p.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground">{p.role}</p>
-                    <p className="text-xs text-muted-foreground">{p.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
 
         <p className="text-center text-xs text-muted-foreground">
           Veloxis Capital UK · Compliance-first trade finance
