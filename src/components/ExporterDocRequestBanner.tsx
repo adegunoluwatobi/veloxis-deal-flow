@@ -37,7 +37,7 @@ export default function ExporterDocRequestBanner({ dealId, dealStatus, onReload 
       .eq('deal_id', dealId)
       .eq('status', 'pending')
       .order('created_at', { ascending: true });
-    setRequests((data as DocRequest[]) ?? []);
+    setRequests((data as unknown as DocRequest[]) ?? []);
     setLoading(false);
   };
 
