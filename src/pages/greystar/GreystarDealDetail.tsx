@@ -9,13 +9,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import DealStatusBadge from '@/components/DealStatusBadge';
 import DealAuditTrail from '@/components/DealAuditTrail';
 import ChangeRequestModal, { type FlaggedField } from '@/components/ChangeRequestModal';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle, CheckCircle2, Send, XCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle, CheckCircle2, Send, XCircle, Loader2, Clock } from 'lucide-react';
 import type { DealStatus } from '@/types';
+import { CURRENCY_SYMBOLS, type InvoiceCurrency } from '@/types';
 import SettlementSummaryBanner from '@/components/SettlementSummaryBanner';
 
 export default function GreystarDealDetail() {
@@ -247,6 +250,57 @@ export default function GreystarDealDetail() {
       {validationFailures.length > 0 && (
         <ValidationSummaryBanner failures={validationFailures} onDismiss={() => setValidationFailures([])} />
       )}
+
+      {/* Facility Offer Panel — read-only for partner when pending exporter acceptance or declined */}
+      {(deal.status === 'pending_exporter_acceptance' || deal.status === 'declined_by_exporter') && (() => {
+        const psym = CURRENCY_SYMBOLS[(deal.invoice_currency_v2 as InvoiceCurrency) ?? 'GBP'] ?? '£';
+        const pfmt = (v: number | null) => v != null ? `${psym}${Number(v).toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—';
+        return (
+          <Card className="border-primary/30">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Facility Offer Sent to Exporter
+                </CardTitle>
+                <Badge variant="secondary" className={deal.status === 'pending_exporter_acceptance' ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}>
+                  {deal.status === 'pending_exporter_acceptance' ? 'Awaiting Exporter Response' : 'Declined by Exporter'}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {deal.status === 'declined_by_exporter' && deal.offer_decline_reason && (
+                <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3">
+                  <XCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Exporter declined</p>
+                    <p className="text-sm text-muted-foreground">{deal.offer_decline_reason}</p>
+                  </div>
+                </div>
+              )}
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[60%]">Field</TableHead>
+                    <TableHead>Value</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow><TableCell>Invoice Amount</TableCell><TableCell className="font-medium">{pfmt(deal.invoice_value)}</TableCell></TableRow>
+                  <TableRow><TableCell>Advance %</TableCell><TableCell className="font-medium">{deal.advance_percentage}%</TableCell></TableRow>
+                  <TableRow><TableCell>Advance Amount</TableCell><TableCell className="font-medium">{pfmt(deal.advance_amount)}</TableCell></TableRow>
+                  <TableRow><TableCell>Platform Fee (one-off)</TableCell><TableCell className="font-medium">{pfmt(deal.platform_fee_amount)}</TableCell></TableRow>
+                  <TableRow><TableCell>Discount Fee</TableCell><TableCell className="font-medium">{pfmt(deal.discount_fee_amount)}</TableCell></TableRow>
+                  <TableRow><TableCell>Total Fees</TableCell><TableCell className="font-medium">{pfmt(deal.gross_yield)}</TableCell></TableRow>
+                  <TableRow className="border-t-2"><TableCell className="font-semibold">Net Advance to Exporter</TableCell><TableCell className="font-bold">{pfmt(deal.net_advance_amount)}</TableCell></TableRow>
+                  <TableRow><TableCell>Payment Terms</TableCell><TableCell className="font-medium">{deal.payment_terms_days ?? '—'} days</TableCell></TableRow>
+                </TableBody>
+              </Table>
+              <p className="text-xs text-muted-foreground italic">The partner cannot accept or decline on the exporter's behalf.</p>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Actions */}
       {(deal.status === 'submitted' || deal.status === 'changes_requested') && (

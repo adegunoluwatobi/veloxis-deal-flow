@@ -5,13 +5,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import DealStatusBadge from '@/components/DealStatusBadge';
 import DealAuditTrail from '@/components/DealAuditTrail';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle, Send, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle, Send, Loader2, Pencil, Trash2, CheckCircle2, XCircle } from 'lucide-react';
 import { useConfirm } from '@/components/ConfirmDialog';
 import type { DealStatus } from '@/types';
+import { CURRENCY_SYMBOLS, type InvoiceCurrency } from '@/types';
 import type { FlaggedField } from '@/components/ChangeRequestModal';
 import { CurrencyInput, stripCommas } from '@/components/ui/currency-input';
 import SettlementSummaryBanner from '@/components/SettlementSummaryBanner';
@@ -28,6 +32,8 @@ export default function ExporterDealDetail() {
   const [pendingCR, setPendingCR] = useState<any>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [declineOpen, setDeclineOpen] = useState(false);
+  const [declineReason, setDeclineReason] = useState('');
 
   const loadData = async () => {
     if (!user || !id) return;
@@ -129,8 +135,70 @@ export default function ExporterDealDetail() {
     }
   };
 
+  const handleAcceptOffer = async () => {
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from('deals').update({
+        status: 'approved' as any,
+        offer_accepted_at: new Date().toISOString(),
+        offer_accepted_by: user!.id,
+      }).eq('id', id!);
+      if (error) throw error;
+
+      await supabase.rpc('insert_audit_log', {
+        p_deal_id: id!,
+        p_user_id: user!.id,
+        p_user_role: 'exporter' as any,
+        p_action_type: 'deal_status_changed' as any,
+        p_metadata: { actor_name: user!.email, from: 'pending_exporter_acceptance', to: 'approved', action: 'offer_accepted' },
+      });
+
+      toast({ title: 'Offer accepted', description: 'Your facility offer has been accepted.' });
+      await loadData();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeclineOffer = async () => {
+    if (!declineReason.trim()) return;
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from('deals').update({
+        status: 'declined_by_exporter' as any,
+        offer_declined_at: new Date().toISOString(),
+        offer_declined_by: user!.id,
+        offer_decline_reason: declineReason.trim(),
+      }).eq('id', id!);
+      if (error) throw error;
+
+      await supabase.rpc('insert_audit_log', {
+        p_deal_id: id!,
+        p_user_id: user!.id,
+        p_user_role: 'exporter' as any,
+        p_action_type: 'deal_status_changed' as any,
+        p_metadata: { actor_name: user!.email, from: 'pending_exporter_acceptance', to: 'declined_by_exporter', reason: declineReason.trim() },
+      });
+
+      toast({ title: 'Offer declined' });
+      setDeclineOpen(false);
+      setDeclineReason('');
+      await loadData();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!deal) return <div className="py-20 text-center text-muted-foreground">Application not found</div>;
+
+  const isPendingAcceptance = deal.status === 'pending_exporter_acceptance';
+  const sym = CURRENCY_SYMBOLS[(deal.invoice_currency_v2 as InvoiceCurrency) ?? 'GBP'] ?? '£';
+  const fmt = (v: number | null) => v != null ? `${sym}${Number(v).toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—';
 
   const isFlagged = (field: string) => flaggedSet.has(field);
 
@@ -224,6 +292,90 @@ export default function ExporterDealDetail() {
           </>
         )}
       </div>
+
+      {/* Facility Offer Panel — shown when pending exporter acceptance */}
+      {isPendingAcceptance && (
+        <Card className="border-primary">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              Your Facility Offer
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[60%]">Field</TableHead>
+                  <TableHead>Value</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>Invoice Amount</TableCell>
+                  <TableCell className="font-medium">{fmt(deal.invoice_value)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Advance %</TableCell>
+                  <TableCell className="font-medium">{deal.advance_percentage}%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Advance Amount</TableCell>
+                  <TableCell className="font-medium">{fmt(deal.advance_amount)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Platform Fee (one-off)</TableCell>
+                  <TableCell className="font-medium">{fmt(deal.platform_fee_amount)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Discount Fee ({((deal.discount_fee_pct ?? 0) * 100).toFixed(1)}%/month × {deal.payment_terms_days ?? 0} days)</TableCell>
+                  <TableCell className="font-medium">{fmt(deal.discount_fee_amount)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Total Fees</TableCell>
+                  <TableCell className="font-medium">{fmt(deal.gross_yield)}</TableCell>
+                </TableRow>
+                <TableRow className="border-t-2">
+                  <TableCell className="font-semibold">Net Advance to You</TableCell>
+                  <TableCell className="font-bold">{fmt(deal.net_advance_amount)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Payment Terms</TableCell>
+                  <TableCell className="font-medium">{deal.payment_terms_days ?? '—'} days</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Late Penalty Rate</TableCell>
+                  <TableCell className="font-medium">{((deal.demurrage_rate_daily ?? 0.00067) * 100).toFixed(3)}%/day after maturity</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+
+            <div className="flex flex-wrap gap-3 pt-2">
+              <Button
+                onClick={handleAcceptOffer}
+                disabled={submitting}
+                className="gap-2 bg-success hover:bg-success/90"
+              >
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                Accept Offer
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setDeclineOpen(true)}
+                disabled={submitting}
+                className="gap-2 border-destructive text-destructive hover:bg-destructive/5"
+              >
+                <XCircle className="h-4 w-4" />
+                Decline Offer
+              </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground italic">
+              By accepting this offer, you agree to the fee structure above and authorise Veloxis to proceed with the Notice of Assignment and Irrevocable Payment Undertaking process with your buyer.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Change Request Banner */}
       {hasCR && (
@@ -351,6 +503,35 @@ export default function ExporterDealDetail() {
 
       {/* Audit Trail */}
       <DealAuditTrail dealId={deal.id} viewerRole="exporter" />
+
+      {/* Decline Offer Modal */}
+      <Dialog open={declineOpen} onOpenChange={() => setDeclineOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Decline Facility Offer</DialogTitle>
+            <DialogDescription>Please provide a reason for declining this offer. Veloxis may revise the terms and re-send.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Textarea
+              value={declineReason}
+              onChange={e => setDeclineReason(e.target.value)}
+              placeholder="Reason for declining..."
+              rows={4}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeclineOpen(false)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              disabled={!declineReason.trim() || submitting}
+              onClick={handleDeclineOffer}
+            >
+              {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Decline Offer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

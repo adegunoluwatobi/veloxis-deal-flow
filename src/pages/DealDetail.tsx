@@ -302,27 +302,9 @@ export default function DealDetail() {
     if (!id || !deal) return;
     setActionLoading(true);
     try {
-      // Recalculate pricing with override percentage
-      const advPct = parseFloat(overrideAdvPct) || 80;
-      const tier = exporter?.subscription_tier ?? 'pay_as_you_go';
-      const { data: pricingData } = await supabase.rpc('calculate_deal_pricing', {
-        p_invoice_value: deal.invoice_value ?? 0,
-        p_advance_percentage: advPct,
-        p_payment_terms_days: deal.payment_terms_days ?? 30,
-        p_subscription_tier: tier as 'pay_as_you_go' | 'veloxis_pro',
-      });
-      const p = pricingData?.[0];
-      if (!p) throw new Error('Pricing calculation failed');
-
       const { error } = await supabase.from('deals').update({
-        status: 'approved',
-        advance_percentage: advPct,
-        advance_amount: p.advance_amount,
-        platform_fee_pct: p.platform_fee_pct,
-        platform_fee_amount: p.platform_fee_amount,
-        discount_fee_pct: p.discount_fee_pct,
-        discount_fee_amount: p.discount_fee_amount,
-        gross_yield: p.gross_expected_yield,
+        status: 'pending_exporter_acceptance' as DealStatus,
+        approved_at: new Date().toISOString(),
       }).eq('id', id);
       if (error) throw error;
 
@@ -331,14 +313,43 @@ export default function DealDetail() {
         p_user_id: user?.id,
         p_user_role: role as any,
         p_action_type: 'deal_approved',
-        p_metadata: { advance_percentage: advPct, ...p },
+        p_metadata: { actor_name: user?.email, next_status: 'pending_exporter_acceptance' },
       });
 
-      toast({ title: 'Deal approved', description: 'Pricing locked.' });
+      toast({ title: 'Deal approved', description: 'Offer sent to exporter for acceptance.' });
       setPricingOverride(false);
       load();
     } catch (err: unknown) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Approval failed', variant: 'destructive' });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleResendOffer = async () => {
+    if (!id || !deal) return;
+    setActionLoading(true);
+    try {
+      const { error } = await supabase.from('deals').update({
+        status: 'pending_exporter_acceptance' as DealStatus,
+        offer_declined_at: null,
+        offer_declined_by: null,
+        offer_decline_reason: null,
+      }).eq('id', id);
+      if (error) throw error;
+
+      await supabase.rpc('insert_audit_log', {
+        p_deal_id: id,
+        p_user_id: user?.id,
+        p_user_role: role as any,
+        p_action_type: 'deal_status_changed' as AuditAction,
+        p_metadata: { actor_name: user?.email, from: 'declined_by_exporter', to: 'pending_exporter_acceptance' },
+      });
+
+      toast({ title: 'Offer re-sent to exporter' });
+      load();
+    } catch (err: unknown) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to re-send offer', variant: 'destructive' });
     } finally {
       setActionLoading(false);
     }
@@ -434,6 +445,44 @@ export default function DealDetail() {
             <p className="text-sm font-medium text-foreground">Rejection Recommended</p>
             <p className="text-sm text-muted-foreground">{deal.rejection_reason}</p>
             <p className="text-xs text-muted-foreground mt-1">Pending Super Admin review before finalisation.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Exporter accepted offer banner */}
+      {deal.status === 'approved' && (deal as any).offer_accepted_at && (
+        <div className="flex items-start gap-3 rounded-lg border border-success/30 bg-success/5 p-4">
+          <CheckCircle2 className="mt-0.5 h-5 w-5 text-success shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Exporter Accepted Offer</p>
+            <p className="text-sm text-muted-foreground">
+              Accepted on {new Date((deal as any).offer_accepted_at).toLocaleDateString('en-GB')} at {new Date((deal as any).offer_accepted_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}. Proceed with sending the IPU to the buyer.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Exporter declined offer banner */}
+      {deal.status === ('declined_by_exporter' as DealStatus) && (
+        <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+          <XCircle className="mt-0.5 h-5 w-5 text-destructive shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Exporter Declined Offer</p>
+            {(deal as any).offer_decline_reason && (
+              <p className="text-sm text-muted-foreground mt-1">Reason: {(deal as any).offer_decline_reason}</p>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">You may revise pricing and re-send the offer.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Pending exporter acceptance banner */}
+      {deal.status === ('pending_exporter_acceptance' as DealStatus) && (
+        <div className="flex items-start gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
+          <Clock className="mt-0.5 h-5 w-5 text-primary shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Awaiting Exporter Response</p>
+            <p className="text-sm text-muted-foreground">The facility offer has been sent to the exporter. Waiting for them to accept or decline.</p>
           </div>
         </div>
       )}
@@ -534,9 +583,15 @@ export default function DealDetail() {
                   <Clock className="h-4 w-4" /> Back to Review
                 </Button>
               )}
-              {/* Pre-Veloxis statuses should never appear here due to RLS, but show info if they do */}
-              {['draft', 'submitted', 'changes_requested'].includes(deal.status) && (
-                <p className="text-sm text-muted-foreground italic">This deal has not been submitted to Veloxis by the partner yet. No actions available.</p>
+              {/* Declined by exporter — super_admin can re-send offer */}
+              {deal.status === ('declined_by_exporter' as DealStatus) && isSuperAdmin && (
+                <Button size="sm" onClick={handleResendOffer} disabled={actionLoading} className="gap-1">
+                  <Send className="h-4 w-4" /> Re-send Offer to Exporter
+                </Button>
+              )}
+              {/* Pending exporter acceptance — informational */}
+              {deal.status === ('pending_exporter_acceptance' as DealStatus) && (
+                <p className="text-sm text-muted-foreground italic">Waiting for exporter to accept or decline the facility offer.</p>
               )}
             </div>
           </CardContent>

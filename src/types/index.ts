@@ -9,7 +9,9 @@ export type CommodityType = 'solid_minerals' | 'scrap_metal' | 'manufactured_goo
 export type DealStatus =
   | 'draft' | 'submitted' | 'changes_requested' | 'sent_to_veloxis'
   | 'under_review' | 'docs_requested'
-  | 'ready_for_final_approval' | 'rejection_pending_approval' | 'approved'
+  | 'ready_for_final_approval' | 'rejection_pending_approval'
+  | 'pending_exporter_acceptance' | 'declined_by_exporter'
+  | 'approved'
   | 'rejected' | 'rejected_by_partner' | 'rejected_by_veloxis'
   | 'ipu_sent' | 'ipu_expired' | 'ipu_signed_awaiting_funding'
   | 'funded_active' | 'repayment_due' | 'overdue' | 'payment_received'
@@ -100,6 +102,8 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   docs_requested: 'Documents Requested',
   ready_for_final_approval: 'Ready for Final Approval',
   rejection_pending_approval: 'Rejection Pending Approval',
+  pending_exporter_acceptance: 'Pending Exporter Acceptance',
+  declined_by_exporter: 'Declined by Exporter',
   approved: 'Approved',
   rejected: 'Rejected',
   rejected_by_partner: 'Rejected by Partner',
@@ -116,11 +120,23 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   closed_partial: 'Closed (Partial)',
 };
 
-// Portal-specific overrides for sent_to_veloxis label
+// Portal-specific overrides for status labels
 export const PORTAL_STATUS_OVERRIDES: Record<Portal, Partial<Record<DealStatus, string>>> = {
-  exporter: { sent_to_veloxis: 'Under Review' },
-  partner: { sent_to_veloxis: 'Submitted to Veloxis' },
-  veloxis: { sent_to_veloxis: 'Awaiting Review' },
+  exporter: {
+    sent_to_veloxis: 'Under Review',
+    pending_exporter_acceptance: 'Offer Received',
+    declined_by_exporter: 'Offer Declined',
+  },
+  partner: {
+    sent_to_veloxis: 'Submitted to Veloxis',
+    pending_exporter_acceptance: 'Awaiting Exporter Response',
+    declined_by_exporter: 'Declined by Exporter',
+  },
+  veloxis: {
+    sent_to_veloxis: 'Awaiting Review',
+    pending_exporter_acceptance: 'Pending Exporter Acceptance',
+    declined_by_exporter: 'Declined by Exporter',
+  },
 };
 
 export function getDealStatusLabel(status: DealStatus, portal?: Portal): string {
@@ -139,6 +155,8 @@ export const DEAL_STATUS_COLORS: Record<DealStatus, string> = {
   docs_requested: 'bg-warning/10 text-warning',
   ready_for_final_approval: 'bg-primary/10 text-primary',
   rejection_pending_approval: 'bg-destructive/10 text-destructive',
+  pending_exporter_acceptance: 'bg-primary/10 text-primary',
+  declined_by_exporter: 'bg-destructive/10 text-destructive',
   approved: 'bg-success/10 text-success',
   rejected: 'bg-destructive/10 text-destructive',
   rejected_by_partner: 'bg-destructive/10 text-destructive',

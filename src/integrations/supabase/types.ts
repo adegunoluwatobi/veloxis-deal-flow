@@ -341,6 +341,11 @@ export type Database = {
           licence_name_match: boolean | null
           net_advance_amount: number | null
           ngn_equivalent_at_disbursement: number | null
+          offer_accepted_at: string | null
+          offer_accepted_by: string | null
+          offer_decline_reason: string | null
+          offer_declined_at: string | null
+          offer_declined_by: string | null
           originator_id: string
           outstanding_balance: number | null
           overdue_days: number
@@ -437,6 +442,11 @@ export type Database = {
           licence_name_match?: boolean | null
           net_advance_amount?: number | null
           ngn_equivalent_at_disbursement?: number | null
+          offer_accepted_at?: string | null
+          offer_accepted_by?: string | null
+          offer_decline_reason?: string | null
+          offer_declined_at?: string | null
+          offer_declined_by?: string | null
           originator_id: string
           outstanding_balance?: number | null
           overdue_days?: number
@@ -533,6 +543,11 @@ export type Database = {
           licence_name_match?: boolean | null
           net_advance_amount?: number | null
           ngn_equivalent_at_disbursement?: number | null
+          offer_accepted_at?: string | null
+          offer_accepted_by?: string | null
+          offer_decline_reason?: string | null
+          offer_declined_at?: string | null
+          offer_declined_by?: string | null
           originator_id?: string
           outstanding_balance?: number | null
           overdue_days?: number
@@ -1424,6 +1439,8 @@ export type Database = {
         | "rejected_by_partner"
         | "rejected_by_veloxis"
         | "in_collections"
+        | "pending_exporter_acceptance"
+        | "declined_by_exporter"
       document_request_status:
         | "pending_upload"
         | "uploaded_pending_review"
@@ -1684,6 +1701,8 @@ export const Constants = {
         "rejected_by_partner",
         "rejected_by_veloxis",
         "in_collections",
+        "pending_exporter_acceptance",
+        "declined_by_exporter",
       ],
       document_request_status: [
         "pending_upload",
