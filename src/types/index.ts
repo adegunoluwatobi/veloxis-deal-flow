@@ -23,7 +23,7 @@ export type ExpiryStatus = 'valid' | 'expiring_soon_60' | 'expiring_soon_30' | '
 
 export type SubscriptionTier = 'pay_as_you_go' | 'veloxis_pro';
 
-export type InvoiceCurrency = 'GBP' | 'USD' | 'EUR';
+export type InvoiceCurrency = 'GBP' | 'USD' | 'EUR' | 'NGN';
 
 export type ExporterDocumentType = 'cac_certificate' | 'director_id' | 'nepc_certificate' | 'other';
 
