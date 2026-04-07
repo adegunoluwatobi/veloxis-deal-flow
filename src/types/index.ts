@@ -39,6 +39,8 @@ export type AuditAction =
   | 'exporter_document_verified';
 
 // UI Label Maps
+export type Portal = 'exporter' | 'partner' | 'veloxis';
+
 export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   draft: 'Draft',
   submitted: 'Submitted',
