@@ -27,6 +27,9 @@ import {
   DollarSign, Globe, Package, Calendar, Percent,
 } from 'lucide-react';
 import BuyerComplianceSection from '@/components/BuyerComplianceSection';
+import SettlementFxSection from '@/components/SettlementFxSection';
+import RepaymentFxSection from '@/components/RepaymentFxSection';
+import type { SettlementMethod, RepaymentReconciliationStatus } from '@/types';
 
 interface DealRow {
   id: string;
