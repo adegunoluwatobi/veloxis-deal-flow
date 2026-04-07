@@ -12,7 +12,7 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ElementType;
-  roles: ('originator' | 'deal_manager')[];
+  roles: string[];
 }
 
 const NAV_ITEMS: NavItem[] = [
