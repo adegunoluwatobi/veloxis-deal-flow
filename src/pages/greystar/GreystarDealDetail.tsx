@@ -121,7 +121,7 @@ export default function GreystarDealDetail() {
               <XCircle className="mr-2 h-4 w-4" />Reject Deal
             </Button>
             {canSubmitToVeloxis && (
-              <Button onClick={() => updateStatus('sent_to_veloxis' as DealStatus, { sent_to_veloxis_at: new Date().toISOString() })}>
+              <Button onClick={() => updateStatus('sent_to_veloxis' as DealStatus, { sent_to_veloxis_at: new Date().toISOString() }, 'deal_sent_to_veloxis')}>
                 <Send className="mr-2 h-4 w-4" />Submit to Veloxis
               </Button>
             )}
