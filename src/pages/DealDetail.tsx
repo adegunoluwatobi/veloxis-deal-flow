@@ -166,6 +166,7 @@ export default function DealDetail() {
       setEditAdvPct(String(d.advance_percentage));
       setEditPlatformFeePct(String((d.platform_fee_pct ?? 0) * 100));
       setEditDiscountFeePct(String((d.discount_fee_pct ?? 0) * 100));
+      setEditPaymentTerms(String(d.payment_terms_days ?? ''));
       // Load exporter
       const { data: exp } = await supabase.from('exporters').select('*').eq('id', d.exporter_id).single();
       if (exp) {
