@@ -32,6 +32,8 @@ export default function ExporterDealDetail() {
   const [pendingCR, setPendingCR] = useState<any>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [declineOpen, setDeclineOpen] = useState(false);
+  const [declineReason, setDeclineReason] = useState('');
 
   const loadData = async () => {
     if (!user || !id) return;
