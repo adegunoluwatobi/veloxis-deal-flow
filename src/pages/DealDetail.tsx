@@ -736,6 +736,32 @@ export default function DealDetail() {
         />
       )}
 
+      {/* IPU Upload & Verification */}
+      {isDM && (
+        <IpuUploadSection
+          dealId={deal.id}
+          ipuVerified={(deal as any).ipu_verified ?? false}
+          ipuVerifiedAt={(deal as any).ipu_verified_at ?? null}
+          ipuDocuments={activeDocs.filter(d => d.document_type === 'ipu_signed').map(d => ({ id: d.id, file_name: d.file_name, uploaded_at: d.uploaded_at }))}
+          dealStatus={deal.status}
+          onReload={load}
+        />
+      )}
+
+      {/* Record Buyer Payment */}
+      <PaymentAdvicePanel
+        dealId={deal.id}
+        invoiceCurrency={deal.invoice_currency_v2}
+        advanceAmount={deal.advance_amount}
+        invoiceValue={deal.invoice_value}
+        platformFeeAmount={deal.platform_fee_amount}
+        discountFeeAmount={deal.discount_fee_amount}
+        repaymentDueDate={(deal as any).repayment_due_date ?? null}
+        dealStatus={deal.status}
+        discountFeePct={deal.discount_fee_pct}
+        onReload={load}
+      />
+
       {/* Settlement & FX */}
       {isDM && (
         <SettlementFxSection
