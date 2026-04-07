@@ -111,7 +111,7 @@ export default function ExporterDealDetail() {
 
   const handleDeleteDraft = async () => {
     const ok = await confirm({
-      title: 'Delete Draft Deal',
+      title: 'Delete Draft Application',
       description: 'Are you sure you want to delete this draft? This action cannot be undone.',
       variant: 'warning',
       confirmLabel: 'Delete',
