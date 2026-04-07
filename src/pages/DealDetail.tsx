@@ -239,9 +239,19 @@ export default function DealDetail() {
     }
   };
 
-  const handleReject = async () => {
+  const handleRecommendRejection = async () => {
     if (!rejectReason.trim()) {
-      toast({ title: 'Reason required', description: 'You must provide a rejection reason.', variant: 'destructive' });
+      toast({ title: 'Reason required', description: 'You must provide a reason for rejection.', variant: 'destructive' });
+      return;
+    }
+    await updateStatus('rejection_pending_approval' as DealStatus, { rejection_reason: rejectReason.trim() });
+    setRejectOpen(false);
+    setRejectReason('');
+  };
+
+  const handleFinalReject = async () => {
+    if (!rejectReason.trim()) {
+      toast({ title: 'Reason required', description: 'You must provide a reason for rejection.', variant: 'destructive' });
       return;
     }
     await updateStatus('rejected', { rejection_reason: rejectReason.trim() });
