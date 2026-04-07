@@ -20,6 +20,7 @@ export default function SetPassword() {
   const [sessionReady, setSessionReady] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [resendEmail, setResendEmail] = useState('');
+  const [resendExporterId, setResendExporterId] = useState('');
   const [resendingInvite, setResendingInvite] = useState(false);
 
   useEffect(() => {
@@ -95,12 +96,17 @@ export default function SetPassword() {
           ? (rawType as EmailOtpType)
           : null;
         const inviteEmail = readAuthParam(searchParams, hashParams, 'email');
+        const exporterId = readAuthParam(searchParams, hashParams, 'exporter_id');
         const accessToken = readAuthParam(searchParams, hashParams, 'access_token');
         const refreshToken = readAuthParam(searchParams, hashParams, 'refresh_token');
         const authError = formatUrlError(readAuthParam(searchParams, hashParams, 'error_description'));
 
         if (inviteEmail) {
           setResendEmail(inviteEmail);
+        }
+
+        if (exporterId) {
+          setResendExporterId(exporterId);
         }
 
         if (authError) {
@@ -184,19 +190,28 @@ export default function SetPassword() {
       return;
     }
 
+    if (!resendExporterId) {
+      toast({ title: 'Invite unavailable', description: 'This link is missing exporter details. Please contact your administrator.', variant: 'destructive' });
+      return;
+    }
+
     setResendingInvite(true);
-    const redirectTo = `${window.location.origin}/set-password?email=${encodeURIComponent(email)}`;
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    const { data, error } = await supabase.functions.invoke('invite-exporter', {
+      body: {
+        email,
+        exporter_id: resendExporterId,
+      },
+    });
     setResendingInvite(false);
 
-    if (error) {
-      toast({ title: 'Unable to resend invite', description: error.message, variant: 'destructive' });
+    if (error || data?.error) {
+      toast({ title: 'Unable to resend invite', description: error?.message ?? data?.error ?? 'Please contact your administrator.', variant: 'destructive' });
       return;
     }
 
     toast({
       title: 'New invite sent',
-      description: 'If the account exists, a fresh setup email is on the way. Open it directly in your browser.',
+      description: 'A fresh invitation email is on the way. Open it directly in your browser.',
     });
   };
 
@@ -314,7 +329,7 @@ export default function SetPassword() {
                   autoComplete="email"
                 />
               </div>
-              <Button type="button" className="w-full" onClick={handleResendInvite} disabled={resendingInvite || !resendEmail.trim()}>
+              <Button type="button" className="w-full" onClick={handleResendInvite} disabled={resendingInvite || !resendEmail.trim() || !resendExporterId}>
                 {resendingInvite ? 'Sending…' : 'Send a new invite'}
               </Button>
             </CardContent>

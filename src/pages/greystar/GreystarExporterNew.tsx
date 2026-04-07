@@ -19,7 +19,7 @@ export default function GreystarExporterNew() {
   const [created, setCreated] = useState<{
     exporterId: string;
     email: string;
-    inviteStatus: 'invite_sent' | 'password_reset_sent' | 'failed';
+    inviteStatus: 'invite_sent' | 'failed';
   } | null>(null);
   const [form, setForm] = useState({
     company_name: '',
@@ -35,7 +35,7 @@ export default function GreystarExporterNew() {
     if (!user || !isValid) return;
     setLoading(true);
     try {
-      let inviteStatus: 'invite_sent' | 'password_reset_sent' | 'failed' = 'invite_sent';
+      let inviteStatus: 'invite_sent' | 'failed' = 'invite_sent';
 
       // Create exporter profile
       const { data: exporter, error } = await supabase.from('exporters').insert({
@@ -65,14 +65,11 @@ export default function GreystarExporterNew() {
         console.error('Auto-invite failed:', inviteError.message);
         toast({ title: 'Exporter created', description: 'Profile created but auto-invite failed. You can invite manually.', variant: 'default' });
       } else {
-        inviteStatus = inviteResult?.reset_email_sent ? 'password_reset_sent' : 'invite_sent';
+        inviteStatus = 'invite_sent';
         console.log('Invite result:', inviteResult);
         toast({
-          title: inviteStatus === 'password_reset_sent' ? 'Setup email sent' : 'Exporter created',
-          description:
-            inviteStatus === 'password_reset_sent'
-              ? `Existing account linked and password setup email sent to ${form.contact_email.trim()}`
-              : 'Account invite sent to ' + form.contact_email.trim(),
+          title: 'Exporter created',
+          description: 'Account invite sent to ' + form.contact_email.trim(),
         });
       }
 
@@ -119,11 +116,6 @@ export default function GreystarExporterNew() {
                 <>
                   The exporter profile was created, but the setup email could not be sent to <strong>{created.email}</strong>.
                   You can retry from the exporter detail page.
-                </>
-              ) : created.inviteStatus === 'password_reset_sent' ? (
-                <>
-                  An existing account was linked to <strong>{created.email}</strong> and a password setup email has been sent.
-                  The exporter can use that email to access onboarding.
                 </>
               ) : (
                 <>
