@@ -230,7 +230,7 @@ export default function ExporterDealDetail() {
             <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
             <div className="flex-1 space-y-1">
               <p className="text-sm font-medium text-foreground">
-                Changes have been requested for this deal. Please review and update the highlighted fields below.
+                Changes have been requested for this application. Please review and update the highlighted fields below.
               </p>
               {flaggedFields.map(f => (
                 <p key={f.field} className="text-sm text-muted-foreground">
