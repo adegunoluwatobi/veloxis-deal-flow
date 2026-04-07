@@ -239,6 +239,8 @@ export default function ExporterDealNew() {
         incoterms: form.incoterms,
         export_licence_document_id: exportLicence?.id ?? null,
         licence_name_match: exportLicence ? true : null,
+        fx_risk_acknowledged: form.fx_risk_acknowledged,
+        settlement_currency: form.invoice_currency,
       };
 
       if (!asDraft) {
