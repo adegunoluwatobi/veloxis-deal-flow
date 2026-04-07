@@ -191,6 +191,11 @@ export default function ExporterDetail() {
         <ArrowLeft className="h-4 w-4" /> Back to Exporters
       </Button>
 
+      {/* Read-only notice */}
+      <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+        <Eye className="h-4 w-4" /> Read-only view. Document verification is managed by the partner organisation.
+      </div>
+
       {/* KYC Status Banner */}
       <div className={cn(
         'flex items-center gap-3 rounded-lg border p-4',
