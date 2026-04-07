@@ -319,7 +319,7 @@ export default function ExporterDealDetail() {
         <div className="flex justify-end">
           <Button onClick={handleResubmit} disabled={submitting} size="lg">
             {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-            Resubmit Deal
+            Resubmit Application
           </Button>
         </div>
       )}
