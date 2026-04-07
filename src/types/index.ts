@@ -111,6 +111,7 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   repayment_due: 'Repayment Due',
   overdue: 'Overdue',
   payment_received: 'Payment Received — Pending Closure',
+  in_collections: 'In Collections',
   closed_repaid: 'Closed (Repaid)',
   closed_partial: 'Closed (Partial)',
 };
