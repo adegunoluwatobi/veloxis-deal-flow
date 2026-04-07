@@ -503,6 +503,35 @@ export default function ExporterDealDetail() {
 
       {/* Audit Trail */}
       <DealAuditTrail dealId={deal.id} viewerRole="exporter" />
+
+      {/* Decline Offer Modal */}
+      <Dialog open={declineOpen} onOpenChange={() => setDeclineOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Decline Facility Offer</DialogTitle>
+            <DialogDescription>Please provide a reason for declining this offer. Veloxis may revise the terms and re-send.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Textarea
+              value={declineReason}
+              onChange={e => setDeclineReason(e.target.value)}
+              placeholder="Reason for declining..."
+              rows={4}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeclineOpen(false)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              disabled={!declineReason.trim() || submitting}
+              onClick={handleDeclineOffer}
+            >
+              {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Decline Offer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
