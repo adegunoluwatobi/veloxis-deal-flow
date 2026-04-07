@@ -1369,6 +1369,7 @@ export type Database = {
         | "sent_to_veloxis"
         | "rejected_by_partner"
         | "rejected_by_veloxis"
+        | "in_collections"
       document_request_status:
         | "pending_upload"
         | "uploaded_pending_review"
@@ -1628,6 +1629,7 @@ export const Constants = {
         "sent_to_veloxis",
         "rejected_by_partner",
         "rejected_by_veloxis",
+        "in_collections",
       ],
       document_request_status: [
         "pending_upload",

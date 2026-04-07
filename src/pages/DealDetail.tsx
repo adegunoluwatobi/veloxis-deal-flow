@@ -32,6 +32,8 @@ import RepaymentFxSection from '@/components/RepaymentFxSection';
 import PaymentAdvicePanel from '@/components/PaymentAdvicePanel';
 import SettlementSummaryBanner from '@/components/SettlementSummaryBanner';
 import IpuUploadSection from '@/components/IpuUploadSection';
+import TradePackChecklist from '@/components/TradePackChecklist';
+import OverdueActionsPanel from '@/components/OverdueActionsPanel';
 import type { SettlementMethod, RepaymentReconciliationStatus } from '@/types';
 
 interface DealRow {
@@ -795,39 +797,27 @@ export default function DealDetail() {
         onReload={load}
       />
 
-      {/* Document Vault */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-base">Documents</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {activeDocs.length === 0 ? (
-            <p className="py-4 text-center text-sm text-muted-foreground">No documents attached.</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>File</TableHead>
-                  <TableHead>Uploaded</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {activeDocs.map((doc) => (
-                  <TableRow key={doc.id}>
-                    <TableCell className="text-sm font-medium capitalize">{doc.document_type.replace(/_/g, ' ')}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground truncate max-w-[200px]">{doc.file_name}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{new Date(doc.uploaded_at).toLocaleDateString('en-GB')}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      {/* Overdue Actions Panel */}
+      <OverdueActionsPanel
+        dealId={deal.id}
+        dealStatus={deal.status}
+        buyerContactEmail={deal.buyer_contact_email}
+        buyerCompanyName={deal.buyer_company_name}
+        dealReference={(deal as any).deal_reference ?? null}
+        overdueDays={(deal as any).overdue_days ?? 0}
+        onReload={load}
+      />
+
+      {/* Trade Pack Checklist */}
+      <TradePackChecklist
+        dealId={deal.id}
+        documents={activeDocs as any}
+        commodityType={deal.commodity_type}
+        exportDestination={(deal as any).export_destination ?? null}
+        dealStatus={deal.status}
+        isVeloxis={isDM}
+        onReload={load}
+      />
 
       {/* Internal Notes (DM only) */}
       {isDM && (

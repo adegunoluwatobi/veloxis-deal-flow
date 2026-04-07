@@ -13,6 +13,7 @@ export type DealStatus =
   | 'rejected' | 'rejected_by_partner' | 'rejected_by_veloxis'
   | 'ipu_sent' | 'ipu_expired' | 'ipu_signed_awaiting_funding'
   | 'funded_active' | 'repayment_due' | 'overdue' | 'payment_received'
+  | 'in_collections'
   | 'closed_repaid' | 'closed_partial';
 
 export type KycStatus =
@@ -110,6 +111,7 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   repayment_due: 'Repayment Due',
   overdue: 'Overdue',
   payment_received: 'Payment Received — Pending Closure',
+  in_collections: 'In Collections',
   closed_repaid: 'Closed (Repaid)',
   closed_partial: 'Closed (Partial)',
 };
@@ -148,6 +150,7 @@ export const DEAL_STATUS_COLORS: Record<DealStatus, string> = {
   repayment_due: 'bg-warning/10 text-warning',
   overdue: 'bg-destructive/10 text-destructive',
   payment_received: 'bg-success/10 text-success',
+  in_collections: 'bg-destructive/10 text-destructive',
   closed_repaid: 'bg-muted text-muted-foreground',
   closed_partial: 'bg-muted text-muted-foreground',
 };
