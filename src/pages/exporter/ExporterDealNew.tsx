@@ -79,6 +79,7 @@ export default function ExporterDealNew() {
     export_licence_number: '',
     hs_code: '',
     incoterms: '',
+    fx_risk_acknowledged: false,
   });
 
   useEffect(() => {
