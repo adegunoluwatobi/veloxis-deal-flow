@@ -33,7 +33,7 @@ export default function DealsList() {
       let query = supabase.from('deals')
         .select('id, status, invoice_number, invoice_value, buyer_company_name, commodity_type, created_at')
         .order('created_at', { ascending: false });
-      if (role === 'originator') {
+      if (role === 'originator_staff' || role === 'originator_admin') {
         query = query.eq('originator_id', user.id);
       }
       const { data } = await query;
