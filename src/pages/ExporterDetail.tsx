@@ -229,7 +229,7 @@ export default function ExporterDetail() {
              'Awaiting document uploads and verification.'}
           </p>
         </div>
-        {role === 'deal_manager' && exporter.kyc_status !== 'verified' && exporter.kyc_status !== 'rejected' && (
+        {(role === 'deal_manager' || role === 'super_admin') && exporter.kyc_status !== 'verified' && exporter.kyc_status !== 'rejected' && (
           <Button size="sm" onClick={handleVerifyExporter} className="gap-1">
             <ShieldCheck className="h-4 w-4" /> Verify Exporter
           </Button>
