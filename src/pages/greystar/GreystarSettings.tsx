@@ -12,9 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Settings, Users, Plus, Shield, Loader2, Mail, Info, UserPlus } from 'lucide-react';
-
-type CreateAction = 'partner_staff' | 'exporter';
+import { Settings, Users, Plus, Shield, Loader2, UserPlus } from 'lucide-react';
 
 export default function GreystarSettings() {
   const { user, role } = useAuth();
@@ -23,7 +21,6 @@ export default function GreystarSettings() {
   const { toast } = useToast();
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [createAction, setCreateAction] = useState<CreateAction>('partner_staff');
   const [form, setForm] = useState({ email: '', password: '', full_name: '', organisation: '' });
   const [loading, setLoading] = useState(false);
 
@@ -88,11 +85,8 @@ export default function GreystarSettings() {
     enabled: !!partnerOrgId,
   });
 
-  const isExporter = createAction === 'exporter';
-
   const resetForm = () => {
     setForm({ email: '', password: '', full_name: '', organisation: '' });
-    setCreateAction('partner_staff');
   };
 
   const handleCreate = async () => {
@@ -104,79 +98,39 @@ export default function GreystarSettings() {
       toast({ title: 'Error', description: 'Full name is required', variant: 'destructive' });
       return;
     }
-
-    if (isExporter) {
-      // Exporter invite flow
-      const ok = await confirm({
-        title: 'Send Exporter Invite',
-        description: `Send an invitation to ${form.email}? They will set their own password.`,
-        variant: 'info',
+    if (!form.password || form.password.length < 8) {
+      toast({ title: 'Error', description: 'Password must be at least 8 characters', variant: 'destructive' });
+      return;
+    }
+    const ok = await confirm({
+      title: 'Create Partner Staff',
+      description: `Create ${form.email} as partner staff for ${orgName ?? 'your organisation'}?`,
+      variant: 'info',
+    });
+    if (!ok) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: form.email.trim(),
+          password: form.password,
+          role: 'partner_staff',
+          full_name: form.full_name.trim(),
+          organisation: orgName ?? '',
+          partner_organisation_id: partnerOrgId,
+        },
       });
-      if (!ok) return;
-      setLoading(true);
-      try {
-        const { data, error } = await supabase.functions.invoke('create-user', {
-          body: {
-            email: form.email.trim(),
-            role: 'exporter',
-            full_name: form.full_name.trim(),
-            organisation: form.organisation.trim() || orgName || '',
-            invite_only: true,
-            partner_organisation_id: partnerOrgId,
-          },
-        });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
-        toast({
-          title: data?.reset_email_sent ? 'Setup email sent' : 'Invitation sent',
-          description: data?.reset_email_sent
-            ? `${form.email} already had an account. A password setup email has been sent.`
-            : `${form.email} will receive an invite to set their password.`
-        });
-        setCreateOpen(false);
-        resetForm();
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Failed to send invite';
-        toast({ title: 'Error', description: msg, variant: 'destructive' });
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      // Partner staff creation
-      if (!form.password || form.password.length < 8) {
-        toast({ title: 'Error', description: 'Password must be at least 8 characters', variant: 'destructive' });
-        return;
-      }
-      const ok = await confirm({
-        title: 'Create Partner Staff',
-        description: `Create ${form.email} as partner staff for ${orgName ?? 'your organisation'}?`,
-        variant: 'info',
-      });
-      if (!ok) return;
-      setLoading(true);
-      try {
-        const { data, error } = await supabase.functions.invoke('create-user', {
-          body: {
-            email: form.email.trim(),
-            password: form.password,
-            role: 'partner_staff',
-            full_name: form.full_name.trim(),
-            organisation: orgName ?? '',
-            partner_organisation_id: partnerOrgId,
-          },
-        });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
-        toast({ title: 'Staff created', description: `${form.email} has been added.` });
-        setCreateOpen(false);
-        resetForm();
-        queryClient.invalidateQueries({ queryKey: ['partner_org_users'] });
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Failed to create user';
-        toast({ title: 'Error', description: msg, variant: 'destructive' });
-      } finally {
-        setLoading(false);
-      }
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: 'Staff created', description: `${form.email} has been added.` });
+      setCreateOpen(false);
+      resetForm();
+      queryClient.invalidateQueries({ queryKey: ['partner_org_users'] });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to create user';
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -206,10 +160,7 @@ export default function GreystarSettings() {
             <Users className="h-5 w-5" /> Organisation Staff
           </CardTitle>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => { setCreateAction('exporter'); setCreateOpen(true); }}>
-              <Mail className="h-3.5 w-3.5" /> Invite Exporter
-            </Button>
-            <Button size="sm" className="gap-1.5" onClick={() => { setCreateAction('partner_staff'); setCreateOpen(true); }}>
+            <Button size="sm" className="gap-1.5" onClick={() => setCreateOpen(true)}>
               <Plus className="h-3.5 w-3.5" /> Add Staff
             </Button>
           </div>
@@ -254,61 +205,31 @@ export default function GreystarSettings() {
       <Dialog open={createOpen} onOpenChange={(open) => { setCreateOpen(open); if (!open) resetForm(); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{isExporter ? 'Invite Exporter' : 'Add Partner Staff'}</DialogTitle>
+            <DialogTitle>Add Partner Staff</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
-            {/* Action selector */}
-            <div className="space-y-2">
-              <Label>Action</Label>
-              <Select value={createAction} onValueChange={(v) => setCreateAction(v as CreateAction)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="partner_staff">Create Partner Staff</SelectItem>
-                  <SelectItem value="exporter">Invite Exporter</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {isExporter && (
-              <div className="flex items-start gap-2 rounded-md border border-border bg-muted/50 p-3">
-                <Info className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                <p className="text-xs text-muted-foreground">
-                  Exporters are invite-only. They will receive an email to set their own password and will be linked to your organisation automatically.
-                </p>
-              </div>
-            )}
-
             <div className="space-y-2">
               <Label>Email *</Label>
-              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder={isExporter ? 'exporter@company.ng' : 'staff@example.com'} />
+              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="staff@example.com" />
             </div>
 
-            {!isExporter && (
-              <div className="space-y-2">
-                <Label>Password *</Label>
-                <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Min 8 characters" />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>Password *</Label>
+              <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Min 8 characters" />
+            </div>
 
             <div className="space-y-2">
               <Label>Full Name *</Label>
               <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder="Jane Doe" />
             </div>
 
-            {isExporter && (
-              <div className="space-y-2">
-                <Label>Company / Organisation *</Label>
-                <Input value={form.organisation} onChange={(e) => setForm({ ...form, organisation: e.target.value })} placeholder="Exporter company name" required />
-              </div>
-            )}
-
             <Button
               onClick={handleCreate}
-              disabled={loading || !form.email.trim() || !form.full_name.trim() || (isExporter && !form.organisation.trim()) || (!isExporter && (!form.password || form.password.length < 8))}
+              disabled={loading || !form.email.trim() || !form.full_name.trim() || !form.password || form.password.length < 8}
               className="w-full gap-2"
             >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : isExporter ? <Mail className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
-              {loading ? (isExporter ? 'Sending Invite…' : 'Creating…') : isExporter ? 'Send Invite' : 'Create Staff Member'}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+              {loading ? 'Creating…' : 'Create Staff Member'}
             </Button>
           </div>
         </DialogContent>
