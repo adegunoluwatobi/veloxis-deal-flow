@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
   Shield, LayoutDashboard, Users, FileText, Settings, LogOut,
-  Menu, X, ChevronRight, ShieldCheck,
+  Menu, X, ChevronRight, ShieldCheck, Banknote, Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
