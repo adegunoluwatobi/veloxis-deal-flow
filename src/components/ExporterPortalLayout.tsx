@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { label: 'My Profile', href: '/exporter', icon: LayoutDashboard },
-  { label: 'Deals', href: '/exporter/deals', icon: Briefcase },
+  { label: 'Applications', href: '/exporter/deals', icon: Briefcase },
   { label: 'Documents', href: '/exporter/documents', icon: FileText },
 ];
 

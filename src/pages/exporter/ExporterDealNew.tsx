@@ -280,7 +280,7 @@ export default function ExporterDealNew() {
         });
       }
 
-      toast({ title: asDraft ? 'Deal saved as draft' : 'Deal submitted successfully' });
+      toast({ title: asDraft ? 'Application saved as draft' : 'Application submitted successfully' });
       navigate('/exporter/deals');
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -298,7 +298,7 @@ export default function ExporterDealNew() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">{isEditing ? 'Edit Deal' : 'Submit a Deal'}</h1>
+          <h1 className="text-2xl font-bold text-foreground">{isEditing ? 'Edit Application' : 'Submit an Application'}</h1>
           <p className="text-sm text-muted-foreground">Step {step + 1} of {STEPS.length}: {STEPS[step]}</p>
         </div>
       </div>
@@ -356,7 +356,7 @@ export default function ExporterDealNew() {
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox id="save-bank" checked={saveBankDetails} onCheckedChange={(v) => setSaveBankDetails(v === true)} />
-              <label htmlFor="save-bank" className="text-sm text-muted-foreground">Save bank details for future deals</label>
+              <label htmlFor="save-bank" className="text-sm text-muted-foreground">Save bank details for future applications</label>
             </div>
           </CardContent>
         </Card>
@@ -538,7 +538,7 @@ export default function ExporterDealNew() {
         <Card>
           <CardHeader>
             <CardTitle>Review & Submit</CardTitle>
-            <CardDescription>Review your deal application before submitting</CardDescription>
+            <CardDescription>Review your application before submitting</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="rounded-lg border border-border p-4 space-y-2">
@@ -557,7 +557,7 @@ export default function ExporterDealNew() {
               </div>
               {(!bankNameMatch || !exportLicence) && (
                 <p className="text-xs text-destructive mt-2">
-                  ⚠️ Please ensure all names match before submitting. Mismatches may cause your deal to be rejected.
+                  ⚠️ Please ensure all names match before submitting. Mismatches may cause your application to be rejected.
                 </p>
               )}
             </div>
@@ -588,7 +588,7 @@ export default function ExporterDealNew() {
                 {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Save as Draft
               </Button>
               <Button disabled={saving} onClick={() => handleSubmit(false)}>
-                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Submit Deal
+                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Submit Application
               </Button>
             </>
           ) : (

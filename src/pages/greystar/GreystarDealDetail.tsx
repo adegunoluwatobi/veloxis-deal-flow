@@ -141,7 +141,7 @@ export default function GreystarDealDetail() {
         p_metadata: { actor_name: user!.email, reason: rejectReason },
       });
 
-      toast({ title: 'Deal rejected' });
+      toast({ title: 'Application rejected' });
       setRejectOpen(false);
       setRejectReason('');
       await loadDeal();
@@ -178,7 +178,7 @@ export default function GreystarDealDetail() {
   };
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-  if (!deal) return <div className="py-20 text-center text-muted-foreground">Deal not found</div>;
+  if (!deal) return <div className="py-20 text-center text-muted-foreground">Application not found</div>;
 
   const Field = ({ label, value }: { label: string; value: string | null | undefined }) => (
     <div>
@@ -225,7 +225,7 @@ export default function GreystarDealDetail() {
               </Button>
             )}
             <Button variant="destructive" onClick={() => setRejectOpen(true)}>
-              <XCircle className="mr-2 h-4 w-4" />Reject Deal
+              <XCircle className="mr-2 h-4 w-4" />Reject Application
             </Button>
             {canSubmitToVeloxis && (
               <Button onClick={handleSubmitToVeloxis} disabled={submitting}>
@@ -328,8 +328,8 @@ export default function GreystarDealDetail() {
       <Dialog open={rejectOpen} onOpenChange={() => setRejectOpen(false)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Deal</DialogTitle>
-            <DialogDescription>Provide a reason for rejecting this deal.</DialogDescription>
+            <DialogTitle>Reject Application</DialogTitle>
+            <DialogDescription>Provide a reason for rejecting this application.</DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             <Label>Rejection reason *</Label>
@@ -338,7 +338,7 @@ export default function GreystarDealDetail() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setRejectOpen(false)}>Cancel</Button>
             <Button variant="destructive" disabled={!rejectReason.trim() || submitting} onClick={handleReject}>
-              {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Reject Deal
+              {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Reject Application
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -100,7 +100,7 @@ export default function ExporterDealDetail() {
         },
       });
 
-      toast({ title: 'Deal resubmitted successfully' });
+      toast({ title: 'Application resubmitted successfully' });
       await loadData();
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -111,7 +111,7 @@ export default function ExporterDealDetail() {
 
   const handleDeleteDraft = async () => {
     const ok = await confirm({
-      title: 'Delete Draft Deal',
+      title: 'Delete Draft Application',
       description: 'Are you sure you want to delete this draft? This action cannot be undone.',
       variant: 'warning',
       confirmLabel: 'Delete',
@@ -120,7 +120,7 @@ export default function ExporterDealDetail() {
     try {
       const { error } = await supabase.from('deals').delete().eq('id', id!);
       if (error) throw error;
-      toast({ title: 'Draft deal deleted' });
+      toast({ title: 'Draft application deleted' });
       navigate('/exporter/deals');
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -128,7 +128,7 @@ export default function ExporterDealDetail() {
   };
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-  if (!deal) return <div className="py-20 text-center text-muted-foreground">Deal not found</div>;
+  if (!deal) return <div className="py-20 text-center text-muted-foreground">Application not found</div>;
 
   const isFlagged = (field: string) => flaggedSet.has(field);
 
@@ -204,7 +204,7 @@ export default function ExporterDealDetail() {
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-foreground">{deal.deal_reference || deal.id.slice(0, 8)}</h1>
-          <p className="text-sm text-muted-foreground">Deal Application</p>
+          <p className="text-sm text-muted-foreground">Application</p>
         </div>
         <DealStatusBadge status={deal.status} />
         {deal.status === 'draft' && (
@@ -212,7 +212,7 @@ export default function ExporterDealDetail() {
             <Button asChild>
               <Link to={`/exporter/deals/${deal.id}/edit`}>
                 <Pencil className="mr-2 h-4 w-4" />
-                Edit Deal
+                Edit Application
               </Link>
             </Button>
             <Button variant="destructive" onClick={handleDeleteDraft}>
@@ -230,7 +230,7 @@ export default function ExporterDealDetail() {
             <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
             <div className="flex-1 space-y-1">
               <p className="text-sm font-medium text-foreground">
-                Changes have been requested for this deal. Please review and update the highlighted fields below.
+                Changes have been requested for this application. Please review and update the highlighted fields below.
               </p>
               {flaggedFields.map(f => (
                 <p key={f.field} className="text-sm text-muted-foreground">
@@ -319,7 +319,7 @@ export default function ExporterDealDetail() {
         <div className="flex justify-end">
           <Button onClick={handleResubmit} disabled={submitting} size="lg">
             {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-            Resubmit Deal
+            Resubmit Application
           </Button>
         </div>
       )}
