@@ -271,8 +271,70 @@ export type Database = {
           },
         ]
       }
+      document_requests: {
+        Row: {
+          created_at: string
+          description: string | null
+          document_title: string
+          expiry_required: boolean
+          exporter_id: string
+          fulfilled_at: string | null
+          id: string
+          partner_organisation_id: string | null
+          requested_by: string
+          status: Database["public"]["Enums"]["document_request_status"]
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          document_title: string
+          expiry_required?: boolean
+          exporter_id: string
+          fulfilled_at?: string | null
+          id?: string
+          partner_organisation_id?: string | null
+          requested_by: string
+          status?: Database["public"]["Enums"]["document_request_status"]
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          document_title?: string
+          expiry_required?: boolean
+          exporter_id?: string
+          fulfilled_at?: string | null
+          id?: string
+          partner_organisation_id?: string | null
+          requested_by?: string
+          status?: Database["public"]["Enums"]["document_request_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_requests_exporter_id_fkey"
+            columns: ["exporter_id"]
+            isOneToOne: false
+            referencedRelation: "exporters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_requests_partner_organisation_id_fkey"
+            columns: ["partner_organisation_id"]
+            isOneToOne: false
+            referencedRelation: "partner_organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exporter_documents: {
         Row: {
+          document_request_id: string | null
           document_status: string
           document_type: Database["public"]["Enums"]["exporter_document_type"]
           expiry_date: string | null
@@ -292,6 +354,7 @@ export type Database = {
           verified_by: string | null
         }
         Insert: {
+          document_request_id?: string | null
           document_status?: string
           document_type: Database["public"]["Enums"]["exporter_document_type"]
           expiry_date?: string | null
@@ -311,6 +374,7 @@ export type Database = {
           verified_by?: string | null
         }
         Update: {
+          document_request_id?: string | null
           document_status?: string
           document_type?: Database["public"]["Enums"]["exporter_document_type"]
           expiry_date?: string | null
@@ -330,6 +394,13 @@ export type Database = {
           verified_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "exporter_documents_document_request_id_fkey"
+            columns: ["document_request_id"]
+            isOneToOne: false
+            referencedRelation: "document_requests"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "exporter_documents_exporter_id_fkey"
             columns: ["exporter_id"]
@@ -846,6 +917,12 @@ export type Database = {
         | "overdue"
         | "closed_repaid"
         | "closed_partial"
+      document_request_status:
+        | "pending_upload"
+        | "uploaded_pending_review"
+        | "verified"
+        | "rejected"
+        | "cancelled"
       entity_type: "limited_company" | "plc" | "llp" | "incorporated_trustee"
       expiry_status:
         | "valid"
@@ -1066,6 +1143,13 @@ export const Constants = {
         "overdue",
         "closed_repaid",
         "closed_partial",
+      ],
+      document_request_status: [
+        "pending_upload",
+        "uploaded_pending_review",
+        "verified",
+        "rejected",
+        "cancelled",
       ],
       entity_type: ["limited_company", "plc", "llp", "incorporated_trustee"],
       expiry_status: [
