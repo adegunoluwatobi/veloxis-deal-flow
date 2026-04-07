@@ -183,38 +183,6 @@ export default function GreystarExporterDetail() {
     }
   };
 
-  const handleForwardToVeloxis = async () => {
-    if (!user || !id || !exporter) return;
-    const confirmed = await confirm({
-      title: 'Forward to Veloxis',
-      description: `You are about to forward ${exporter.company_name} to Veloxis for trade finance processing. This will make the exporter and their documents visible to Veloxis deal managers. Confirm?`,
-      variant: 'info',
-      confirmLabel: 'Forward to Veloxis',
-    });
-    if (!confirmed) return;
-    setForwarding(true);
-    try {
-      const { error } = await supabase.from('exporters').update({
-        forwarded_to_veloxis_at: new Date().toISOString(),
-        forwarded_to_veloxis_by: user.id,
-      } as any).eq('id', id);
-      if (error) throw error;
-      await supabase.rpc('insert_audit_log', {
-        p_exporter_id: id,
-        p_user_id: user.id,
-        p_user_role: (role ?? 'partner_admin') as any,
-        p_action_type: 'exporter_created' as any,
-        p_metadata: { action: 'forwarded_to_veloxis', company_name: exporter.company_name },
-      });
-      toast({ title: 'Forwarded to Veloxis', description: `${exporter.company_name} is now visible in the Veloxis Deal Room.` });
-      load();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to forward';
-      toast({ title: 'Error', description: msg, variant: 'destructive' });
-    } finally {
-      setForwarding(false);
-    }
-  };
 
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading…</div>;
   if (!exporter) return <div className="py-20 text-center text-muted-foreground">Exporter not found.</div>;
