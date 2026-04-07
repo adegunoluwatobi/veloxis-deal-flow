@@ -107,11 +107,16 @@ const App = () => (
             <Route path="/greystar/exporters" element={<GreystarRoute><GreystarExportersList /></GreystarRoute>} />
             <Route path="/greystar/exporters/new" element={<GreystarRoute><GreystarExporterNew /></GreystarRoute>} />
             <Route path="/greystar/exporters/:id" element={<GreystarRoute><GreystarExporterDetail /></GreystarRoute>} />
+            <Route path="/greystar/deals" element={<GreystarRoute><GreystarDeals /></GreystarRoute>} />
+            <Route path="/greystar/deals/:id" element={<GreystarRoute><GreystarDealDetail /></GreystarRoute>} />
             <Route path="/greystar/review" element={<GreystarRoute><GreystarReviewQueue /></GreystarRoute>} />
             <Route path="/greystar/settings" element={<GreystarRoute><GreystarSettings /></GreystarRoute>} />
 
             {/* Exporter portal routes (require approved onboarding) */}
             <Route path="/exporter" element={<ExporterRoute><ExporterDashboardPage /></ExporterRoute>} />
+            <Route path="/exporter/deals" element={<ExporterRoute><ExporterDeals /></ExporterRoute>} />
+            <Route path="/exporter/deals/new" element={<ExporterRoute><ExporterDealNew /></ExporterRoute>} />
+            <Route path="/exporter/deals/:id" element={<ExporterRoute><ExporterDealDetail /></ExporterRoute>} />
             <Route path="/exporter/documents" element={<ExporterRoute><ExporterDocuments /></ExporterRoute>} />
 
             {/* Admin routes */}

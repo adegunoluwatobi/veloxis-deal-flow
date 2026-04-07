@@ -4,13 +4,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import {
-  LayoutDashboard, FileText, LogOut,
+  LayoutDashboard, FileText, LogOut, Briefcase,
   Menu, X, ChevronRight, UserCircle, Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { label: 'My Profile', href: '/exporter', icon: LayoutDashboard },
+  { label: 'Deals', href: '/exporter/deals', icon: Briefcase },
   { label: 'Documents', href: '/exporter/documents', icon: FileText },
 ];
 
