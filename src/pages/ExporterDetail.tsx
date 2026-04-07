@@ -342,7 +342,7 @@ export default function ExporterDetail() {
                   <TableHead>Expiry</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Uploaded</TableHead>
-                  {(role === 'deal_manager' || role === 'super_admin') && <TableHead className="text-right">Actions</TableHead>}
+                  {(role === 'deal_manager' || role === 'super_admin') && <TableHead className="text-right">View</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -384,16 +384,9 @@ export default function ExporterDetail() {
                       </TableCell>
                       {(role === 'deal_manager' || role === 'super_admin') && (
                         <TableCell className="text-right">
-                          {!doc.is_superseded && doc.document_status === 'pending_review' && (
-                            <div className="flex justify-end gap-1">
-                              <Button size="sm" variant="ghost" className="h-7 gap-1 text-success" onClick={() => handleVerifyDoc(doc.id)}>
-                                <CheckCircle2 className="h-3.5 w-3.5" /> Verify
-                              </Button>
-                              <Button size="sm" variant="ghost" className="h-7 gap-1 text-destructive" onClick={() => handleRejectDoc(doc.id)}>
-                                <XCircle className="h-3.5 w-3.5" /> Reject
-                              </Button>
-                            </div>
-                          )}
+                          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleDownload(doc.file_path)}>
+                            <Download className="mr-1 h-3 w-3" /> View
+                          </Button>
                         </TableCell>
                       )}
                     </TableRow>
