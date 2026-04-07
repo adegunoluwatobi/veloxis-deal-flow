@@ -31,12 +31,17 @@ import GreystarExporterNew from "@/pages/greystar/GreystarExporterNew";
 import GreystarExporterDetail from "@/pages/greystar/GreystarExporterDetail";
 import GreystarReviewQueue from "@/pages/greystar/GreystarReviewQueue";
 import GreystarSettings from "@/pages/greystar/GreystarSettings";
+import GreystarDeals from "@/pages/greystar/GreystarDeals";
+import GreystarDealDetail from "@/pages/greystar/GreystarDealDetail";
 
 // Exporter portal pages
 import ExporterDashboardPage from "@/pages/exporter/ExporterDashboard";
 import ExporterDocuments from "@/pages/exporter/ExporterDocuments";
 import ExporterOnboarding from "@/pages/exporter/ExporterOnboarding";
 import ExporterPendingApproval from "@/pages/exporter/ExporterPendingApproval";
+import ExporterDeals from "@/pages/exporter/ExporterDeals";
+import ExporterDealNew from "@/pages/exporter/ExporterDealNew";
+import ExporterDealDetail from "@/pages/exporter/ExporterDealDetail";
 
 const queryClient = new QueryClient();
 
