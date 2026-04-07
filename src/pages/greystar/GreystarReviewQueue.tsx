@@ -59,7 +59,7 @@ export default function GreystarReviewQueue() {
     await supabase.rpc('insert_audit_log', {
       p_exporter_id: doc.exporter_id,
       p_user_id: user.id,
-      p_user_role: 'originator_staff' as any,
+      p_user_role: 'partner_staff' as any,
       p_action_type: 'kyc_rejected' as any,
       p_metadata: { document_id: doc.id, document_type: doc.document_type },
     });
