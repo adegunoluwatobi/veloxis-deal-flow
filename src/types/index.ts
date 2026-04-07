@@ -150,6 +150,7 @@ export const DEAL_STATUS_COLORS: Record<DealStatus, string> = {
   repayment_due: 'bg-warning/10 text-warning',
   overdue: 'bg-destructive/10 text-destructive',
   payment_received: 'bg-success/10 text-success',
+  in_collections: 'bg-destructive/10 text-destructive',
   closed_repaid: 'bg-muted text-muted-foreground',
   closed_partial: 'bg-muted text-muted-foreground',
 };
