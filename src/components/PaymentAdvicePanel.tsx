@@ -74,10 +74,17 @@ export default function PaymentAdvicePanel({
   const residual = received - (advanceAmount ?? 0) - (platformFeeAmount ?? 0) - (discountFeeAmount ?? 0) - latePenalty;
 
   const handleSubmit = async () => {
-    if (!paymentDate || !amountReceived || !paymentFile || !user) {
-      toast({ title: 'All fields required', description: 'Please fill in payment date, amount, and upload payment advice.', variant: 'destructive' });
+    const failures = validateAndScroll([
+      { fieldId: 'field-payment-date', label: 'Payment Date', condition: !!paymentDate },
+      { fieldId: 'field-amount-received', label: 'Amount Received', condition: !!amountReceived && parseFloat(amountReceived) > 0 },
+      { fieldId: 'field-payment-file', label: 'Payment Advice Document', condition: !!paymentFile },
+    ]);
+    if (failures.length > 0) {
+      setPaymentValidationFailures(failures);
       return;
     }
+    if (!user) return;
+    setPaymentValidationFailures([]);
     setSubmitting(true);
     try {
       // Upload payment advice document
