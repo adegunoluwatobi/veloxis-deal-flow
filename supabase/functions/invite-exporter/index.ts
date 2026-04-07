@@ -100,19 +100,29 @@ Deno.serve(async (req) => {
             invite_sent_at: new Date().toISOString(),
           } as any).eq("id", exporter_id);
 
-          const { error: resetError } = await anonClient.auth.resetPasswordForEmail(email, {
-            redirectTo,
+          // Generate a fresh invite link using admin API (not password recovery)
+          const { error: reinviteError } = await adminClient.auth.admin.generateLink({
+            type: 'invite',
+            email,
+            options: {
+              data: {
+                full_name: full_name || existingUser.user_metadata?.full_name || "",
+                organisation: organisation || existingUser.user_metadata?.organisation || "",
+                role: "exporter",
+              },
+              redirectTo,
+            },
           });
 
-          if (resetError) {
-            throw resetError;
+          if (reinviteError) {
+            throw reinviteError;
           }
 
           return new Response(JSON.stringify({ 
             user_id: existingUser.id, 
             already_existed: true,
-            invited: false,
-            reset_email_sent: true,
+            invited: true,
+            reset_email_sent: false,
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
