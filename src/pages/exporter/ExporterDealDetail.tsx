@@ -258,6 +258,9 @@ export default function ExporterDealDetail() {
         </Card>
       )}
 
+      {/* Document Request Banner */}
+      <ExporterDocRequestBanner dealId={deal.id} dealStatus={deal.status} onReload={loadData} />
+
       {/* Payment Received Banner & Settlement Summary */}
       <SettlementSummaryBanner
         dealId={deal.id}
