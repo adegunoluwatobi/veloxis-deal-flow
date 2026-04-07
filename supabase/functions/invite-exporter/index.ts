@@ -176,16 +176,16 @@ Deno.serve(async (req) => {
           throw inviteError;
         }
 
+        // Remove FK-referencing rows BEFORE deleting the auth user
+        await adminClient.from("exporters").update({ exporter_user_id: null } as any).eq("id", exporter_id);
+        await adminClient.from("user_roles").delete().eq("user_id", existingUser.id);
+        await adminClient.from("users").delete().eq("id", existingUser.id);
+
         const { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(existingUser.id);
         if (deleteAuthError) {
-          throw deleteAuthError;
+          console.error("deleteUser warning (continuing):", deleteAuthError.message);
+          // Non-fatal: the auth record may already be gone
         }
-
-        await Promise.all([
-          adminClient.from("users").delete().eq("id", existingUser.id),
-          adminClient.from("user_roles").delete().eq("user_id", existingUser.id),
-          adminClient.from("exporters").update({ exporter_user_id: null } as any).eq("id", exporter_id),
-        ]);
 
         const retry = await sendInvite();
         inviteData = retry.data;
