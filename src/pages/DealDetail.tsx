@@ -162,6 +162,9 @@ export default function DealDetail() {
       const d = dealRes.data as unknown as DealRow;
       setDeal(d);
       setOverrideAdvPct(String(d.advance_percentage));
+      setEditAdvPct(String(d.advance_percentage));
+      setEditPlatformFeePct(String((d.platform_fee_pct ?? 0) * 100));
+      setEditDiscountFeePct(String((d.discount_fee_pct ?? 0) * 100));
       // Load exporter
       const { data: exp } = await supabase.from('exporters').select('*').eq('id', d.exporter_id).single();
       if (exp) {
