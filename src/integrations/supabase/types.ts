@@ -69,6 +69,69 @@ export type Database = {
           },
         ]
       }
+      capital_pool_history: {
+        Row: {
+          action_type: string
+          actor_id: string
+          amount_change: number
+          created_at: string
+          id: string
+          new_total: number
+          note: string | null
+        }
+        Insert: {
+          action_type: string
+          actor_id: string
+          amount_change: number
+          created_at?: string
+          id?: string
+          new_total: number
+          note?: string | null
+        }
+        Update: {
+          action_type?: string
+          actor_id?: string
+          amount_change?: number
+          created_at?: string
+          id?: string
+          new_total?: number
+          note?: string | null
+        }
+        Relationships: []
+      }
+      capital_tranches: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string
+          date_received: string
+          id: string
+          notes: string | null
+          reference: string
+          source_name: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by: string
+          date_received: string
+          id?: string
+          notes?: string | null
+          reference: string
+          source_name: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string
+          date_received?: string
+          id?: string
+          notes?: string | null
+          reference?: string
+          source_name?: string
+        }
+        Relationships: []
+      }
       deal_change_requests: {
         Row: {
           created_at: string
@@ -840,24 +903,42 @@ export type Database = {
       }
       partner_organisations: {
         Row: {
+          admin_email: string | null
+          country: string | null
           created_at: string
           id: string
           is_active: boolean
           name: string
+          notes: string | null
+          suspended_at: string | null
+          suspended_by: string | null
+          suspension_reason: string | null
           updated_at: string
         }
         Insert: {
+          admin_email?: string | null
+          country?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
           name: string
+          notes?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
           updated_at?: string
         }
         Update: {
+          admin_email?: string | null
+          country?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
           name?: string
+          notes?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
           updated_at?: string
         }
         Relationships: []
