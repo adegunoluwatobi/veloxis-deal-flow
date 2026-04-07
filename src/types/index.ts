@@ -1,6 +1,6 @@
 // Veloxis Deal Room — TypeScript Types
 
-export type AppRole = 'super_admin' | 'originator_admin' | 'originator_staff' | 'deal_manager' | 'exporter';
+export type AppRole = 'super_admin' | 'partner_admin' | 'partner_staff' | 'deal_manager' | 'exporter';
 
 export type EntityType = 'limited_company' | 'plc' | 'llp' | 'incorporated_trustee';
 
@@ -110,8 +110,8 @@ export const BUYER_COUNTRY_WHITELIST = [
 
 export const ROLE_LABELS: Record<AppRole, string> = {
   super_admin: 'Super Admin',
-  originator_admin: 'Originator Admin',
-  originator_staff: 'Originator Staff',
+  partner_admin: 'Partner Admin',
+  partner_staff: 'Partner Staff',
   deal_manager: 'Deal Manager',
   exporter: 'Exporter',
 };

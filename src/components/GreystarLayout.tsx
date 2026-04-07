@@ -82,7 +82,7 @@ export default function GreystarLayout({ children }: { children: React.ReactNode
         <div className="border-t border-[hsl(160,30%,25%)] p-4">
           <div className="mb-3 px-1">
             <p className="truncate text-sm font-medium">{user?.email}</p>
-            <p className="text-xs text-[hsl(160,20%,55%)]">Originator Staff</p>
+            <p className="text-xs text-[hsl(160,20%,55%)]">Partner Staff</p>
           </div>
           <Button
             variant="ghost"

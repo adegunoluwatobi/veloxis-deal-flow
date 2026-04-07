@@ -578,6 +578,30 @@ export type Database = {
           },
         ]
       }
+      partner_organisations: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       system_config: {
         Row: {
           description: string | null
@@ -616,20 +640,31 @@ export type Database = {
       user_roles: {
         Row: {
           id: string
+          partner_organisation_id: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
           id?: string
+          partner_organisation_id?: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
           id?: string
+          partner_organisation_id?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_partner_organisation_id_fkey"
+            columns: ["partner_organisation_id"]
+            isOneToOne: false
+            referencedRelation: "partner_organisations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       users: {
         Row: {
@@ -695,6 +730,7 @@ export type Database = {
           would_deploy_gbp: number
         }[]
       }
+      get_partner_org_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -714,6 +750,11 @@ export type Database = {
         Returns: string
       }
       is_originator: { Args: { _user_id: string }; Returns: boolean }
+      is_partner: { Args: { _user_id: string }; Returns: boolean }
+      is_partner_in_org: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
       is_veloxis_staff: { Args: { _user_id: string }; Returns: boolean }
       validate_status_transition: {
@@ -741,8 +782,8 @@ export type Database = {
         | "greystar_originator"
         | "exporter"
         | "super_admin"
-        | "originator_admin"
-        | "originator_staff"
+        | "partner_admin"
+        | "partner_staff"
       audit_action:
         | "deal_created"
         | "deal_submitted"
@@ -946,8 +987,8 @@ export const Constants = {
         "greystar_originator",
         "exporter",
         "super_admin",
-        "originator_admin",
-        "originator_staff",
+        "partner_admin",
+        "partner_staff",
       ],
       audit_action: [
         "deal_created",

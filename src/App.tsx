@@ -55,7 +55,7 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
 
 function GreystarRoute({ children }: { children: React.ReactNode }) {
   return (
-    <ProtectedRoute allowedRoles={['originator_admin', 'originator_staff']}>
+    <ProtectedRoute allowedRoles={['partner_admin', 'partner_staff']}>
       <GreystarLayout>{children}</GreystarLayout>
     </ProtectedRoute>
   );

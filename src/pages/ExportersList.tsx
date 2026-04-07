@@ -40,7 +40,7 @@ export default function ExportersList() {
     const load = async () => {
       let query = supabase.from('exporters').select('id, company_name, rc_number, entity_type, director_name, kyc_status, created_at')
         .order('created_at', { ascending: false });
-      if (role === 'originator_staff' || role === 'originator_admin') {
+      if (role === 'partner_staff' || role === 'partner_admin') {
         query = query.eq('originator_id', user.id);
       }
       const { data } = await query;
@@ -62,7 +62,7 @@ export default function ExportersList() {
           <h1 className="text-2xl font-bold text-foreground">Exporters</h1>
           <p className="text-sm text-muted-foreground">Nigerian SME profiles</p>
         </div>
-        {(role === 'originator_staff' || role === 'originator_admin') && (
+        {(role === 'partner_staff' || role === 'partner_admin') && (
           <Button asChild>
             <Link to="/exporters/new"><Plus className="mr-2 h-4 w-4" />New Exporter</Link>
           </Button>

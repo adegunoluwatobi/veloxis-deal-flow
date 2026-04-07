@@ -17,16 +17,16 @@ import type { AppRole } from '@/types';
 
 const ROLE_OPTIONS: { value: AppRole; label: string }[] = [
   { value: 'super_admin', label: 'Super Admin' },
-  { value: 'originator_admin', label: 'Originator Admin' },
-  { value: 'originator_staff', label: 'Originator Staff' },
+  { value: 'partner_admin', label: 'Partner Admin' },
+  { value: 'partner_staff', label: 'Partner Staff' },
   { value: 'deal_manager', label: 'Deal Manager' },
   { value: 'exporter', label: 'Exporter' },
 ];
 
 const ROLE_COLORS: Record<string, string> = {
   super_admin: 'bg-destructive/10 text-destructive',
-  originator_admin: 'bg-success/10 text-success',
-  originator_staff: 'bg-success/10 text-success',
+  partner_admin: 'bg-success/10 text-success',
+  partner_staff: 'bg-success/10 text-success',
   deal_manager: 'bg-primary/10 text-primary',
   exporter: 'bg-muted text-muted-foreground',
 };
