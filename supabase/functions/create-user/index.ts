@@ -6,19 +6,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-function getSiteUrl(req: Request) {
-  const origin = req.headers.get("origin");
-  if (origin) return origin.replace(/\/+$/, "");
-
-  const referer = req.headers.get("referer");
-  if (referer) {
-    try {
-      return new URL(referer).origin.replace(/\/+$/, "");
-    } catch {
-    }
-  }
-
-  return `https://id-preview--5aecb038-1cd1-4607-baa8-41e86f61384a.lovable.app`;
+function getSiteUrl(_req: Request) {
+  return (Deno.env.get("SITE_URL") || "https://id-preview--5aecb038-1cd1-4607-baa8-41e86f61384a.lovable.app").replace(/\/+$/, "");
 }
 
 function isExistingUserError(message?: string) {
