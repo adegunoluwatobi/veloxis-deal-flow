@@ -221,14 +221,19 @@ export default function DealDetail() {
   // Live pricing calculations
   const pricingEditable = isDM && (deal?.status === ('sent_to_veloxis' as DealStatus) || deal?.status === 'under_review');
   const liveAdvPct = parseFloat(editAdvPct) || 80;
-  const liveAdvanceAmount = (deal?.invoice_value ?? 0) * (liveAdvPct / 100);
+  const liveInvoiceValue = deal?.invoice_value ?? 0;
+  const liveAdvanceAmount = liveInvoiceValue * (liveAdvPct / 100);
   const livePlatformFeePct = parseFloat(editPlatformFeePct) || 0;
   const liveDiscountFeePct = parseFloat(editDiscountFeePct) || 0;
-  const livePlatformFeeAmount = liveAdvanceAmount * (livePlatformFeePct / 100);
-  const liveDiscountFeeAmount = liveAdvanceAmount * (liveDiscountFeePct / 100);
+  const livePaymentTerms = parseInt(editPaymentTerms) || 0;
+  // Platform fee: one-off on invoice face value
+  const livePlatformFeeAmount = liveInvoiceValue * (livePlatformFeePct / 100);
+  // Discount fee: per-month rate on advance amount, prorated by tenor
+  const liveDiscountFeeAmount = liveAdvanceAmount * (liveDiscountFeePct / 100) * (livePaymentTerms / 30);
   const liveTotalFees = livePlatformFeeAmount + liveDiscountFeeAmount;
   const liveNetAdvance = liveAdvanceAmount - liveTotalFees;
-  const liveRepaymentAmount = deal?.invoice_value ?? 0;
+  const liveRepaymentAmount = liveInvoiceValue;
+  const pricingCanSave = livePaymentTerms > 0;
 
   const handleSavePricing = async () => {
     if (!id || !deal) return;
