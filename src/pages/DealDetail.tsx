@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import DealStatusBadge from '@/components/DealStatusBadge';
 import DealAuditTrail from '@/components/DealAuditTrail';
 import { cn } from '@/lib/utils';
+import { computeKycStatus, type KycDocumentLike } from '@/lib/computeKycStatus';
 import {
   DEAL_STATUS_LABELS, KYC_STATUS_LABELS, ENTITY_TYPE_LABELS,
   COMMODITY_TYPE_LABELS, CURRENCY_SYMBOLS,
@@ -119,6 +120,7 @@ export default function DealDetail() {
   const [deal, setDeal] = useState<DealRow | null>(null);
   const [exporter, setExporter] = useState<ExporterRow | null>(null);
   const [docs, setDocs] = useState<DocRow[]>([]);
+  const [exporterDocs, setExporterDocs] = useState<KycDocumentLike[]>([]);
   const [notes, setNotes] = useState<NoteRow[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,6 +138,7 @@ export default function DealDetail() {
   const isDM = role === 'deal_manager' || role === 'super_admin';
   const isSuperAdmin = role === 'super_admin';
   const currency = deal?.invoice_currency_v2 ?? 'GBP';
+  const computedKyc = useMemo(() => computeKycStatus(exporterDocs), [exporterDocs]);
   const sym = CURRENCY_SYMBOLS[currency] ?? '£';
 
   const load = useCallback(async () => {
@@ -153,7 +156,16 @@ export default function DealDetail() {
       setOverrideAdvPct(String(d.advance_percentage));
       // Load exporter
       const { data: exp } = await supabase.from('exporters').select('*').eq('id', d.exporter_id).single();
-      if (exp) setExporter(exp as unknown as ExporterRow);
+      if (exp) {
+        setExporter(exp as unknown as ExporterRow);
+        // Load active exporter documents for live KYC computation
+        const { data: eDocs } = await supabase
+          .from('exporter_documents')
+          .select('exporter_id, document_type, document_status, expiry_status')
+          .eq('exporter_id', d.exporter_id)
+          .eq('is_superseded', false);
+        setExporterDocs((eDocs ?? []) as KycDocumentLike[]);
+      }
     }
     setDocs((docsRes.data as unknown as DocRow[]) ?? []);
     setNotes((notesRes.data as unknown as NoteRow[]) ?? []);
@@ -439,7 +451,7 @@ export default function DealDetail() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">KYC</span>
-                  <Badge variant="secondary" className="text-xs">{KYC_STATUS_LABELS[exporter.kyc_status]}</Badge>
+                  <Badge variant="secondary" className={cn("text-xs", computedKyc.color)}>{computedKyc.badgeLabel}</Badge>
                 </div>
               </div>
             ) : <p className="text-sm text-muted-foreground">—</p>}
