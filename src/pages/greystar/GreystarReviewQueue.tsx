@@ -45,7 +45,7 @@ export default function GreystarReviewQueue() {
     await supabase.rpc('insert_audit_log', {
       p_exporter_id: doc.exporter_id,
       p_user_id: user.id,
-      p_user_role: 'greystar_originator' as any,
+      p_user_role: 'originator_staff' as any,
       p_action_type: 'exporter_document_verified' as any,
       p_metadata: { document_id: doc.id, document_type: doc.document_type },
     });
@@ -59,7 +59,7 @@ export default function GreystarReviewQueue() {
     await supabase.rpc('insert_audit_log', {
       p_exporter_id: doc.exporter_id,
       p_user_id: user.id,
-      p_user_role: 'greystar_originator' as any,
+      p_user_role: 'originator_staff' as any,
       p_action_type: 'kyc_rejected' as any,
       p_metadata: { document_id: doc.id, document_type: doc.document_type },
     });
@@ -111,7 +111,7 @@ export default function GreystarReviewQueue() {
                       <td className="py-3 max-w-[200px] truncate">{doc.file_name}</td>
                       <td className="py-3">
                         <Badge variant="outline" className="text-xs">
-                          {doc.uploaded_by_role === 'greystar_originator' ? 'Greystar' : doc.uploaded_by_role === 'exporter' ? 'Exporter' : 'Token'}
+                          {doc.uploaded_by_role === 'originator_staff' ? 'Greystar' : doc.uploaded_by_role === 'exporter' ? 'Exporter' : 'Token'}
                         </Badge>
                       </td>
                       <td className="py-3 text-muted-foreground">{new Date(doc.uploaded_at).toLocaleDateString()}</td>

@@ -16,16 +16,18 @@ import { Settings, Users, Plus, Shield, Loader2 } from 'lucide-react';
 import type { AppRole } from '@/types';
 
 const ROLE_OPTIONS: { value: AppRole; label: string }[] = [
+  { value: 'super_admin', label: 'Super Admin' },
+  { value: 'originator_admin', label: 'Originator Admin' },
+  { value: 'originator_staff', label: 'Originator Staff' },
   { value: 'deal_manager', label: 'Deal Manager' },
-  { value: 'greystar_originator', label: 'Greystar Originator' },
-  { value: 'originator', label: 'Originator' },
   { value: 'exporter', label: 'Exporter' },
 ];
 
 const ROLE_COLORS: Record<string, string> = {
+  super_admin: 'bg-destructive/10 text-destructive',
+  originator_admin: 'bg-success/10 text-success',
+  originator_staff: 'bg-success/10 text-success',
   deal_manager: 'bg-primary/10 text-primary',
-  greystar_originator: 'bg-success/10 text-success',
-  originator: 'bg-warning/10 text-warning',
   exporter: 'bg-muted text-muted-foreground',
 };
 
@@ -36,7 +38,7 @@ export default function SettingsPage() {
   const { toast } = useToast();
 
   const [createUserOpen, setCreateUserOpen] = useState(false);
-  const [createForm, setCreateForm] = useState({ email: '', password: '', role: 'originator' as AppRole, full_name: '', organisation: '' });
+  const [createForm, setCreateForm] = useState({ email: '', password: '', role: 'deal_manager' as AppRole, full_name: '', organisation: '' });
   const [createLoading, setCreateLoading] = useState(false);
 
   const { data: users, isLoading: usersLoading } = useQuery({
@@ -92,7 +94,7 @@ export default function SettingsPage() {
       if (data?.error) throw new Error(data.error);
       toast({ title: 'User created', description: `${createForm.email} has been added.` });
       setCreateUserOpen(false);
-      setCreateForm({ email: '', password: '', role: 'originator', full_name: '', organisation: '' });
+      setCreateForm({ email: '', password: '', role: 'deal_manager', full_name: '', organisation: '' });
       queryClient.invalidateQueries({ queryKey: ['admin_users'] });
       queryClient.invalidateQueries({ queryKey: ['admin_user_roles'] });
     } catch (err: unknown) {
@@ -124,10 +126,10 @@ export default function SettingsPage() {
     }
   };
 
-  if (role !== 'deal_manager') {
+  if (role !== 'super_admin') {
     return (
       <div className="flex items-center justify-center h-64 text-muted-foreground">
-        <Shield className="h-8 w-8 mr-3" /> Access restricted to Deal Managers only.
+        <Shield className="h-8 w-8 mr-3" /> Access restricted to Super Admins only.
       </div>
     );
   }

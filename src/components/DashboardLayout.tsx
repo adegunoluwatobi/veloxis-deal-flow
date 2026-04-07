@@ -16,15 +16,15 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['originator', 'deal_manager'] },
-  { label: 'Exporters', href: '/exporters', icon: Users, roles: ['originator', 'deal_manager'] },
-  { label: 'Deals', href: '/deals', icon: FileText, roles: ['originator', 'deal_manager'] },
+  { label: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['super_admin', 'deal_manager'] },
+  { label: 'Exporters', href: '/exporters', icon: Users, roles: ['super_admin', 'deal_manager'] },
+  { label: 'Deals', href: '/deals', icon: FileText, roles: ['super_admin', 'deal_manager'] },
 ];
 
 const ADMIN_NAV: NavItem[] = [
-  { label: 'Admin Dashboard', href: '/admin', icon: ShieldCheck, roles: ['deal_manager'] },
-  { label: 'All Deals', href: '/admin/deals', icon: FileText, roles: ['deal_manager'] },
-  { label: 'User Management', href: '/admin/settings', icon: Settings, roles: ['deal_manager'] },
+  { label: 'Admin Dashboard', href: '/admin', icon: ShieldCheck, roles: ['super_admin', 'deal_manager'] },
+  { label: 'All Deals', href: '/admin/deals', icon: FileText, roles: ['super_admin', 'deal_manager'] },
+  { label: 'User Management', href: '/admin/settings', icon: Settings, roles: ['super_admin'] },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -41,7 +41,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     navigate('/login');
   };
 
-  const roleLabel = role === 'deal_manager' ? 'Deal Manager' : 'Originator';
+  const roleLabel = role === 'super_admin' ? 'Super Admin' : role === 'deal_manager' ? 'Deal Manager' : 'Staff';
 
   const isActive = (href: string) =>
     location.pathname === href || (href !== '/' && href !== '/admin' && location.pathname.startsWith(href));

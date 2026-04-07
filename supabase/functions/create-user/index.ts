@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Only deal_manager can create users
+    // Only super_admin can create users
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
@@ -37,11 +37,11 @@ Deno.serve(async (req) => {
       .from("user_roles")
       .select("role")
       .eq("user_id", caller.id)
-      .eq("role", "deal_manager")
+      .eq("role", "super_admin")
       .maybeSingle();
 
     if (!roleData) {
-      return new Response(JSON.stringify({ error: "Forbidden: deal_manager only" }), {
+      return new Response(JSON.stringify({ error: "Forbidden: super_admin only" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const validRoles = ["originator", "deal_manager", "greystar_originator", "exporter"];
+    const validRoles = ["super_admin", "originator_admin", "originator_staff", "deal_manager", "exporter"];
     if (role && !validRoles.includes(role)) {
       return new Response(JSON.stringify({ error: `Invalid role: ${role}` }), {
         status: 400,
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
       user_metadata: {
         full_name: full_name || "",
         organisation: organisation || "",
-        role: role || "originator",
+        role: role || "deal_manager",
       },
     });
 

@@ -132,7 +132,7 @@ export default function DealDetail() {
   // Notes
   const [newNote, setNewNote] = useState('');
 
-  const isDM = role === 'deal_manager';
+  const isDM = role === 'deal_manager' || role === 'super_admin';
   const currency = deal?.invoice_currency_v2 ?? 'GBP';
   const sym = CURRENCY_SYMBOLS[currency] ?? '£';
 
@@ -174,7 +174,7 @@ export default function DealDetail() {
       await supabase.rpc('insert_audit_log', {
         p_deal_id: id,
         p_user_id: user?.id,
-        p_user_role: role as 'originator' | 'deal_manager',
+        p_user_role: role as any,
         p_action_type: `deal_status_changed` as AuditAction,
         p_metadata: { from: deal.status, to: newStatus, ...extraFields },
       });

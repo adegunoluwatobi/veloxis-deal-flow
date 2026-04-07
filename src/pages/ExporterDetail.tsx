@@ -229,7 +229,7 @@ export default function ExporterDetail() {
              'Awaiting document uploads and verification.'}
           </p>
         </div>
-        {role === 'deal_manager' && exporter.kyc_status !== 'verified' && exporter.kyc_status !== 'rejected' && (
+        {(role === 'deal_manager' || role === 'super_admin') && exporter.kyc_status !== 'verified' && exporter.kyc_status !== 'rejected' && (
           <Button size="sm" onClick={handleVerifyExporter} className="gap-1">
             <ShieldCheck className="h-4 w-4" /> Verify Exporter
           </Button>
@@ -280,7 +280,7 @@ export default function ExporterDetail() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">KYC Document Checklist</CardTitle>
             <div className="flex gap-2">
-              {(role === 'originator') && (
+              {(role === 'originator_staff' || role === 'originator_admin') && (
                 <Button variant="outline" size="sm" onClick={generateUploadToken} disabled={generatingToken}>
                   {generatingToken ? 'Generating…' : 'Generate Upload Link'}
                 </Button>
@@ -363,7 +363,7 @@ export default function ExporterDetail() {
                   <TableHead>Expiry</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Uploaded</TableHead>
-                  {role === 'deal_manager' && <TableHead className="text-right">Actions</TableHead>}
+                  {(role === 'deal_manager' || role === 'super_admin') && <TableHead className="text-right">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -403,7 +403,7 @@ export default function ExporterDetail() {
                           {doc.uploaded_by_token_id ? 'via upload link' : 'by originator'}
                         </span>
                       </TableCell>
-                      {role === 'deal_manager' && (
+                      {(role === 'deal_manager' || role === 'super_admin') && (
                         <TableCell className="text-right">
                           {!doc.is_superseded && doc.document_status === 'pending_review' && (
                             <div className="flex justify-end gap-1">

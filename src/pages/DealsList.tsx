@@ -33,7 +33,7 @@ export default function DealsList() {
       let query = supabase.from('deals')
         .select('id, status, invoice_number, invoice_value, buyer_company_name, commodity_type, created_at')
         .order('created_at', { ascending: false });
-      if (role === 'originator') {
+      if (role === 'originator_staff' || role === 'originator_admin') {
         query = query.eq('originator_id', user.id);
       }
       const { data } = await query;
@@ -56,9 +56,9 @@ export default function DealsList() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Deals</h1>
-          <p className="text-sm text-muted-foreground">{role === 'deal_manager' ? 'All deals' : 'Your deal pipeline'}</p>
+          <p className="text-sm text-muted-foreground">{(role === 'super_admin' || role === 'deal_manager') ? 'All deals' : 'Your deal pipeline'}</p>
         </div>
-        {role === 'originator' && (
+        {(role === 'originator_staff' || role === 'originator_admin') && (
           <Button asChild>
             <Link to="/deals/new"><Plus className="mr-2 h-4 w-4" />New Deal</Link>
           </Button>

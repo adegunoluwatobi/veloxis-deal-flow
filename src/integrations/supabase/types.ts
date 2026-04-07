@@ -713,6 +713,9 @@ export type Database = {
         }
         Returns: string
       }
+      is_originator: { Args: { _user_id: string }; Returns: boolean }
+      is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_veloxis_staff: { Args: { _user_id: string }; Returns: boolean }
       validate_status_transition: {
         Args: {
           p_current_status: Database["public"]["Enums"]["deal_status"]
@@ -737,6 +740,9 @@ export type Database = {
         | "deal_manager"
         | "greystar_originator"
         | "exporter"
+        | "super_admin"
+        | "originator_admin"
+        | "originator_staff"
       audit_action:
         | "deal_created"
         | "deal_submitted"
@@ -939,6 +945,9 @@ export const Constants = {
         "deal_manager",
         "greystar_originator",
         "exporter",
+        "super_admin",
+        "originator_admin",
+        "originator_staff",
       ],
       audit_action: [
         "deal_created",
