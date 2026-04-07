@@ -38,6 +38,7 @@ interface ExporterMap {
 type SortField = 'created_at' | 'invoice_value' | 'status';
 
 export default function AdminDeals() {
+  const navigate = useNavigate();
   const [deals, setDeals] = useState<DealRow[]>([]);
   const [exporterNames, setExporterNames] = useState<ExporterMap>({});
   const [search, setSearch] = useState('');
