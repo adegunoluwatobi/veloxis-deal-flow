@@ -194,7 +194,7 @@ export default function ExporterDealNew() {
     }
     setSaving(true);
     try {
-      let invoiceFilePath: string | null = null;
+      let invoiceFilePath: string | null = existingInvoicePath;
       if (form.invoice_file) {
         const safeName = sanitiseFilename(form.invoice_file.name);
         const path = `deals/${exporter.id}/${Date.now()}_${safeName}`;
@@ -244,8 +244,28 @@ export default function ExporterDealNew() {
         dealData.submitted_at = new Date().toISOString();
       }
 
-      const { data: newDeal, error } = await supabase.from('deals').insert(dealData).select('id').single();
-      if (error) throw error;
+      let dealId: string;
+      if (isEditing) {
+        const { error } = await supabase.from('deals').update(dealData as any).eq('id', editDealId!);
+        if (error) throw error;
+        dealId = editDealId!;
+      } else {
+        const { data: newDeal, error } = await supabase.from('deals').insert(dealData).select('id').single();
+        if (error) throw error;
+        dealId = newDeal.id;
+      }
+
+      // Audit log
+      const actionType = isEditing
+        ? (asDraft ? 'deal_field_edited' : 'deal_submitted')
+        : (asDraft ? 'deal_created' : 'deal_submitted');
+      await supabase.rpc('insert_audit_log', {
+        p_deal_id: dealId,
+        p_user_id: user.id,
+        p_user_role: 'exporter' as any,
+        p_action_type: actionType as any,
+        p_metadata: { actor_name: user.email, email: user.email, invoice_number: form.invoice_number },
+      });
 
       // Audit log
       const actionType = asDraft ? 'deal_created' : 'deal_submitted';
