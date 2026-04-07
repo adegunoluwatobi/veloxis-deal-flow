@@ -218,6 +218,16 @@ export default function GreystarDealDetail() {
 
   const canSubmitToVeloxis = deal.status === 'submitted' && deal.bank_name_match !== false;
 
+  // Submit to Veloxis prerequisites tooltip
+  const submitPrereqs = [
+    { fieldId: 'field-buyer-company', label: 'Buyer company name required', condition: !!deal?.buyer_company_name },
+    { fieldId: 'field-buyer-country', label: 'Buyer country required', condition: !!deal?.buyer_country },
+    { fieldId: 'field-invoice-number', label: 'Invoice number required', condition: !!deal?.invoice_number },
+    { fieldId: 'field-invoice-value', label: 'Invoice value required', condition: !!(deal?.invoice_value && deal.invoice_value > 0) },
+    { fieldId: 'field-bank-match', label: 'Bank name must match company name', condition: deal?.bank_name_match !== false },
+  ];
+  const submitTooltip = canSubmitToVeloxis ? buildPrerequisiteTooltip(submitPrereqs) : 'Application must be in Submitted status';
+
   // Show pending CR info
   const crFields: FlaggedField[] = pendingCR?.fields_flagged ?? [];
 
