@@ -53,7 +53,7 @@ function getDisplayStatus(exporter: ExporterRow): DisplayStatus {
   return exporter.onboarding_status;
 }
 
-type FilterTab = 'all' | 'not_forwarded' | 'forwarded';
+type FilterTab = 'all';
 
 export default function GreystarExportersList() {
   const [exporters, setExporters] = useState<ExporterRow[]>([]);
