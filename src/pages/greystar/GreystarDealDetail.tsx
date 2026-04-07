@@ -41,7 +41,7 @@ export default function GreystarDealDetail() {
 
   useEffect(() => { loadDeal(); }, [id]);
 
-  const updateStatus = async (status: DealStatus, extra: Record<string, any> = {}) => {
+  const updateStatus = async (status: DealStatus, extra: Record<string, any> = {}, auditAction?: string) => {
     setSubmitting(true);
     try {
       const { error } = await supabase
@@ -49,6 +49,24 @@ export default function GreystarDealDetail() {
         .update({ status, ...extra })
         .eq('id', id!);
       if (error) throw error;
+
+      // Audit log
+      if (user) {
+        const action = auditAction || 'deal_status_changed';
+        await supabase.rpc('insert_audit_log', {
+          p_deal_id: id!,
+          p_user_id: user.id,
+          p_user_role: 'partner_admin' as any,
+          p_action_type: action as any,
+          p_metadata: {
+            actor_name: user.email,
+            new_status: status,
+            ...(extra.partner_notes ? { note: extra.partner_notes } : {}),
+            ...(extra.rejection_reason ? { reason: extra.rejection_reason } : {}),
+          },
+        });
+      }
+
       toast({ title: `Deal ${status.replace(/_/g, ' ')}` });
       await loadDeal();
       setActionDialog(null);
