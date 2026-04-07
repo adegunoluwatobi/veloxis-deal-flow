@@ -13,6 +13,7 @@ import ExporterNew from "@/pages/ExporterNew";
 import ExporterDetail from "@/pages/ExporterDetail";
 import DealsList from "@/pages/DealsList";
 import DealNew from "@/pages/DealNew";
+import DealDetail from "@/pages/DealDetail";
 import SMEUpload from "@/pages/SMEUpload";
 import NotFound from "@/pages/NotFound";
 
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/exporters/:id" element={<AuthenticatedLayout><ExporterDetail /></AuthenticatedLayout>} />
             <Route path="/deals" element={<AuthenticatedLayout><DealsList /></AuthenticatedLayout>} />
             <Route path="/deals/new" element={<AuthenticatedLayout><DealNew /></AuthenticatedLayout>} />
+            <Route path="/deals/:id" element={<AuthenticatedLayout><DealDetail /></AuthenticatedLayout>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
