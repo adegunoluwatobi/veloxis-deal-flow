@@ -24,6 +24,7 @@ export default function Login() {
     if (error) {
       toast({ title: 'Login failed', description: error.message, variant: 'destructive' });
     } else {
+      // Role-based redirect happens in Dashboard component
       navigate('/');
     }
   };

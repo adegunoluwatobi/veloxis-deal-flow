@@ -1,6 +1,6 @@
 // Veloxis Deal Room — TypeScript Types
 
-export type AppRole = 'originator' | 'deal_manager';
+export type AppRole = 'originator' | 'deal_manager' | 'greystar_originator' | 'exporter';
 
 export type EntityType = 'limited_company' | 'plc' | 'llp' | 'incorporated_trustee';
 
