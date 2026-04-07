@@ -163,6 +163,7 @@ export default function PaymentAdvicePanel({
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">Amount Received ({invoiceCurrency ?? 'GBP'})</Label>
             <Input
+              id="field-amount-received"
               type="number"
               step="0.01"
               value={amountReceived}
