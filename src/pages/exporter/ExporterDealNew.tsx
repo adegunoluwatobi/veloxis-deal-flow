@@ -538,7 +538,7 @@ export default function ExporterDealNew() {
         <Card>
           <CardHeader>
             <CardTitle>Review & Submit</CardTitle>
-            <CardDescription>Review your deal application before submitting</CardDescription>
+            <CardDescription>Review your application before submitting</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="rounded-lg border border-border p-4 space-y-2">
