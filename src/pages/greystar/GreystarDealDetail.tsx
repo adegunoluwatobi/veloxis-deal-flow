@@ -162,6 +162,19 @@ export default function GreystarDealDetail() {
   };
 
   const handleSubmitToVeloxis = async () => {
+    // Validate required fields before submission
+    const rules = [
+      { fieldId: 'field-buyer-company', label: 'Buyer Company Name', condition: !!deal?.buyer_company_name },
+      { fieldId: 'field-buyer-country', label: 'Buyer Country', condition: !!deal?.buyer_country },
+      { fieldId: 'field-invoice-number', label: 'Invoice Number', condition: !!deal?.invoice_number },
+      { fieldId: 'field-invoice-value', label: 'Invoice Value', condition: !!(deal?.invoice_value && deal.invoice_value > 0) },
+    ];
+    const failures = validateAndScroll(rules);
+    if (failures.length > 0) {
+      setValidationFailures(failures);
+      return;
+    }
+    setValidationFailures([]);
     setSubmitting(true);
     try {
       await supabase.from('deals').update({
