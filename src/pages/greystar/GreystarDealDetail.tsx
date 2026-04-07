@@ -374,7 +374,7 @@ export default function GreystarDealDetail() {
           </DialogHeader>
           <div className="space-y-2">
             <Label>Rejection reason *</Label>
-            <Textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Reason for rejection..." rows={4} />
+            <Textarea id="partner-reject-reason" value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Reason for rejection..." rows={4} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRejectOpen(false)}>Cancel</Button>
