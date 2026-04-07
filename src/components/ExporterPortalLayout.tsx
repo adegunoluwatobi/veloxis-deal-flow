@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard, FileText, LogOut,
-  Menu, X, ChevronRight, UserCircle,
+  Menu, X, ChevronRight, UserCircle, Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,6 +19,31 @@ export default function ExporterPortalLayout({ children }: { children: React.Rea
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+
+  // Gate: redirect unapproved exporters to onboarding
+  useEffect(() => {
+    if (!user) return;
+    const check = async () => {
+      const { data } = await supabase
+        .from('exporters')
+        .select('onboarding_status')
+        .eq('exporter_user_id', user.id)
+        .maybeSingle();
+
+      if (!data || !['onboarding_approved'].includes(data.onboarding_status as string)) {
+        const status = data?.onboarding_status;
+        if (status === 'onboarding_submitted') {
+          navigate('/exporter/pending', { replace: true });
+        } else {
+          navigate('/exporter/onboarding', { replace: true });
+        }
+        return;
+      }
+      setOnboardingChecked(true);
+    };
+    check();
+  }, [user, navigate]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -26,6 +52,14 @@ export default function ExporterPortalLayout({ children }: { children: React.Rea
 
   const isActive = (href: string) =>
     location.pathname === href || (href !== '/exporter' && location.pathname.startsWith(href));
+
+  if (!onboardingChecked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">

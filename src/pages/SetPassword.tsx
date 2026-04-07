@@ -19,20 +19,13 @@ export default function SetPassword() {
   const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
-    // The invite link will contain a token in the URL hash
-    // Supabase auto-exchanges it for a session via onAuthStateChange
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        setSessionReady(true);
-        setChecking(false);
-      }
-      if (event === 'TOKEN_REFRESHED' && session) {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
         setSessionReady(true);
         setChecking(false);
       }
     });
 
-    // Also check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setSessionReady(true);
@@ -61,9 +54,18 @@ export default function SetPassword() {
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } else {
+      // Update onboarding status to password_set
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('exporters')
+          .update({ onboarding_status: 'password_set' as any })
+          .eq('exporter_user_id', user.id);
+      }
+      
       setDone(true);
-      toast({ title: 'Password set', description: 'Your account is now active.' });
-      setTimeout(() => navigate('/exporter'), 2000);
+      toast({ title: 'Password set', description: 'Redirecting to onboarding…' });
+      setTimeout(() => navigate('/exporter/onboarding'), 2000);
     }
   };
 
@@ -82,7 +84,7 @@ export default function SetPassword() {
           <CardContent className="flex flex-col items-center py-10 text-center">
             <CheckCircle2 className="mb-4 h-12 w-12 text-success" />
             <h2 className="text-xl font-bold text-foreground">Account Activated</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Redirecting to your exporter portal…</p>
+            <p className="mt-2 text-sm text-muted-foreground">Redirecting to onboarding…</p>
           </CardContent>
         </Card>
       </div>
@@ -100,7 +102,7 @@ export default function SetPassword() {
           <p className="text-sm text-muted-foreground">
             {sessionReady
               ? 'Choose a secure password to activate your exporter account.'
-              : 'Invalid or expired invite link. Please contact your Greystar representative.'}
+              : 'Invalid or expired invite link. Please contact your administrator.'}
           </p>
         </div>
 
@@ -114,27 +116,11 @@ export default function SetPassword() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="password">New Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={8}
-                    autoComplete="new-password"
-                  />
+                  <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} autoComplete="new-password" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirm">Confirm Password</Label>
-                  <Input
-                    id="confirm"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    minLength={8}
-                    autoComplete="new-password"
-                  />
+                  <Input id="confirm" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={8} autoComplete="new-password" />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Setting Password…' : 'Activate Account'}
@@ -145,7 +131,7 @@ export default function SetPassword() {
         )}
 
         <p className="text-center text-xs text-muted-foreground">
-          Greystar · Trade Finance Platform
+          Trade Finance Platform
         </p>
       </div>
     </div>

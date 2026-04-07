@@ -292,14 +292,14 @@ export default function GreystarSettings() {
 
             {isExporter && (
               <div className="space-y-2">
-                <Label>Company / Organisation</Label>
-                <Input value={form.organisation} onChange={(e) => setForm({ ...form, organisation: e.target.value })} placeholder="Exporter company name" />
+                <Label>Company / Organisation *</Label>
+                <Input value={form.organisation} onChange={(e) => setForm({ ...form, organisation: e.target.value })} placeholder="Exporter company name" required />
               </div>
             )}
 
             <Button
               onClick={handleCreate}
-              disabled={loading || !form.email.trim() || !form.full_name.trim() || (!isExporter && (!form.password || form.password.length < 8))}
+              disabled={loading || !form.email.trim() || !form.full_name.trim() || (isExporter && !form.organisation.trim()) || (!isExporter && (!form.password || form.password.length < 8))}
               className="w-full gap-2"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : isExporter ? <Mail className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}

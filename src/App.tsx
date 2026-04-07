@@ -35,6 +35,8 @@ import GreystarSettings from "@/pages/greystar/GreystarSettings";
 // Exporter portal pages
 import ExporterDashboardPage from "@/pages/exporter/ExporterDashboard";
 import ExporterDocuments from "@/pages/exporter/ExporterDocuments";
+import ExporterOnboarding from "@/pages/exporter/ExporterOnboarding";
+import ExporterPendingApproval from "@/pages/exporter/ExporterPendingApproval";
 
 const queryClient = new QueryClient();
 
@@ -83,6 +85,18 @@ const App = () => (
             <Route path="/set-password" element={<SetPassword />} />
             <Route path="/upload/:token" element={<SMEUpload />} />
 
+            {/* Exporter onboarding (before approval) */}
+            <Route path="/exporter/onboarding" element={
+              <ProtectedRoute allowedRoles={['exporter']}>
+                <ExporterOnboarding />
+              </ProtectedRoute>
+            } />
+            <Route path="/exporter/pending" element={
+              <ProtectedRoute allowedRoles={['exporter']}>
+                <ExporterPendingApproval />
+              </ProtectedRoute>
+            } />
+
             {/* Greystar routes */}
             <Route path="/greystar" element={<GreystarRoute><GreystarDashboard /></GreystarRoute>} />
             <Route path="/greystar/exporters" element={<GreystarRoute><GreystarExportersList /></GreystarRoute>} />
@@ -91,11 +105,11 @@ const App = () => (
             <Route path="/greystar/review" element={<GreystarRoute><GreystarReviewQueue /></GreystarRoute>} />
             <Route path="/greystar/settings" element={<GreystarRoute><GreystarSettings /></GreystarRoute>} />
 
-            {/* Exporter portal routes */}
+            {/* Exporter portal routes (require approved onboarding) */}
             <Route path="/exporter" element={<ExporterRoute><ExporterDashboardPage /></ExporterRoute>} />
             <Route path="/exporter/documents" element={<ExporterRoute><ExporterDocuments /></ExporterRoute>} />
 
-            {/* Admin routes (deal_manager only) */}
+            {/* Admin routes */}
             <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
             <Route path="/admin/deals" element={<AdminLayout><AdminDeals /></AdminLayout>} />
             <Route path="/admin/deals/:id" element={<AdminLayout><DealDetail /></AdminLayout>} />
