@@ -25,9 +25,38 @@ export type SubscriptionTier = 'pay_as_you_go' | 'veloxis_pro';
 
 export type InvoiceCurrency = 'GBP' | 'USD' | 'EUR' | 'NGN';
 
-export type ExporterDocumentType = 'cac_certificate' | 'director_id' | 'nepc_certificate' | 'other';
+export type ExporterDocumentType = 'cac_certificate' | 'director_id' | 'nepc_certificate' | 'ubo_declaration_doc' | 'source_of_funds_doc' | 'bank_statements' | 'other';
 
-export type DealDocumentType = 'commercial_invoice' | 'bill_of_lading' | 'other';
+export type DealDocumentType = 'commercial_invoice' | 'bill_of_lading' | 'buyer_registration_doc' | 'other';
+
+export type SanctionsScreeningStatus = 'pending_screening' | 'clear' | 'flagged';
+export type BuyerCreditCheckStatus = 'pending' | 'pass' | 'refer' | 'fail';
+
+export const SANCTIONS_STATUS_LABELS: Record<SanctionsScreeningStatus, string> = {
+  pending_screening: 'Pending Screening',
+  clear: 'Clear',
+  flagged: 'Flagged',
+};
+
+export const SANCTIONS_STATUS_COLORS: Record<SanctionsScreeningStatus, string> = {
+  pending_screening: 'bg-warning/10 text-warning',
+  clear: 'bg-success/10 text-success',
+  flagged: 'bg-destructive/10 text-destructive',
+};
+
+export const BUYER_CREDIT_CHECK_LABELS: Record<BuyerCreditCheckStatus, string> = {
+  pending: 'Pending',
+  pass: 'Pass',
+  refer: 'Refer',
+  fail: 'Fail',
+};
+
+export const BUYER_CREDIT_CHECK_COLORS: Record<BuyerCreditCheckStatus, string> = {
+  pending: 'bg-warning/10 text-warning',
+  pass: 'bg-success/10 text-success',
+  refer: 'bg-primary/10 text-primary',
+  fail: 'bg-destructive/10 text-destructive',
+};
 
 export type AuditAction =
   | 'deal_created' | 'deal_submitted' | 'document_uploaded' | 'deal_moved_to_under_review'
