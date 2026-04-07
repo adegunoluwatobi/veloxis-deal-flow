@@ -334,7 +334,7 @@ export default function ExporterDetail() {
                   <TableHead>Expiry</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Uploaded</TableHead>
-                  {(role === 'deal_manager' || role === 'super_admin') && <TableHead className="text-right">View</TableHead>}
+                  {<TableHead className="text-right">View</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
