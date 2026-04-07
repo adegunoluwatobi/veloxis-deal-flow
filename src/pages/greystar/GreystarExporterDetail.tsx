@@ -189,10 +189,6 @@ export default function GreystarExporterDetail() {
 
   const enabledOptions = docTypeOptions.filter((o) => !o.disabled);
   const kycResult = computeKycStatus(activeDocs);
-    ? 'KYC must be complete (all 3 documents verified) before forwarding'
-    : isAlreadyForwarded
-    ? 'Already forwarded to Veloxis'
-    : '';
 
   return (
     <div className="space-y-6 animate-fade-in">
