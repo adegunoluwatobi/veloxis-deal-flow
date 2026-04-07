@@ -1,13 +1,15 @@
 const DISALLOWED_AUTH_CALLBACK_HOST_PATTERNS = [
   /\.lovableproject\.com$/i,
-  /\.lovable\.app$/i,
   /^localhost$/i,
   /^127(?:\.\d{1,3}){3}$/i,
   /^\[::1\]$/i,
 ];
 
 export function isDisallowedAuthCallbackHost(hostname: string) {
-  return DISALLOWED_AUTH_CALLBACK_HOST_PATTERNS.some((pattern) => pattern.test(hostname));
+  const normalizedHostname = hostname.trim().toLowerCase();
+  const isLovablePreviewHost = normalizedHostname.endsWith('.lovable.app') && normalizedHostname.includes('preview--');
+
+  return isLovablePreviewHost || DISALLOWED_AUTH_CALLBACK_HOST_PATTERNS.some((pattern) => pattern.test(normalizedHostname));
 }
 
 export function getConfiguredPublicAppUrl() {
