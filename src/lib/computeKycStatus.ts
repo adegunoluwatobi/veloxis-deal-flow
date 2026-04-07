@@ -1,10 +1,18 @@
 import type { ExporterDocumentType } from '@/types';
 
+export interface KycDocumentLike {
+  exporter_id?: string | null;
+  document_type: string;
+  document_status: string;
+  expiry_status?: string | null;
+}
+
 export type ComputedKycStatus = 'verified' | 'rejected' | 'expired' | 'under_review' | 'pending_documents';
 
 export interface ComputedKyc {
   status: ComputedKycStatus;
   label: string;
+  badgeLabel: string;
   description: string;
   color: string;
   borderColor: string;
@@ -13,33 +21,46 @@ export interface ComputedKyc {
 
 const MANDATORY: ExporterDocumentType[] = ['cac_certificate', 'director_id', 'nepc_certificate'];
 
+export function groupDocumentsByExporter<T extends { exporter_id?: string | null }>(docs: T[]) {
+  const grouped = new Map<string, T[]>();
+
+  for (const doc of docs) {
+    if (!doc.exporter_id) continue;
+    const existing = grouped.get(doc.exporter_id) ?? [];
+    existing.push(doc);
+    grouped.set(doc.exporter_id, existing);
+  }
+
+  return grouped;
+}
+
 /**
  * Derive KYC status live from the active (non-superseded) documents list.
  * Priority: rejected > expired > pending_review > pending upload > verified
  */
-export function computeKycStatus(activeDocs: { document_type: string; document_status: string; expiry_status?: string }[]): ComputedKyc {
-  const byType = new Map<string, { document_status: string; expiry_status?: string }>();
+export function computeKycStatus(activeDocs: KycDocumentLike[]): ComputedKyc {
+  const byType = new Map<string, KycDocumentLike>();
+
   for (const doc of activeDocs) {
-    // Keep latest per type (activeDocs should already be non-superseded)
     if (!byType.has(doc.document_type)) {
       byType.set(doc.document_type, doc);
     }
   }
 
-  const mandatoryDocs = MANDATORY.map(t => ({ type: t, doc: byType.get(t) }));
+  const mandatoryDocs = MANDATORY.map((type) => ({ type, doc: byType.get(type) }));
+  const missing = mandatoryDocs.filter((item) => !item.doc);
+  const rejected = mandatoryDocs.filter((item) => item.doc?.document_status === 'rejected');
+  const expired = mandatoryDocs.filter(
+    (item) => item.doc?.expiry_status === 'expired' || item.doc?.document_status === 'expired'
+  );
+  const pending = mandatoryDocs.filter((item) => item.doc?.document_status === 'pending_review');
+  const verified = mandatoryDocs.filter((item) => item.doc?.document_status === 'verified');
 
-  // Check missing
-  const missing = mandatoryDocs.filter(m => !m.doc);
-  const rejected = mandatoryDocs.filter(m => m.doc?.document_status === 'rejected');
-  const expired = mandatoryDocs.filter(m => m.doc?.expiry_status === 'expired');
-  const pending = mandatoryDocs.filter(m => m.doc?.document_status === 'pending_review');
-  const verified = mandatoryDocs.filter(m => m.doc?.document_status === 'verified');
-
-  // Priority order
   if (rejected.length > 0) {
     return {
       status: 'rejected',
       label: 'Action Required',
+      badgeLabel: 'Action Required',
       description: 'One or more documents were rejected. Please re-upload.',
       color: 'bg-destructive/10 text-destructive',
       borderColor: 'border-destructive/30 bg-destructive/5',
@@ -51,10 +72,11 @@ export function computeKycStatus(activeDocs: { document_type: string; document_s
     return {
       status: 'expired',
       label: 'Documents Expired',
+      badgeLabel: 'Expired',
       description: 'Please renew your expired documents.',
-      color: 'bg-destructive/10 text-destructive',
-      borderColor: 'border-destructive/30 bg-destructive/5',
-      icon: 'destructive',
+      color: 'bg-warning/10 text-warning',
+      borderColor: 'border-warning/30 bg-warning/5',
+      icon: 'warning',
     };
   }
 
@@ -62,6 +84,7 @@ export function computeKycStatus(activeDocs: { document_type: string; document_s
     return {
       status: 'under_review',
       label: 'Under Review',
+      badgeLabel: 'Under Review',
       description: 'Your documents are being reviewed.',
       color: 'bg-warning/10 text-warning',
       borderColor: 'border-warning/30 bg-warning/5',
@@ -73,6 +96,7 @@ export function computeKycStatus(activeDocs: { document_type: string; document_s
     return {
       status: 'pending_documents',
       label: 'Pending Documents',
+      badgeLabel: 'Pending Documents',
       description: 'Please upload your CAC Certificate, Director ID, and NEPC Certificate.',
       color: 'bg-muted text-muted-foreground',
       borderColor: 'border-muted bg-muted/30',
@@ -84,6 +108,7 @@ export function computeKycStatus(activeDocs: { document_type: string; document_s
     return {
       status: 'verified',
       label: 'Complete',
+      badgeLabel: 'KYC Complete',
       description: 'All mandatory documents verified.',
       color: 'bg-success/10 text-success',
       borderColor: 'border-success/30 bg-success/5',
@@ -91,10 +116,10 @@ export function computeKycStatus(activeDocs: { document_type: string; document_s
     };
   }
 
-  // Fallback
   return {
     status: 'pending_documents',
     label: 'Pending Documents',
+    badgeLabel: 'Pending Documents',
     description: 'Please upload your CAC Certificate, Director ID, and NEPC Certificate.',
     color: 'bg-muted text-muted-foreground',
     borderColor: 'border-muted bg-muted/30',

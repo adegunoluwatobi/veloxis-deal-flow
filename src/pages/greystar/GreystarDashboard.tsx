@@ -4,50 +4,79 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus, ArrowRight, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
-import { KYC_STATUS_LABELS, type KycStatus } from '@/types';
+import { Users, Plus, ArrowRight, FileText, CheckCircle2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { computeKycStatus, groupDocumentsByExporter, type KycDocumentLike } from '@/lib/computeKycStatus';
 
-const KYC_COLORS: Record<KycStatus, string> = {
-  pending_documents: 'bg-muted text-muted-foreground',
-  documents_uploaded: 'bg-primary/10 text-primary',
-  under_review: 'bg-warning/10 text-warning',
-  verified: 'bg-success/10 text-success',
-  kyc_document_expired: 'bg-destructive/10 text-destructive',
-  rejected: 'bg-destructive/10 text-destructive',
-};
+interface ExporterRow {
+  id: string;
+  company_name: string;
+  rc_number: string;
+  created_at: string;
+  contact_email: string | null;
+}
+
+interface ExporterDocumentRow extends KycDocumentLike {
+  exporter_id: string;
+  is_superseded: boolean;
+}
+
+interface RecentExporter extends ExporterRow {
+  kyc: ReturnType<typeof computeKycStatus>;
+}
+
+interface DashboardStats {
+  totalExporters: number;
+  pendingReview: number;
+  verified: number;
+  docsToReview: number;
+}
 
 export default function GreystarDashboard() {
-  const [stats, setStats] = useState({ total: 0, pending: 0, verified: 0, expired: 0 });
-  const [recentExporters, setRecentExporters] = useState<any[]>([]);
-  const [pendingDocs, setPendingDocs] = useState(0);
+  const [stats, setStats] = useState<DashboardStats>({ totalExporters: 0, pendingReview: 0, verified: 0, docsToReview: 0 });
+  const [recentExporters, setRecentExporters] = useState<RecentExporter[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const { data: exporters } = await supabase
+      setLoading(true);
+
+      const { data: exporterData } = await supabase
         .from('exporters')
-        .select('id, company_name, rc_number, kyc_status, created_at, contact_email')
-        .order('created_at', { ascending: false })
-        .limit(10);
+        .select('id, company_name, rc_number, created_at, contact_email')
+        .order('created_at', { ascending: false });
 
-      const list = exporters ?? [];
-      setRecentExporters(list);
+      const exporters = (exporterData as ExporterRow[]) ?? [];
+      const exporterIds = exporters.map((exporter) => exporter.id);
+
+      let documents: ExporterDocumentRow[] = [];
+
+      if (exporterIds.length > 0) {
+        const { data: docData } = await supabase
+          .from('exporter_documents')
+          .select('exporter_id, document_type, document_status, expiry_status, is_superseded')
+          .in('exporter_id', exporterIds)
+          .eq('is_superseded', false);
+
+        documents = (docData as ExporterDocumentRow[]) ?? [];
+      }
+
+      const docsByExporter = groupDocumentsByExporter(documents);
+      const exportersWithKyc = exporters.map((exporter) => ({
+        ...exporter,
+        kyc: computeKycStatus(docsByExporter.get(exporter.id) ?? []),
+      }));
+
+      setRecentExporters(exportersWithKyc.slice(0, 10));
       setStats({
-        total: list.length,
-        pending: list.filter((e: any) => ['pending_documents', 'documents_uploaded'].includes(e.kyc_status)).length,
-        verified: list.filter((e: any) => e.kyc_status === 'verified').length,
-        expired: list.filter((e: any) => e.kyc_status === 'kyc_document_expired').length,
+        totalExporters: exporters.length,
+        pendingReview: exportersWithKyc.filter((exporter) => exporter.kyc.status === 'under_review').length,
+        verified: exportersWithKyc.filter((exporter) => exporter.kyc.status === 'verified').length,
+        docsToReview: documents.filter((doc) => doc.document_status === 'pending_review').length,
       });
-
-      const { count } = await supabase
-        .from('exporter_documents')
-        .select('id', { count: 'exact', head: true })
-        .eq('document_status', 'pending_review')
-        .eq('is_superseded', false);
-      setPendingDocs(count ?? 0);
       setLoading(false);
     };
+
     load();
   }, []);
 
@@ -73,14 +102,14 @@ export default function GreystarDashboard() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Exporters</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent><div className="text-3xl font-bold text-foreground">{stats.total}</div></CardContent>
+          <CardContent><div className="text-3xl font-bold text-foreground">{stats.totalExporters}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Pending Review</CardTitle>
             <Clock className="h-4 w-4 text-warning" />
           </CardHeader>
-          <CardContent><div className="text-3xl font-bold text-warning">{stats.pending}</div></CardContent>
+          <CardContent><div className="text-3xl font-bold text-warning">{stats.pendingReview}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -92,9 +121,9 @@ export default function GreystarDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Docs to Review</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-destructive" />
+            <FileText className="h-4 w-4 text-primary" />
           </CardHeader>
-          <CardContent><div className="text-3xl font-bold text-destructive">{pendingDocs}</div></CardContent>
+          <CardContent><div className="text-3xl font-bold text-primary">{stats.docsToReview}</div></CardContent>
         </Card>
       </div>
 
@@ -112,18 +141,18 @@ export default function GreystarDashboard() {
             </p>
           ) : (
             <div className="space-y-3">
-              {recentExporters.slice(0, 5).map((exp: any) => (
+              {recentExporters.slice(0, 5).map((exporter) => (
                 <Link
-                  key={exp.id}
-                  to={`/greystar/exporters/${exp.id}`}
+                  key={exporter.id}
+                  to={`/greystar/exporters/${exporter.id}`}
                   className="flex items-center justify-between rounded-lg border border-border p-4 transition-colors hover:bg-muted/50"
                 >
                   <div>
-                    <p className="font-medium text-foreground">{exp.company_name}</p>
-                    <p className="text-sm text-muted-foreground">RC {exp.rc_number}</p>
+                    <p className="font-medium text-foreground">{exporter.company_name}</p>
+                    <p className="text-sm text-muted-foreground">RC {exporter.rc_number}</p>
                   </div>
-                  <Badge variant="secondary" className={cn('font-medium', KYC_COLORS[exp.kyc_status as KycStatus])}>
-                    {KYC_STATUS_LABELS[exp.kyc_status as KycStatus]}
+                  <Badge variant="secondary" className={cn('font-medium', exporter.kyc.color)}>
+                    {exporter.kyc.badgeLabel}
                   </Badge>
                 </Link>
               ))}
