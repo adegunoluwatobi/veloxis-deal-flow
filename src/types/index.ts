@@ -27,7 +27,7 @@ export type InvoiceCurrency = 'GBP' | 'USD' | 'EUR' | 'NGN';
 
 export type ExporterDocumentType = 'cac_certificate' | 'director_id' | 'nepc_certificate' | 'ubo_declaration_doc' | 'source_of_funds_doc' | 'bank_statements' | 'other';
 
-export type DealDocumentType = 'commercial_invoice' | 'bill_of_lading' | 'buyer_registration_doc' | 'other';
+export type DealDocumentType = 'commercial_invoice' | 'bill_of_lading' | 'buyer_registration_doc' | 'ipu_signed' | 'payment_advice' | 'other';
 
 export type SanctionsScreeningStatus = 'pending_screening' | 'clear' | 'flagged';
 export type BuyerCreditCheckStatus = 'pending' | 'pass' | 'refer' | 'fail';
