@@ -24,6 +24,7 @@ const NAV_ITEMS: NavItem[] = [
 const ADMIN_NAV: NavItem[] = [
   { label: 'Admin Dashboard', href: '/admin', icon: ShieldCheck, roles: ['deal_manager'] },
   { label: 'All Deals', href: '/admin/deals', icon: FileText, roles: ['deal_manager'] },
+  { label: 'User Management', href: '/admin/settings', icon: Settings, roles: ['deal_manager'] },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

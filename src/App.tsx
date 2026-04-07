@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import { ConfirmProvider } from "@/components/ConfirmDialog";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
 import GreystarLayout from "@/components/GreystarLayout";
@@ -20,6 +21,7 @@ import DealDetail from "@/pages/DealDetail";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminDeals from "@/pages/AdminDeals";
 import SMEUpload from "@/pages/SMEUpload";
+import SettingsPage from "@/pages/SettingsPage";
 import NotFound from "@/pages/NotFound";
 
 // Greystar pages
@@ -74,6 +76,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <ConfirmProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/set-password" element={<SetPassword />} />
@@ -94,6 +97,7 @@ const App = () => (
             <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
             <Route path="/admin/deals" element={<AdminLayout><AdminDeals /></AdminLayout>} />
             <Route path="/admin/deals/:id" element={<AdminLayout><DealDetail /></AdminLayout>} />
+            <Route path="/admin/settings" element={<AdminLayout><SettingsPage /></AdminLayout>} />
 
             {/* Originator routes */}
             <Route path="/" element={<AuthenticatedLayout><Dashboard /></AuthenticatedLayout>} />
@@ -106,6 +110,7 @@ const App = () => (
 
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </ConfirmProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
