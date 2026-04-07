@@ -8,7 +8,7 @@ export type CommodityType = 'solid_minerals' | 'scrap_metal' | 'manufactured_goo
 
 export type DealStatus =
   | 'draft' | 'submitted' | 'under_review' | 'docs_requested'
-  | 'ready_for_final_approval' | 'approved'
+  | 'ready_for_final_approval' | 'rejection_pending_approval' | 'approved'
   | 'rejected' | 'ipu_sent' | 'ipu_expired' | 'ipu_signed_awaiting_funding'
   | 'funded_active' | 'repayment_due' | 'overdue'
   | 'closed_repaid' | 'closed_partial';
