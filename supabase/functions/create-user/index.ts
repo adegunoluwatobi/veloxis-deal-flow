@@ -17,6 +17,13 @@ Deno.serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+    if (!supabaseUrl || !serviceRoleKey) {
+      return new Response(JSON.stringify({ error: "Server configuration error" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Verify caller
     const callerClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
@@ -29,28 +36,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Only super_admin can create users
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
-    const { data: roleData } = await adminClient
+
+    // Check caller role
+    const { data: callerRoleData } = await adminClient
       .from("user_roles")
-      .select("role")
+      .select("role, partner_organisation_id")
       .eq("user_id", caller.id)
-      .eq("role", "super_admin")
       .maybeSingle();
 
-    if (!roleData) {
-      return new Response(JSON.stringify({ error: "Forbidden: super_admin only" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const callerRole = callerRoleData?.role;
+    const callerOrgId = callerRoleData?.partner_organisation_id;
 
-    const { email, password, role, full_name, organisation } = await req.json();
+    const { email, password, role, full_name, organisation, invite_only, partner_organisation_id } = await req.json();
 
-    if (!email || !password) {
-      return new Response(JSON.stringify({ error: "Email and password are required" }), {
+    if (!email) {
+      return new Response(JSON.stringify({ error: "Email is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -59,6 +62,60 @@ Deno.serve(async (req) => {
     const validRoles = ["super_admin", "partner_admin", "partner_staff", "deal_manager", "exporter"];
     if (role && !validRoles.includes(role)) {
       return new Response(JSON.stringify({ error: `Invalid role: ${role}` }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Permission checks
+    if (callerRole === "super_admin") {
+      // super_admin can create: super_admin, partner_admin, deal_manager, exporter
+      // partner_staff is delegated to partner_admin
+    } else if (callerRole === "partner_admin") {
+      // partner_admin can only create partner_staff in their own org
+      if (role !== "partner_staff") {
+        return new Response(JSON.stringify({ error: "Partner admins can only create partner staff" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } else {
+      return new Response(JSON.stringify({ error: "Forbidden: insufficient permissions" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Exporter invite-only flow
+    if (role === "exporter" && invite_only) {
+      const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
+        data: {
+          full_name: full_name || "",
+          organisation: organisation || "",
+          role: "exporter",
+        },
+        redirectTo: `${supabaseUrl.replace('.supabase.co', '.lovable.app')}/set-password`,
+      });
+
+      if (inviteError) {
+        if (inviteError.message?.includes("already been registered") || inviteError.message?.includes("already exists")) {
+          return new Response(JSON.stringify({ error: "This email is already registered. The user may already have an account." }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        throw inviteError;
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, user_id: inviteData?.user?.id, email, invited: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Internal user creation — requires password
+    if (!password) {
+      return new Response(JSON.stringify({ error: "Password is required for internal users" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -94,7 +151,6 @@ Deno.serve(async (req) => {
           });
         }
         userId = existing.id;
-        // Update password and confirm
         await adminClient.auth.admin.updateUserById(userId, { password, email_confirm: true });
       } else {
         return new Response(JSON.stringify({ error: createError.message }), {
@@ -106,10 +162,14 @@ Deno.serve(async (req) => {
       userId = newUser.user?.id;
     }
 
-    // Assign role
+    // Assign role and partner org
     if (role && userId) {
-      // The handle_new_user trigger should have already inserted the role
-      // But in case it didn't (e.g. user already existed), upsert
+      const assignedOrgId = (role === "partner_staff" && callerRole === "partner_admin")
+        ? callerOrgId
+        : (role === "partner_admin" || role === "partner_staff")
+          ? partner_organisation_id
+          : null;
+
       const { data: existingRole } = await adminClient
         .from("user_roles")
         .select("id")
@@ -117,9 +177,16 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (existingRole) {
-        await adminClient.from("user_roles").update({ role }).eq("user_id", userId);
+        await adminClient.from("user_roles").update({
+          role,
+          partner_organisation_id: assignedOrgId || null,
+        }).eq("user_id", userId);
       } else {
-        await adminClient.from("user_roles").insert({ user_id: userId, role });
+        await adminClient.from("user_roles").insert({
+          user_id: userId,
+          role,
+          partner_organisation_id: assignedOrgId || null,
+        });
       }
     }
 

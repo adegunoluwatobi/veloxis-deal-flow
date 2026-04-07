@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard, Users, FileText, LogOut,
-  Menu, X, ChevronRight, Building,
+  Menu, X, ChevronRight, Building, Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -21,7 +21,11 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 export default function GreystarLayout({ children }: { children: React.ReactNode }) {
-  const { user, signOut } = useAuth();
+  const { user, role, signOut } = useAuth();
+  const navItems = [
+    ...NAV_ITEMS,
+    ...(role === 'partner_admin' ? [{ label: 'Team', href: '/greystar/settings', icon: Settings }] : []),
+  ];
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -57,7 +61,7 @@ export default function GreystarLayout({ children }: { children: React.ReactNode
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const active = isActive(item.href);
             return (
               <Link
