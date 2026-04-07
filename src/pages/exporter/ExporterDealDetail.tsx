@@ -44,10 +44,10 @@ export default function ExporterDealDetail() {
 
     // Pre-populate edit values with current deal values for flagged fields
     if (crData && data) {
-      const flagged: FlaggedField[] = crData.fields_flagged ?? [];
+      const flagged = (crData.fields_flagged ?? []) as unknown as FlaggedField[];
       const vals: Record<string, string> = {};
       for (const f of flagged) {
-        vals[f.field] = data[f.field]?.toString() ?? '';
+        vals[f.field] = (data as any)[f.field]?.toString() ?? '';
       }
       setEditValues(vals);
     }
