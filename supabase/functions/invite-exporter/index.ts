@@ -97,7 +97,8 @@ Deno.serve(async (req) => {
           // Link to exporter profile
           await adminClient.from("exporters").update({
             exporter_user_id: existingUser.id,
-          }).eq("id", exporter_id);
+            invite_sent_at: new Date().toISOString(),
+          } as any).eq("id", exporter_id);
 
           const { error: resetError } = await anonClient.auth.resetPasswordForEmail(email, {
             redirectTo,
@@ -124,7 +125,8 @@ Deno.serve(async (req) => {
     if (inviteData?.user) {
       await adminClient.from("exporters").update({
         exporter_user_id: inviteData.user.id,
-      }).eq("id", exporter_id);
+        invite_sent_at: new Date().toISOString(),
+      } as any).eq("id", exporter_id);
     }
 
     return new Response(JSON.stringify({ 
