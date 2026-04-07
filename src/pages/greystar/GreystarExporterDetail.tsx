@@ -348,16 +348,28 @@ export default function GreystarExporterDetail() {
                       </td>
                       {isPartner && (
                         <td className="py-3">
-                          {doc.document_status === 'pending_review' && (
-                            <div className="flex gap-1">
-                              <Button size="sm" variant="ghost" className="h-7 text-xs text-success" onClick={() => handleVerify(doc.id)}>
-                                <CheckCircle2 className="mr-1 h-3 w-3" /> Verify
-                              </Button>
-                              <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive" onClick={() => handleReject(doc.id)}>
-                                <XCircle className="mr-1 h-3 w-3" /> Reject
-                              </Button>
-                            </div>
-                          )}
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleDownload(doc.file_path, doc.file_name)}>
+                              <Download className="mr-1 h-3 w-3" /> View
+                            </Button>
+                            {doc.document_status === 'pending_review' && (
+                              <>
+                                <Button size="sm" variant="ghost" className="h-7 text-xs text-success" onClick={() => handleVerify(doc.id)}>
+                                  <CheckCircle2 className="mr-1 h-3 w-3" /> Verify
+                                </Button>
+                                <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive" onClick={() => handleReject(doc.id)}>
+                                  <XCircle className="mr-1 h-3 w-3" /> Reject
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      )}
+                      {isReadOnly && (
+                        <td className="py-3">
+                          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleDownload(doc.file_path, doc.file_name)}>
+                            <Download className="mr-1 h-3 w-3" /> View
+                          </Button>
                         </td>
                       )}
                     </tr>
