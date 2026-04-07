@@ -10,6 +10,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CurrencyInput, stripCommas } from '@/components/ui/currency-input';
+import { PhoneInput } from '@/components/ui/phone-input';
+import { EmailInput, isValidEmail } from '@/components/ui/email-input';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Upload, Loader2, ShieldCheck } from 'lucide-react';
 import { BUYER_COUNTRY_WHITELIST } from '@/types';
@@ -18,10 +21,10 @@ const STEPS = ['Bank Account', 'Invoice Details', 'Buyer Details', 'Export Detai
 const INCOTERMS = ['EXW', 'FOB', 'CIF', 'DAP', 'DDP', 'Other'] as const;
 const BANK_COUNTRIES = ['Nigeria', 'United Kingdom', 'United States', 'Ghana', 'Kenya', 'South Africa'] as const;
 const CURRENCIES = [
-  { value: 'GBP', label: '£ GBP' },
-  { value: 'USD', label: '$ USD' },
-  { value: 'EUR', label: '€ EUR' },
-  { value: 'NGN', label: '₦ NGN' },
+  { value: 'GBP', label: '£ GBP', symbol: '£' },
+  { value: 'USD', label: '$ USD', symbol: '$' },
+  { value: 'EUR', label: '€ EUR', symbol: '€' },
+  { value: 'NGN', label: '₦ NGN', symbol: '₦' },
 ] as const;
 
 const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
@@ -49,28 +52,25 @@ export default function ExporterDealNew() {
   const [exportLicence, setExportLicence] = useState<ExportLicenceDoc | null>(null);
   const [savedBankAccounts, setSavedBankAccounts] = useState<any[]>([]);
   const [saveBankDetails, setSaveBankDetails] = useState(true);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [form, setForm] = useState({
-    // Bank
     bank_name: '',
     bank_account_name: '',
     bank_account_number: '',
     bank_sort_code_iban: '',
     bank_country: '',
-    // Invoice
     invoice_number: '',
     invoice_date: '',
     invoice_amount: '',
     invoice_currency: 'GBP',
     payment_due_date: '',
     invoice_file: null as File | null,
-    // Buyer
     buyer_company_name: '',
     buyer_country: '',
     buyer_contact_name: '',
     buyer_contact_email: '',
     buyer_contact_phone: '',
-    // Export
     goods_description: '',
     export_destination: '',
     export_licence_number: '',
@@ -88,7 +88,6 @@ export default function ExporterDealNew() {
         .maybeSingle();
       if (exp) {
         setExporter(exp);
-        // Load saved bank accounts
         const { data: banks } = await supabase
           .from('exporter_bank_accounts')
           .select('*')
@@ -106,7 +105,6 @@ export default function ExporterDealNew() {
             bank_country: def.bank_country,
           }));
         }
-        // Load NEPC certificate (export licence) on file
         const { data: licDoc } = await supabase
           .from('exporter_documents')
           .select('id, file_name, document_status')
@@ -120,18 +118,25 @@ export default function ExporterDealNew() {
     load();
   }, [user]);
 
-  const updateField = (field: string, value: any) =>
+  const updateField = (field: string, value: any) => {
     setForm(f => ({ ...f, [field]: value }));
+    // Clear field error when user starts correcting
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => { const n = { ...prev }; delete n[field]; return n; });
+    }
+  };
 
   const bankNameMatch = exporter
     ? form.bank_account_name.trim().toLowerCase() === exporter.company_name.trim().toLowerCase()
     : null;
 
+  const currencySymbol = CURRENCIES.find(c => c.value === form.invoice_currency)?.symbol ?? '';
+
   const canProceed = (s: number) => {
     switch (s) {
       case 0: return form.bank_name && form.bank_account_name && form.bank_account_number && form.bank_sort_code_iban && form.bank_country;
       case 1: return form.invoice_number && form.invoice_date && form.invoice_amount && form.invoice_currency && form.payment_due_date && form.invoice_file;
-      case 2: return form.buyer_company_name && form.buyer_country && form.buyer_contact_name && form.buyer_contact_email && form.buyer_contact_phone;
+      case 2: return form.buyer_company_name && form.buyer_country && form.buyer_contact_name && form.buyer_contact_email && isValidEmail(form.buyer_contact_email) && form.buyer_contact_phone;
       case 3: return form.goods_description && form.export_destination && form.export_licence_number && form.hs_code && form.incoterms;
       default: return true;
     }
@@ -139,9 +144,14 @@ export default function ExporterDealNew() {
 
   const handleSubmit = async (asDraft: boolean) => {
     if (!exporter || !user) return;
+    // Validate email before submit
+    if (!asDraft && !isValidEmail(form.buyer_contact_email)) {
+      setFieldErrors(prev => ({ ...prev, buyer_contact_email: 'Please enter a valid email address' }));
+      setStep(2);
+      return;
+    }
     setSaving(true);
     try {
-      // Upload invoice file
       let invoiceFilePath: string | null = null;
       if (form.invoice_file) {
         const safeName = sanitiseFilename(form.invoice_file.name);
@@ -153,7 +163,6 @@ export default function ExporterDealNew() {
         invoiceFilePath = path;
       }
 
-      // Get partner org
       const { data: orgData } = await supabase
         .rpc('get_partner_org_id', { _user_id: exporter.originator_id });
 
@@ -162,28 +171,24 @@ export default function ExporterDealNew() {
         originator_id: exporter.originator_id,
         partner_organisation_id: orgData,
         status: asDraft ? 'draft' : 'submitted',
-        // Bank
         bank_name: form.bank_name,
         bank_account_name: form.bank_account_name,
         bank_account_number: form.bank_account_number,
         bank_sort_code_iban: form.bank_sort_code_iban,
         bank_country: form.bank_country,
         bank_name_match: bankNameMatch,
-        // Invoice
         invoice_number: form.invoice_number,
         invoice_date: form.invoice_date,
-        invoice_value: parseFloat(form.invoice_amount),
+        invoice_value: parseFloat(stripCommas(form.invoice_amount)),
         invoice_currency_v2: form.invoice_currency,
         payment_due_date: form.payment_due_date,
         invoice_file_path: invoiceFilePath,
-        // Buyer
         buyer_company_name: form.buyer_company_name,
         buyer_country: form.buyer_country,
         buyer_contact_name: form.buyer_contact_name,
         buyer_contact_email: form.buyer_contact_email,
         buyer_contact_phone: form.buyer_contact_phone,
-        buyer_name_match: true, // simplified for now
-        // Export
+        buyer_name_match: true,
         goods_description: form.goods_description,
         export_destination: form.export_destination,
         export_licence_number: form.export_licence_number,
@@ -200,7 +205,6 @@ export default function ExporterDealNew() {
       const { error } = await supabase.from('deals').insert(dealData);
       if (error) throw error;
 
-      // Save bank details if checkbox is on
       if (saveBankDetails && savedBankAccounts.length === 0) {
         await supabase.from('exporter_bank_accounts').insert({
           exporter_id: exporter.id,
@@ -305,7 +309,7 @@ export default function ExporterDealNew() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Invoice Number *</Label>
-              <Input value={form.invoice_number} onChange={e => updateField('invoice_number', e.target.value)} />
+              <Input value={form.invoice_number} onChange={e => updateField('invoice_number', e.target.value)} placeholder="e.g. INV-2024/001" />
             </div>
             <div className="space-y-2">
               <Label>Invoice Date *</Label>
@@ -314,7 +318,12 @@ export default function ExporterDealNew() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Invoice Amount *</Label>
-                <Input type="number" step="0.01" value={form.invoice_amount} onChange={e => updateField('invoice_amount', e.target.value)} />
+                <CurrencyInput
+                  value={form.invoice_amount}
+                  onChange={v => updateField('invoice_amount', v)}
+                  currencyLabel={currencySymbol}
+                  placeholder="0.00"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Currency *</Label>
@@ -385,11 +394,20 @@ export default function ExporterDealNew() {
             </div>
             <div className="space-y-2">
               <Label>Contact Email *</Label>
-              <Input type="email" value={form.buyer_contact_email} onChange={e => updateField('buyer_contact_email', e.target.value)} />
+              <EmailInput
+                value={form.buyer_contact_email}
+                onChange={e => updateField('buyer_contact_email', e.target.value)}
+                error={fieldErrors.buyer_contact_email}
+                placeholder="buyer@company.com"
+              />
             </div>
             <div className="space-y-2">
               <Label>Contact Phone *</Label>
-              <Input value={form.buyer_contact_phone} onChange={e => updateField('buyer_contact_phone', e.target.value)} />
+              <PhoneInput
+                value={form.buyer_contact_phone}
+                onChange={v => updateField('buyer_contact_phone', v)}
+                placeholder="8012345678"
+              />
             </div>
           </CardContent>
         </Card>
@@ -434,7 +452,6 @@ export default function ExporterDealNew() {
               </Select>
             </div>
 
-            {/* Export licence on file */}
             <div className="rounded-lg border border-border bg-muted/30 p-4">
               <p className="text-sm font-medium text-foreground mb-1">Export Licence on File</p>
               {exportLicence ? (
@@ -461,7 +478,6 @@ export default function ExporterDealNew() {
             <CardDescription>Review your deal application before submitting</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Name matching summary */}
             <div className="rounded-lg border border-border p-4 space-y-2">
               <p className="text-sm font-medium text-foreground mb-2">Name Matching Validation</p>
               <div className="flex items-center gap-2 text-sm">
@@ -483,11 +499,10 @@ export default function ExporterDealNew() {
               )}
             </div>
 
-            {/* Summary sections */}
             <div className="space-y-3 text-sm">
               <div className="grid grid-cols-2 gap-2">
                 <span className="text-muted-foreground">Invoice Number</span><span className="font-medium">{form.invoice_number}</span>
-                <span className="text-muted-foreground">Invoice Amount</span><span className="font-medium">{form.invoice_currency} {parseFloat(form.invoice_amount || '0').toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                <span className="text-muted-foreground">Invoice Amount</span><span className="font-medium">{form.invoice_currency} {parseFloat(stripCommas(form.invoice_amount) || '0').toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
                 <span className="text-muted-foreground">Buyer</span><span className="font-medium">{form.buyer_company_name}</span>
                 <span className="text-muted-foreground">Destination</span><span className="font-medium">{form.export_destination}</span>
                 <span className="text-muted-foreground">Bank Account</span><span className="font-medium">{form.bank_account_name} ({form.bank_name})</span>
