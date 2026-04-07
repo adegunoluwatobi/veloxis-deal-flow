@@ -9,8 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Upload, FileText, AlertTriangle, CheckCircle2, XCircle, Clock, Eye, Download } from 'lucide-react';
+import { useConfirm } from '@/components/ConfirmDialog';
+import { ArrowLeft, Upload, FileText, AlertTriangle, CheckCircle2, XCircle, Clock, Eye, Download, Send } from 'lucide-react';
 import { type KycStatus, type ExporterDocumentType } from '@/types';
 import { cn } from '@/lib/utils';
 import { DOC_TYPE_LABELS, buildDocTypeOptions } from '@/lib/docTypeOptions';
@@ -37,11 +39,13 @@ export default function GreystarExporterDetail() {
   const { user, role } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [exporter, setExporter] = useState<any>(null);
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [resendingInvite, setResendingInvite] = useState(false);
+  const [forwarding, setForwarding] = useState(false);
   const [uploadForm, setUploadForm] = useState({
     document_type: '' as ExporterDocumentType | '',
     expiry_date: '',
@@ -179,10 +183,55 @@ export default function GreystarExporterDetail() {
     }
   };
 
+  const handleForwardToVeloxis = async () => {
+    if (!user || !id || !exporter) return;
+    const confirmed = await confirm({
+      title: 'Forward to Veloxis',
+      description: `You are about to forward ${exporter.company_name} to Veloxis for trade finance processing. This will make the exporter and their documents visible to Veloxis deal managers. Confirm?`,
+      variant: 'info',
+      confirmLabel: 'Forward to Veloxis',
+    });
+    if (!confirmed) return;
+    setForwarding(true);
+    try {
+      const { error } = await supabase.from('exporters').update({
+        forwarded_to_veloxis_at: new Date().toISOString(),
+        forwarded_to_veloxis_by: user.id,
+      } as any).eq('id', id);
+      if (error) throw error;
+      await supabase.rpc('insert_audit_log', {
+        p_exporter_id: id,
+        p_user_id: user.id,
+        p_user_role: (role ?? 'partner_admin') as any,
+        p_action_type: 'exporter_created' as any,
+        p_metadata: { action: 'forwarded_to_veloxis', company_name: exporter.company_name },
+      });
+      toast({ title: 'Forwarded to Veloxis', description: `${exporter.company_name} is now visible in the Veloxis Deal Room.` });
+      load();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to forward';
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
+    } finally {
+      setForwarding(false);
+    }
+  };
+
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading…</div>;
   if (!exporter) return <div className="py-20 text-center text-muted-foreground">Exporter not found.</div>;
 
   const enabledOptions = docTypeOptions.filter((o) => !o.disabled);
+  const kycResult = computeKycStatus(activeDocs);
+  const isKycComplete = kycResult.status === 'verified';
+  const isOnboardingApproved = exporter.onboarding_status === 'onboarding_approved';
+  const isAlreadyForwarded = !!exporter.forwarded_to_veloxis_at;
+  const canForward = isPartner && isOnboardingApproved && isKycComplete && !isAlreadyForwarded;
+  const forwardDisabledReason = !isOnboardingApproved
+    ? 'Onboarding must be approved before forwarding'
+    : !isKycComplete
+    ? 'KYC must be complete (all 3 documents verified) before forwarding'
+    : isAlreadyForwarded
+    ? 'Already forwarded to Veloxis'
+    : '';
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -199,14 +248,13 @@ export default function GreystarExporterDetail() {
 
       {/* KYC Banner — derived from documents */}
       {(() => {
-        const kyc = computeKycStatus(activeDocs);
         return (
-          <div className={cn('rounded-lg border p-4', kyc.borderColor)}>
+          <div className={cn('rounded-lg border p-4', kycResult.borderColor)}>
             <div className="flex items-center gap-2">
-              {kyc.status === 'verified' ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
-              <span className="font-semibold">KYC Status: {kyc.label}</span>
+              {kycResult.status === 'verified' ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+              <span className="font-semibold">KYC Status: {kycResult.label}</span>
             </div>
-            <p className="mt-1 text-sm">{kyc.description}</p>
+            <p className="mt-1 text-sm">{kycResult.description}</p>
           </div>
         );
       })()}
@@ -259,11 +307,35 @@ export default function GreystarExporterDetail() {
             <CardTitle>{exporter.company_name}</CardTitle>
             <CardDescription>Review onboarding progress and resend access when the invite is still pending.</CardDescription>
           </div>
-          {isPartner && exporter.onboarding_status === 'invited' && exporter.contact_email && (
-            <Button variant="outline" size="sm" onClick={handleResendInvite} disabled={resendingInvite}>
-              {resendingInvite ? 'Resending…' : 'Resend Invite'}
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {isPartner && exporter.onboarding_status === 'invited' && exporter.contact_email && (
+              <Button variant="outline" size="sm" onClick={handleResendInvite} disabled={resendingInvite}>
+                {resendingInvite ? 'Resending…' : 'Resend Invite'}
+              </Button>
+            )}
+            {isPartner && !isAlreadyForwarded && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Button size="sm" onClick={handleForwardToVeloxis} disabled={!canForward || forwarding} className="gap-1.5">
+                        <Send className="h-3.5 w-3.5" />
+                        {forwarding ? 'Forwarding…' : 'Forward to Veloxis'}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {!canForward && forwardDisabledReason && (
+                    <TooltipContent><p>{forwardDisabledReason}</p></TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {isAlreadyForwarded && (
+              <Badge variant="outline" className="bg-success/10 text-success gap-1">
+                <CheckCircle2 className="h-3 w-3" /> Forwarded
+              </Badge>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <dl className="grid grid-cols-2 gap-4 text-sm">
@@ -272,7 +344,14 @@ export default function GreystarExporterDetail() {
             <div><dt className="text-muted-foreground">Director</dt><dd className="font-medium">{exporter.director_name}</dd></div>
             <div><dt className="text-muted-foreground">Contact Email</dt><dd className="font-medium">{exporter.contact_email ?? '—'}</dd></div>
             <div><dt className="text-muted-foreground">Onboarding</dt><dd className="font-medium capitalize">{(exporter.onboarding_status || 'invited').replace(/_/g, ' ')}</dd></div>
-            <div><dt className="text-muted-foreground">Forwarded to Veloxis</dt><dd className="font-medium">{exporter.forwarded_to_veloxis_at ? new Date(exporter.forwarded_to_veloxis_at).toLocaleDateString() : 'Not yet'}</dd></div>
+            <div>
+              <dt className="text-muted-foreground">Forwarded to Veloxis</dt>
+              <dd className="font-medium">
+                {exporter.forwarded_to_veloxis_at
+                  ? new Date(exporter.forwarded_to_veloxis_at).toLocaleDateString()
+                  : 'Not yet'}
+              </dd>
+            </div>
           </dl>
         </CardContent>
       </Card>
