@@ -906,6 +906,7 @@ export default function DealDetail() {
           <div className="space-y-3">
             <Label>Reason for rejection</Label>
             <Textarea
+              id="reject-reason-field"
               placeholder="Explain why this deal is being rejected…"
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
