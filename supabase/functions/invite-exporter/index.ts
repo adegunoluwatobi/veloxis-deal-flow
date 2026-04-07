@@ -64,13 +64,14 @@ Deno.serve(async (req) => {
     // Derive redirect URL from the request origin so it matches the user's browser
     const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/+$/, "") || Deno.env.get("SITE_URL") || `https://id-preview--5aecb038-1cd1-4607-baa8-41e86f61384a.lovable.app`;
     const siteUrl = origin.replace(/\/+$/, "");
+    const redirectTo = `${siteUrl}/set-password`;
     const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
       data: {
         full_name: full_name || "",
         organisation: organisation || "",
         role: "exporter",
       },
-      redirectTo: `${siteUrl}/set-password`,
+      redirectTo,
     });
 
     if (inviteError) {
@@ -84,9 +85,19 @@ Deno.serve(async (req) => {
             exporter_user_id: existingUser.id,
           }).eq("id", exporter_id);
 
+          const { error: resetError } = await anonClient.auth.resetPasswordForEmail(email, {
+            redirectTo,
+          });
+
+          if (resetError) {
+            throw resetError;
+          }
+
           return new Response(JSON.stringify({ 
             user_id: existingUser.id, 
-            already_existed: true 
+            already_existed: true,
+            invited: false,
+            reset_email_sent: true,
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });

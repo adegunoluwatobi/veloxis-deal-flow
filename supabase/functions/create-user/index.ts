@@ -41,6 +41,10 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
+    const publicClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
     // Check caller role
     const { data: callerRoleData } = await adminClient
       .from("user_roles")
@@ -103,20 +107,20 @@ Deno.serve(async (req) => {
           if (listErr) throw listErr;
           const existing = users.find((u: any) => u.email === email);
           if (existing) {
-            // Re-send the invite to generate a fresh link
-            await adminClient.auth.admin.inviteUserByEmail(email, {
-              data: { full_name: full_name || "", organisation: organisation || "", role: "exporter" },
+            const { error: resetError } = await publicClient.auth.resetPasswordForEmail(email, {
               redirectTo: redirectUrl,
-            }).catch(() => {/* already invited, ignore */});
+            });
 
-            return jsonResponse({ success: true, user_id: existing.id, email, already_existed: true, invited: true });
+            if (resetError) throw resetError;
+
+            return jsonResponse({ success: true, user_id: existing.id, email, already_existed: true, invited: false, reset_email_sent: true });
           }
           return jsonResponse({ error: "User exists but could not be found" }, 400);
         }
         throw inviteError;
       }
 
-      return jsonResponse({ success: true, user_id: inviteData?.user?.id, email, invited: true });
+      return jsonResponse({ success: true, user_id: inviteData?.user?.id, email, invited: true, reset_email_sent: false });
     }
 
     // ── Partner Admin creation: auto-create partner org ─────────────────

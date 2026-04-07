@@ -16,7 +16,11 @@ export default function GreystarExporterNew() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [created, setCreated] = useState<{ exporterId: string; email: string } | null>(null);
+  const [created, setCreated] = useState<{
+    exporterId: string;
+    email: string;
+    inviteStatus: 'invite_sent' | 'password_reset_sent' | 'failed';
+  } | null>(null);
   const [form, setForm] = useState({
     company_name: '',
     rc_number: '',
@@ -31,6 +35,8 @@ export default function GreystarExporterNew() {
     if (!user || !isValid) return;
     setLoading(true);
     try {
+      let inviteStatus: 'invite_sent' | 'password_reset_sent' | 'failed' = 'invite_sent';
+
       // Create exporter profile
       const { data: exporter, error } = await supabase.from('exporters').insert({
         originator_id: user.id,
@@ -55,10 +61,19 @@ export default function GreystarExporterNew() {
       });
 
       if (inviteError) {
+        inviteStatus = 'failed';
         console.error('Auto-invite failed:', inviteError.message);
         toast({ title: 'Exporter created', description: 'Profile created but auto-invite failed. You can invite manually.', variant: 'default' });
       } else {
+        inviteStatus = inviteResult?.reset_email_sent ? 'password_reset_sent' : 'invite_sent';
         console.log('Invite result:', inviteResult);
+        toast({
+          title: inviteStatus === 'password_reset_sent' ? 'Setup email sent' : 'Exporter created',
+          description:
+            inviteStatus === 'password_reset_sent'
+              ? `Existing account linked and password setup email sent to ${form.contact_email.trim()}`
+              : 'Account invite sent to ' + form.contact_email.trim(),
+        });
       }
 
       // Generate upload token (48h) for secure upload option
@@ -78,8 +93,7 @@ export default function GreystarExporterNew() {
         p_metadata: { company_name: form.company_name.trim(), contact_email: form.contact_email.trim() },
       });
 
-      setCreated({ exporterId: exporter.id, email: form.contact_email.trim() });
-      toast({ title: 'Exporter created', description: 'Account invite sent to ' + form.contact_email.trim() });
+      setCreated({ exporterId: exporter.id, email: form.contact_email.trim(), inviteStatus });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to create exporter';
       toast({ title: 'Error', description: message, variant: 'destructive' });
@@ -101,8 +115,22 @@ export default function GreystarExporterNew() {
             </div>
             <CardTitle>Exporter Created</CardTitle>
             <CardDescription>
-              An account invitation has been sent to <strong>{created.email}</strong>.
-              The exporter will receive setup details to log in and upload documents.
+              {created.inviteStatus === 'failed' ? (
+                <>
+                  The exporter profile was created, but the setup email could not be sent to <strong>{created.email}</strong>.
+                  You can retry from the exporter detail page.
+                </>
+              ) : created.inviteStatus === 'password_reset_sent' ? (
+                <>
+                  An existing account was linked to <strong>{created.email}</strong> and a password setup email has been sent.
+                  The exporter can use that email to access onboarding.
+                </>
+              ) : (
+                <>
+                  An account invitation has been sent to <strong>{created.email}</strong>.
+                  The exporter will receive setup details to log in and upload documents.
+                </>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex gap-3">

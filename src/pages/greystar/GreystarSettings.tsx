@@ -127,7 +127,12 @@ export default function GreystarSettings() {
         });
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
-        toast({ title: 'Invitation sent', description: `${form.email} will receive an invite to set their password.` });
+        toast({
+          title: data?.reset_email_sent ? 'Setup email sent' : 'Invitation sent',
+          description: data?.reset_email_sent
+            ? `${form.email} already had an account. A password setup email has been sent.`
+            : `${form.email} will receive an invite to set their password.`
+        });
         setCreateOpen(false);
         resetForm();
       } catch (err: unknown) {
