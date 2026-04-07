@@ -6,8 +6,42 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-function getSiteUrl(_req: Request) {
-  return (Deno.env.get("SITE_URL") || "https://id-preview--5aecb038-1cd1-4607-baa8-41e86f61384a.lovable.app").replace(/\/+$/, "");
+const disallowedAuthCallbackHostPatterns = [
+  /\.lovableproject\.com$/i,
+  /\.lovable\.app$/i,
+  /^localhost$/i,
+  /^127(?:\.\d{1,3}){3}$/i,
+  /^\[::1\]$/i,
+];
+
+function getSiteUrl() {
+  const rawSiteUrl = Deno.env.get("SITE_URL")?.trim();
+
+  if (!rawSiteUrl) {
+    throw new Error("SITE_URL is not configured. Invite emails require a stable public app URL.");
+  }
+
+  let siteUrl: URL;
+
+  try {
+    siteUrl = new URL(rawSiteUrl);
+  } catch {
+    throw new Error("SITE_URL must be a valid absolute URL.");
+  }
+
+  if (siteUrl.protocol !== "https:") {
+    throw new Error("SITE_URL must use https://.");
+  }
+
+  if (disallowedAuthCallbackHostPatterns.some((pattern) => pattern.test(siteUrl.hostname))) {
+    throw new Error("SITE_URL must be a stable public domain, not a preview or local URL.");
+  }
+
+  siteUrl.pathname = "";
+  siteUrl.search = "";
+  siteUrl.hash = "";
+
+  return siteUrl.toString().replace(/\/+$/, "");
 }
 
 function isExistingUserError(message?: string) {
@@ -96,8 +130,9 @@ Deno.serve(async (req) => {
 
     // ── Exporter invite-only flow ──────────────────────────────────────
     if (role === "exporter" && invite_only) {
-      const siteUrl = getSiteUrl(req);
-      const redirectUrl = `${siteUrl}/set-password?email=${encodeURIComponent(email)}`;
+      const siteUrl = getSiteUrl();
+      const redirectUrl = new URL('/set-password', `${siteUrl}/`);
+      redirectUrl.searchParams.set('email', email);
 
       const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
         data: {
@@ -105,7 +140,7 @@ Deno.serve(async (req) => {
           organisation: organisation || "",
           role: "exporter",
         },
-        redirectTo: redirectUrl,
+        redirectTo: redirectUrl.toString(),
       });
 
       if (inviteError) {
