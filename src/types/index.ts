@@ -42,6 +42,7 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   submitted: 'Submitted',
   under_review: 'Under Review',
   docs_requested: 'Documents Requested',
+  ready_for_final_approval: 'Ready for Final Approval',
   approved: 'Approved',
   rejected: 'Rejected',
   ipu_sent: 'IPU Sent',
