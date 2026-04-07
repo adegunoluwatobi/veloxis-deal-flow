@@ -157,6 +157,7 @@ export default function DealDetail() {
 
   // Notes
   const [newNote, setNewNote] = useState('');
+  const [validationFailures, setValidationFailures] = useState<ValidationFailure[]>([]);
 
   const isDM = role === 'deal_manager' || role === 'super_admin';
   const isSuperAdmin = role === 'super_admin';
