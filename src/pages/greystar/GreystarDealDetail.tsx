@@ -130,6 +130,10 @@ export default function GreystarDealDetail() {
   };
 
   const handleReject = async () => {
+    const failures = validateAndScroll([
+      { fieldId: 'partner-reject-reason', label: 'Rejection reason', condition: !!rejectReason.trim() },
+    ]);
+    if (failures.length > 0) return;
     setSubmitting(true);
     try {
       await supabase.from('deals').update({
