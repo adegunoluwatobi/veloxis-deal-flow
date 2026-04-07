@@ -13,11 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { ArrowLeft, Upload, FileText, AlertTriangle, CheckCircle2, XCircle, Clock, Eye, Download } from 'lucide-react';
-import { type KycStatus, type ExporterDocumentType } from '@/types';
+import { type KycStatus, type ExporterDocumentType, type SanctionsScreeningStatus } from '@/types';
 import { cn } from '@/lib/utils';
 import { DOC_TYPE_LABELS, buildDocTypeOptions } from '@/lib/docTypeOptions';
 import { computeKycStatus } from '@/lib/computeKycStatus';
 import DocumentRequestSection from '@/components/DocumentRequestSection';
+import UboDeclarationForm from '@/components/UboDeclarationForm';
+import ExporterComplianceSection from '@/components/ExporterComplianceSection';
 
 const DOC_STATUS_COLORS: Record<string, string> = {
   pending_review: 'bg-warning/10 text-warning',
