@@ -153,11 +153,6 @@ export default function GreystarExportersList() {
                     {statusMeta.icon === 'expired' && <XCircle className="h-3 w-3" />}
                     {statusMeta.label}
                   </Badge>
-                  {exporter.forwarded_to_veloxis_at && (
-                    <Badge variant="outline" className="text-xs gap-1 bg-success/10 text-success">
-                      <Send className="h-3 w-3" /> Forwarded
-                    </Badge>
-                  )}
                   <Badge variant="secondary" className={cn('font-medium', kyc.color)}>
                     {kyc.badgeLabel}
                   </Badge>
