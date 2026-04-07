@@ -155,7 +155,16 @@ export default function DealDetail() {
       setOverrideAdvPct(String(d.advance_percentage));
       // Load exporter
       const { data: exp } = await supabase.from('exporters').select('*').eq('id', d.exporter_id).single();
-      if (exp) setExporter(exp as unknown as ExporterRow);
+      if (exp) {
+        setExporter(exp as unknown as ExporterRow);
+        // Load active exporter documents for live KYC computation
+        const { data: eDocs } = await supabase
+          .from('exporter_documents')
+          .select('exporter_id, document_type, document_status, expiry_status')
+          .eq('exporter_id', d.exporter_id)
+          .eq('is_superseded', false);
+        setExporterDocs((eDocs ?? []) as KycDocumentLike[]);
+      }
     }
     setDocs((docsRes.data as unknown as DocRow[]) ?? []);
     setNotes((notesRes.data as unknown as NoteRow[]) ?? []);
