@@ -194,6 +194,7 @@ export default function ExporterDealDetail() {
             </Link>
           </Button>
         )}
+      </div>
 
       {/* Change Request Banner */}
       {hasCR && (
