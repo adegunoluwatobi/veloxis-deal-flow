@@ -257,6 +257,26 @@ export default function ExporterDealDetail() {
         </Card>
       )}
 
+      {/* Payment Received Banner & Settlement Summary */}
+      <SettlementSummaryBanner
+        dealId={deal.id}
+        dealReference={deal.deal_reference ?? null}
+        invoiceCurrency={deal.invoice_currency_v2}
+        paymentDate={deal.payment_date ?? null}
+        paymentAmountReceived={deal.payment_amount_received ?? null}
+        advanceAmount={deal.advance_amount}
+        platformFeeAmount={deal.platform_fee_amount}
+        discountFeeAmount={deal.discount_fee_amount}
+        latePenaltyAmount={deal.late_penalty_amount ?? null}
+        overdueDaysAtPayment={deal.overdue_days_at_payment ?? null}
+        residualBalance={deal.residual_balance ?? null}
+        paymentAdviceDocId={deal.payment_advice_doc_id ?? null}
+        exporterReceiptConfirmedAt={deal.exporter_receipt_confirmed_at ?? null}
+        dealStatus={deal.status}
+        canConfirmReceipt={true}
+        onReload={loadData}
+      />
+
       {/* Name Match Summary */}
       <Card>
         <CardHeader><CardTitle className="text-base">Name Matching</CardTitle></CardHeader>
