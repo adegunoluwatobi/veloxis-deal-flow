@@ -141,7 +141,7 @@ export default function GreystarDealDetail() {
         p_metadata: { actor_name: user!.email, reason: rejectReason },
       });
 
-      toast({ title: 'Deal rejected' });
+      toast({ title: 'Application rejected' });
       setRejectOpen(false);
       setRejectReason('');
       await loadDeal();
