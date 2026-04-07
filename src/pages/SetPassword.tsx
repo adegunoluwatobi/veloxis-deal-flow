@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import type { EmailOtpType } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -17,13 +18,15 @@ export default function SetPassword() {
   const [checking, setChecking] = useState(true);
   const [done, setDone] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
-    const updateSessionState = (hasSession: boolean) => {
+    const updateSessionState = (hasSession: boolean, message?: string | null) => {
       if (!isMounted) return;
       setSessionReady(hasSession);
+      setErrorMessage(hasSession ? null : message ?? null);
       setChecking(false);
     };
 
@@ -31,22 +34,56 @@ export default function SetPassword() {
       window.history.replaceState({}, document.title, window.location.pathname);
     };
 
+    const readAuthParam = (
+      searchParams: URLSearchParams,
+      hashParams: URLSearchParams,
+      key: string,
+    ) => searchParams.get(key) ?? hashParams.get(key);
+
+    const formatUrlError = (value: string | null) => {
+      if (!value) return null;
+      try {
+        return decodeURIComponent(value.replace(/\+/g, ' '));
+      } catch {
+        return value;
+      }
+    };
+
     const restoreInviteSession = async () => {
       try {
         const searchParams = new URLSearchParams(window.location.search);
         const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
 
-        const code = searchParams.get('code');
-        if (code) {
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) throw error;
-          clearAuthParamsFromUrl();
-          updateSessionState(Boolean(data.session));
+        const code = readAuthParam(searchParams, hashParams, 'code');
+        const tokenHash = readAuthParam(searchParams, hashParams, 'token_hash');
+        const rawType = readAuthParam(searchParams, hashParams, 'type');
+        const otpType = rawType && ['invite', 'recovery', 'magiclink', 'signup', 'email_change'].includes(rawType)
+          ? (rawType as EmailOtpType)
+          : null;
+        const accessToken = readAuthParam(searchParams, hashParams, 'access_token');
+        const refreshToken = readAuthParam(searchParams, hashParams, 'refresh_token');
+        const authError = formatUrlError(readAuthParam(searchParams, hashParams, 'error_description'));
+
+        if (authError) {
+          updateSessionState(false, authError);
           return;
         }
 
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+          clearAuthParamsFromUrl();
+        }
+
+        if (tokenHash && otpType) {
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: otpType,
+          });
+          if (error) throw error;
+          clearAuthParamsFromUrl();
+        }
+
         if (accessToken && refreshToken) {
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
@@ -54,26 +91,33 @@ export default function SetPassword() {
           });
           if (error) throw error;
           clearAuthParamsFromUrl();
-          updateSessionState(Boolean(data.session));
-          return;
+          if (data.session) {
+            updateSessionState(true);
+            return;
+          }
         }
 
-        for (let attempt = 0; attempt < 4; attempt += 1) {
+        for (let attempt = 0; attempt < 12; attempt += 1) {
           const { data: { session } } = await supabase.auth.getSession();
           if (session) {
             updateSessionState(true);
             return;
           }
 
-          if (attempt < 3) {
+          if (attempt < 11) {
             await new Promise((resolve) => window.setTimeout(resolve, 250));
           }
         }
 
-        updateSessionState(false);
+        updateSessionState(false, 'Invalid or expired invite link. Please contact your administrator.');
       } catch (error) {
         console.error('Failed to restore invite session', error);
-        updateSessionState(false);
+        updateSessionState(
+          false,
+          error instanceof Error
+            ? error.message
+            : 'Invalid or expired invite link. Please contact your administrator.',
+        );
       }
     };
 
@@ -160,7 +204,7 @@ export default function SetPassword() {
           <p className="text-sm text-muted-foreground">
             {sessionReady
               ? 'Choose a secure password to activate your exporter account.'
-              : 'Invalid or expired invite link. Please contact your administrator.'}
+              : errorMessage || 'Invalid or expired invite link. Please contact your administrator.'}
           </p>
         </div>
 
