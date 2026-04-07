@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import DealStatusBadge from '@/components/DealStatusBadge';
-import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle } from 'lucide-react';
+import DealAuditTrail from '@/components/DealAuditTrail';
 import type { DealStatus } from '@/types';
 import { Loader2 } from 'lucide-react';
 
