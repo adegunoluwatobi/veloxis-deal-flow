@@ -112,6 +112,7 @@ export const CURRENCY_SYMBOLS: Record<InvoiceCurrency, string> = {
   GBP: '£',
   USD: '$',
   EUR: '€',
+  NGN: '₦',
 };
 
 export const BUYER_COUNTRY_WHITELIST = [
