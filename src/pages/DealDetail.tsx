@@ -357,13 +357,8 @@ export default function DealDetail() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {/* Veloxis can only act on deals at sent_to_veloxis or beyond */}
-              {deal.status === ('sent_to_veloxis' as DealStatus) && (
-                <Button size="sm" onClick={handleMoveToReview} disabled={actionLoading} className="gap-1">
-                  <Clock className="h-4 w-4" /> Move to Review
-                </Button>
-              )}
-              {deal.status === 'under_review' && (
+              {/* sent_to_veloxis and under_review both show review actions (no separate "Move to Review" step) */}
+              {(deal.status === ('sent_to_veloxis' as DealStatus) || deal.status === 'under_review') && (
                 <>
                   {role === 'deal_manager' && (
                     <>
@@ -422,7 +417,7 @@ export default function DealDetail() {
                 <p className="text-sm text-muted-foreground italic">Rejection recommendation pending Super Admin decision.</p>
               )}
               {deal.status === 'docs_requested' && (
-                <Button size="sm" onClick={handleMoveToReview} disabled={actionLoading} className="gap-1">
+                <Button size="sm" onClick={() => updateStatus('under_review')} disabled={actionLoading} className="gap-1">
                   <Clock className="h-4 w-4" /> Back to Review
                 </Button>
               )}
