@@ -30,6 +30,7 @@ export default function GreystarDealDetail() {
   const [rejectReason, setRejectReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [pendingCR, setPendingCR] = useState<any>(null);
+  const [validationFailures, setValidationFailures] = useState<ValidationFailure[]>([]);
 
   const loadDeal = async () => {
     if (!id) return;
