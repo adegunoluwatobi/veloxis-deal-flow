@@ -243,6 +243,10 @@ export default function GreystarDealDetail() {
         </div>
         <DealStatusBadge status={deal.status} portal="partner" />
       </div>
+      {/* Validation Summary Banner */}
+      {validationFailures.length > 0 && (
+        <ValidationSummaryBanner failures={validationFailures} onDismiss={() => setValidationFailures([])} />
+      )}
 
       {/* Actions */}
       {(deal.status === 'submitted' || deal.status === 'changes_requested') && (
