@@ -119,7 +119,7 @@ export default function AdminDeals() {
                   : 'border-border bg-card text-muted-foreground hover:bg-muted/50'
               )}
             >
-              {s === 'all' ? 'All' : DEAL_STATUS_LABELS[s]}
+              {s === 'all' ? 'All' : getDealStatusLabel(s, 'veloxis')}
               <span className={cn('rounded-full px-1.5 py-0.5 text-[10px]', isActive ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
                 {count}
               </span>
