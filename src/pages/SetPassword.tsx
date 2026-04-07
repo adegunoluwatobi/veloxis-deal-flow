@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { getConfiguredPublicAppUrl, getConfiguredSetPasswordUrl, isDisallowedAuthCallbackHost } from '@/lib/publicAppUrl';
 import { Shield, CheckCircle2, Loader2 } from 'lucide-react';
 
 export default function SetPassword() {
@@ -25,6 +26,8 @@ export default function SetPassword() {
 
   useEffect(() => {
     let isMounted = true;
+    const configuredPublicAppUrl = getConfiguredPublicAppUrl();
+    const configuredSetPasswordUrl = getConfiguredSetPasswordUrl();
 
     const updateSessionState = (hasSession: boolean, message?: string | null) => {
       if (!isMounted) return;
@@ -84,10 +87,37 @@ export default function SetPassword() {
       }
     };
 
+    const redactSensitiveParams = (params: URLSearchParams) => {
+      const redacted = new URLSearchParams();
+      const sensitiveKeys = new Set([
+        'code',
+        'token_hash',
+        'access_token',
+        'refresh_token',
+        'provider_token',
+        'provider_refresh_token',
+      ]);
+
+      params.forEach((value, key) => {
+        redacted.set(key, sensitiveKeys.has(key) ? '[redacted]' : value);
+      });
+
+      return redacted.toString();
+    };
+
     const restoreInviteSession = async () => {
       try {
         const searchParams = new URLSearchParams(window.location.search);
         const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+
+        console.info('SetPassword auth callback', {
+          currentHost: window.location.host,
+          currentPath: window.location.pathname,
+          configuredPublicAppUrl,
+          configuredSetPasswordUrl,
+          searchParams: redactSensitiveParams(searchParams),
+          hashParams: redactSensitiveParams(hashParams),
+        });
 
         const code = readAuthParam(searchParams, hashParams, 'code');
         const tokenHash = readAuthParam(searchParams, hashParams, 'token_hash');
@@ -107,6 +137,16 @@ export default function SetPassword() {
 
         if (exporterId) {
           setResendExporterId(exporterId);
+        }
+
+        if (isDisallowedAuthCallbackHost(window.location.hostname)) {
+          updateSessionState(
+            false,
+            configuredSetPasswordUrl
+              ? `This invite link opened on a preview domain. Please open a fresh invite on ${configuredSetPasswordUrl}.`
+              : 'This invite link opened on a preview domain. Please contact your administrator to configure a stable public app URL and send a fresh invite.',
+          );
+          return;
         }
 
         if (authError) {
