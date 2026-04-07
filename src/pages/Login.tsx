@@ -20,10 +20,50 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
     const { error } = await signIn(email, password);
-    setIsLoading(false);
     if (error) {
+      setIsLoading(false);
       toast({ title: 'Login failed', description: error.message, variant: 'destructive' });
+      return;
+    }
+
+    // Determine role-based redirect
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) { setIsLoading(false); navigate('/'); return; }
+
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', authUser.id)
+      .limit(1)
+      .maybeSingle();
+
+    const userRole = roleData?.role;
+
+    if (userRole === 'exporter') {
+      // Route based on onboarding status
+      const { data: exp } = await supabase
+        .from('exporters')
+        .select('onboarding_status')
+        .eq('exporter_user_id', authUser.id)
+        .maybeSingle();
+
+      const status = exp?.onboarding_status;
+      setIsLoading(false);
+      if (status === 'onboarding_approved') {
+        navigate('/exporter');
+      } else if (status === 'onboarding_submitted') {
+        navigate('/exporter/pending');
+      } else {
+        navigate('/exporter/onboarding');
+      }
+    } else if (userRole === 'partner_admin' || userRole === 'partner_staff') {
+      setIsLoading(false);
+      navigate('/greystar');
+    } else if (userRole === 'super_admin' || userRole === 'deal_manager') {
+      setIsLoading(false);
+      navigate('/admin');
     } else {
+      setIsLoading(false);
       navigate('/');
     }
   };
