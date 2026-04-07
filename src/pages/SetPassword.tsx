@@ -19,21 +19,79 @@ export default function SetPassword() {
   const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
-        setSessionReady(true);
-        setChecking(false);
-      }
-    });
+    let isMounted = true;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSessionReady(true);
-      }
+    const updateSessionState = (hasSession: boolean) => {
+      if (!isMounted) return;
+      setSessionReady(hasSession);
       setChecking(false);
+    };
+
+    const clearAuthParamsFromUrl = () => {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    };
+
+    const restoreInviteSession = async () => {
+      try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+
+        const code = searchParams.get('code');
+        if (code) {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+          clearAuthParamsFromUrl();
+          updateSessionState(Boolean(data.session));
+          return;
+        }
+
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        if (accessToken && refreshToken) {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (error) throw error;
+          clearAuthParamsFromUrl();
+          updateSessionState(Boolean(data.session));
+          return;
+        }
+
+        for (let attempt = 0; attempt < 4; attempt += 1) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            updateSessionState(true);
+            return;
+          }
+
+          if (attempt < 3) {
+            await new Promise((resolve) => window.setTimeout(resolve, 250));
+          }
+        }
+
+        updateSessionState(false);
+      } catch (error) {
+        console.error('Failed to restore invite session', error);
+        updateSessionState(false);
+      }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (
+        ['INITIAL_SESSION', 'SIGNED_IN', 'TOKEN_REFRESHED', 'PASSWORD_RECOVERY', 'USER_UPDATED'].includes(event) &&
+        session
+      ) {
+        updateSessionState(true);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    void restoreInviteSession();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
