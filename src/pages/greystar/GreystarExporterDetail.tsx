@@ -420,6 +420,9 @@ export default function GreystarExporterDetail() {
         onReload={load}
       />
 
+      {/* Bank Account Verification */}
+      <BankAccountVerification exporterId={id!} isVeloxis={!isPartner} onReload={load} />
+
       {/* Requested Documents */}
       <DocumentRequestSection exporterId={id!} mode={isPartner ? 'admin' : 'admin'} />
 
