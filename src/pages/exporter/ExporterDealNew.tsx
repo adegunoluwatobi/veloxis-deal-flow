@@ -44,6 +44,7 @@ interface ExportLicenceDoc {
 
 export default function ExporterDealNew() {
   const { user } = useAuth();
+  const { id: editDealId } = useParams<{ id?: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [step, setStep] = useState(0);
@@ -53,6 +54,7 @@ export default function ExporterDealNew() {
   const [savedBankAccounts, setSavedBankAccounts] = useState<any[]>([]);
   const [saveBankDetails, setSaveBankDetails] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const isEditing = !!editDealId;
 
   const [form, setForm] = useState({
     bank_name: '',
