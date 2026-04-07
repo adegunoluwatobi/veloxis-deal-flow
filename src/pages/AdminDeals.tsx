@@ -180,7 +180,7 @@ export default function AdminDeals() {
             </TableHeader>
             <TableBody>
               {filtered.map(deal => (
-                <TableRow key={deal.id} className="cursor-pointer" onClick={() => window.location.href = `/admin/deals/${deal.id}`}>
+                <TableRow key={deal.id} className="cursor-pointer" onClick={() => navigate(`/admin/deals/${deal.id}`)}>
                   <TableCell className="font-medium text-foreground text-sm">
                     <Link to={`/admin/deals/${deal.id}`} className="hover:underline">
                       {deal.invoice_number || deal.id.slice(0, 8)}
