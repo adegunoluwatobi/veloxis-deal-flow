@@ -374,13 +374,11 @@ export default function ExporterDetail() {
                           {doc.uploaded_by_token_id ? 'via upload link' : 'by originator'}
                         </span>
                       </TableCell>
-                      {(role === 'deal_manager' || role === 'super_admin') && (
-                        <TableCell className="text-right">
+                      <TableCell className="text-right">
                           <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleDownload(doc.file_path)}>
                             <Download className="mr-1 h-3 w-3" /> View
                           </Button>
                         </TableCell>
-                      )}
                     </TableRow>
                   );
                 })}
