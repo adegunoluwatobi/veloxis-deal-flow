@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, MailCheck, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   KYC_STATUS_LABELS, ENTITY_TYPE_LABELS,
@@ -21,11 +22,18 @@ const KYC_COLORS: Record<KycStatus, string> = {
   rejected: 'bg-destructive/10 text-destructive',
 };
 
-const EXPORTER_STATUS_META: Record<OnboardingStatus, { label: string; className: string; icon: 'pending' | 'accepted' | 'approved' | 'attention' }> = {
+type DisplayStatus = OnboardingStatus | 'invite_expired';
+
+const EXPORTER_STATUS_META: Record<DisplayStatus, { label: string; className: string; icon: 'pending' | 'accepted' | 'approved' | 'attention' | 'expired' }> = {
   invited: {
     label: 'Invite Pending',
     className: 'bg-warning/10 text-warning',
     icon: 'pending',
+  },
+  invite_expired: {
+    label: 'Invite Expired',
+    className: 'bg-destructive/10 text-destructive',
+    icon: 'expired',
   },
   password_set: {
     label: 'Invite Accepted',
@@ -65,6 +73,20 @@ interface ExporterRow {
   created_at: string;
   forwarded_to_veloxis_at: string | null;
   onboarding_status: OnboardingStatus;
+  invite_sent_at: string | null;
+  invite_accepted_at: string | null;
+}
+
+function getDisplayStatus(exp: ExporterRow): DisplayStatus {
+  if (
+    exp.onboarding_status === 'invited' &&
+    !exp.invite_accepted_at &&
+    exp.invite_sent_at &&
+    Date.now() - new Date(exp.invite_sent_at).getTime() > 7 * 24 * 60 * 60 * 1000
+  ) {
+    return 'invite_expired';
+  }
+  return exp.onboarding_status;
 }
 
 export default function GreystarExportersList() {
@@ -76,7 +98,7 @@ export default function GreystarExportersList() {
     const load = async () => {
       const { data } = await supabase
         .from('exporters')
-        .select('id, company_name, rc_number, entity_type, director_name, kyc_status, contact_email, created_at, forwarded_to_veloxis_at, onboarding_status')
+        .select('id, company_name, rc_number, entity_type, director_name, kyc_status, contact_email, created_at, forwarded_to_veloxis_at, onboarding_status, invite_sent_at, invite_accepted_at')
         .order('created_at', { ascending: false });
       setExporters((data as ExporterRow[]) ?? []);
       setLoading(false);
@@ -115,7 +137,7 @@ export default function GreystarExportersList() {
         <div className="space-y-3">
           {filtered.map((exp) => (
             (() => {
-              const statusMeta = EXPORTER_STATUS_META[exp.onboarding_status];
+              const statusMeta = EXPORTER_STATUS_META[getDisplayStatus(exp)];
               return (
             <Link
               key={exp.id}
@@ -134,6 +156,7 @@ export default function GreystarExportersList() {
                   {statusMeta.icon === 'accepted' && <MailCheck className="h-3 w-3" />}
                   {statusMeta.icon === 'approved' && <CheckCircle2 className="h-3 w-3" />}
                   {statusMeta.icon === 'attention' && <AlertTriangle className="h-3 w-3" />}
+                  {statusMeta.icon === 'expired' && <XCircle className="h-3 w-3" />}
                   {statusMeta.label}
                 </Badge>
                 {exp.forwarded_to_veloxis_at && (
