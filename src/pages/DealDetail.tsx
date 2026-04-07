@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import DealStatusBadge from '@/components/DealStatusBadge';
+import DealAuditTrail from '@/components/DealAuditTrail';
 import { cn } from '@/lib/utils';
 import {
   DEAL_STATUS_LABELS, KYC_STATUS_LABELS, ENTITY_TYPE_LABELS,
@@ -177,7 +178,7 @@ export default function DealDetail() {
         p_user_id: user?.id,
         p_user_role: role as any,
         p_action_type: `deal_status_changed` as AuditAction,
-        p_metadata: { from: deal.status, to: newStatus, ...extraFields },
+        p_metadata: { actor_name: user?.email, from: deal.status, to: newStatus, ...extraFields },
       });
 
       toast({ title: `Deal ${DEAL_STATUS_LABELS[newStatus].toLowerCase()}` });
@@ -616,36 +617,8 @@ export default function DealDetail() {
         </Card>
       )}
 
-      {/* Audit Timeline */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-base">Audit Timeline</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {auditLogs.length === 0 ? (
-            <p className="py-4 text-center text-sm text-muted-foreground">No audit events yet.</p>
-          ) : (
-            <div className="space-y-3">
-              {auditLogs.map((log) => (
-                <div key={log.id} className="flex items-start gap-3 text-sm">
-                  <div className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground">
-                      {AUDIT_LABELS[log.action_type] ?? log.action_type.replace(/_/g, ' ')}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(log.created_at).toLocaleString('en-GB')}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Audit Trail */}
+      <DealAuditTrail dealId={deal.id} viewerRole="veloxis" />
 
       {/* Reject Dialog */}
       <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>

@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import DealStatusBadge from '@/components/DealStatusBadge';
+import DealAuditTrail from '@/components/DealAuditTrail';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle, CheckCircle2, Send, XCircle, MessageSquare, Loader2 } from 'lucide-react';
 import type { DealStatus } from '@/types';
@@ -40,7 +41,7 @@ export default function GreystarDealDetail() {
 
   useEffect(() => { loadDeal(); }, [id]);
 
-  const updateStatus = async (status: DealStatus, extra: Record<string, any> = {}) => {
+  const updateStatus = async (status: DealStatus, extra: Record<string, any> = {}, auditAction?: string) => {
     setSubmitting(true);
     try {
       const { error } = await supabase
@@ -48,6 +49,24 @@ export default function GreystarDealDetail() {
         .update({ status, ...extra })
         .eq('id', id!);
       if (error) throw error;
+
+      // Audit log
+      if (user) {
+        const action = auditAction || 'deal_status_changed';
+        await supabase.rpc('insert_audit_log', {
+          p_deal_id: id!,
+          p_user_id: user.id,
+          p_user_role: 'partner_admin' as any,
+          p_action_type: action as any,
+          p_metadata: {
+            actor_name: user.email,
+            new_status: status,
+            ...(extra.partner_notes ? { note: extra.partner_notes } : {}),
+            ...(extra.rejection_reason ? { reason: extra.rejection_reason } : {}),
+          },
+        });
+      }
+
       toast({ title: `Deal ${status.replace(/_/g, ' ')}` });
       await loadDeal();
       setActionDialog(null);
@@ -102,7 +121,7 @@ export default function GreystarDealDetail() {
               <XCircle className="mr-2 h-4 w-4" />Reject Deal
             </Button>
             {canSubmitToVeloxis && (
-              <Button onClick={() => updateStatus('sent_to_veloxis' as DealStatus, { sent_to_veloxis_at: new Date().toISOString() })}>
+              <Button onClick={() => updateStatus('sent_to_veloxis' as DealStatus, { sent_to_veloxis_at: new Date().toISOString() }, 'deal_sent_to_veloxis')}>
                 <Send className="mr-2 h-4 w-4" />Submit to Veloxis
               </Button>
             )}
@@ -167,6 +186,9 @@ export default function GreystarDealDetail() {
         </CardContent>
       </Card>
 
+      {/* Audit Trail */}
+      <DealAuditTrail dealId={deal.id} viewerRole="partner" />
+
       {/* Request Changes Dialog */}
       <Dialog open={actionDialog === 'changes'} onOpenChange={() => setActionDialog(null)}>
         <DialogContent>
@@ -180,7 +202,7 @@ export default function GreystarDealDetail() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setActionDialog(null)}>Cancel</Button>
-            <Button disabled={!actionNote.trim() || submitting} onClick={() => updateStatus('changes_requested' as DealStatus, { partner_notes: actionNote })}>
+            <Button disabled={!actionNote.trim() || submitting} onClick={() => updateStatus('changes_requested' as DealStatus, { partner_notes: actionNote }, 'deal_changes_requested')}>
               {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Send Request
             </Button>
           </DialogFooter>
@@ -200,7 +222,7 @@ export default function GreystarDealDetail() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setActionDialog(null)}>Cancel</Button>
-            <Button variant="destructive" disabled={!actionNote.trim() || submitting} onClick={() => updateStatus('rejected_by_partner' as DealStatus, { rejection_reason: actionNote, rejected_at: new Date().toISOString() })}>
+            <Button variant="destructive" disabled={!actionNote.trim() || submitting} onClick={() => updateStatus('rejected_by_partner' as DealStatus, { rejection_reason: actionNote, rejected_at: new Date().toISOString() }, 'deal_rejected_by_partner')}>
               {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Reject Deal
             </Button>
           </DialogFooter>

@@ -1036,6 +1036,16 @@ export type Database = {
         | "onboarding_submitted"
         | "onboarding_approved"
         | "onboarding_rejected"
+        | "deal_changes_requested"
+        | "deal_resubmitted"
+        | "deal_sent_to_veloxis"
+        | "deal_rejected_by_partner"
+        | "deal_rejected_by_veloxis"
+        | "deal_funded"
+        | "deal_overdue"
+        | "deal_field_edited"
+        | "deal_document_requested"
+        | "deal_document_uploaded"
       commodity_type:
         | "solid_minerals"
         | "scrap_metal"
@@ -1264,6 +1274,16 @@ export const Constants = {
         "onboarding_submitted",
         "onboarding_approved",
         "onboarding_rejected",
+        "deal_changes_requested",
+        "deal_resubmitted",
+        "deal_sent_to_veloxis",
+        "deal_rejected_by_partner",
+        "deal_rejected_by_veloxis",
+        "deal_funded",
+        "deal_overdue",
+        "deal_field_edited",
+        "deal_document_requested",
+        "deal_document_uploaded",
       ],
       commodity_type: [
         "solid_minerals",

@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import DealStatusBadge from '@/components/DealStatusBadge';
+import DealAuditTrail from '@/components/DealAuditTrail';
 import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle } from 'lucide-react';
 import type { DealStatus } from '@/types';
 import { Loader2 } from 'lucide-react';
@@ -129,6 +130,9 @@ export default function ExporterDealDetail() {
           <Field label="Incoterms" value={deal.incoterms} />
         </CardContent>
       </Card>
+
+      {/* Audit Trail */}
+      <DealAuditTrail dealId={deal.id} viewerRole="exporter" />
     </div>
   );
 }

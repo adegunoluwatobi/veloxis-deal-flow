@@ -202,8 +202,18 @@ export default function ExporterDealNew() {
         dealData.submitted_at = new Date().toISOString();
       }
 
-      const { error } = await supabase.from('deals').insert(dealData);
+      const { data: newDeal, error } = await supabase.from('deals').insert(dealData).select('id').single();
       if (error) throw error;
+
+      // Audit log
+      const actionType = asDraft ? 'deal_created' : 'deal_submitted';
+      await supabase.rpc('insert_audit_log', {
+        p_deal_id: newDeal.id,
+        p_user_id: user.id,
+        p_user_role: 'exporter' as any,
+        p_action_type: actionType as any,
+        p_metadata: { actor_name: user.email, email: user.email, invoice_number: form.invoice_number },
+      });
 
       if (saveBankDetails && savedBankAccounts.length === 0) {
         await supabase.from('exporter_bank_accounts').insert({
