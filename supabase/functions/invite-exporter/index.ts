@@ -61,13 +61,15 @@ Deno.serve(async (req) => {
     }
 
     // Use admin API to invite user by email (sends magic link / invite email)
+    // Determine the correct redirect URL for the app
+    const siteUrl = Deno.env.get("SITE_URL") || `https://id-preview--5aecb038-1cd1-4607-baa8-41e86f61384a.lovable.app`;
     const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
       data: {
         full_name: full_name || "",
         organisation: organisation || "",
         role: "exporter",
       },
-      redirectTo: `${supabaseUrl.replace('.supabase.co', '.lovable.app')}/set-password`,
+      redirectTo: `${siteUrl}/set-password`,
     });
 
     if (inviteError) {
