@@ -9,6 +9,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import GreystarLayout from "@/components/GreystarLayout";
 import ExporterPortalLayout from "@/components/ExporterPortalLayout";
 import Login from "@/pages/Login";
+import SetPassword from "@/pages/SetPassword";
 import Dashboard from "@/pages/Dashboard";
 import ExportersList from "@/pages/ExportersList";
 import ExporterNew from "@/pages/ExporterNew";
