@@ -45,6 +45,7 @@ export default function PaymentAdvicePanel({
   const [amountReceived, setAmountReceived] = useState('');
   const [paymentFile, setPaymentFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [paymentValidationFailures, setPaymentValidationFailures] = useState<ValidationFailure[]>([]);
 
   const isSuperAdminOrDM = role === 'super_admin' || role === 'deal_manager';
   const isFunded = ['funded_active', 'repayment_due', 'overdue'].includes(dealStatus);
