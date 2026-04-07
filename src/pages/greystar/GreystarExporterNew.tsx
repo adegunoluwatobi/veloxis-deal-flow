@@ -43,29 +43,22 @@ export default function GreystarExporterNew() {
 
       if (error) throw error;
 
-      // Auto-invite: sign up the exporter user with the contact email
-      // Generate a temporary password — the exporter will reset on first login
-      const tempPassword = crypto.randomUUID().slice(0, 16) + 'Aa1!';
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: form.contact_email.trim(),
-        password: tempPassword,
-        options: {
-          data: {
-            full_name: form.director_name.trim(),
-            organisation: form.company_name.trim(),
-            role: 'exporter',
-          },
+      // Auto-invite: use edge function to invite exporter via admin API
+      // This avoids disrupting the current Greystar user's session
+      const { data: inviteResult, error: inviteError } = await supabase.functions.invoke('invite-exporter', {
+        body: {
+          email: form.contact_email.trim(),
+          full_name: form.director_name.trim(),
+          organisation: form.company_name.trim(),
+          exporter_id: exporter.id,
         },
       });
 
-      if (signUpError) {
-        console.error('Auto-invite failed:', signUpError.message);
+      if (inviteError) {
+        console.error('Auto-invite failed:', inviteError.message);
         toast({ title: 'Exporter created', description: 'Profile created but auto-invite failed. You can invite manually.', variant: 'default' });
-      } else if (signUpData?.user) {
-        // Link the exporter account
-        await supabase.from('exporters').update({
-          exporter_user_id: signUpData.user.id,
-        }).eq('id', exporter.id);
+      } else {
+        console.log('Invite result:', inviteResult);
       }
 
       // Generate upload token (48h) for secure upload option

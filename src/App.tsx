@@ -9,6 +9,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import GreystarLayout from "@/components/GreystarLayout";
 import ExporterPortalLayout from "@/components/ExporterPortalLayout";
 import Login from "@/pages/Login";
+import SetPassword from "@/pages/SetPassword";
 import Dashboard from "@/pages/Dashboard";
 import ExportersList from "@/pages/ExportersList";
 import ExporterNew from "@/pages/ExporterNew";
@@ -75,6 +76,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/set-password" element={<SetPassword />} />
             <Route path="/upload/:token" element={<SMEUpload />} />
 
             {/* Greystar routes */}
