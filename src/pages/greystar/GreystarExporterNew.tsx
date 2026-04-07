@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { EmailInput, isValidEmail } from '@/components/ui/email-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { ENTITY_TYPE_LABELS, type EntityType } from '@/types';
@@ -29,7 +30,7 @@ export default function GreystarExporterNew() {
     contact_email: '',
   });
 
-  const isValid = form.company_name.trim() && form.rc_number.trim() && form.entity_type && form.director_name.trim() && form.contact_email.trim();
+  const isValid = form.company_name.trim() && form.rc_number.trim() && form.entity_type && form.director_name.trim() && form.contact_email.trim() && isValidEmail(form.contact_email);
 
   const handleSubmit = async () => {
     if (!user || !isValid) return;
@@ -178,7 +179,7 @@ export default function GreystarExporterNew() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="contact_email">Exporter Contact Email</Label>
-            <Input id="contact_email" type="email" placeholder="exporter@company.ng" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} />
+            <EmailInput id="contact_email" placeholder="exporter@company.ng" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} />
             <p className="text-xs text-muted-foreground">An account invitation will be sent to this email automatically.</p>
           </div>
           <Button onClick={handleSubmit} disabled={!isValid || loading} className="w-full">
