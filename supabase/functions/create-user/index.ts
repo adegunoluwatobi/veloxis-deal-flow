@@ -6,6 +6,21 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+function getSiteUrl(req: Request) {
+  const origin = req.headers.get("origin");
+  if (origin) return origin.replace(/\/+$/, "");
+
+  const referer = req.headers.get("referer");
+  if (referer) {
+    try {
+      return new URL(referer).origin.replace(/\/+$/, "");
+    } catch {
+    }
+  }
+
+  return `https://id-preview--5aecb038-1cd1-4607-baa8-41e86f61384a.lovable.app`;
+}
+
 function jsonResponse(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -88,8 +103,8 @@ Deno.serve(async (req) => {
 
     // ── Exporter invite-only flow ──────────────────────────────────────
     if (role === "exporter" && invite_only) {
-      const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/+$/, "") || `https://id-preview--5aecb038-1cd1-4607-baa8-41e86f61384a.lovable.app`;
-      const redirectUrl = `${origin.replace(/\/+$/, "")}/set-password`;
+      const siteUrl = getSiteUrl(req);
+      const redirectUrl = `${siteUrl}/set-password?email=${encodeURIComponent(email)}`;
 
       const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
         data: {

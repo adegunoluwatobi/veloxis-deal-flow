@@ -5,6 +5,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function getSiteUrl(req: Request) {
+  const origin = req.headers.get("origin");
+  if (origin) return origin.replace(/\/+$/, "");
+
+  const referer = req.headers.get("referer");
+  if (referer) {
+    try {
+      return new URL(referer).origin.replace(/\/+$/, "");
+    } catch {
+    }
+  }
+
+  return (Deno.env.get("SITE_URL") || `https://id-preview--5aecb038-1cd1-4607-baa8-41e86f61384a.lovable.app`).replace(/\/+$/, "");
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -62,9 +77,8 @@ Deno.serve(async (req) => {
 
     // Use admin API to invite user by email (sends magic link / invite email)
     // Derive redirect URL from the request origin so it matches the user's browser
-    const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/+$/, "") || Deno.env.get("SITE_URL") || `https://id-preview--5aecb038-1cd1-4607-baa8-41e86f61384a.lovable.app`;
-    const siteUrl = origin.replace(/\/+$/, "");
-    const redirectTo = `${siteUrl}/set-password`;
+    const siteUrl = getSiteUrl(req);
+    const redirectTo = `${siteUrl}/set-password?email=${encodeURIComponent(email)}&exporter_id=${encodeURIComponent(exporter_id)}`;
     const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
       data: {
         full_name: full_name || "",

@@ -4,16 +4,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, MailCheck, Clock } from 'lucide-react';
+import { Plus, Search, MailCheck, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   KYC_STATUS_LABELS, ENTITY_TYPE_LABELS,
-  ONBOARDING_STATUS_LABELS, ONBOARDING_STATUS_COLORS,
   type KycStatus, type EntityType, type OnboardingStatus,
 } from '@/types';
 import { cn } from '@/lib/utils';
-
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const KYC_COLORS: Record<KycStatus, string> = {
   pending_documents: 'bg-muted text-muted-foreground',
@@ -22,6 +19,39 @@ const KYC_COLORS: Record<KycStatus, string> = {
   verified: 'bg-success/10 text-success',
   kyc_document_expired: 'bg-destructive/10 text-destructive',
   rejected: 'bg-destructive/10 text-destructive',
+};
+
+const EXPORTER_STATUS_META: Record<OnboardingStatus, { label: string; className: string; icon: 'pending' | 'accepted' | 'approved' | 'attention' }> = {
+  invited: {
+    label: 'Invite Pending',
+    className: 'bg-warning/10 text-warning',
+    icon: 'pending',
+  },
+  password_set: {
+    label: 'Invite Accepted',
+    className: 'bg-primary/10 text-primary',
+    icon: 'accepted',
+  },
+  onboarding_in_progress: {
+    label: 'Invite Accepted',
+    className: 'bg-primary/10 text-primary',
+    icon: 'accepted',
+  },
+  onboarding_submitted: {
+    label: 'Onboarding Submitted',
+    className: 'bg-warning/10 text-warning',
+    icon: 'pending',
+  },
+  onboarding_approved: {
+    label: 'Approved',
+    className: 'bg-success/10 text-success',
+    icon: 'approved',
+  },
+  onboarding_rejected: {
+    label: 'Needs Changes',
+    className: 'bg-destructive/10 text-destructive',
+    icon: 'attention',
+  },
 };
 
 interface ExporterRow {
@@ -84,6 +114,9 @@ export default function GreystarExportersList() {
       ) : (
         <div className="space-y-3">
           {filtered.map((exp) => (
+            (() => {
+              const statusMeta = EXPORTER_STATUS_META[exp.onboarding_status];
+              return (
             <Link
               key={exp.id}
               to={`/greystar/exporters/${exp.id}`}
@@ -96,9 +129,12 @@ export default function GreystarExportersList() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className={cn('flex items-center gap-1 text-xs font-medium', ONBOARDING_STATUS_COLORS[exp.onboarding_status])}>
-                  {exp.onboarding_status === 'invited' ? <Clock className="h-3 w-3" /> : <MailCheck className="h-3 w-3" />}
-                  {ONBOARDING_STATUS_LABELS[exp.onboarding_status]}
+                <Badge variant="secondary" className={cn('flex items-center gap-1 text-xs font-medium', statusMeta.className)}>
+                  {statusMeta.icon === 'pending' && <Clock className="h-3 w-3" />}
+                  {statusMeta.icon === 'accepted' && <MailCheck className="h-3 w-3" />}
+                  {statusMeta.icon === 'approved' && <CheckCircle2 className="h-3 w-3" />}
+                  {statusMeta.icon === 'attention' && <AlertTriangle className="h-3 w-3" />}
+                  {statusMeta.label}
                 </Badge>
                 {exp.forwarded_to_veloxis_at && (
                   <Badge variant="outline" className="text-xs">Forwarded</Badge>
@@ -108,6 +144,8 @@ export default function GreystarExportersList() {
                 </Badge>
               </div>
             </Link>
+              );
+            })()
           ))}
         </div>
       )}
