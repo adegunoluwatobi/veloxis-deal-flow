@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import DealStatusBadge from '@/components/DealStatusBadge';
 import { cn } from '@/lib/utils';
+import { computeKycStatus, groupDocumentsByExporter, type KycDocumentLike } from '@/lib/computeKycStatus';
 import {
   LayoutDashboard, TrendingUp, AlertTriangle, ArrowRight, Banknote,
-  Users, FileText, ShieldCheck, Clock, XCircle,
+  Users, FileText,
 } from 'lucide-react';
-import { KYC_STATUS_LABELS, type DealStatus, type KycStatus } from '@/types';
+import { type DealStatus } from '@/types';
 
 interface DealRow {
   id: string;
@@ -25,7 +26,11 @@ interface DealRow {
 interface ExporterRow {
   id: string;
   company_name: string;
-  kyc_status: KycStatus;
+}
+
+interface ExporterDocRow extends KycDocumentLike {
+  exporter_id: string;
+  is_superseded: boolean;
 }
 
 interface SystemConfig {
@@ -33,18 +38,9 @@ interface SystemConfig {
   value: string;
 }
 
-const KYC_COLORS: Record<KycStatus, string> = {
-  pending_documents: 'bg-muted text-muted-foreground',
-  documents_uploaded: 'bg-primary/10 text-primary',
-  under_review: 'bg-warning/10 text-warning',
-  verified: 'bg-success/10 text-success',
-  kyc_document_expired: 'bg-destructive/10 text-destructive',
-  rejected: 'bg-destructive/10 text-destructive',
-};
-
 export default function AdminDashboard() {
   const [deals, setDeals] = useState<DealRow[]>([]);
-  const [exporters, setExporters] = useState<ExporterRow[]>([]);
+  const [exportersWithKyc, setExportersWithKyc] = useState<(ExporterRow & { kyc: ReturnType<typeof computeKycStatus> })[]>([]);
   const [config, setConfig] = useState<SystemConfig[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,12 +51,32 @@ export default function AdminDashboard() {
           .select('id, status, invoice_number, invoice_value, gbp_equivalent, buyer_company_name, created_at')
           .order('created_at', { ascending: false }).limit(100),
         supabase.from('exporters')
-          .select('id, company_name, kyc_status')
+          .select('id, company_name')
           .order('created_at', { ascending: false }),
         supabase.from('system_config').select('key, value'),
       ]);
+
+      const exporters = (exportersRes.data as ExporterRow[]) ?? [];
+      const exporterIds = exporters.map(e => e.id);
+
+      let docs: ExporterDocRow[] = [];
+      if (exporterIds.length > 0) {
+        const { data: docData } = await supabase
+          .from('exporter_documents')
+          .select('exporter_id, document_type, document_status, expiry_status, is_superseded')
+          .in('exporter_id', exporterIds)
+          .eq('is_superseded', false);
+        docs = (docData as ExporterDocRow[]) ?? [];
+      }
+
+      const docsByExporter = groupDocumentsByExporter(docs);
+      const withKyc = exporters.map(exp => ({
+        ...exp,
+        kyc: computeKycStatus(docsByExporter.get(exp.id) ?? []),
+      }));
+
       setDeals((dealsRes.data as DealRow[]) ?? []);
-      setExporters((exportersRes.data as ExporterRow[]) ?? []);
+      setExportersWithKyc(withKyc);
       setConfig((configRes.data as SystemConfig[]) ?? []);
       setLoading(false);
     };
@@ -79,8 +95,8 @@ export default function AdminDashboard() {
   const underReview = deals.filter(d => d.status === 'under_review').length;
   const overdueCount = deals.filter(d => d.status === 'overdue').length;
   const docsRequested = deals.filter(d => d.status === 'docs_requested').length;
-  const verifiedExporters = exporters.filter(e => e.kyc_status === 'verified').length;
-  const pendingKyc = exporters.filter(e => e.kyc_status !== 'verified' && e.kyc_status !== 'rejected').length;
+  const verifiedExporters = exportersWithKyc.filter(e => e.kyc.status === 'verified').length;
+  const pendingKyc = exportersWithKyc.filter(e => e.kyc.status !== 'verified').length;
 
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading…</div>;
 
@@ -215,7 +231,7 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="mb-4 grid grid-cols-3 gap-3 text-center">
               <div className="rounded-lg border border-border p-2">
-                <p className="text-lg font-bold text-foreground">{exporters.length}</p>
+                <p className="text-lg font-bold text-foreground">{exportersWithKyc.length}</p>
                 <p className="text-xs text-muted-foreground">Total</p>
               </div>
               <div className="rounded-lg border border-success/30 bg-success/5 p-2">
@@ -228,15 +244,15 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="space-y-1.5">
-              {exporters.slice(0, 6).map(exp => (
+              {exportersWithKyc.slice(0, 6).map(exp => (
                 <Link
                   key={exp.id}
                   to={`/exporters/${exp.id}`}
                   className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
                 >
                   <span className="font-medium text-foreground">{exp.company_name}</span>
-                  <Badge variant="secondary" className={cn('text-xs', KYC_COLORS[exp.kyc_status])}>
-                    {KYC_STATUS_LABELS[exp.kyc_status]}
+                  <Badge variant="secondary" className={cn('text-xs', exp.kyc.color)}>
+                    {exp.kyc.badgeLabel}
                   </Badge>
                 </Link>
               ))}
