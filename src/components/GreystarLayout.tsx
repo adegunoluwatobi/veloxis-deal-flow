@@ -61,7 +61,7 @@ export default function GreystarLayout({ children }: { children: React.ReactNode
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const active = isActive(item.href);
             return (
               <Link
