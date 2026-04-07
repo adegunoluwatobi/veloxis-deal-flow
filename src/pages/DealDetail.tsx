@@ -331,18 +331,19 @@ export default function DealDetail() {
               )}
               {deal.status === 'under_review' && (
                 <>
-                  {/* Deal manager: recommend / escalate only */}
                   {role === 'deal_manager' && (
                     <>
                       <Button size="sm" onClick={handleSubmitForFinalApproval} disabled={actionLoading} className="gap-1">
-                        <Send className="h-4 w-4" /> Submit for Final Approval
+                        <Send className="h-4 w-4" /> Recommend Approval
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => setRejectOpen(true)} disabled={actionLoading} className="gap-1">
+                        <XCircle className="h-4 w-4" /> Recommend Rejection
                       </Button>
                       <Button size="sm" variant="outline" onClick={handleRequestDocs} disabled={actionLoading} className="gap-1">
                         <FileText className="h-4 w-4" /> Request Docs
                       </Button>
                     </>
                   )}
-                  {/* Super admin: can approve/reject directly from under_review or escalate */}
                   {isSuperAdmin && (
                     <>
                       <Button size="sm" onClick={() => setPricingOverride(true)} disabled={actionLoading} className="gap-1 bg-success hover:bg-success/90">
@@ -371,6 +372,20 @@ export default function DealDetail() {
               )}
               {deal.status === ('ready_for_final_approval' as DealStatus) && role === 'deal_manager' && (
                 <p className="text-sm text-muted-foreground italic">Awaiting final approval from Super Admin.</p>
+              )}
+              {/* Rejection pending approval — super_admin can finalize or send back */}
+              {deal.status === ('rejection_pending_approval' as DealStatus) && isSuperAdmin && (
+                <>
+                  <Button size="sm" variant="destructive" onClick={() => setRejectOpen(true)} disabled={actionLoading} className="gap-1">
+                    <XCircle className="h-4 w-4" /> Confirm Rejection
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => updateStatus('under_review')} disabled={actionLoading} className="gap-1">
+                    <ArrowLeft className="h-4 w-4" /> Send Back to Review
+                  </Button>
+                </>
+              )}
+              {deal.status === ('rejection_pending_approval' as DealStatus) && role === 'deal_manager' && (
+                <p className="text-sm text-muted-foreground italic">Rejection recommendation pending Super Admin decision.</p>
               )}
               {deal.status === 'docs_requested' && (
                 <Button size="sm" onClick={handleMoveToReview} disabled={actionLoading} className="gap-1">
