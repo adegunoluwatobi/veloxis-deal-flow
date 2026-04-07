@@ -175,6 +175,7 @@ export default function ExporterDocuments() {
                     <th className="pb-2 font-medium">Expiry</th>
                     <th className="pb-2 font-medium">Status</th>
                     <th className="pb-2 font-medium">Uploaded</th>
+                    <th className="pb-2 font-medium">View</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -193,6 +194,11 @@ export default function ExporterDocuments() {
                         </Badge>
                       </td>
                       <td className="py-3 text-muted-foreground">{new Date(doc.uploaded_at).toLocaleDateString()}</td>
+                      <td className="py-3">
+                        <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleDownload(doc.file_path)}>
+                          <Download className="mr-1 h-3 w-3" /> View
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
