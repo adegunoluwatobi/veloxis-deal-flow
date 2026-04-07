@@ -6,13 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Building, UserCircle, Briefcase } from 'lucide-react';
-
-const PORTAL_INFO = [
-  { role: 'Greystar Originator', icon: Building, desc: 'Exporter intake & review', color: 'hsl(160,40%,30%)' },
-  { role: 'Deal Manager', icon: Briefcase, desc: 'Veloxis approval & funding', color: 'hsl(220,50%,40%)' },
-  { role: 'Exporter', icon: UserCircle, desc: 'Document upload & status', color: 'hsl(200,40%,35%)' },
-];
+import { Shield } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
