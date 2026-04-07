@@ -34,6 +34,7 @@ import SettlementSummaryBanner from '@/components/SettlementSummaryBanner';
 import IpuUploadSection from '@/components/IpuUploadSection';
 import TradePackChecklist from '@/components/TradePackChecklist';
 import OverdueActionsPanel from '@/components/OverdueActionsPanel';
+import RequestDocsModal from '@/components/RequestDocsModal';
 import type { SettlementMethod, RepaymentReconciliationStatus } from '@/types';
 
 interface DealRow {
