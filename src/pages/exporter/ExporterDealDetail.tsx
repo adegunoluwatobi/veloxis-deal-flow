@@ -18,7 +18,9 @@ import { CurrencyInput, stripCommas } from '@/components/ui/currency-input';
 export default function ExporterDealDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [deal, setDeal] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [pendingCR, setPendingCR] = useState<any>(null);
