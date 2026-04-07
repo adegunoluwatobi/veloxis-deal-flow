@@ -96,26 +96,8 @@ export default function GreystarExportersList() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                {exp.onboarding_status === 'invited' ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
-                        <Clock className="h-3 w-3" /> Invite Pending
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>Exporter has not accepted their invite yet</TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
-                        <MailCheck className="h-3 w-3" /> Accepted
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>Invite accepted — {ONBOARDING_STATUS_LABELS[exp.onboarding_status]}</TooltipContent>
-                  </Tooltip>
-                )}
-                <Badge variant="secondary" className={cn('text-xs font-medium', ONBOARDING_STATUS_COLORS[exp.onboarding_status])}>
+                <Badge variant="secondary" className={cn('flex items-center gap-1 text-xs font-medium', ONBOARDING_STATUS_COLORS[exp.onboarding_status])}>
+                  {exp.onboarding_status === 'invited' ? <Clock className="h-3 w-3" /> : <MailCheck className="h-3 w-3" />}
                   {ONBOARDING_STATUS_LABELS[exp.onboarding_status]}
                 </Badge>
                 {exp.forwarded_to_veloxis_at && (
