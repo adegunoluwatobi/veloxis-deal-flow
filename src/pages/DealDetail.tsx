@@ -580,37 +580,102 @@ export default function DealDetail() {
         </Card>
 
         {/* Pricing Summary */}
-        <Card>
+        <Card className="lg:col-span-2">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-muted-foreground" />
               <CardTitle className="text-base">Pricing</CardTitle>
-              {['approved', 'ready_for_final_approval', 'ipu_sent', 'ipu_signed_awaiting_funding', 'funded_active', 'repayment_due', 'overdue', 'closed_repaid', 'closed_partial'].includes(deal.status) && (
-                <Badge variant="secondary" className="text-xs bg-success/10 text-success">
-                  {deal.status === ('ready_for_final_approval' as DealStatus) ? 'Pending Approval' : 'Locked'}
-                </Badge>
+              {!pricingEditable && ['approved', 'ready_for_final_approval', 'ipu_sent', 'ipu_signed_awaiting_funding', 'funded_active', 'repayment_due', 'overdue', 'closed_repaid', 'closed_partial'].includes(deal.status) && (
+                <Badge variant="secondary" className="text-xs bg-success/10 text-success">Locked</Badge>
+              )}
+              {pricingEditable && (
+                <Badge variant="secondary" className="text-xs bg-warning/10 text-warning">Editable</Badge>
               )}
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Advance ({deal.advance_percentage}%)</span>
-                <span className="font-medium text-foreground">{deal.advance_amount ? `${sym}${deal.advance_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+            {pricingEditable ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Advance %</Label>
+                    <Input type="number" min="1" max="100" value={editAdvPct} onChange={e => setEditAdvPct(e.target.value)} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Platform Fee %</Label>
+                    <Input type="number" min="0" max="100" step="0.1" value={editPlatformFeePct} onChange={e => setEditPlatformFeePct(e.target.value)} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Discount Fee %</Label>
+                    <Input type="number" min="0" max="100" step="0.1" value={editDiscountFeePct} onChange={e => setEditDiscountFeePct(e.target.value)} className="mt-1" />
+                  </div>
+                </div>
+                <div className="grid gap-2 text-sm border-t border-border pt-3">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Advance Amount ({liveAdvPct}%)</span>
+                    <span className="font-medium text-foreground">{sym}{liveAdvanceAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Platform Fee ({livePlatformFeePct}%)</span>
+                    <span className="font-medium text-foreground">{sym}{livePlatformFeeAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Discount Fee ({liveDiscountFeePct}%)</span>
+                    <span className="font-medium text-foreground">{sym}{liveDiscountFeeAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total Fees</span>
+                    <span className="font-medium text-foreground">{sym}{liveTotalFees.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-border pt-2">
+                    <span className="text-muted-foreground font-medium">Net Advance to Exporter</span>
+                    <span className="font-semibold text-foreground">{sym}{liveNetAdvance.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground font-medium">Expected Yield</span>
+                    <span className="font-semibold text-foreground">{sym}{liveTotalFees.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground font-medium">Repayment Amount</span>
+                    <span className="font-semibold text-foreground">{sym}{liveRepaymentAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+                <Button size="sm" onClick={handleSavePricing} disabled={pricingSaving} className="gap-1">
+                  {pricingSaving ? 'Saving…' : 'Save Pricing'}
+                </Button>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Platform Fee ({((deal.platform_fee_pct ?? 0) * 100).toFixed(1)}%)</span>
-                <span className="font-medium text-foreground">{deal.platform_fee_amount ? `${sym}${deal.platform_fee_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+            ) : (
+              <div className="grid gap-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Advance ({deal.advance_percentage}%)</span>
+                  <span className="font-medium text-foreground">{deal.advance_amount ? `${sym}${deal.advance_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Platform Fee ({((deal.platform_fee_pct ?? 0) * 100).toFixed(1)}%)</span>
+                  <span className="font-medium text-foreground">{deal.platform_fee_amount ? `${sym}${deal.platform_fee_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Discount Fee ({((deal.discount_fee_pct ?? 0) * 100).toFixed(1)}%)</span>
+                  <span className="font-medium text-foreground">{deal.discount_fee_amount ? `${sym}${deal.discount_fee_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total Fees</span>
+                  <span className="font-medium text-foreground">{sym}{((deal.platform_fee_amount ?? 0) + (deal.discount_fee_amount ?? 0)).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between border-t border-border pt-2">
+                  <span className="text-muted-foreground font-medium">Net Advance to Exporter</span>
+                  <span className="font-semibold text-foreground">{deal.net_advance_amount ? `${sym}${deal.net_advance_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground font-medium">Expected Yield</span>
+                  <span className="font-semibold text-foreground">{deal.gross_yield ? `${sym}${deal.gross_yield.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground font-medium">Repayment Amount</span>
+                  <span className="font-semibold text-foreground">{deal.repayment_amount ? `${sym}${deal.repayment_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Discount Fee ({((deal.discount_fee_pct ?? 0) * 100).toFixed(1)}%)</span>
-                <span className="font-medium text-foreground">{deal.discount_fee_amount ? `${sym}${deal.discount_fee_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
-              </div>
-              <div className="flex justify-between border-t border-border pt-2">
-                <span className="text-muted-foreground font-medium">Expected Yield</span>
-                <span className="font-semibold text-foreground">{deal.gross_yield ? `${sym}${deal.gross_yield.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
