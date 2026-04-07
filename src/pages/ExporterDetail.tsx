@@ -16,7 +16,7 @@ import {
 import { cn } from '@/lib/utils';
 import {
   ArrowLeft, Building2, Shield, ShieldCheck, ShieldX, AlertTriangle,
-  FileText, Copy, ExternalLink, CheckCircle2, XCircle, Clock, Upload,
+  FileText, Copy, ExternalLink, CheckCircle2, XCircle, Clock, Upload, Download, Eye,
 } from 'lucide-react';
 
 const KYC_COLORS: Record<KycStatus, string> = {
