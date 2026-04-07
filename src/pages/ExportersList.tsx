@@ -35,6 +35,7 @@ export default function ExportersList() {
   const [exporters, setExporters] = useState<ExporterRow[]>([]);
   const [exporterDocs, setExporterDocs] = useState<ExporterDocRow[]>([]);
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
@@ -45,7 +46,17 @@ export default function ExportersList() {
         query = query.eq('originator_id', user.id);
       }
       const { data } = await query;
+      const ids = (data ?? []).map(e => e.id);
       setExporters((data as ExporterRow[]) ?? []);
+
+      if (ids.length > 0) {
+        const { data: docs } = await supabase
+          .from('exporter_documents')
+          .select('exporter_id, document_type, document_status, expiry_status, is_superseded')
+          .in('exporter_id', ids)
+          .eq('is_superseded', false);
+        setExporterDocs((docs as ExporterDocRow[]) ?? []);
+      }
       setLoading(false);
     };
     load();
