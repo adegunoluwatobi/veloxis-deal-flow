@@ -14,6 +14,7 @@ import { useConfirm } from '@/components/ConfirmDialog';
 import type { DealStatus } from '@/types';
 import type { FlaggedField } from '@/components/ChangeRequestModal';
 import { CurrencyInput, stripCommas } from '@/components/ui/currency-input';
+import SettlementSummaryBanner from '@/components/SettlementSummaryBanner';
 
 export default function ExporterDealDetail() {
   const { id } = useParams<{ id: string }>();
