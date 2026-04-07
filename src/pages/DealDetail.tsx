@@ -412,6 +412,25 @@ export default function DealDetail() {
         </div>
       )}
 
+      {/* Payment Received Banner & Settlement Summary */}
+      <SettlementSummaryBanner
+        dealId={deal.id}
+        dealReference={(deal as any).deal_reference ?? null}
+        invoiceCurrency={deal.invoice_currency_v2}
+        paymentDate={(deal as any).payment_date ?? null}
+        paymentAmountReceived={(deal as any).payment_amount_received ?? null}
+        advanceAmount={deal.advance_amount}
+        platformFeeAmount={deal.platform_fee_amount}
+        discountFeeAmount={deal.discount_fee_amount}
+        latePenaltyAmount={(deal as any).late_penalty_amount ?? null}
+        overdueDaysAtPayment={(deal as any).overdue_days_at_payment ?? null}
+        residualBalance={(deal as any).residual_balance ?? null}
+        paymentAdviceDocId={(deal as any).payment_advice_doc_id ?? null}
+        exporterReceiptConfirmedAt={(deal as any).exporter_receipt_confirmed_at ?? null}
+        dealStatus={deal.status}
+        onReload={load}
+      />
+
       {/* Deal Manager Actions */}
       {isDM && (
         <Card>
