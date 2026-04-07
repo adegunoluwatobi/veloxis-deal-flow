@@ -226,7 +226,7 @@ export default function DealDetail() {
     }
   };
 
-  const handleRequestDocs = () => updateStatus('docs_requested');
+  const handleRequestDocs = () => setRequestDocsOpen(true);
   const handleSubmitForFinalApproval = () => updateStatus('ready_for_final_approval' as DealStatus);
 
   // Live pricing calculations
