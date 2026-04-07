@@ -216,6 +216,54 @@ export default function DealDetail() {
   const handleRequestDocs = () => updateStatus('docs_requested');
   const handleSubmitForFinalApproval = () => updateStatus('ready_for_final_approval' as DealStatus);
 
+  // Live pricing calculations
+  const pricingEditable = isDM && (deal?.status === ('sent_to_veloxis' as DealStatus) || deal?.status === 'under_review');
+  const liveAdvPct = parseFloat(editAdvPct) || 80;
+  const liveAdvanceAmount = (deal?.invoice_value ?? 0) * (liveAdvPct / 100);
+  const livePlatformFeePct = parseFloat(editPlatformFeePct) || 0;
+  const liveDiscountFeePct = parseFloat(editDiscountFeePct) || 0;
+  const livePlatformFeeAmount = liveAdvanceAmount * (livePlatformFeePct / 100);
+  const liveDiscountFeeAmount = liveAdvanceAmount * (liveDiscountFeePct / 100);
+  const liveTotalFees = livePlatformFeeAmount + liveDiscountFeeAmount;
+  const liveNetAdvance = liveAdvanceAmount - liveTotalFees;
+  const liveRepaymentAmount = deal?.invoice_value ?? 0;
+
+  const handleSavePricing = async () => {
+    if (!id || !deal) return;
+    setPricingSaving(true);
+    try {
+      const { error } = await supabase.from('deals').update({
+        advance_percentage: liveAdvPct,
+        advance_amount: liveAdvanceAmount,
+        platform_fee_pct: livePlatformFeePct / 100,
+        platform_fee_amount: livePlatformFeeAmount,
+        discount_fee_pct: liveDiscountFeePct / 100,
+        discount_fee_amount: liveDiscountFeeAmount,
+        gross_yield: liveTotalFees,
+        net_advance_amount: liveNetAdvance,
+        repayment_amount: liveRepaymentAmount,
+      }).eq('id', id);
+      if (error) throw error;
+      await supabase.rpc('insert_audit_log', {
+        p_deal_id: id,
+        p_user_id: user?.id,
+        p_user_role: role as any,
+        p_action_type: 'pricing_recalculated' as AuditAction,
+        p_metadata: {
+          advance_pct: liveAdvPct,
+          platform_fee_pct: livePlatformFeePct,
+          discount_fee_pct: liveDiscountFeePct,
+        },
+      });
+      toast({ title: 'Pricing saved' });
+      load();
+    } catch (err: unknown) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Save failed', variant: 'destructive' });
+    } finally {
+      setPricingSaving(false);
+    }
+  };
+
   const handleApprove = async () => {
     if (!id || !deal) return;
     setActionLoading(true);
