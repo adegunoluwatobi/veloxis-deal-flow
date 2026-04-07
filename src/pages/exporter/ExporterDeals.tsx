@@ -57,11 +57,11 @@ export default function ExporterDeals() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">My Deals</h1>
+          <h1 className="text-2xl font-bold text-foreground">My Applications</h1>
           <p className="text-sm text-muted-foreground">Your trade finance applications</p>
         </div>
         <Button asChild>
-          <Link to="/exporter/deals/new"><Plus className="mr-2 h-4 w-4" />Submit Deal</Link>
+          <Link to="/exporter/deals/new"><Plus className="mr-2 h-4 w-4" />Submit Application</Link>
         </Button>
       </div>
 
