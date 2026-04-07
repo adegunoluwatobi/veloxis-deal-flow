@@ -161,39 +161,29 @@ Deno.serve(async (req) => {
 
     if (inviteError) {
       if (isExistingUserError(inviteError.message)) {
-        if (!isPendingInvite) {
+        if (!isPendingInvite && !hasPartnerAccess) {
           return new Response(JSON.stringify({ error: "This exporter has already accepted the invite. Ask them to sign in instead." }), {
             status: 409,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
 
-        const existingUser = exporter.exporter_user_id
-          ? { id: exporter.exporter_user_id }
-          : await findUserByEmail(adminClient, email);
+        // User already exists — generate a fresh invite link instead of deleting
+        const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+          type: "invite",
+          email,
+          options: {
+            data: invitePayload.data,
+            redirectTo: redirectTo,
+          },
+        });
 
-        if (!existingUser?.id) {
-          throw inviteError;
+        if (linkError) {
+          throw linkError;
         }
 
-        // Remove FK-referencing rows BEFORE deleting the auth user
-        await adminClient.from("exporters").update({ exporter_user_id: null } as any).eq("id", exporter_id);
-        await adminClient.from("user_roles").delete().eq("user_id", existingUser.id);
-        await adminClient.from("users").delete().eq("id", existingUser.id);
-
-        const { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(existingUser.id);
-        if (deleteAuthError) {
-          console.error("deleteUser warning (continuing):", deleteAuthError.message);
-          // Non-fatal: the auth record may already be gone
-        }
-
-        const retry = await sendInvite();
-        inviteData = retry.data;
-        inviteError = retry.error;
-
-        if (inviteError) {
-          throw inviteError;
-        }
+        inviteData = { user: linkData?.user ?? null } as any;
+        inviteError = null;
       } else {
         throw inviteError;
       }
