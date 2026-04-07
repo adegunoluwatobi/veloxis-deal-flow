@@ -69,15 +69,15 @@ export default function ExporterDealDetail() {
     setSubmitting(true);
     try {
       // Build update payload with only flagged fields
-      const updateData: Record<string, any> = { status: 'submitted' };
+      const updatePayload: Record<string, any> = { status: 'submitted' };
       for (const f of flaggedFields) {
         let val: any = editValues[f.field] ?? '';
         if (f.field === 'invoice_value') val = val ? Number(stripCommas(val)) : null;
         else if (val === '') val = null;
-        updateData[f.field] = val;
+        updatePayload[f.field] = val;
       }
 
-      const { error } = await supabase.from('deals').update(updateData).eq('id', id!);
+      const { error } = await supabase.from('deals').update(updatePayload as any).eq('id', id!);
       if (error) throw error;
 
       // Resolve change request
