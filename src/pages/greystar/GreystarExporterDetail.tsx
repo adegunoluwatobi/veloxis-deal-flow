@@ -39,6 +39,7 @@ export default function GreystarExporterDetail() {
   const { user, role } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [exporter, setExporter] = useState<any>(null);
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
