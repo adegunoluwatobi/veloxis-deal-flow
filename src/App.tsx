@@ -97,6 +97,7 @@ const App = () => (
             <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
             <Route path="/admin/deals" element={<AdminLayout><AdminDeals /></AdminLayout>} />
             <Route path="/admin/deals/:id" element={<AdminLayout><DealDetail /></AdminLayout>} />
+            <Route path="/admin/settings" element={<AdminLayout><SettingsPage /></AdminLayout>} />
 
             {/* Originator routes */}
             <Route path="/" element={<AuthenticatedLayout><Dashboard /></AuthenticatedLayout>} />
