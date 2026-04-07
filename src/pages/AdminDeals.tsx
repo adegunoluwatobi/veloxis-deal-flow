@@ -94,7 +94,7 @@ export default function AdminDeals() {
   const statusCounts: Partial<Record<DealStatus | 'all', number>> = { all: deals.length };
   deals.forEach(d => { statusCounts[d.status] = (statusCounts[d.status] ?? 0) + 1; });
 
-  const QUICK_STATUSES: (DealStatus | 'all')[] = ['all', 'submitted', 'under_review', 'ready_for_final_approval' as DealStatus, 'docs_requested', 'approved', 'funded_active', 'overdue'];
+  const QUICK_STATUSES: (DealStatus | 'all')[] = ['all', 'submitted', 'under_review', 'ready_for_final_approval' as DealStatus, 'rejection_pending_approval' as DealStatus, 'docs_requested', 'approved', 'funded_active', 'overdue'];
 
   return (
     <div className="space-y-4 animate-fade-in">
