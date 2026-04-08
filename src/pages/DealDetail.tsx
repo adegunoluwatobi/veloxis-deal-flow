@@ -31,14 +31,13 @@ import {
 } from 'lucide-react';
 import BuyerComplianceSection from '@/components/BuyerComplianceSection';
 import SettlementFxSection from '@/components/SettlementFxSection';
-import RepaymentFxSection from '@/components/RepaymentFxSection';
 import PaymentAdvicePanel from '@/components/PaymentAdvicePanel';
 import SettlementSummaryBanner from '@/components/SettlementSummaryBanner';
 import IpuUploadSection from '@/components/IpuUploadSection';
 import TradePackChecklist from '@/components/TradePackChecklist';
 import OverdueActionsPanel from '@/components/OverdueActionsPanel';
 import RequestDocsModal from '@/components/RequestDocsModal';
-import type { SettlementMethod, RepaymentReconciliationStatus } from '@/types';
+import type { SettlementMethod } from '@/types';
 
 interface DealRow {
   id: string;
@@ -697,38 +696,14 @@ export default function DealDetail() {
         onReload={load}
       />
 
-      {/* Settlement & FX */}
+      {/* Settlement Details */}
       {isDM && (
         <SettlementFxSection
-          dealId={deal.id}
           invoiceCurrency={deal.invoice_currency_v2}
-          settlementCurrency={(deal as any).settlement_currency ?? null}
-          settlementMethod={((deal as any).settlement_method ?? null) as SettlementMethod | null}
-          fxRateAtFunding={(deal as any).fx_rate_at_funding ?? null}
-          ngnEquivalent={(deal as any).ngn_equivalent_at_disbursement ?? null}
-          advanceAmount={deal.advance_amount}
-          fxRiskAcknowledged={(deal as any).fx_risk_acknowledged ?? false}
-          cbnRepatriationDeadline={(deal as any).cbn_repatriation_deadline ?? null}
           dealStatus={deal.status}
-          isVeloxis={isDM}
-          isExporter={false}
-          onReload={load}
         />
       )}
 
-      {/* Repayment FX Reconciliation */}
-      <RepaymentFxSection
-        dealId={deal.id}
-        invoiceCurrency={deal.invoice_currency_v2}
-        repaymentAmount={deal.repayment_amount}
-        actualRepaymentAmount={(deal as any).actual_repayment_amount ?? null}
-        repaymentCurrencyReceived={(deal as any).repayment_currency_received ?? null}
-        repaymentFxRate={(deal as any).repayment_fx_rate ?? null}
-        repaymentGbpEquivalent={(deal as any).repayment_gbp_equivalent ?? null}
-        reconciliationStatus={((deal as any).repayment_reconciliation_status ?? null) as RepaymentReconciliationStatus | null}
-        dealStatus={deal.status}
-        onReload={load}
-      />
 
       {/* Overdue Actions Panel */}
       <OverdueActionsPanel
