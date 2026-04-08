@@ -256,8 +256,6 @@ export default function GreystarDealDetail() {
 
       {/* Facility Offer Panel — read-only for partner when pending exporter acceptance or declined */}
       {(deal.status === 'pending_exporter_acceptance' || deal.status === 'declined_by_exporter') && (() => {
-        const psym = CURRENCY_SYMBOLS[(deal.invoice_currency_v2 as InvoiceCurrency) ?? 'GBP'] ?? '£';
-        const pfmt = (v: number | null) => v != null ? `${psym}${Number(v).toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—';
         return (
           <Card className="border-primary/30">
             <CardHeader>
