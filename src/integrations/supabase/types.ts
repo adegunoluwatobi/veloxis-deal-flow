@@ -236,6 +236,9 @@ export type Database = {
           mime_type: string | null
           uploaded_at: string
           uploaded_by: string
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           deal_id: string
@@ -248,6 +251,9 @@ export type Database = {
           mime_type?: string | null
           uploaded_at?: string
           uploaded_by: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           deal_id?: string
@@ -260,6 +266,9 @@ export type Database = {
           mime_type?: string | null
           uploaded_at?: string
           uploaded_by?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {
