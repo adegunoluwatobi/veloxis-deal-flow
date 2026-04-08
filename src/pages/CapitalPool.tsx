@@ -128,7 +128,7 @@ export default function CapitalPool() {
       const cur = d.invoice_currency_v2 || 'GBP';
       byCurrency[cur] = (byCurrency[cur] || 0) + (Number(d.invoice_value) || Number(d.gbp_equivalent) || 0);
     });
-    setDealsByurrency(byCurrency);
+    setDealsByCurrency(byCurrency);
 
     setTranches((tranchesRes.data ?? []) as Tranche[]);
     setHistory((historyRes.data ?? []) as PoolHistoryRow[]);
