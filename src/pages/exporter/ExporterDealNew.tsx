@@ -620,8 +620,86 @@ export default function ExporterDealNew() {
         </Card>
       )}
 
-      {/* Step 4: Fee Calculator */}
+      {/* Step 4: Transaction Documents */}
       {step === 4 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Transaction Documents</CardTitle>
+            <CardDescription>Upload the trade pack documents for this application</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {ALL_TRADE_DOCS.map(doc => {
+              const file = tradePackFiles[doc.type];
+              return (
+                <div key={doc.type} className="flex items-center justify-between rounded-lg border border-border p-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {file ? (
+                      <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
+                    ) : (
+                      <AlertTriangle className="h-5 w-5 text-muted-foreground shrink-0" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">{doc.label}</p>
+                      {file && <p className="text-xs text-muted-foreground truncate">{file.name}</p>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant="secondary" className={cn("text-xs", doc.required ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary")}>
+                      {doc.required ? 'Required' : 'Recommended'}
+                    </Badge>
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.jpg,.jpeg,.png,.webp"
+                        onChange={e => {
+                          const f = e.target.files?.[0];
+                          if (f && !ALLOWED_MIME.includes(f.type)) {
+                            toast({ title: 'Invalid file type', variant: 'destructive' });
+                            return;
+                          }
+                          if (f && f.size > MAX_SIZE) {
+                            toast({ title: 'File too large (max 20 MB)', variant: 'destructive' });
+                            return;
+                          }
+                          if (f) setTradePackFiles(prev => ({ ...prev, [doc.type]: f }));
+                        }}
+                      />
+                      <Button size="sm" variant="outline" className="h-8 text-xs gap-1 pointer-events-none">
+                        <Upload className="h-3 w-3" />
+                        {file ? 'Replace' : 'Upload'}
+                      </Button>
+                    </label>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Checklist summary */}
+            <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm">
+              <p className="font-medium text-foreground">
+                {requiredDocsUploaded === REQUIRED_TRADE_DOCS.length ? (
+                  <span className="flex items-center gap-1 text-success">
+                    <CheckCircle2 className="h-4 w-4" />
+                    {requiredDocsUploaded} of {REQUIRED_TRADE_DOCS.length} required documents uploaded ✓
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    {requiredDocsUploaded} of {REQUIRED_TRADE_DOCS.length} required documents uploaded
+                  </span>
+                )}
+              </p>
+              <p className="text-muted-foreground mt-1">
+                {recommendedDocsUploaded} of {RECOMMENDED_TRADE_DOCS.length} recommended documents uploaded
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 5: Fee Calculator */}
+      {step === 5 && (
         <Card>
           <CardHeader>
             <CardTitle>Fee Calculator & Acceptance</CardTitle>
