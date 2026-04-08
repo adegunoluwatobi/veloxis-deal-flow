@@ -97,7 +97,7 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   draft: 'Draft',
   submitted: 'Submitted',
   changes_requested: 'Changes Requested',
-  sent_to_veloxis: 'Sent to Underwriter',
+  sent_to_veloxis: 'Under Review',
   under_review: 'Under Review',
   docs_requested: 'Documents Requested',
   ready_for_final_approval: 'Ready for Final Approval',
