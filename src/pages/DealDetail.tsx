@@ -414,16 +414,24 @@ export default function DealDetail() {
         dealId={deal.id}
         dealReference={(deal as any).deal_reference ?? null}
         invoiceCurrency={deal.invoice_currency_v2}
+        invoiceValue={deal.invoice_value}
         paymentDate={(deal as any).payment_date ?? null}
         paymentAmountReceived={(deal as any).payment_amount_received ?? null}
+        paymentReference={(deal as any).payment_reference ?? null}
         advanceAmount={deal.advance_amount}
         platformFeeAmount={deal.platform_fee_amount}
+        platformFeePct={deal.platform_fee_pct}
         discountFeeAmount={deal.discount_fee_amount}
+        discountFeePct={deal.discount_fee_pct}
+        paymentTermsDays={deal.payment_terms_days}
         latePenaltyAmount={(deal as any).late_penalty_amount ?? null}
         overdueDaysAtPayment={(deal as any).overdue_days_at_payment ?? null}
         residualBalance={(deal as any).residual_balance ?? null}
         paymentAdviceDocId={(deal as any).payment_advice_doc_id ?? null}
         exporterReceiptConfirmedAt={(deal as any).exporter_receipt_confirmed_at ?? null}
+        residualSentAt={(deal as any).residual_sent_at ?? null}
+        residualTransferReference={(deal as any).residual_transfer_reference ?? null}
+        residualRemittanceDocId={(deal as any).residual_remittance_doc_id ?? null}
         dealStatus={deal.status}
         onReload={load}
       />

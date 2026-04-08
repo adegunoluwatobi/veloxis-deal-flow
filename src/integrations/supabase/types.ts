@@ -359,6 +359,7 @@ export type Database = {
           payment_amount_received: number | null
           payment_date: string | null
           payment_due_date: string | null
+          payment_reference: string | null
           payment_terms_days: number | null
           platform_fee_amount: number | null
           platform_fee_pct: number | null
@@ -373,6 +374,10 @@ export type Database = {
             | Database["public"]["Enums"]["repayment_reconciliation_status"]
             | null
           residual_balance: number | null
+          residual_remittance_doc_id: string | null
+          residual_sent_at: string | null
+          residual_sent_by: string | null
+          residual_transfer_reference: string | null
           sent_to_veloxis_at: string | null
           settlement_currency: string | null
           settlement_method:
@@ -466,6 +471,7 @@ export type Database = {
           payment_amount_received?: number | null
           payment_date?: string | null
           payment_due_date?: string | null
+          payment_reference?: string | null
           payment_terms_days?: number | null
           platform_fee_amount?: number | null
           platform_fee_pct?: number | null
@@ -480,6 +486,10 @@ export type Database = {
             | Database["public"]["Enums"]["repayment_reconciliation_status"]
             | null
           residual_balance?: number | null
+          residual_remittance_doc_id?: string | null
+          residual_sent_at?: string | null
+          residual_sent_by?: string | null
+          residual_transfer_reference?: string | null
           sent_to_veloxis_at?: string | null
           settlement_currency?: string | null
           settlement_method?:
@@ -573,6 +583,7 @@ export type Database = {
           payment_amount_received?: number | null
           payment_date?: string | null
           payment_due_date?: string | null
+          payment_reference?: string | null
           payment_terms_days?: number | null
           platform_fee_amount?: number | null
           platform_fee_pct?: number | null
@@ -587,6 +598,10 @@ export type Database = {
             | Database["public"]["Enums"]["repayment_reconciliation_status"]
             | null
           residual_balance?: number | null
+          residual_remittance_doc_id?: string | null
+          residual_sent_at?: string | null
+          residual_sent_by?: string | null
+          residual_transfer_reference?: string | null
           sent_to_veloxis_at?: string | null
           settlement_currency?: string | null
           settlement_method?:
@@ -646,6 +661,13 @@ export type Database = {
           {
             foreignKeyName: "deals_payment_advice_doc_id_fkey"
             columns: ["payment_advice_doc_id"]
+            isOneToOne: false
+            referencedRelation: "deal_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_residual_remittance_doc_id_fkey"
+            columns: ["residual_remittance_doc_id"]
             isOneToOne: false
             referencedRelation: "deal_documents"
             referencedColumns: ["id"]

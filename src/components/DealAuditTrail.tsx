@@ -41,6 +41,9 @@ const EVENT_CONFIG: Record<string, { label: string; icon: typeof FileText; color
   ipu_generated: { label: 'IPU Generated', icon: FileText, color: 'text-primary' },
   ipu_sent: { label: 'IPU Sent', icon: Send, color: 'text-primary' },
   ipu_signed: { label: 'IPU Signed', icon: CheckCircle2, color: 'text-success' },
+  ipu_verified: { label: 'IPU Verified', icon: CheckCircle2, color: 'text-success' },
+  payment_advice_submitted: { label: 'Buyer Payment Recorded', icon: DollarSign, color: 'text-success' },
+  exporter_receipt_confirmed: { label: 'Exporter Confirmed Receipt', icon: CheckCircle2, color: 'text-success' },
   pricing_recalculated: { label: 'Pricing Recalculated', icon: DollarSign, color: 'text-muted-foreground' },
 };
 
