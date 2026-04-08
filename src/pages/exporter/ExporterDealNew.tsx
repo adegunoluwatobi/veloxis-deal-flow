@@ -204,7 +204,7 @@ export default function ExporterDealNew() {
       case 1: return form.invoice_number && form.invoice_date && form.invoice_amount && form.invoice_currency && form.payment_due_date && (form.invoice_file || existingInvoicePath);
       case 2: return form.buyer_company_name && form.buyer_country && form.buyer_contact_name && form.buyer_contact_email && isValidEmail(form.buyer_contact_email) && form.buyer_contact_phone;
       case 3: return form.goods_description && form.export_destination && form.export_licence_number && form.hs_code && form.incoterms;
-      case 4: return terms >= minTerms && terms <= maxTerms && feeAccepted;
+      case 4: return terms >= minTerms && terms <= maxTerms && feeAccepted && (terms <= 60 || extendedTermsConfirmed);
       default: return true;
     }
   };
