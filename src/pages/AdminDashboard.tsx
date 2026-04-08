@@ -196,7 +196,7 @@ export default function AdminDashboard() {
       {utilization > 90 && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 shrink-0" />
-          Pool utilization is above 90%. New deal approvals may be blocked.
+          Pool utilization is above 90%. New application approvals may be blocked.
         </div>
       )}
 

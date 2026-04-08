@@ -4,15 +4,17 @@ import ValidationSummaryBanner from '@/components/ValidationSummaryBanner';
 import type { ValidationFailure } from '@/lib/validation';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { sanitiseFilename } from '@/lib/sanitiseFilename';
-import { CURRENCY_SYMBOLS, type InvoiceCurrency, type AuditAction } from '@/types';
-import { Banknote, Upload, Loader2 } from 'lucide-react';
+import { CURRENCY_SYMBOLS, type InvoiceCurrency } from '@/types';
+import { Banknote, Loader2 } from 'lucide-react';
 import { differenceInDays, parseISO } from 'date-fns';
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
+} from '@/components/ui/dialog';
 
 interface Props {
   dealId: string;
@@ -41,6 +43,7 @@ export default function PaymentAdvicePanel({
 }: Props) {
   const { user, role } = useAuth();
   const { toast } = useToast();
+  const [open, setOpen] = useState(false);
   const [paymentDate, setPaymentDate] = useState('');
   const [amountReceived, setAmountReceived] = useState('');
   const [paymentReference, setPaymentReference] = useState('');
@@ -133,7 +136,8 @@ export default function PaymentAdvicePanel({
         },
       });
 
-      toast({ title: 'Payment advice recorded', description: 'Deal status updated to Payment Received — Pending Settlement.' });
+      toast({ title: 'Payment advice recorded', description: 'Application status updated to Payment Received — Pending Settlement.' });
+      setOpen(false);
       onReload();
     } catch (err: unknown) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Submission failed', variant: 'destructive' });
@@ -143,127 +147,133 @@ export default function PaymentAdvicePanel({
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-2">
-          <Banknote className="h-4 w-4 text-muted-foreground" />
-          <CardTitle className="text-base">Record Buyer Payment</CardTitle>
-        </div>
-        <CardDescription>Record payment received from the buyer to initiate deal closure.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {paymentValidationFailures.length > 0 && (
-          <ValidationSummaryBanner failures={paymentValidationFailures} onDismiss={() => setPaymentValidationFailures([])} />
-        )}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Payment Date *</Label>
-            <Input id="field-payment-date" type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="h-8" />
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2">
+          <Banknote className="h-4 w-4" /> Record Buyer Payment
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Banknote className="h-4 w-4" /> Record Buyer Payment
+          </DialogTitle>
+          <DialogDescription>Record payment received from the buyer to initiate settlement.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          {paymentValidationFailures.length > 0 && (
+            <ValidationSummaryBanner failures={paymentValidationFailures} onDismiss={() => setPaymentValidationFailures([])} />
+          )}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Payment Date *</Label>
+              <Input id="field-payment-date" type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="h-8" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Amount Received ({invoiceCurrency ?? 'GBP'}) *</Label>
+              <Input
+                id="field-amount-received"
+                type="number"
+                step="0.01"
+                value={amountReceived}
+                onChange={e => setAmountReceived(e.target.value)}
+                placeholder={`e.g. ${(invoiceValue ?? 0).toLocaleString('en-GB')}`}
+                className="h-8"
+              />
+            </div>
           </div>
+
           <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Amount Received ({invoiceCurrency ?? 'GBP'}) *</Label>
+            <Label className="text-xs text-muted-foreground">Payment Reference / SWIFT Reference *</Label>
             <Input
-              id="field-amount-received"
-              type="number"
-              step="0.01"
-              value={amountReceived}
-              onChange={e => setAmountReceived(e.target.value)}
-              placeholder={`e.g. ${(invoiceValue ?? 0).toLocaleString('en-GB')}`}
+              id="field-payment-reference"
+              value={paymentReference}
+              onChange={e => setPaymentReference(e.target.value)}
+              placeholder="e.g. SWIFT ref or bank transfer reference"
               className="h-8"
             />
           </div>
-        </div>
 
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Payment Reference / SWIFT Reference *</Label>
-          <Input
-            id="field-payment-reference"
-            value={paymentReference}
-            onChange={e => setPaymentReference(e.target.value)}
-            placeholder="e.g. SWIFT ref or bank transfer reference"
-            className="h-8"
-          />
-        </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Payment Advice Document (SWIFT advice / bank confirmation) *</Label>
-          <Input
-            id="field-payment-file"
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
-            onChange={e => setPaymentFile(e.target.files?.[0] ?? null)}
-            className="h-8"
-          />
-        </div>
-
-        {overdueDays > 0 && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-1">
-            <p className="text-xs font-medium text-destructive">Late Penalty Applies</p>
-            <div className="grid grid-cols-3 gap-2 text-xs">
-              <div>
-                <span className="text-muted-foreground">Overdue Days</span>
-                <p className="font-medium text-foreground">{overdueDays} days</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Daily Penalty Rate</span>
-                <p className="font-medium text-foreground">{dailyRate.toFixed(4)}%</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Late Penalty</span>
-                <p className="font-medium text-destructive">{sym}{latePenalty.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</p>
-              </div>
-            </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Payment Advice Document (SWIFT advice / bank confirmation) *</Label>
+            <Input
+              id="field-payment-file"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={e => setPaymentFile(e.target.files?.[0] ?? null)}
+              className="h-8"
+            />
           </div>
-        )}
 
-        {received > 0 && (
-          <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
-            <p className="text-xs font-medium text-foreground">Settlement Summary Preview</p>
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Invoice Amount</span>
-                <span className="font-medium text-foreground">{sym}{(invoiceValue ?? 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Amount Received from Buyer</span>
-                <span className="font-medium text-foreground">{sym}{received.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Less: Advance Already Paid to Exporter</span>
-                <span className="font-medium text-foreground">− {sym}{(advanceAmount ?? 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Less: Platform Fee (one-off)</span>
-                <span className="font-medium text-foreground">− {sym}{(platformFeeAmount ?? 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Less: Discount Fee</span>
-                <span className="font-medium text-foreground">− {sym}{(discountFeeAmount ?? 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
-              </div>
-              {latePenalty > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Less: Late Penalty ({overdueDays} days × daily rate)</span>
-                  <span className="font-medium text-destructive">− {sym}{latePenalty.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+          {overdueDays > 0 && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-1">
+              <p className="text-xs font-medium text-destructive">Late Penalty Applies</p>
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div>
+                  <span className="text-muted-foreground">Overdue Days</span>
+                  <p className="font-medium text-foreground">{overdueDays} days</p>
                 </div>
-              )}
-              <div className="flex justify-between border-t border-border pt-1">
-                <span className="font-medium text-muted-foreground">Total Deductions</span>
-                <span className="font-medium text-foreground">− {sym}{totalDeductions.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
-              </div>
-              <div className="flex justify-between border-t border-border pt-1 mt-1">
-                <span className="font-semibold text-foreground">Residual Balance Due to Exporter</span>
-                <span className={`font-bold ${residual >= 0 ? 'text-success' : 'text-destructive'}`}>
-                  {sym}{residual.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
-                </span>
+                <div>
+                  <span className="text-muted-foreground">Daily Penalty Rate</span>
+                  <p className="font-medium text-foreground">{dailyRate.toFixed(4)}%</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Late Penalty</span>
+                  <p className="font-medium text-destructive">{sym}{latePenalty.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <Button size="sm" onClick={handleSubmit} disabled={submitting || !paymentDate || !amountReceived || !paymentReference.trim() || !paymentFile}>
-          {submitting ? <><Loader2 className="mr-1 h-3 w-3 animate-spin" /> Submitting…</> : 'Submit Payment Advice'}
-        </Button>
-      </CardContent>
-    </Card>
+          {received > 0 && (
+            <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+              <p className="text-xs font-medium text-foreground">Settlement Summary Preview</p>
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Invoice Amount</span>
+                  <span className="font-medium text-foreground">{sym}{(invoiceValue ?? 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Amount Received from Buyer</span>
+                  <span className="font-medium text-foreground">{sym}{received.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Less: Advance Already Paid to Exporter</span>
+                  <span className="font-medium text-foreground">− {sym}{(advanceAmount ?? 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Less: Platform Fee (one-off)</span>
+                  <span className="font-medium text-foreground">− {sym}{(platformFeeAmount ?? 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Less: Discount Fee</span>
+                  <span className="font-medium text-foreground">− {sym}{(discountFeeAmount ?? 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                </div>
+                {latePenalty > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Less: Late Penalty ({overdueDays} days × daily rate)</span>
+                    <span className="font-medium text-destructive">− {sym}{latePenalty.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t border-border pt-1">
+                  <span className="font-medium text-muted-foreground">Total Deductions</span>
+                  <span className="font-medium text-foreground">− {sym}{totalDeductions.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between border-t border-border pt-1 mt-1">
+                  <span className="font-semibold text-foreground">Residual Balance Due to Exporter</span>
+                  <span className={`font-bold ${residual >= 0 ? 'text-success' : 'text-destructive'}`}>
+                    {sym}{residual.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <Button size="sm" onClick={handleSubmit} disabled={submitting || !paymentDate || !amountReceived || !paymentReference.trim() || !paymentFile} className="w-full">
+            {submitting ? <><Loader2 className="mr-1 h-3 w-3 animate-spin" /> Submitting…</> : 'Submit Payment Advice'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -105,19 +105,19 @@ interface AuditRow {
 }
 
 const AUDIT_LABELS: Partial<Record<AuditAction, string>> = {
-  deal_created: 'Deal created',
+  deal_created: 'Application created',
   deal_submitted: 'Submitted for review',
   deal_moved_to_under_review: 'Moved to under review',
   document_requested: 'Documents requested',
   deal_approved: 'Final approval granted',
-  deal_rejected: 'Deal rejected',
+  deal_rejected: 'Application rejected',
   document_uploaded: 'Document uploaded',
   ipu_generated: 'IPU generated',
   ipu_sent: 'IPU sent',
   ipu_signed: 'IPU signed',
   funding_recorded: 'Funding recorded',
   repayment_recorded: 'Repayment recorded',
-  deal_closed: 'Deal closed',
+  deal_closed: 'Application closed',
   deal_status_changed: 'Status changed',
   pricing_recalculated: 'Pricing recalculated',
   internal_note_added: 'Note added',
@@ -258,7 +258,7 @@ export default function DealDetail() {
         p_metadata: { actor_name: user?.email, next_status: 'approved' },
       });
 
-      toast({ title: 'Deal approved', description: 'The deal has been approved. IPU process can now begin.' });
+      toast({ title: 'Application approved', description: 'The application has been approved. IPU process can now begin.' });
       setPricingOverride(false);
       load();
     } catch (err: unknown) {
@@ -375,7 +375,7 @@ export default function DealDetail() {
         <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
           <XCircle className="mt-0.5 h-5 w-5 text-destructive shrink-0" />
           <div>
-            <p className="text-sm font-medium text-foreground">Deal Rejected</p>
+            <p className="text-sm font-medium text-foreground">Application Rejected</p>
             <p className="text-sm text-muted-foreground">{deal.rejection_reason}</p>
           </div>
         </div>
@@ -396,7 +396,7 @@ export default function DealDetail() {
         <div className="flex items-start gap-3 rounded-lg border border-success/30 bg-success/5 p-4">
           <CheckCircle2 className="mt-0.5 h-5 w-5 text-success shrink-0" />
           <div>
-            <p className="text-sm font-medium text-foreground">Deal Approved</p>
+            <p className="text-sm font-medium text-foreground">Application Approved</p>
             <p className="text-sm text-muted-foreground">
               Exporter accepted fee terms on {new Date((deal as any).fee_acceptance_at).toLocaleDateString('en-GB')}. Proceed with the IPU process.
             </p>
@@ -463,10 +463,10 @@ export default function DealDetail() {
                   {isSuperAdmin && (
                     <>
                       <Button size="sm" onClick={() => setPricingOverride(true)} disabled={approveDisabled} className="gap-1 bg-success hover:bg-success/90" title={approveTooltip ?? undefined}>
-                        <CheckCircle2 className="h-4 w-4" /> Approve Deal
+                        <CheckCircle2 className="h-4 w-4" /> Approve Application
                       </Button>
                       <Button size="sm" variant="destructive" onClick={() => setRejectOpen(true)} disabled={actionLoading} className="gap-1">
-                        <XCircle className="h-4 w-4" /> Reject Deal
+                        <XCircle className="h-4 w-4" /> Reject Application
                       </Button>
                       <Button size="sm" variant="outline" onClick={handleRequestDocs} disabled={actionLoading} className="gap-1">
                         <FileText className="h-4 w-4" /> Request Docs
@@ -479,10 +479,10 @@ export default function DealDetail() {
               {deal.status === ('ready_for_final_approval' as DealStatus) && isSuperAdmin && (
                 <>
                   <Button size="sm" onClick={() => setPricingOverride(true)} disabled={approveDisabled} className="gap-1 bg-success hover:bg-success/90" title={approveTooltip ?? undefined}>
-                    <CheckCircle2 className="h-4 w-4" /> Approve Deal
+                    <CheckCircle2 className="h-4 w-4" /> Approve Application
                   </Button>
                   <Button size="sm" variant="destructive" onClick={() => setRejectOpen(true)} disabled={actionLoading} className="gap-1">
-                    <XCircle className="h-4 w-4" /> Reject Deal
+                    <XCircle className="h-4 w-4" /> Reject Application
                   </Button>
                 </>
               )}
@@ -796,7 +796,7 @@ export default function DealDetail() {
           <DialogHeader>
             <DialogTitle>
               {role === 'deal_manager' ? 'Recommend Rejection' : 
-               deal?.status === ('rejection_pending_approval' as DealStatus) ? 'Confirm Rejection' : 'Reject Deal'}
+               deal?.status === ('rejection_pending_approval' as DealStatus) ? 'Confirm Rejection' : 'Reject Application'}
             </DialogTitle>
             <DialogDescription>
               {role === 'deal_manager'
@@ -823,7 +823,7 @@ export default function DealDetail() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setRejectOpen(false)}>Cancel</Button>
             <Button variant="destructive" onClick={role === 'deal_manager' ? handleRecommendRejection : handleFinalReject} disabled={!rejectReason.trim() || actionLoading}>
-              {actionLoading ? 'Processing…' : role === 'deal_manager' ? 'Recommend Rejection' : 'Reject Deal'}
+              {actionLoading ? 'Processing…' : role === 'deal_manager' ? 'Recommend Rejection' : 'Reject Application'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -833,8 +833,8 @@ export default function DealDetail() {
       <Dialog open={pricingOverride} onOpenChange={setPricingOverride}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Approve Deal</DialogTitle>
-            <DialogDescription>Confirm that you want to approve this deal. Pricing was accepted by the exporter at submission time.</DialogDescription>
+            <DialogTitle>Approve Application</DialogTitle>
+            <DialogDescription>Confirm that you want to approve this application. Pricing was accepted by the exporter at submission time.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid gap-2 text-sm">

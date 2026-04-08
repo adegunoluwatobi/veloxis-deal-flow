@@ -58,7 +58,7 @@ export default function OriginatorDashboard() {
             <Link to="/exporters/new"><Plus className="mr-2 h-4 w-4" />New Exporter</Link>
           </Button>
           <Button asChild>
-            <Link to="/deals/new"><Plus className="mr-2 h-4 w-4" />New Deal</Link>
+            <Link to="/deals/new"><Plus className="mr-2 h-4 w-4" />New Application</Link>
           </Button>
         </div>
       </div>

@@ -85,7 +85,7 @@ export default function IpuUploadSection({
         p_metadata: { actor_name: user.email },
       });
 
-      toast({ title: 'IPU verified', description: 'The Approve Deal button is now unlocked.' });
+      toast({ title: 'IPU verified', description: 'The Approve Application button is now unlocked.' });
       onReload();
     } catch (err: unknown) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Verification failed', variant: 'destructive' });

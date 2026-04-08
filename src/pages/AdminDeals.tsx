@@ -99,8 +99,8 @@ export default function AdminDeals() {
   return (
     <div className="space-y-4 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">All Deals</h1>
-        <p className="text-sm text-muted-foreground">{deals.length} deals in the system</p>
+        <h1 className="text-2xl font-bold text-foreground">All Applications</h1>
+        <p className="text-sm text-muted-foreground">{deals.length} applications in the system</p>
       </div>
 
       {/* Quick status tabs */}

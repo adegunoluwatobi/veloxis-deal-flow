@@ -55,12 +55,12 @@ export default function DealsList() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Deals</h1>
-          <p className="text-sm text-muted-foreground">{(role === 'super_admin' || role === 'deal_manager') ? 'All deals' : 'Your deal pipeline'}</p>
+          <h1 className="text-2xl font-bold text-foreground">Applications</h1>
+          <p className="text-sm text-muted-foreground">{(role === 'super_admin' || role === 'deal_manager') ? 'All applications' : 'Your application pipeline'}</p>
         </div>
         {(role === 'partner_staff' || role === 'partner_admin') && (
           <Button asChild>
-            <Link to="/deals/new"><Plus className="mr-2 h-4 w-4" />New Deal</Link>
+            <Link to="/deals/new"><Plus className="mr-2 h-4 w-4" />New Application</Link>
           </Button>
         )}
       </div>

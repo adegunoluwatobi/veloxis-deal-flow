@@ -18,12 +18,12 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['super_admin', 'deal_manager'] },
   { label: 'Exporters', href: '/exporters', icon: Users, roles: ['super_admin', 'deal_manager'] },
-  { label: 'Deals', href: '/deals', icon: FileText, roles: ['super_admin', 'deal_manager'] },
+  { label: 'Applications', href: '/deals', icon: FileText, roles: ['super_admin', 'deal_manager'] },
 ];
 
 const ADMIN_NAV: NavItem[] = [
   { label: 'Admin Dashboard', href: '/admin', icon: ShieldCheck, roles: ['super_admin', 'deal_manager'] },
-  { label: 'All Deals', href: '/admin/deals', icon: FileText, roles: ['super_admin', 'deal_manager'] },
+  { label: 'All Applications', href: '/admin/deals', icon: FileText, roles: ['super_admin', 'deal_manager'] },
   { label: 'Capital Pool', href: '/admin/capital', icon: Banknote, roles: ['super_admin', 'deal_manager'] },
   { label: 'Partners', href: '/admin/partners', icon: Building2, roles: ['super_admin'] },
   { label: 'Pricing', href: '/admin/pricing', icon: Banknote, roles: ['super_admin'] },

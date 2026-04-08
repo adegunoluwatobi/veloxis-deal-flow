@@ -203,7 +203,7 @@ export default function DealNew() {
 
       if (submitErr) throw submitErr;
 
-      toast({ title: 'Deal submitted', description: 'Your deal has been submitted for review.' });
+      toast({ title: 'Application submitted', description: 'Your application has been submitted for review.' });
       navigate('/deals');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to submit deal';
