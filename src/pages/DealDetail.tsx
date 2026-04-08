@@ -345,9 +345,9 @@ export default function DealDetail() {
 
   const activeDocs = docs.filter(d => !d.is_superseded);
 
-  // Approve prerequisites tooltip
+  // Approve prerequisites — pricing accepted by exporter, IPU verified
   const approvePrereqs: ValidationRule[] = [
-    { fieldId: 'pricing-card', label: 'Pricing must be saved', condition: !!(deal?.advance_amount && deal?.payment_terms_days) },
+    { fieldId: 'pricing-card', label: 'Exporter must have accepted pricing', condition: !!(deal as any)?.fee_acceptance_at },
     { fieldId: 'ipu-section', label: 'IPU must be uploaded and verified', condition: !!(deal as any)?.ipu_verified },
   ];
   const approveTooltip = buildPrerequisiteTooltip(approvePrereqs);
