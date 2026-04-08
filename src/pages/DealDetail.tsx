@@ -704,19 +704,6 @@ export default function DealDetail() {
         />
       )}
 
-      {/* Repayment FX Reconciliation */}
-      <RepaymentFxSection
-        dealId={deal.id}
-        invoiceCurrency={deal.invoice_currency_v2}
-        repaymentAmount={deal.repayment_amount}
-        actualRepaymentAmount={(deal as any).actual_repayment_amount ?? null}
-        repaymentCurrencyReceived={(deal as any).repayment_currency_received ?? null}
-        repaymentFxRate={(deal as any).repayment_fx_rate ?? null}
-        repaymentGbpEquivalent={(deal as any).repayment_gbp_equivalent ?? null}
-        reconciliationStatus={((deal as any).repayment_reconciliation_status ?? null) as RepaymentReconciliationStatus | null}
-        dealStatus={deal.status}
-        onReload={load}
-      />
 
       {/* Overdue Actions Panel */}
       <OverdueActionsPanel
