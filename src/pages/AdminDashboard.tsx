@@ -258,7 +258,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             {deals.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">No deals in the system.</p>
+              <p className="py-6 text-center text-sm text-muted-foreground">No applications in the system.</p>
             ) : (
               <div className="space-y-1.5">
                 {deals.slice(0, 8).map(deal => (

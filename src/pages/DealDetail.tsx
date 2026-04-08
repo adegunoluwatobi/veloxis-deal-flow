@@ -221,7 +221,7 @@ export default function DealDetail() {
         p_metadata: { actor_name: user?.email, from: deal.status, to: newStatus, ...extraFields },
       });
 
-      toast({ title: `Deal ${DEAL_STATUS_LABELS[newStatus].toLowerCase()}` });
+      toast({ title: `Application ${DEAL_STATUS_LABELS[newStatus].toLowerCase()}` });
       load();
     } catch (err: unknown) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Action failed', variant: 'destructive' });
