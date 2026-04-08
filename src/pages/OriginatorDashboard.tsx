@@ -106,7 +106,7 @@ export default function OriginatorDashboard() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent Deals</CardTitle>
+          <CardTitle>Recent Applications</CardTitle>
           <Button asChild variant="ghost" size="sm">
             <Link to="/deals">View all <ArrowRight className="ml-1 h-4 w-4" /></Link>
           </Button>
