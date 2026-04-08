@@ -508,6 +508,22 @@ export default function DealDetail() {
                   <Clock className="h-4 w-4" /> Back to Review
                 </Button>
               )}
+              {/* Post-approval lifecycle buttons */}
+              {deal.status === 'approved' && (
+                <Button size="sm" onClick={() => updateStatus('ipu_sent')} disabled={actionLoading} className="gap-1">
+                  <Send className="h-4 w-4" /> Send IPU to Buyer
+                </Button>
+              )}
+              {deal.status === ('ipu_sent' as DealStatus) && (
+                <Button size="sm" onClick={() => updateStatus('ipu_signed_awaiting_funding')} disabled={actionLoading} className="gap-1 bg-success hover:bg-success/90">
+                  <CheckCircle2 className="h-4 w-4" /> Mark IPU Signed
+                </Button>
+              )}
+              {deal.status === ('ipu_signed_awaiting_funding' as DealStatus) && (
+                <Button size="sm" onClick={() => updateStatus('funded_active', { funded_at: new Date().toISOString(), disbursement_date: new Date().toISOString().split('T')[0] })} disabled={actionLoading} className="gap-1 bg-success hover:bg-success/90">
+                  <DollarSign className="h-4 w-4" /> Record Funding / Disbursement
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
