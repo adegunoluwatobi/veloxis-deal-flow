@@ -43,6 +43,7 @@ export default function PaymentAdvicePanel({
   const { toast } = useToast();
   const [paymentDate, setPaymentDate] = useState('');
   const [amountReceived, setAmountReceived] = useState('');
+  const [paymentReference, setPaymentReference] = useState('');
   const [paymentFile, setPaymentFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [paymentValidationFailures, setPaymentValidationFailures] = useState<ValidationFailure[]>([]);
@@ -54,7 +55,6 @@ export default function PaymentAdvicePanel({
 
   const sym = CURRENCY_SYMBOLS[(invoiceCurrency ?? 'GBP') as InvoiceCurrency] ?? '£';
 
-  // Late penalty calculation
   const computePenalty = () => {
     if (!paymentDate || !repaymentDueDate || !advanceAmount || !discountFeePct) {
       return { overdueDays: 0, dailyRate: 0, latePenalty: 0 };
@@ -62,21 +62,22 @@ export default function PaymentAdvicePanel({
     const payment = parseISO(paymentDate);
     const maturity = parseISO(repaymentDueDate);
     const overdueDays = Math.max(0, differenceInDays(payment, maturity));
-    const dailyRate = (discountFeePct * 100) / 30; // discountFeePct is stored as decimal e.g. 0.02
+    const dailyRate = (discountFeePct * 100) / 30;
     const latePenalty = advanceAmount * (dailyRate / 100) * overdueDays;
     return { overdueDays, dailyRate, latePenalty };
   };
 
   const { overdueDays, dailyRate, latePenalty } = computePenalty();
 
-  // Settlement summary
   const received = parseFloat(amountReceived) || 0;
-  const residual = received - (advanceAmount ?? 0) - (platformFeeAmount ?? 0) - (discountFeeAmount ?? 0) - latePenalty;
+  const totalDeductions = (advanceAmount ?? 0) + (platformFeeAmount ?? 0) + (discountFeeAmount ?? 0) + latePenalty;
+  const residual = received - totalDeductions;
 
   const handleSubmit = async () => {
     const failures = validateAndScroll([
       { fieldId: 'field-payment-date', label: 'Payment Date', condition: !!paymentDate },
       { fieldId: 'field-amount-received', label: 'Amount Received', condition: !!amountReceived && parseFloat(amountReceived) > 0 },
+      { fieldId: 'field-payment-reference', label: 'Payment Reference / SWIFT Reference', condition: !!paymentReference.trim() },
       { fieldId: 'field-payment-file', label: 'Payment Advice Document', condition: !!paymentFile },
     ]);
     if (failures.length > 0) {
@@ -87,24 +88,21 @@ export default function PaymentAdvicePanel({
     setPaymentValidationFailures([]);
     setSubmitting(true);
     try {
-      // Upload payment advice document
-      const filePath = `deals/${dealId}/payment_advice_${Date.now()}_${sanitiseFilename(paymentFile.name)}`;
-      const { error: storageErr } = await supabase.storage.from('veloxis-documents').upload(filePath, paymentFile);
+      const filePath = `deals/${dealId}/payment_advice_${Date.now()}_${sanitiseFilename(paymentFile!.name)}`;
+      const { error: storageErr } = await supabase.storage.from('veloxis-documents').upload(filePath, paymentFile!);
       if (storageErr) throw storageErr;
 
-      // Create deal document record
       const { data: docData, error: docErr } = await supabase.from('deal_documents').insert({
         deal_id: dealId,
         document_type: 'payment_advice' as any,
-        file_name: paymentFile.name,
+        file_name: paymentFile!.name,
         file_path: filePath,
-        file_size_bytes: paymentFile.size,
-        mime_type: paymentFile.type,
+        file_size_bytes: paymentFile!.size,
+        mime_type: paymentFile!.type,
         uploaded_by: user.id,
       }).select('id').single();
       if (docErr) throw docErr;
 
-      // Update deal with payment info
       const { error: updateErr } = await supabase.from('deals').update({
         status: 'payment_received' as any,
         payment_date: paymentDate,
@@ -112,28 +110,30 @@ export default function PaymentAdvicePanel({
         actual_repayment_amount: parseFloat(amountReceived),
         actual_repayment_date: paymentDate,
         payment_advice_doc_id: docData.id,
+        payment_reference: paymentReference.trim(),
         late_penalty_amount: latePenalty,
         overdue_days_at_payment: overdueDays,
         residual_balance: residual,
       } as any).eq('id', dealId);
       if (updateErr) throw updateErr;
 
-      // Audit log
       await supabase.rpc('insert_audit_log', {
         p_deal_id: dealId,
         p_user_id: user.id,
         p_user_role: role as any,
         p_action_type: 'payment_advice_submitted' as any,
         p_metadata: {
+          actor_name: user.email,
           payment_date: paymentDate,
           amount_received: parseFloat(amountReceived),
+          payment_reference: paymentReference.trim(),
           late_penalty: latePenalty,
           overdue_days: overdueDays,
           residual_balance: residual,
         },
       });
 
-      toast({ title: 'Payment advice recorded', description: 'Deal status updated to Payment Received — Pending Closure.' });
+      toast({ title: 'Payment advice recorded', description: 'Deal status updated to Payment Received — Pending Settlement.' });
       onReload();
     } catch (err: unknown) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Submission failed', variant: 'destructive' });
@@ -157,11 +157,11 @@ export default function PaymentAdvicePanel({
         )}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Payment Date</Label>
+            <Label className="text-xs text-muted-foreground">Payment Date *</Label>
             <Input id="field-payment-date" type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="h-8" />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Amount Received ({invoiceCurrency ?? 'GBP'})</Label>
+            <Label className="text-xs text-muted-foreground">Amount Received ({invoiceCurrency ?? 'GBP'}) *</Label>
             <Input
               id="field-amount-received"
               type="number"
@@ -175,7 +175,18 @@ export default function PaymentAdvicePanel({
         </div>
 
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Payment Advice Document (SWIFT advice / bank confirmation)</Label>
+          <Label className="text-xs text-muted-foreground">Payment Reference / SWIFT Reference *</Label>
+          <Input
+            id="field-payment-reference"
+            value={paymentReference}
+            onChange={e => setPaymentReference(e.target.value)}
+            placeholder="e.g. SWIFT ref or bank transfer reference"
+            className="h-8"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Payment Advice Document (SWIFT advice / bank confirmation) *</Label>
           <Input
             id="field-payment-file"
             type="file"
@@ -185,7 +196,6 @@ export default function PaymentAdvicePanel({
           />
         </div>
 
-        {/* Late Penalty Calculation */}
         {overdueDays > 0 && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-1">
             <p className="text-xs font-medium text-destructive">Late Penalty Applies</p>
@@ -206,11 +216,14 @@ export default function PaymentAdvicePanel({
           </div>
         )}
 
-        {/* Settlement Summary Preview */}
         {received > 0 && (
           <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
             <p className="text-xs font-medium text-foreground">Settlement Summary Preview</p>
             <div className="space-y-1 text-xs">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Invoice Amount</span>
+                <span className="font-medium text-foreground">{sym}{(invoiceValue ?? 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+              </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Amount Received from Buyer</span>
                 <span className="font-medium text-foreground">{sym}{received.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
@@ -220,7 +233,7 @@ export default function PaymentAdvicePanel({
                 <span className="font-medium text-foreground">− {sym}{(advanceAmount ?? 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Less: Platform Fee</span>
+                <span className="text-muted-foreground">Less: Platform Fee (one-off)</span>
                 <span className="font-medium text-foreground">− {sym}{(platformFeeAmount ?? 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between">
@@ -229,24 +242,25 @@ export default function PaymentAdvicePanel({
               </div>
               {latePenalty > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Less: Late Penalty</span>
+                  <span className="text-muted-foreground">Less: Late Penalty ({overdueDays} days × daily rate)</span>
                   <span className="font-medium text-destructive">− {sym}{latePenalty.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
                 </div>
               )}
+              <div className="flex justify-between border-t border-border pt-1">
+                <span className="font-medium text-muted-foreground">Total Deductions</span>
+                <span className="font-medium text-foreground">− {sym}{totalDeductions.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+              </div>
               <div className="flex justify-between border-t border-border pt-1 mt-1">
-                <span className="font-medium text-foreground">Residual Balance Due to Exporter</span>
-                <span className={`font-semibold ${residual >= 0 ? 'text-success' : 'text-destructive'}`}>
+                <span className="font-semibold text-foreground">Residual Balance Due to Exporter</span>
+                <span className={`font-bold ${residual >= 0 ? 'text-success' : 'text-destructive'}`}>
                   {sym}{residual.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-2">
-              This residual is paid <strong>directly from Veloxis to the Exporter's domiciliary account</strong>. Greystar does not handle or route this payment.
-            </p>
           </div>
         )}
 
-        <Button size="sm" onClick={handleSubmit} disabled={submitting || !paymentDate || !amountReceived || !paymentFile}>
+        <Button size="sm" onClick={handleSubmit} disabled={submitting || !paymentDate || !amountReceived || !paymentReference.trim() || !paymentFile}>
           {submitting ? <><Loader2 className="mr-1 h-3 w-3 animate-spin" /> Submitting…</> : 'Submit Payment Advice'}
         </Button>
       </CardContent>
