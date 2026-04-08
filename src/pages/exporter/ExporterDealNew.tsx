@@ -828,23 +828,24 @@ export default function ExporterDealNew() {
               </div>
             </div>
 
-            {/* FX Risk Acknowledgement */}
+            {/* Domiciliary Account Confirmation */}
             <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
-              <p className="text-sm font-medium text-foreground">FX Risk Acknowledgement</p>
+              <p className="text-sm font-medium text-foreground">Settlement Confirmation</p>
+              <p className="text-xs text-muted-foreground">Settlement Method: Foreign Currency to Domiciliary Account</p>
               <div className="flex items-start space-x-2">
                 <Checkbox
-                  id="fx-risk"
-                  checked={form.fx_risk_acknowledged}
-                  onCheckedChange={(v) => updateField('fx_risk_acknowledged', v === true)}
+                  id="dom-account-confirm"
+                  checked={form.domiciliary_account_confirmed}
+                  onCheckedChange={(v) => updateField('domiciliary_account_confirmed', v === true)}
                 />
-                <label htmlFor="fx-risk" className="text-xs text-muted-foreground leading-relaxed">
-                  I understand that the advance will be paid in {form.invoice_currency} to my domiciliary account. Veloxis bears no responsibility for fluctuations in the NGN exchange rate. I am solely responsible for all costs and risks of converting to NGN, including CBN regulations on domiciliary account usage.
+                <label htmlFor="dom-account-confirm" className="text-xs text-muted-foreground leading-relaxed">
+                  I confirm my domiciliary account can receive {form.invoice_currency} and I accept full responsibility for any local currency conversion costs.
                 </label>
               </div>
-              {!form.fx_risk_acknowledged && (
+              {!form.domiciliary_account_confirmed && (
                 <p className="text-xs text-warning flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3" />
-                  You must acknowledge FX risk before submitting
+                  You must confirm before submitting
                 </p>
               )}
             </div>
