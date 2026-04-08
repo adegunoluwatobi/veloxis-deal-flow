@@ -100,7 +100,7 @@ export default function OverdueActionsPanel({
         p_metadata: { from: 'overdue', to: 'in_collections', action: 'escalated_to_collections' },
       });
 
-      toast({ title: 'Deal escalated to Collections' });
+      toast({ title: 'Application escalated to Collections' });
       onReload();
     } catch (err: unknown) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed', variant: 'destructive' });
