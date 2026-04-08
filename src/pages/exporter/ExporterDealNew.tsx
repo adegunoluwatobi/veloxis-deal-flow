@@ -182,19 +182,34 @@ export default function ExporterDealNew() {
 
   const currencySymbol = CURRENCIES.find(c => c.value === form.invoice_currency)?.symbol ?? '';
 
+  // Fee calculator values
+  const invoiceAmount = parseFloat(stripCommas(form.invoice_amount)) || 0;
+  const advRatePct = pricingConfig?.advance_rate_pct ?? 80;
+  const platformFeePct = pricingConfig?.platform_fee_pct ?? 1;
+  const discountFeePctMonthly = pricingConfig?.discount_fee_pct_monthly ?? 2;
+  const latePenaltyRate = pricingConfig?.late_penalty_rate_pct_daily ?? 0.067;
+  const minTerms = pricingConfig?.min_payment_terms_days ?? 30;
+  const maxTerms = pricingConfig?.max_payment_terms_days ?? 90;
+  const terms = parseInt(paymentTermsDays) || 0;
+  const advanceAmount = invoiceAmount * (advRatePct / 100);
+  const platformFeeAmount = invoiceAmount * (platformFeePct / 100);
+  const discountFeeAmount = advanceAmount * (discountFeePctMonthly / 100) * (terms / 30);
+  const totalFees = platformFeeAmount + discountFeeAmount;
+  const netAdvance = advanceAmount - totalFees;
+
   const canProceed = (s: number) => {
     switch (s) {
       case 0: return form.bank_name && form.bank_account_name && form.bank_account_number && form.bank_sort_code_iban && form.bank_country;
       case 1: return form.invoice_number && form.invoice_date && form.invoice_amount && form.invoice_currency && form.payment_due_date && (form.invoice_file || existingInvoicePath);
       case 2: return form.buyer_company_name && form.buyer_country && form.buyer_contact_name && form.buyer_contact_email && isValidEmail(form.buyer_contact_email) && form.buyer_contact_phone;
       case 3: return form.goods_description && form.export_destination && form.export_licence_number && form.hs_code && form.incoterms;
+      case 4: return terms >= minTerms && terms <= maxTerms && feeAccepted;
       default: return true;
     }
   };
 
   const handleSubmit = async (asDraft: boolean) => {
     if (!exporter || !user) return;
-    // Validate email before submit
     if (!asDraft && !isValidEmail(form.buyer_contact_email)) {
       setFieldErrors(prev => ({ ...prev, buyer_contact_email: 'Please enter a valid email address' }));
       setStep(2);
@@ -202,6 +217,11 @@ export default function ExporterDealNew() {
     }
     if (!asDraft && !form.fx_risk_acknowledged) {
       toast({ title: 'FX Risk Acknowledgement Required', description: 'Please acknowledge the FX risk before submitting.', variant: 'destructive' });
+      setStep(5);
+      return;
+    }
+    if (!asDraft && !feeAccepted) {
+      toast({ title: 'Fee Acceptance Required', description: 'Please accept the fee structure before submitting.', variant: 'destructive' });
       setStep(4);
       return;
     }
