@@ -17,6 +17,7 @@ import DealAuditTrail from '@/components/DealAuditTrail';
 import ChangeRequestModal, { type FlaggedField } from '@/components/ChangeRequestModal';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle, CheckCircle2, Send, XCircle, Loader2, Clock } from 'lucide-react';
+import DealLifecycleBanner from '@/components/DealLifecycleBanner';
 import type { DealStatus } from '@/types';
 import { CURRENCY_SYMBOLS, type InvoiceCurrency } from '@/types';
 import SettlementSummaryBanner from '@/components/SettlementSummaryBanner';
