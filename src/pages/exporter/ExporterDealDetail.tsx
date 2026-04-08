@@ -414,6 +414,9 @@ export default function ExporterDealDetail() {
       {/* Document Request Banner */}
       <ExporterDocRequestBanner dealId={deal.id} dealStatus={deal.status} onReload={loadData} />
 
+      {/* Lifecycle Status Banners + Pricing */}
+      <DealLifecycleBanner deal={deal} portal="exporter" />
+
       {/* Payment Received Banner & Settlement Summary */}
       <SettlementSummaryBanner
         dealId={deal.id}

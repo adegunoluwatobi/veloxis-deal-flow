@@ -347,6 +347,9 @@ export default function GreystarDealDetail() {
         </Card>
       )}
 
+      {/* Lifecycle Status Banners + Pricing */}
+      <DealLifecycleBanner deal={deal} portal="partner" />
+
       {/* Payment Received Banner & Settlement Summary */}
       <SettlementSummaryBanner
         dealId={deal.id}
