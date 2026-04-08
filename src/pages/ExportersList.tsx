@@ -43,9 +43,9 @@ export default function ExportersList() {
       const isVeloxis = role === 'super_admin' || role === 'deal_manager';
 
       if (isVeloxis) {
-        // Only show exporters who have at least one deal at sent_to_veloxis or beyond
+        // Only show exporters who have at least one deal at under_review or beyond
         const veloxisStatuses = [
-          'sent_to_veloxis', 'under_review', 'docs_requested', 'ready_for_final_approval',
+          'under_review', 'docs_requested', 'ready_for_final_approval',
           'rejection_pending_approval', 'approved', 'rejected', 'ipu_sent', 'ipu_expired',
           'ipu_signed_awaiting_funding', 'funded_active', 'repayment_due', 'overdue',
           'closed_repaid', 'closed_partial', 'rejected_by_veloxis',

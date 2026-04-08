@@ -124,16 +124,19 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
 export const PORTAL_STATUS_OVERRIDES: Record<Portal, Partial<Record<DealStatus, string>>> = {
   exporter: {
     sent_to_veloxis: 'Under Review',
+    under_review: 'Under Review',
     pending_exporter_acceptance: 'Offer Received',
     declined_by_exporter: 'Offer Declined',
   },
   partner: {
-    sent_to_veloxis: 'Submitted to Veloxis',
+    sent_to_veloxis: 'Under Review',
+    under_review: 'Under Review',
     pending_exporter_acceptance: 'Awaiting Exporter Response',
     declined_by_exporter: 'Declined by Exporter',
   },
   veloxis: {
-    sent_to_veloxis: 'Awaiting Review',
+    sent_to_veloxis: 'Under Review',
+    under_review: 'Under Review',
     pending_exporter_acceptance: 'Pending Exporter Acceptance',
     declined_by_exporter: 'Declined by Exporter',
   },

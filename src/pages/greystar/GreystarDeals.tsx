@@ -24,7 +24,7 @@ interface DealRow {
 const TABS = [
   { value: 'all', label: 'All' },
   { value: 'submitted', label: 'Submitted' },
-  { value: 'sent_to_veloxis', label: 'Submitted to Veloxis' },
+  { value: 'under_review', label: 'Under Review' },
   { value: 'rejected', label: 'Rejected' },
 ];
 

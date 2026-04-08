@@ -437,8 +437,8 @@ export default function DealDetail() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {/* sent_to_veloxis and under_review both show review actions (no separate "Move to Review" step) */}
-              {(deal.status === ('sent_to_veloxis' as DealStatus) || deal.status === 'under_review') && (
+              {/* Under review — show review actions */}
+              {deal.status === 'under_review' && (
                 <>
                   {role === 'deal_manager' && (
                     <>
