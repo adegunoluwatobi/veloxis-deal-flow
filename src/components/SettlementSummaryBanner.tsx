@@ -298,56 +298,66 @@ export default function SettlementSummaryBanner({
         </CardContent>
       </Card>
 
-      {/* STEP 3 — Send Residual Payment (Veloxis only) */}
+      {/* STEP 3 — Send Residual Payment (Veloxis only — Dialog) */}
       {isVeloxis && dealStatus === 'payment_received' && !residualSentAt && !exporterReceiptConfirmedAt && (
-        <Card className="border-primary/30">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <Send className="h-4 w-4 text-primary" />
-              <CardTitle className="text-base">Send Residual Payment</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-xs text-muted-foreground">Residual Amount</span>
-                <p className="font-medium text-foreground">{fmt(residualBalance)}</p>
+        <div className="flex justify-end">
+          <Dialog open={residualDialogOpen} onOpenChange={setResidualDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Send className="h-4 w-4" /> Send Residual Payment
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Send className="h-4 w-4" /> Send Residual Payment
+                </DialogTitle>
+                <DialogDescription>Record the residual transfer to the exporter's account.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-xs text-muted-foreground">Residual Amount</span>
+                    <p className="font-medium text-foreground">{fmt(residualBalance)}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Exporter Account</span>
+                    <p className="text-xs text-muted-foreground">Pre-filled from exporter profile</p>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Transfer Reference *</Label>
+                  <Input
+                    value={transferRef}
+                    onChange={e => setTransferRef(e.target.value)}
+                    placeholder="Bank transfer reference"
+                    className="h-8"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Transfer Confirmation / Remittance Advice (upload) *</Label>
+                  <Input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={e => setRemittanceFile(e.target.files?.[0] ?? null)}
+                    className="h-8"
+                  />
+                </div>
+
+                <Button
+                  size="sm"
+                  onClick={handleSendResidual}
+                  disabled={sendingResidual || !transferRef.trim() || !remittanceFile}
+                  className="w-full"
+                >
+                  {sendingResidual ? <><Loader2 className="mr-1 h-3 w-3 animate-spin" /> Sending…</> : 'Mark Residual as Sent'}
+                </Button>
               </div>
-              <div>
-                <span className="text-xs text-muted-foreground">Exporter Account</span>
-                <p className="text-xs text-muted-foreground">Pre-filled from exporter profile</p>
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Transfer Reference *</Label>
-              <Input
-                value={transferRef}
-                onChange={e => setTransferRef(e.target.value)}
-                placeholder="Bank transfer reference"
-                className="h-8"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Transfer Confirmation / Remittance Advice (upload) *</Label>
-              <Input
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={e => setRemittanceFile(e.target.files?.[0] ?? null)}
-                className="h-8"
-              />
-            </div>
-
-            <Button
-              size="sm"
-              onClick={handleSendResidual}
-              disabled={sendingResidual || !transferRef.trim() || !remittanceFile}
-            >
-              {sendingResidual ? <><Loader2 className="mr-1 h-3 w-3 animate-spin" /> Sending…</> : 'Mark Residual as Sent'}
-            </Button>
-          </CardContent>
-        </Card>
+            </DialogContent>
+          </Dialog>
+        </div>
       )}
 
       {/* STEP 4 — Confirm Receipt (Exporter only) */}
