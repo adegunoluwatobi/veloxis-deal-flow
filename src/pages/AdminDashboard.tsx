@@ -119,7 +119,7 @@ export default function AdminDashboard() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pool Size</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pool Size (GBP)</CardTitle>
             <Banknote className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -128,7 +128,7 @@ export default function AdminDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Deployed</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Deployed (GBP equiv.)</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -172,28 +172,33 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
+      {/* Deployed by Currency */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        {(['GBP', 'USD', 'EUR'] as const).map(cur => {
+          const amt = deployedByCurrency[cur] || 0;
+          const dealCount = activeDeals.filter(d => (d.invoice_currency_v2 || 'GBP') === cur).length;
+          return (
+            <Card key={cur}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Deployed in {cur}</CardTitle>
+                <Badge variant="secondary" className="text-xs">{dealCount} deal{dealCount !== 1 ? 's' : ''}</Badge>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xl font-bold text-foreground">
+                  {CURRENCY_SYMBOLS_MAP[cur]}{Number(amt).toLocaleString()}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
       {utilization > 90 && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 shrink-0" />
           Pool utilization is above 90%. New deal approvals may be blocked.
         </div>
       )}
-
-      {/* Deployed by Currency */}
-      {Object.keys(deployedByCurrency).length > 0 && (
-        <div className="grid gap-3 sm:grid-cols-3">
-          {Object.entries(deployedByCurrency).map(([cur, amt]) => (
-            <div key={cur} className="flex items-center justify-between rounded-lg border border-border p-3">
-              <span className="text-sm font-medium text-muted-foreground">Deployed in {cur}</span>
-              <span className="text-sm font-bold text-foreground">{CURRENCY_SYMBOLS_MAP[cur] || ''}{Number(amt).toLocaleString()}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="rounded-lg border border-border bg-warning/5 p-3 text-sm text-warning">
-        Non-GBP deals are converted to GBP at manually recorded FX rates. Exchange rate movement between advance and repayment is not hedged.
-      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Recent Deals */}
