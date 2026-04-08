@@ -13,6 +13,7 @@ import DealStatusBadge from '@/components/DealStatusBadge';
 import DealAuditTrail from '@/components/DealAuditTrail';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Building2, FileText, Globe, CreditCard, AlertTriangle, Send, Loader2, Pencil, Trash2, CheckCircle2, XCircle } from 'lucide-react';
+import DealLifecycleBanner from '@/components/DealLifecycleBanner';
 import { useConfirm } from '@/components/ConfirmDialog';
 import type { DealStatus } from '@/types';
 import { CURRENCY_SYMBOLS, type InvoiceCurrency } from '@/types';
@@ -412,6 +413,9 @@ export default function ExporterDealDetail() {
 
       {/* Document Request Banner */}
       <ExporterDocRequestBanner dealId={deal.id} dealStatus={deal.status} onReload={loadData} />
+
+      {/* Lifecycle Status Banners + Pricing */}
+      <DealLifecycleBanner deal={deal} portal="exporter" />
 
       {/* Payment Received Banner & Settlement Summary */}
       <SettlementSummaryBanner

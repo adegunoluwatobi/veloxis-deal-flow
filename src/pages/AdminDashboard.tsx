@@ -18,6 +18,7 @@ interface DealRow {
   status: DealStatus;
   invoice_number: string | null;
   invoice_value: number | null;
+  invoice_currency_v2: string | null;
   gbp_equivalent: number | null;
   buyer_company_name: string | null;
   created_at: string;
@@ -48,7 +49,7 @@ export default function AdminDashboard() {
     const load = async () => {
       const [dealsRes, exportersRes, configRes] = await Promise.all([
         supabase.from('deals')
-          .select('id, status, invoice_number, invoice_value, gbp_equivalent, buyer_company_name, created_at')
+          .select('id, status, invoice_number, invoice_value, invoice_currency_v2, gbp_equivalent, buyer_company_name, created_at')
           .order('created_at', { ascending: false }).limit(100),
         supabase.from('exporters')
           .select('id, company_name')
@@ -85,11 +86,18 @@ export default function AdminDashboard() {
 
   const poolGbp = Number(config.find(c => c.key === 'pilot_pool_gbp')?.value ?? 150000);
   const activeStatuses: DealStatus[] = ['funded_active', 'repayment_due', 'overdue'];
-  const deployed = deals
-    .filter(d => activeStatuses.includes(d.status))
-    .reduce((sum, d) => sum + (d.gbp_equivalent ?? 0), 0);
+  const activeDeals = deals.filter(d => activeStatuses.includes(d.status));
+  const deployed = activeDeals.reduce((sum, d) => sum + (d.gbp_equivalent ?? 0), 0);
   const available = poolGbp - deployed;
   const utilization = poolGbp > 0 ? (deployed / poolGbp) * 100 : 0;
+
+  // Group deployed by currency
+  const deployedByCurrency: Record<string, number> = {};
+  activeDeals.forEach(d => {
+    const cur = d.invoice_currency_v2 || 'GBP';
+    deployedByCurrency[cur] = (deployedByCurrency[cur] || 0) + (d.invoice_value ?? d.gbp_equivalent ?? 0);
+  });
+  const CURRENCY_SYMBOLS_MAP: Record<string, string> = { GBP: '£', USD: '$', EUR: '€' };
 
   const pendingReview = deals.filter(d => d.status === 'submitted').length;
   const underReview = deals.filter(d => d.status === 'under_review').length;
@@ -168,6 +176,18 @@ export default function AdminDashboard() {
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 shrink-0" />
           Pool utilization is above 90%. New deal approvals may be blocked.
+        </div>
+      )}
+
+      {/* Deployed by Currency */}
+      {Object.keys(deployedByCurrency).length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-3">
+          {Object.entries(deployedByCurrency).map(([cur, amt]) => (
+            <div key={cur} className="flex items-center justify-between rounded-lg border border-border p-3">
+              <span className="text-sm font-medium text-muted-foreground">Deployed in {cur}</span>
+              <span className="text-sm font-bold text-foreground">{CURRENCY_SYMBOLS_MAP[cur] || ''}{Number(amt).toLocaleString()}</span>
+            </div>
+          ))}
         </div>
       )}
 
