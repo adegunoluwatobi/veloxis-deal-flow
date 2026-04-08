@@ -105,7 +105,7 @@ interface AuditRow {
 }
 
 const AUDIT_LABELS: Partial<Record<AuditAction, string>> = {
-  deal_created: 'Deal created',
+  deal_created: 'Application created',
   deal_submitted: 'Submitted for review',
   deal_moved_to_under_review: 'Moved to under review',
   document_requested: 'Documents requested',
@@ -117,7 +117,7 @@ const AUDIT_LABELS: Partial<Record<AuditAction, string>> = {
   ipu_signed: 'IPU signed',
   funding_recorded: 'Funding recorded',
   repayment_recorded: 'Repayment recorded',
-  deal_closed: 'Deal closed',
+  deal_closed: 'Application closed',
   deal_status_changed: 'Status changed',
   pricing_recalculated: 'Pricing recalculated',
   internal_note_added: 'Note added',
