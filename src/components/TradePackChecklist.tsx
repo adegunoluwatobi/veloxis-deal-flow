@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, CheckCircle2, Clock, XCircle, Download, Eye } from 'lucide-react';
+import { FileText, CheckCircle2, Clock, XCircle, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TradePackDoc {
@@ -15,6 +15,7 @@ interface TradePackDoc {
   file_path: string;
   uploaded_at: string;
   is_superseded: boolean;
+  verification_status?: string;
 }
 
 interface Props {
@@ -37,21 +38,15 @@ const TRADE_PACK_LABELS: Record<string, string> = {
 
 const TRADE_PACK_TYPES = ['commercial_invoice', 'bill_of_lading', 'buyer_registration_doc', 'packing_list', 'insurance_certificate', 'nxp_form', 'export_licence'];
 
-type VerificationStatus = 'unverified' | 'verified' | 'rejected';
-
 export default function TradePackChecklist({
   dealId, documents, dealStatus, isVeloxis, onReload,
 }: Props) {
-  const { user, role } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Local verification state (in a real app this would be persisted — using deal_doc_requests or a field)
-  const [verifiedMap, setVerifiedMap] = useState<Record<string, VerificationStatus>>({});
-
   const activeDocs = documents.filter(d => !d.is_superseded);
 
-  // Only show doc types that have been uploaded
   const uploadedTypes = TRADE_PACK_TYPES.filter(type =>
     activeDocs.some(d => d.document_type === type)
   );
@@ -70,15 +65,33 @@ export default function TradePackChecklist({
 
   const handleVerify = async (docId: string, docType: string) => {
     setActionLoading(docType);
-    setVerifiedMap(prev => ({ ...prev, [docType]: 'verified' }));
-    toast({ title: 'Document verified' });
+    const { error } = await supabase.from('deal_documents').update({
+      verification_status: 'verified',
+      verified_at: new Date().toISOString(),
+      verified_by: user?.id,
+    } as any).eq('id', docId);
+    if (error) {
+      toast({ title: 'Failed to verify', variant: 'destructive' });
+    } else {
+      toast({ title: 'Document verified' });
+      onReload();
+    }
     setActionLoading(null);
   };
 
   const handleReject = async (docId: string, docType: string) => {
     setActionLoading(docType);
-    setVerifiedMap(prev => ({ ...prev, [docType]: 'rejected' }));
-    toast({ title: 'Document rejected', variant: 'destructive' });
+    const { error } = await supabase.from('deal_documents').update({
+      verification_status: 'rejected',
+      verified_at: new Date().toISOString(),
+      verified_by: user?.id,
+    } as any).eq('id', docId);
+    if (error) {
+      toast({ title: 'Failed to reject', variant: 'destructive' });
+    } else {
+      toast({ title: 'Document rejected', variant: 'destructive' });
+      onReload();
+    }
     setActionLoading(null);
   };
 
@@ -99,7 +112,7 @@ export default function TradePackChecklist({
           {uploadedTypes.map(type => {
             const doc = getDocForType(type);
             if (!doc) return null;
-            const status = verifiedMap[type] ?? 'unverified';
+            const status = (doc.verification_status as string) || 'unverified';
             const isLoading = actionLoading === type;
 
             return (
