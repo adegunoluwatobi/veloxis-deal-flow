@@ -200,13 +200,27 @@ export default function ExporterDealNew() {
   const totalFees = platformFeeAmount + discountFeeAmount;
   const netAdvance = advanceAmount - totalFees;
 
+  const REQUIRED_TRADE_DOCS = ['commercial_invoice', 'bill_of_lading', 'buyer_registration_doc'];
+  const RECOMMENDED_TRADE_DOCS = ['packing_list', 'insurance_certificate', 'nxp_form'];
+  const ALL_TRADE_DOCS = [
+    { type: 'commercial_invoice', label: 'Commercial Invoice', required: true },
+    { type: 'bill_of_lading', label: 'Bill of Lading / Airway Bill', required: true },
+    { type: 'buyer_registration_doc', label: 'Buyer Registration Document', required: true },
+    { type: 'packing_list', label: 'Packing List', required: false },
+    { type: 'insurance_certificate', label: 'Insurance Certificate', required: false },
+    { type: 'nxp_form', label: 'NXP Form (Customs Export Declaration)', required: false },
+  ];
+  const requiredDocsUploaded = REQUIRED_TRADE_DOCS.filter(t => tradePackFiles[t]).length;
+  const recommendedDocsUploaded = RECOMMENDED_TRADE_DOCS.filter(t => tradePackFiles[t]).length;
+
   const canProceed = (s: number) => {
     switch (s) {
       case 0: return form.bank_name && form.bank_account_name && form.bank_account_number && form.bank_sort_code_iban && form.bank_country;
       case 1: return form.invoice_number && form.invoice_date && form.invoice_amount && form.invoice_currency && form.payment_due_date && (form.invoice_file || existingInvoicePath);
       case 2: return form.buyer_company_name && form.buyer_country && form.buyer_contact_name && form.buyer_contact_email && isValidEmail(form.buyer_contact_email) && form.buyer_contact_phone;
       case 3: return form.goods_description && form.export_destination && form.export_licence_number && form.hs_code && form.incoterms;
-      case 4: return terms >= minTerms && terms <= maxTerms && feeAccepted && (terms <= 60 || extendedTermsConfirmed);
+      case 4: return requiredDocsUploaded === REQUIRED_TRADE_DOCS.length;
+      case 5: return terms >= minTerms && terms <= maxTerms && feeAccepted && (terms <= 60 || extendedTermsConfirmed);
       default: return true;
     }
   };
