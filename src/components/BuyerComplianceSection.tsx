@@ -15,7 +15,7 @@ import {
   BUYER_CREDIT_CHECK_LABELS, BUYER_CREDIT_CHECK_COLORS,
   type SanctionsScreeningStatus, type BuyerCreditCheckStatus,
 } from '@/types';
-import { Shield, FileText, Upload } from 'lucide-react';
+import { Shield, Upload } from 'lucide-react';
 import { sanitiseFilename } from '@/lib/sanitiseFilename';
 
 interface Props {
@@ -46,8 +46,19 @@ export default function BuyerComplianceSection({
   const [creditCheck, setCreditCheck] = useState(buyerCreditCheckStatus);
   const [notes, setNotes] = useState(buyerUnderwriterNotes ?? '');
   const [file, setFile] = useState<File | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
 
   const isSuperAdminOrDM = role === 'super_admin' || role === 'deal_manager';
+
+  // Determine if already completed (non-default values present)
+  const alreadyCompleted = (
+    buyerSanctionsStatus !== 'pending_screening' ||
+    buyerCreditCheckStatus !== 'pending' ||
+    (buyerUnderwriterNotes && buyerUnderwriterNotes.trim().length > 0) ||
+    (buyerCountryOfIncorporation && buyerCountryOfIncorporation.trim().length > 0)
+  );
+
+  const isLocked = alreadyCompleted || justSaved;
 
   const handleSave = async () => {
     setSaving(true);
@@ -59,7 +70,8 @@ export default function BuyerComplianceSection({
         buyer_country_of_incorporation: country.trim() || null,
       } as any).eq('id', dealId);
       if (error) throw error;
-      toast({ title: 'Buyer compliance updated' });
+      toast({ title: 'Buyer compliance saved' });
+      setJustSaved(true);
       onReload();
     } catch (err: unknown) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Save failed', variant: 'destructive' });
@@ -103,28 +115,37 @@ export default function BuyerComplianceSection({
         <div className="flex items-center gap-2">
           <Shield className="h-4 w-4 text-muted-foreground" />
           <CardTitle className="text-base">Buyer Compliance</CardTitle>
+          {isLocked && (
+            <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground">Saved</Badge>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Country of incorporation */}
         <div className="space-y-1">
           <Label className="text-xs text-muted-foreground">Buyer Country of Incorporation</Label>
-          <Input value={country} onChange={e => setCountry(e.target.value)} placeholder="e.g. United Kingdom" disabled={!isVeloxis} />
+          {isLocked ? (
+            <p className="text-sm text-foreground">{country || '—'}</p>
+          ) : (
+            <Input value={country} onChange={e => setCountry(e.target.value)} placeholder="e.g. United Kingdom" disabled={!isVeloxis} />
+          )}
         </div>
 
-        {/* Buyer registration doc upload */}
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Buyer Company Registration Document</Label>
-          <div className="flex gap-2">
-            <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setFile(e.target.files?.[0] ?? null)} className="flex-1" />
-            <Button size="sm" onClick={handleUploadDoc} disabled={!file || uploading}>
-              <Upload className="mr-1 h-3 w-3" /> {uploading ? 'Uploading…' : 'Upload'}
-            </Button>
+        {/* Buyer registration doc upload — Veloxis only, only when not locked */}
+        {isVeloxis && !isLocked && (
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Buyer Company Registration Document</Label>
+            <div className="flex gap-2">
+              <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setFile(e.target.files?.[0] ?? null)} className="flex-1" />
+              <Button size="sm" onClick={handleUploadDoc} disabled={!file || uploading}>
+                <Upload className="mr-1 h-3 w-3" /> {uploading ? 'Uploading…' : 'Upload'}
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Veloxis-only fields */}
-        {isSuperAdminOrDM && (
+        {/* Veloxis-only editable fields — or read-only if locked */}
+        {isSuperAdminOrDM && !isLocked ? (
           <>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
@@ -159,29 +180,37 @@ export default function BuyerComplianceSection({
               <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Notes on buyer creditworthiness…" />
             </div>
           </>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Sanctions Screening</span>
+                <Badge variant="secondary" className={cn('ml-2 text-xs', SANCTIONS_STATUS_COLORS[buyerSanctionsStatus])}>
+                  {SANCTIONS_STATUS_LABELS[buyerSanctionsStatus]}
+                </Badge>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Credit Check</span>
+                <Badge variant="secondary" className={cn('ml-2 text-xs', BUYER_CREDIT_CHECK_COLORS[buyerCreditCheckStatus])}>
+                  {BUYER_CREDIT_CHECK_LABELS[buyerCreditCheckStatus]}
+                </Badge>
+              </div>
+            </div>
+            {buyerUnderwriterNotes && (
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Underwriter Notes</Label>
+                <p className="text-sm text-foreground whitespace-pre-wrap">{buyerUnderwriterNotes}</p>
+              </div>
+            )}
+          </>
         )}
 
-        {/* Read-only status display for partners */}
-        {!isSuperAdminOrDM && (
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Sanctions Screening</span>
-              <Badge variant="secondary" className={cn('ml-2 text-xs', SANCTIONS_STATUS_COLORS[buyerSanctionsStatus])}>
-                {SANCTIONS_STATUS_LABELS[buyerSanctionsStatus]}
-              </Badge>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Credit Check</span>
-              <Badge variant="secondary" className={cn('ml-2 text-xs', BUYER_CREDIT_CHECK_COLORS[buyerCreditCheckStatus])}>
-                {BUYER_CREDIT_CHECK_LABELS[buyerCreditCheckStatus]}
-              </Badge>
-            </div>
-          </div>
+        {/* Save button only when not locked and user is Veloxis */}
+        {isSuperAdminOrDM && !isLocked && (
+          <Button size="sm" onClick={handleSave} disabled={saving}>
+            {saving ? 'Saving…' : 'Save Buyer Compliance'}
+          </Button>
         )}
-
-        <Button size="sm" onClick={handleSave} disabled={saving}>
-          {saving ? 'Saving…' : 'Save Buyer Compliance'}
-        </Button>
       </CardContent>
     </Card>
   );
