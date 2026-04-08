@@ -233,69 +233,12 @@ export default function DealDetail() {
   const handleRequestDocs = () => setRequestDocsOpen(true);
   const handleSubmitForFinalApproval = () => updateStatus('ready_for_final_approval' as DealStatus);
 
-  // Live pricing calculations
-  const pricingEditable = isDM && (deal?.status === ('sent_to_veloxis' as DealStatus) || deal?.status === 'under_review');
-  const liveAdvPct = parseFloat(editAdvPct) || 80;
-  const liveInvoiceValue = deal?.invoice_value ?? 0;
-  const liveAdvanceAmount = liveInvoiceValue * (liveAdvPct / 100);
-  const livePlatformFeePct = parseFloat(editPlatformFeePct) || 0;
-  const liveDiscountFeePct = parseFloat(editDiscountFeePct) || 0;
-  const livePaymentTerms = parseInt(editPaymentTerms) || 0;
-  // Platform fee: one-off on invoice face value
-  const livePlatformFeeAmount = liveInvoiceValue * (livePlatformFeePct / 100);
-  // Discount fee: per-month rate on advance amount, prorated by tenor
-  const liveDiscountFeeAmount = liveAdvanceAmount * (liveDiscountFeePct / 100) * (livePaymentTerms / 30);
-  const liveTotalFees = livePlatformFeeAmount + liveDiscountFeeAmount;
-  const liveNetAdvance = liveAdvanceAmount - liveTotalFees;
-  const liveRepaymentAmount = liveInvoiceValue;
-  const pricingCanSave = livePaymentTerms > 0;
+  // Pricing is now read-only — set globally by Super Admin and accepted by exporter at submission
+  const pricingEditable = false;
 
   const handleSavePricing = async () => {
-    if (!id || !deal) return;
-    const failures = validateAndScroll([
-      { fieldId: 'field-advance-pct', label: 'Advance %', condition: !!editAdvPct && parseFloat(editAdvPct) > 0 },
-      { fieldId: 'field-payment-terms', label: 'Payment Terms (days)', condition: !!editPaymentTerms && parseInt(editPaymentTerms) > 0 },
-      { fieldId: 'field-platform-fee', label: 'Platform Fee %', condition: editPlatformFeePct !== '' },
-      { fieldId: 'field-discount-fee', label: 'Discount Fee %', condition: editDiscountFeePct !== '' },
-    ]);
-    if (failures.length > 0) {
-      setValidationFailures(failures);
-      return;
-    }
-    setValidationFailures([]);
-    setPricingSaving(true);
-    try {
-      const { error } = await supabase.from('deals').update({
-        advance_percentage: liveAdvPct,
-        advance_amount: liveAdvanceAmount,
-        payment_terms_days: livePaymentTerms,
-        platform_fee_pct: livePlatformFeePct / 100,
-        platform_fee_amount: livePlatformFeeAmount,
-        discount_fee_pct: liveDiscountFeePct / 100,
-        discount_fee_amount: liveDiscountFeeAmount,
-        gross_yield: liveTotalFees,
-        net_advance_amount: liveNetAdvance,
-        repayment_amount: liveRepaymentAmount,
-      }).eq('id', id);
-      if (error) throw error;
-      await supabase.rpc('insert_audit_log', {
-        p_deal_id: id,
-        p_user_id: user?.id,
-        p_user_role: role as any,
-        p_action_type: 'pricing_recalculated' as AuditAction,
-        p_metadata: {
-          advance_pct: liveAdvPct,
-          platform_fee_pct: livePlatformFeePct,
-          discount_fee_pct: liveDiscountFeePct,
-        },
-      });
-      toast({ title: 'Pricing saved' });
-      load();
-    } catch (err: unknown) {
-      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Save failed', variant: 'destructive' });
-    } finally {
-      setPricingSaving(false);
-    }
+    // No longer needed — pricing is set globally
+    toast({ title: 'Info', description: 'Pricing is now managed globally in Admin → Pricing Configuration.' });
   };
 
   const handleApprove = async () => {
