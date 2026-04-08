@@ -9,11 +9,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { CurrencyInput, stripCommas } from '@/components/ui/currency-input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import {
-  Banknote, TrendingUp, LayoutDashboard, Plus, Edit, History,
+  Banknote, TrendingUp, LayoutDashboard, Plus, Edit, History, RefreshCw,
 } from 'lucide-react';
 
 interface SystemConfig { key: string; value: string; }
@@ -36,6 +37,18 @@ interface PoolHistoryRow {
   note: string | null;
   created_at: string;
 }
+interface FxRates {
+  GBP: number;
+  USD: number;
+  EUR: number;
+}
+interface DealCurrency {
+  gbp_equivalent: number | null;
+  invoice_currency_v2: string | null;
+  invoice_value: number | null;
+}
+
+const CURRENCY_SYMBOLS: Record<string, string> = { GBP: '£', USD: '$', EUR: '€' };
 
 export default function CapitalPool() {
   const { user, role } = useAuth();
@@ -44,10 +57,17 @@ export default function CapitalPool() {
 
   const [poolGbp, setPoolGbp] = useState(0);
   const [deployed, setDeployed] = useState(0);
+  const [dealsByCurrency, setDealsByCurrency] = useState<Record<string, number>>({});
   const [tranches, setTranches] = useState<Tranche[]>([]);
   const [history, setHistory] = useState<PoolHistoryRow[]>([]);
   const [users, setUsers] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+
+  // FX state
+  const [baseCurrency, setBaseCurrency] = useState<'GBP' | 'USD' | 'EUR'>('GBP');
+  const [fxRates, setFxRates] = useState<FxRates | null>(null);
+  const [fxUpdatedAt, setFxUpdatedAt] = useState<string | null>(null);
+  const [fxLoading, setFxLoading] = useState(false);
 
   // Modal states
   const [showUpdatePool, setShowUpdatePool] = useState(false);
@@ -64,11 +84,31 @@ export default function CapitalPool() {
   const [trancheDate, setTrancheDate] = useState('');
   const [trancheNotes, setTrancheNotes] = useState('');
 
+  const fetchRates = useCallback(async () => {
+    setFxLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('exchange-rates', {
+        body: null,
+        method: 'GET',
+      });
+      if (error) throw error;
+      if (data?.rates) {
+        setFxRates(data.rates);
+        setFxUpdatedAt(data.updated_at);
+      }
+    } catch (err) {
+      console.error('Failed to fetch FX rates:', err);
+      toast({ title: 'Could not fetch live exchange rates', variant: 'destructive' });
+    } finally {
+      setFxLoading(false);
+    }
+  }, [toast]);
+
   const load = useCallback(async () => {
     const [configRes, deployedRes, tranchesRes, historyRes] = await Promise.all([
       supabase.from('system_config').select('key, value'),
       supabase.from('deals')
-        .select('gbp_equivalent')
+        .select('gbp_equivalent, invoice_currency_v2, invoice_value')
         .in('status', ['funded_active', 'repayment_due', 'overdue']),
       supabase.from('capital_tranches').select('*').order('created_at', { ascending: false }),
       supabase.from('capital_pool_history').select('*').order('created_at', { ascending: false }).limit(50),
@@ -78,8 +118,17 @@ export default function CapitalPool() {
     const pool = Number(config.find(c => c.key === 'pilot_pool_gbp')?.value ?? 150000);
     setPoolGbp(pool);
 
-    const dep = (deployedRes.data ?? []).reduce((s, d) => s + (Number(d.gbp_equivalent) || 0), 0);
+    const deals = (deployedRes.data ?? []) as DealCurrency[];
+    const dep = deals.reduce((s, d) => s + (Number(d.gbp_equivalent) || 0), 0);
     setDeployed(dep);
+
+    // Group deployed by currency
+    const byCurrency: Record<string, number> = {};
+    deals.forEach(d => {
+      const cur = d.invoice_currency_v2 || 'GBP';
+      byCurrency[cur] = (byCurrency[cur] || 0) + (Number(d.invoice_value) || Number(d.gbp_equivalent) || 0);
+    });
+    setDealsByCurrency(byCurrency);
 
     setTranches((tranchesRes.data ?? []) as Tranche[]);
     setHistory((historyRes.data ?? []) as PoolHistoryRow[]);
@@ -98,7 +147,16 @@ export default function CapitalPool() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); fetchRates(); }, [load, fetchRates]);
+
+  // Convert GBP amount to selected base currency
+  const convert = (gbpAmount: number): number => {
+    if (!fxRates || baseCurrency === 'GBP') return gbpAmount;
+    return gbpAmount * (fxRates[baseCurrency] || 1);
+  };
+
+  const sym = CURRENCY_SYMBOLS[baseCurrency] || '£';
+  const fmtAmount = (gbpVal: number) => `${sym}${convert(gbpVal).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
   const available = poolGbp - deployed;
   const utilization = poolGbp > 0 ? (deployed / poolGbp) * 100 : 0;
@@ -137,7 +195,7 @@ export default function CapitalPool() {
     const newTotal = poolGbp + amt;
 
     await supabase.from('capital_tranches').insert({
-      reference: '', // auto-generated by trigger
+      reference: '',
       source_name: trancheSource.trim(),
       amount: amt,
       date_received: trancheDate,
@@ -174,17 +232,42 @@ export default function CapitalPool() {
           <h1 className="text-2xl font-bold text-foreground">Capital Pool</h1>
           <p className="text-sm text-muted-foreground">Manage pool size, tranches, and deployment</p>
         </div>
-        {isSuperAdmin && (
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => { setNewPoolSize(String(poolGbp)); setShowUpdatePool(true); }}>
-              <Edit className="mr-2 h-4 w-4" /> Update Pool Size
-            </Button>
-            <Button onClick={() => setShowAddTranche(true)}>
-              <Plus className="mr-2 h-4 w-4" /> Add Tranche
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Base currency selector */}
+          <Select value={baseCurrency} onValueChange={(v) => setBaseCurrency(v as 'GBP' | 'USD' | 'EUR')}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="GBP">🇬🇧 GBP</SelectItem>
+              <SelectItem value="USD">🇺🇸 USD</SelectItem>
+              <SelectItem value="EUR">🇪🇺 EUR</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="ghost" size="icon" onClick={fetchRates} disabled={fxLoading} title="Refresh rates">
+            <RefreshCw className={cn('h-4 w-4', fxLoading && 'animate-spin')} />
+          </Button>
+          {isSuperAdmin && (
+            <>
+              <Button variant="outline" onClick={() => { setNewPoolSize(String(poolGbp)); setShowUpdatePool(true); }}>
+                <Edit className="mr-2 h-4 w-4" /> Update Pool Size
+              </Button>
+              <Button onClick={() => setShowAddTranche(true)}>
+                <Plus className="mr-2 h-4 w-4" /> Add Tranche
+              </Button>
+            </>
+          )}
+        </div>
       </div>
+
+      {/* Live FX rate line */}
+      {fxRates && (
+        <div className="text-xs text-muted-foreground flex items-center gap-1">
+          <span>1 GBP = {fxRates.USD.toFixed(4)} USD | 1 GBP = {fxRates.EUR.toFixed(4)} EUR</span>
+          <span>—</span>
+          <span>Live rate via ExchangeRate-API{fxUpdatedAt ? `, updated ${format(new Date(fxUpdatedAt), 'dd MMM yyyy HH:mm')}` : ''}</span>
+        </div>
+      )}
 
       {/* Pool Overview Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -194,7 +277,8 @@ export default function CapitalPool() {
             <Banknote className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">£{poolGbp.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-foreground">{fmtAmount(poolGbp)}</div>
+            {baseCurrency !== 'GBP' && <p className="text-xs text-muted-foreground">£{poolGbp.toLocaleString()} GBP</p>}
           </CardContent>
         </Card>
         <Card>
@@ -203,7 +287,7 @@ export default function CapitalPool() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">£{deployed.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-foreground">{fmtAmount(deployed)}</div>
             <div className="mt-1 h-1.5 rounded-full bg-muted overflow-hidden">
               <div
                 className={cn('h-full rounded-full', utilization > 90 ? 'bg-destructive' : utilization > 75 ? 'bg-warning' : 'bg-success')}
@@ -211,6 +295,7 @@ export default function CapitalPool() {
               />
             </div>
             <p className="text-xs text-muted-foreground mt-1">{utilization.toFixed(1)}% utilization</p>
+            {baseCurrency !== 'GBP' && <p className="text-xs text-muted-foreground">£{deployed.toLocaleString()} GBP</p>}
           </CardContent>
         </Card>
         <Card>
@@ -220,8 +305,9 @@ export default function CapitalPool() {
           </CardHeader>
           <CardContent>
             <div className={cn('text-2xl font-bold', available > 0 ? 'text-success' : 'text-destructive')}>
-              £{available.toLocaleString()}
+              {fmtAmount(available)}
             </div>
+            {baseCurrency !== 'GBP' && <p className="text-xs text-muted-foreground">£{available.toLocaleString()} GBP</p>}
           </CardContent>
         </Card>
         <Card>
@@ -235,6 +321,25 @@ export default function CapitalPool() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Deployed by Currency breakdown */}
+      {Object.keys(dealsByCurrency).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Deployed by Invoice Currency</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {Object.entries(dealsByCurrency).map(([cur, amt]) => (
+                <div key={cur} className="flex items-center justify-between rounded-lg border p-3">
+                  <span className="text-sm font-medium">{cur}</span>
+                  <span className="text-sm font-bold">{CURRENCY_SYMBOLS[cur] || ''}{Number(amt).toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Capital Tranches */}
       <Card>
@@ -251,6 +356,7 @@ export default function CapitalPool() {
                   <TableHead>Reference</TableHead>
                   <TableHead>Source / Investor</TableHead>
                   <TableHead className="text-right">Amount (GBP)</TableHead>
+                  {baseCurrency !== 'GBP' && <TableHead className="text-right">Amount ({baseCurrency})</TableHead>}
                   <TableHead>Date Received</TableHead>
                   <TableHead>Notes</TableHead>
                   <TableHead>Added By</TableHead>
@@ -262,6 +368,9 @@ export default function CapitalPool() {
                     <TableCell className="font-mono text-xs">{t.reference}</TableCell>
                     <TableCell className="font-medium">{t.source_name}</TableCell>
                     <TableCell className="text-right">£{Number(t.amount).toLocaleString()}</TableCell>
+                    {baseCurrency !== 'GBP' && (
+                      <TableCell className="text-right">{sym}{convert(Number(t.amount)).toLocaleString(undefined, { maximumFractionDigits: 0 })}</TableCell>
+                    )}
                     <TableCell>{format(new Date(t.date_received), 'dd MMM yyyy')}</TableCell>
                     <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">{t.notes || '—'}</TableCell>
                     <TableCell className="text-sm">{users[t.created_by] || t.created_by.slice(0, 8)}</TableCell>
