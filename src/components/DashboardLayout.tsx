@@ -18,7 +18,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['super_admin', 'deal_manager'] },
   { label: 'Exporters', href: '/exporters', icon: Users, roles: ['super_admin', 'deal_manager'] },
-  { label: 'Deals', href: '/deals', icon: FileText, roles: ['super_admin', 'deal_manager'] },
+  { label: 'Applications', href: '/deals', icon: FileText, roles: ['super_admin', 'deal_manager'] },
 ];
 
 const ADMIN_NAV: NavItem[] = [
