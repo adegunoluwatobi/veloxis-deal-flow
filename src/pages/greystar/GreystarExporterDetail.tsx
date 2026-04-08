@@ -45,6 +45,7 @@ export default function GreystarExporterDetail() {
   const confirm = useConfirm();
   const [exporter, setExporter] = useState<any>(null);
   const [documents, setDocuments] = useState<any[]>([]);
+  const [deals, setDeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [resendingInvite, setResendingInvite] = useState(false);
