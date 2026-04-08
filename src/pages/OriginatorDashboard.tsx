@@ -62,7 +62,7 @@ export default function OriginatorDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Your deal pipeline at a glance</p>
+          <p className="text-sm text-muted-foreground">Your application pipeline at a glance</p>
         </div>
         <div className="flex gap-3">
           <Button asChild variant="outline">
