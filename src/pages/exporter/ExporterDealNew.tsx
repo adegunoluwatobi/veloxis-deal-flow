@@ -324,6 +324,24 @@ export default function ExporterDealNew() {
         dealId = newDeal.id;
       }
 
+      // Upload trade pack documents
+      for (const [docType, file] of Object.entries(tradePackFiles)) {
+        const safeName = sanitiseFilename(file.name);
+        const docPath = `deals/${dealId}/${docType}/${Date.now()}_${safeName}`;
+        const { error: docUpErr } = await supabase.storage.from('veloxis-documents').upload(docPath, file);
+        if (!docUpErr) {
+          await supabase.from('deal_documents').insert({
+            deal_id: dealId,
+            document_type: docType as any,
+            file_name: file.name,
+            file_path: docPath,
+            uploaded_by: user.id,
+            file_size_bytes: file.size,
+            mime_type: file.type,
+          });
+        }
+      }
+
       // Audit log
       const actionType = isEditing
         ? (asDraft ? 'deal_field_edited' : 'deal_submitted')
