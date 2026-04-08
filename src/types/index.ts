@@ -7,7 +7,7 @@ export type EntityType = 'limited_company' | 'plc' | 'llp' | 'incorporated_trust
 export type CommodityType = 'solid_minerals' | 'scrap_metal' | 'manufactured_goods' | 'textiles';
 
 export type DealStatus =
-  | 'draft' | 'submitted' | 'changes_requested' | 'sent_to_veloxis'
+  | 'draft' | 'submitted' | 'changes_requested' | 'sent_to_veloxis' /* legacy, now merged into under_review */
   | 'under_review' | 'docs_requested'
   | 'ready_for_final_approval' | 'rejection_pending_approval'
   | 'pending_exporter_acceptance' | 'declined_by_exporter'
