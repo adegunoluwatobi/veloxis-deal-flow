@@ -1,56 +1,32 @@
+## Plan
 
-# Onboarding & KYC Compliance
+### 1. Multi-currency display on admin dashboard
+- Show deployed amounts by currency (GBP/USD/EUR) on the admin dashboard overview cards
+- Already have FX rates from the exchange-rates edge function
 
-## Phase 1: Database Changes
+### 2. Exporter & Partner deal pricing visibility
+- Ensure both exporter and partner deal detail pages show the locked-in pricing (advance amount, platform fee, discount fee, net advance) in read-only format
 
-### New enums
-- `sanctions_screening_status`: pending_screening, clear, flagged
-- `buyer_credit_check_status`: pending, pass, refer, fail
+### 3. Post-approval transactional email notifications (7 email templates)
+This requires setting up Lovable's email infrastructure first, then creating templates for each lifecycle event:
 
-### New columns on `exporters` table
-- `source_of_funds_statement` (text) — free-text description
-- `sanctions_screening_status` (enum, default: pending_screening)
-- `edd_required` (boolean, default: true)
-- `edd_completed` (boolean, default: false)
+- **deal-approved** — sent to exporter + partner on approval
+- **ipu-signed** — sent to exporter when buyer signs IPU
+- **deal-funded** — sent to exporter + partner when deal marked funded
+- **deal-overdue** — sent to exporter + partner when deal goes overdue
+- **payment-received** — sent to exporter + partner when payment advice uploaded
+- **deal-closed** — sent to exporter + partner when exporter confirms receipt
 
-### New table: `ubo_declarations`
-- id, exporter_id, full_name, nationality, date_of_birth, residential_address, ownership_percentage
-- RLS: exporter can CRUD own, partner can view org, Veloxis can view all
+### 4. Portal status displays
+- Exporter deal detail: status-appropriate banners (Approved → Awaiting IPU, IPU Signed, Funded with countdown, Overdue with penalty, Payment Received with settlement summary)
+- Partner deal detail: matching read-only status displays
 
-### New exporter_document_type enum values
-- `ubo_declaration_doc`
-- `source_of_funds_doc`
-- `bank_statements`
+### 5. Wire up email triggers
+- Add `supabase.functions.invoke('send-transactional-email', ...)` calls at each status transition point in the deal detail pages
 
-### New columns on `deals` table (Buyer KYC)
-- `buyer_country_of_incorporation` (text)
-- `buyer_sanctions_status` (sanctions_screening_status enum, default: pending_screening)
-- `buyer_credit_check_status` (buyer_credit_check_status enum, default: pending)
-- `buyer_underwriter_notes` (text)
-
-### New deal_document_type enum values
-- `buyer_registration_doc`
-
-## Phase 2: UI Changes
-
-### Exporter Onboarding page
-- Add "Compliance & Due Diligence" section with:
-  - UBO Declaration form (add/remove UBO persons)
-  - Source of Funds free-text + upload
-  - Bank Statements multi-file upload
-
-### Exporter Detail pages (Partner + Veloxis)
-- Show compliance docs in a dedicated section
-- Veloxis-only: Sanctions/PEP status dropdown, EDD toggle
-
-### Deal Detail page (Partner + Veloxis)
-- Add "Buyer Compliance" sub-section (hidden from exporter)
-- Buyer registration doc upload
-- Buyer country of incorporation
-- Buyer sanctions status (Veloxis only)
-- Buyer credit check status (Veloxis only)
-- Underwriter notes (Veloxis only)
-
-## Phase 3: Gating Logic
-- EDD flag blocks deal approval until edd_completed = true
-- Sanctions "flagged" status shows warning on deal detail
+### Order of execution
+1. Check email domain status → setup infrastructure → scaffold templates
+2. Create all email templates
+3. Update dashboard with multi-currency
+4. Update exporter/partner deal pages with pricing + status banners
+5. Wire up email triggers at status transition points
