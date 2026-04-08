@@ -234,12 +234,12 @@ export default function ExporterDealNew() {
     }
     if (!asDraft && !form.fx_risk_acknowledged) {
       toast({ title: 'FX Risk Acknowledgement Required', description: 'Please acknowledge the FX risk before submitting.', variant: 'destructive' });
-      setStep(5);
+      setStep(6);
       return;
     }
     if (!asDraft && !feeAccepted) {
       toast({ title: 'Fee Acceptance Required', description: 'Please accept the fee structure before submitting.', variant: 'destructive' });
-      setStep(4);
+      setStep(5);
       return;
     }
     setSaving(true);
