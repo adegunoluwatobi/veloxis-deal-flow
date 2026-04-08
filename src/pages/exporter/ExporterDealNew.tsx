@@ -58,6 +58,7 @@ export default function ExporterDealNew() {
   const [pricingConfig, setPricingConfig] = useState<any>(null);
   const [paymentTermsDays, setPaymentTermsDays] = useState('');
   const [feeAccepted, setFeeAccepted] = useState(false);
+  const [extendedTermsConfirmed, setExtendedTermsConfirmed] = useState(false);
   const isEditing = !!editDealId;
 
   const [form, setForm] = useState({
@@ -203,7 +204,7 @@ export default function ExporterDealNew() {
       case 1: return form.invoice_number && form.invoice_date && form.invoice_amount && form.invoice_currency && form.payment_due_date && (form.invoice_file || existingInvoicePath);
       case 2: return form.buyer_company_name && form.buyer_country && form.buyer_contact_name && form.buyer_contact_email && isValidEmail(form.buyer_contact_email) && form.buyer_contact_phone;
       case 3: return form.goods_description && form.export_destination && form.export_licence_number && form.hs_code && form.incoterms;
-      case 4: return terms >= minTerms && terms <= maxTerms && feeAccepted;
+      case 4: return terms >= minTerms && terms <= maxTerms && feeAccepted && (terms <= 60 || extendedTermsConfirmed);
       default: return true;
     }
   };
@@ -611,10 +612,28 @@ export default function ExporterDealNew() {
                 <p className="text-xs text-destructive">Maximum payment terms is {maxTerms} days</p>
               )}
               {terms > 30 && terms <= 60 && (
-                <p className="text-xs text-warning flex items-center gap-1"><AlertTriangle className="h-3 w-3" />Payment terms above 30 days carry higher discount fees</p>
+                <div className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3 mt-1">
+                  <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                  <p className="text-xs text-warning">Payment terms above 30 days increase your discount fee. Ensure this matches your contract with the buyer.</p>
+                </div>
               )}
               {terms > 60 && terms <= maxTerms && (
-                <p className="text-xs text-destructive flex items-center gap-1"><AlertTriangle className="h-3 w-3" />Extended payment terms above 60 days — please confirm you understand the higher fees</p>
+                <div className="space-y-2 mt-1">
+                  <div className="flex items-start gap-2 rounded-md border border-[hsl(30,90%,50%)]/40 bg-[hsl(30,90%,50%)]/10 p-3">
+                    <AlertTriangle className="h-4 w-4 text-[hsl(30,90%,50%)] shrink-0 mt-0.5" />
+                    <p className="text-xs text-[hsl(30,90%,50%)]">Warning: Standard export finance terms are 30 days. Terms above 60 days significantly increase your fees and repayment risk.</p>
+                  </div>
+                  <div className="flex items-start space-x-2 pl-1">
+                    <Checkbox
+                      id="extended-terms-confirm"
+                      checked={extendedTermsConfirmed}
+                      onCheckedChange={(v) => setExtendedTermsConfirmed(v === true)}
+                    />
+                    <label htmlFor="extended-terms-confirm" className="text-xs text-muted-foreground leading-relaxed">
+                      I confirm these payment terms have been agreed in my contract with the buyer
+                    </label>
+                  </div>
+                </div>
               )}
             </div>
 

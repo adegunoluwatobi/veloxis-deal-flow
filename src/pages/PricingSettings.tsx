@@ -173,6 +173,13 @@ export default function PricingSettings() {
                 ))}
               </div>
 
+              {parseInt(form.max_payment_terms_days) > 60 && (
+                <div className="flex items-start gap-2 rounded-md border border-[hsl(30,90%,50%)]/40 bg-[hsl(30,90%,50%)]/10 p-3">
+                  <AlertTriangle className="h-4 w-4 text-[hsl(30,90%,50%)] shrink-0 mt-0.5" />
+                  <p className="text-sm text-[hsl(30,90%,50%)]">Setting maximum terms above 60 days increases platform risk exposure.</p>
+                </div>
+              )}
+
               <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/5 p-4">
                 <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
                 <p className="text-sm text-muted-foreground">
