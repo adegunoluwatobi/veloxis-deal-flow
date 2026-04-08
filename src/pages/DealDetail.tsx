@@ -67,6 +67,7 @@ interface DealRow {
   updated_at: string;
   exporter_id: string;
   originator_id: string;
+  gbp_equivalent: number | null;
 }
 
 interface ExporterRow {
