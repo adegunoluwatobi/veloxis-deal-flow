@@ -49,7 +49,7 @@ export default function AdminDashboard() {
     const load = async () => {
       const [dealsRes, exportersRes, configRes] = await Promise.all([
         supabase.from('deals')
-          .select('id, status, invoice_number, invoice_value, gbp_equivalent, buyer_company_name, created_at')
+          .select('id, status, invoice_number, invoice_value, invoice_currency_v2, gbp_equivalent, buyer_company_name, created_at')
           .order('created_at', { ascending: false }).limit(100),
         supabase.from('exporters')
           .select('id, company_name')
