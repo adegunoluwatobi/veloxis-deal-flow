@@ -18,6 +18,7 @@ interface DealRow {
   status: DealStatus;
   invoice_number: string | null;
   invoice_value: number | null;
+  invoice_currency_v2: string | null;
   gbp_equivalent: number | null;
   buyer_company_name: string | null;
   created_at: string;
