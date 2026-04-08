@@ -86,11 +86,18 @@ export default function AdminDashboard() {
 
   const poolGbp = Number(config.find(c => c.key === 'pilot_pool_gbp')?.value ?? 150000);
   const activeStatuses: DealStatus[] = ['funded_active', 'repayment_due', 'overdue'];
-  const deployed = deals
-    .filter(d => activeStatuses.includes(d.status))
-    .reduce((sum, d) => sum + (d.gbp_equivalent ?? 0), 0);
+  const activeDeals = deals.filter(d => activeStatuses.includes(d.status));
+  const deployed = activeDeals.reduce((sum, d) => sum + (d.gbp_equivalent ?? 0), 0);
   const available = poolGbp - deployed;
   const utilization = poolGbp > 0 ? (deployed / poolGbp) * 100 : 0;
+
+  // Group deployed by currency
+  const deployedByCurrency: Record<string, number> = {};
+  activeDeals.forEach(d => {
+    const cur = d.invoice_currency_v2 || 'GBP';
+    deployedByCurrency[cur] = (deployedByCurrency[cur] || 0) + (d.invoice_value ?? d.gbp_equivalent ?? 0);
+  });
+  const CURRENCY_SYMBOLS_MAP: Record<string, string> = { GBP: '£', USD: '$', EUR: '€' };
 
   const pendingReview = deals.filter(d => d.status === 'submitted').length;
   const underReview = deals.filter(d => d.status === 'under_review').length;
