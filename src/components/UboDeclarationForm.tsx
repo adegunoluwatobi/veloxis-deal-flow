@@ -115,6 +115,22 @@ export default function UboDeclarationForm({ exporterId, readOnly = false }: Pro
         }
       }
       toast({ title: 'UBO declarations saved' });
+      // Reload from DB to ensure IDs are fresh
+      const { data: refreshed } = await supabase
+        .from('ubo_declarations')
+        .select('*')
+        .eq('exporter_id', exporterId)
+        .order('created_at', { ascending: true });
+      if (refreshed && refreshed.length > 0) {
+        setUbos(refreshed.map((u: any) => ({
+          id: u.id,
+          full_name: u.full_name,
+          nationality: u.nationality,
+          date_of_birth: u.date_of_birth,
+          residential_address: u.residential_address,
+          ownership_percentage: String(u.ownership_percentage),
+        })));
+      }
     } catch (err: unknown) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Save failed', variant: 'destructive' });
     } finally {
