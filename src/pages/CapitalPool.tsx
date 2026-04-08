@@ -323,7 +323,7 @@ export default function CapitalPool() {
       </div>
 
       {/* Deployed by Currency breakdown */}
-      {Object.keys(dealsByurrency).length > 0 && (
+      {Object.keys(dealsByCurrency).length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Deployed by Invoice Currency</CardTitle>
