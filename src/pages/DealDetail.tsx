@@ -832,12 +832,12 @@ export default function DealDetail() {
         </DialogContent>
       </Dialog>
 
-      {/* Pricing Override Dialog */}
+      {/* Approve Confirmation Dialog */}
       <Dialog open={pricingOverride} onOpenChange={setPricingOverride}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Approve Deal</DialogTitle>
-            <DialogDescription>Confirm or adjust the advance percentage before approving. Pricing will be locked after approval.</DialogDescription>
+            <DialogDescription>Confirm that you want to approve this deal. Pricing was accepted by the exporter at submission time.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid gap-2 text-sm">
@@ -846,27 +846,16 @@ export default function DealDetail() {
                 <span className="font-medium">{sym}{(deal.invoice_value ?? 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between">
+                <span className="text-muted-foreground">Advance Amount</span>
+                <span className="font-medium">{deal.advance_amount ? `${sym}${deal.advance_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">Payment Terms</span>
                 <span className="font-medium">{deal.payment_terms_days} days</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Subscription</span>
-                <span className="font-medium">{exporter?.subscription_tier === 'veloxis_pro' ? 'Veloxis Pro' : 'Pay As You Go'}</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Advance Percentage</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={overrideAdvPct}
-                  onChange={(e) => setOverrideAdvPct(e.target.value)}
-                  className="w-24"
-                />
-                <Percent className="h-4 w-4 text-muted-foreground" />
-              </div>
+              {(deal as any).fee_acceptance_at && (
+                <p className="text-xs text-success">Exporter accepted fee terms on {new Date((deal as any).fee_acceptance_at).toLocaleDateString('en-GB')}</p>
+              )}
             </div>
           </div>
           <DialogFooter>
