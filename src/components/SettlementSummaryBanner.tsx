@@ -153,6 +153,7 @@ export default function SettlementSummaryBanner({
       });
 
       toast({ title: 'Residual marked as sent', description: 'Exporter will be able to confirm receipt.' });
+      setResidualDialogOpen(false);
       onReload();
     } catch (err: unknown) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed', variant: 'destructive' });
