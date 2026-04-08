@@ -76,6 +76,7 @@ export default function SettlementSummaryBanner({
   const [confirmNotes, setConfirmNotes] = useState('');
 
   // Send Residual state (Veloxis only)
+  const [residualDialogOpen, setResidualDialogOpen] = useState(false);
   const [transferRef, setTransferRef] = useState('');
   const [remittanceFile, setRemittanceFile] = useState<File | null>(null);
   const [sendingResidual, setSendingResidual] = useState(false);
