@@ -233,7 +233,8 @@ export default function GreystarDealDetail() {
   const submitTooltip = canSubmitToVeloxis ? buildPrerequisiteTooltip(submitPrereqs) : 'Application must be in Submitted status';
 
   // Show pending CR info
-  const crFields: FlaggedField[] = pendingCR?.fields_flagged ?? [];
+  const psym = CURRENCY_SYMBOLS[(deal?.invoice_currency_v2 as InvoiceCurrency) ?? 'GBP'] ?? '£';
+  const pfmt = (v: number | null) => v != null ? `${psym}${Number(v).toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—';
 
   return (
     <div className="space-y-6 animate-fade-in">
