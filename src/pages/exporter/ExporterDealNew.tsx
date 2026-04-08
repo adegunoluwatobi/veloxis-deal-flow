@@ -87,6 +87,10 @@ export default function ExporterDealNew() {
 
   useEffect(() => {
     if (!user) return;
+    // Load pricing config
+    supabase.from('pricing_config').select('*').limit(1).maybeSingle().then(({ data }) => {
+      if (data) setPricingConfig(data);
+    });
     const load = async () => {
       const { data: exp } = await supabase
         .from('exporters')
