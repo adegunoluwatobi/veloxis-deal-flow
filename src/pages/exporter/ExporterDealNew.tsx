@@ -59,6 +59,8 @@ export default function ExporterDealNew() {
   const [paymentTermsDays, setPaymentTermsDays] = useState('');
   const [feeAccepted, setFeeAccepted] = useState(false);
   const [extendedTermsConfirmed, setExtendedTermsConfirmed] = useState(false);
+  const [tradePackFiles, setTradePackFiles] = useState<Record<string, File>>({});
+  const [tradePackUploading, setTradePackUploading] = useState(false);
   const isEditing = !!editDealId;
 
   const [form, setForm] = useState({
