@@ -203,7 +203,7 @@ export default function AdminDashboard() {
             <Card key={cur}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Deployed in {cur}</CardTitle>
-                <Badge variant="secondary" className="text-xs">{dealCount} deal{dealCount !== 1 ? 's' : ''}</Badge>
+                <Badge variant="secondary" className="text-xs">{dealCount} application{dealCount !== 1 ? 's' : ''}</Badge>
               </CardHeader>
               <CardContent>
                 <div className="text-xl font-bold text-foreground">
@@ -214,6 +214,28 @@ export default function AdminDashboard() {
           );
         })}
       </div>
+
+      {/* Total Repaid by Currency */}
+      {closedDeals.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-3">
+          {(['GBP', 'USD', 'EUR'] as const).map(cur => {
+            const data = repaidByCurrency[cur];
+            return (
+              <Card key={`repaid-${cur}`} className="border-success/20 bg-success/5">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Repaid in {cur}</CardTitle>
+                  <Badge variant="secondary" className="text-xs bg-success/10 text-success">{data?.count ?? 0} closed</Badge>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-xl font-bold text-success">
+                    {CURRENCY_SYMBOLS_MAP[cur]}{(data?.amount ?? 0).toLocaleString()}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       {utilization > 90 && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive flex items-center gap-2">
