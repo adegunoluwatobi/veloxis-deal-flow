@@ -45,43 +45,53 @@ export default function AdminDashboard() {
   const [config, setConfig] = useState<SystemConfig[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const load = async () => {
+    const [dealsRes, exportersRes, configRes] = await Promise.all([
+      supabase.from('deals')
+        .select('id, status, invoice_number, invoice_value, invoice_currency_v2, gbp_equivalent, buyer_company_name, created_at')
+        .order('created_at', { ascending: false }).limit(100),
+      supabase.from('exporters')
+        .select('id, company_name')
+        .order('created_at', { ascending: false }),
+      supabase.from('system_config').select('key, value'),
+    ]);
+
+    const exporters = (exportersRes.data as ExporterRow[]) ?? [];
+    const exporterIds = exporters.map(e => e.id);
+
+    let docs: ExporterDocRow[] = [];
+    if (exporterIds.length > 0) {
+      const { data: docData } = await supabase
+        .from('exporter_documents')
+        .select('exporter_id, document_type, document_status, expiry_status, is_superseded')
+        .in('exporter_id', exporterIds)
+        .eq('is_superseded', false);
+      docs = (docData as ExporterDocRow[]) ?? [];
+    }
+
+    const docsByExporter = groupDocumentsByExporter(docs);
+    const withKyc = exporters.map(exp => ({
+      ...exp,
+      kyc: computeKycStatus(docsByExporter.get(exp.id) ?? []),
+    }));
+
+    setDeals((dealsRes.data as DealRow[]) ?? []);
+    setExportersWithKyc(withKyc);
+    setConfig((configRes.data as SystemConfig[]) ?? []);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const load = async () => {
-      const [dealsRes, exportersRes, configRes] = await Promise.all([
-        supabase.from('deals')
-          .select('id, status, invoice_number, invoice_value, invoice_currency_v2, gbp_equivalent, buyer_company_name, created_at')
-          .order('created_at', { ascending: false }).limit(100),
-        supabase.from('exporters')
-          .select('id, company_name')
-          .order('created_at', { ascending: false }),
-        supabase.from('system_config').select('key, value'),
-      ]);
-
-      const exporters = (exportersRes.data as ExporterRow[]) ?? [];
-      const exporterIds = exporters.map(e => e.id);
-
-      let docs: ExporterDocRow[] = [];
-      if (exporterIds.length > 0) {
-        const { data: docData } = await supabase
-          .from('exporter_documents')
-          .select('exporter_id, document_type, document_status, expiry_status, is_superseded')
-          .in('exporter_id', exporterIds)
-          .eq('is_superseded', false);
-        docs = (docData as ExporterDocRow[]) ?? [];
-      }
-
-      const docsByExporter = groupDocumentsByExporter(docs);
-      const withKyc = exporters.map(exp => ({
-        ...exp,
-        kyc: computeKycStatus(docsByExporter.get(exp.id) ?? []),
-      }));
-
-      setDeals((dealsRes.data as DealRow[]) ?? []);
-      setExportersWithKyc(withKyc);
-      setConfig((configRes.data as SystemConfig[]) ?? []);
-      setLoading(false);
-    };
     load();
+
+    const channel = supabase
+      .channel('admin-dashboard-deals')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'deals' }, () => {
+        load();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const poolGbp = Number(config.find(c => c.key === 'pilot_pool_gbp')?.value ?? 150000);

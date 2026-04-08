@@ -50,40 +50,51 @@ export default function ExporterDashboard() {
   const [recentDeals, setRecentDeals] = useState<ActionDeal[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const load = async () => {
+    if (!user) return;
+    const { data: exp } = await supabase
+      .from('exporters')
+      .select('*')
+      .eq('exporter_user_id', user.id)
+      .limit(1)
+      .maybeSingle();
+
+    if (exp) {
+      setExporter(exp);
+      const [docsRes, dealsRes] = await Promise.all([
+        supabase
+          .from('exporter_documents')
+          .select('*')
+          .eq('exporter_id', exp.id)
+          .eq('is_superseded', false)
+          .order('uploaded_at', { ascending: false }),
+        supabase
+          .from('deals')
+          .select('id, deal_reference, status, buyer_company_name, invoice_value, invoice_currency_v2')
+          .eq('exporter_id', exp.id)
+          .order('created_at', { ascending: false })
+          .limit(20),
+      ]);
+      setDocuments(docsRes.data ?? []);
+      const allDeals = (dealsRes.data ?? []) as ActionDeal[];
+      setActionDeals(allDeals.filter(d => ACTION_STATUSES.includes(d.status)));
+      setRecentDeals(allDeals.slice(0, 5));
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (!user) return;
-    const load = async () => {
-      const { data: exp } = await supabase
-        .from('exporters')
-        .select('*')
-        .eq('exporter_user_id', user.id)
-        .limit(1)
-        .maybeSingle();
-
-      if (exp) {
-        setExporter(exp);
-        const [docsRes, dealsRes] = await Promise.all([
-          supabase
-            .from('exporter_documents')
-            .select('*')
-            .eq('exporter_id', exp.id)
-            .eq('is_superseded', false)
-            .order('uploaded_at', { ascending: false }),
-          supabase
-            .from('deals')
-            .select('id, deal_reference, status, buyer_company_name, invoice_value, invoice_currency_v2')
-            .eq('exporter_id', exp.id)
-            .order('created_at', { ascending: false })
-            .limit(20),
-        ]);
-        setDocuments(docsRes.data ?? []);
-        const allDeals = (dealsRes.data ?? []) as ActionDeal[];
-        setActionDeals(allDeals.filter(d => ACTION_STATUSES.includes(d.status)));
-        setRecentDeals(allDeals.slice(0, 5));
-      }
-      setLoading(false);
-    };
     load();
+
+    const channel = supabase
+      .channel('exporter-dashboard-deals')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'deals' }, () => {
+        load();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [user]);
 
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading…</div>;

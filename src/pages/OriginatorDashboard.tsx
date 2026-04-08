@@ -23,19 +23,30 @@ export default function OriginatorDashboard() {
   const [exporterCount, setExporterCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const load = async () => {
+    if (!user) return;
+    const [dealsRes, exportersRes] = await Promise.all([
+      supabase.from('deals').select('id, status, invoice_number, invoice_value, buyer_company_name, created_at')
+        .eq('originator_id', user.id).order('created_at', { ascending: false }).limit(10),
+      supabase.from('exporters').select('id', { count: 'exact', head: true }).eq('originator_id', user.id),
+    ]);
+    setDeals((dealsRes.data as DealRow[]) ?? []);
+    setExporterCount(exportersRes.count ?? 0);
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (!user) return;
-    const load = async () => {
-      const [dealsRes, exportersRes] = await Promise.all([
-        supabase.from('deals').select('id, status, invoice_number, invoice_value, buyer_company_name, created_at')
-          .eq('originator_id', user.id).order('created_at', { ascending: false }).limit(10),
-        supabase.from('exporters').select('id', { count: 'exact', head: true }).eq('originator_id', user.id),
-      ]);
-      setDeals((dealsRes.data as DealRow[]) ?? []);
-      setExporterCount(exportersRes.count ?? 0);
-      setLoading(false);
-    };
     load();
+
+    const channel = supabase
+      .channel('originator-dashboard-deals')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'deals' }, () => {
+        load();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [user]);
 
   const activeDealCount = deals.filter((d) =>

@@ -37,47 +37,56 @@ export default function GreystarDashboard() {
   const [recentExporters, setRecentExporters] = useState<RecentExporter[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const load = async () => {
+    setLoading(true);
+
+    const { data: exporterData } = await supabase
+      .from('exporters')
+      .select('id, company_name, rc_number, created_at, contact_email')
+      .order('created_at', { ascending: false });
+
+    const exporters = (exporterData as ExporterRow[]) ?? [];
+    const exporterIds = exporters.map((exporter) => exporter.id);
+
+    let documents: ExporterDocumentRow[] = [];
+
+    if (exporterIds.length > 0) {
+      const { data: docData } = await supabase
+        .from('exporter_documents')
+        .select('exporter_id, document_type, document_status, expiry_status, is_superseded')
+        .in('exporter_id', exporterIds)
+        .eq('is_superseded', false);
+
+      documents = (docData as ExporterDocumentRow[]) ?? [];
+    }
+
+    const docsByExporter = groupDocumentsByExporter(documents);
+    const exportersWithKyc = exporters.map((exporter) => ({
+      ...exporter,
+      kyc: computeKycStatus(docsByExporter.get(exporter.id) ?? []),
+    }));
+
+    setRecentExporters(exportersWithKyc.slice(0, 10));
+    setStats({
+      totalExporters: exporters.length,
+      pendingReview: exportersWithKyc.filter((exporter) => exporter.kyc.status === 'under_review').length,
+      verified: exportersWithKyc.filter((exporter) => exporter.kyc.status === 'verified').length,
+      docsToReview: documents.filter((doc) => doc.document_status === 'pending_review').length,
+    });
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-
-      const { data: exporterData } = await supabase
-        .from('exporters')
-        .select('id, company_name, rc_number, created_at, contact_email')
-        .order('created_at', { ascending: false });
-
-      const exporters = (exporterData as ExporterRow[]) ?? [];
-      const exporterIds = exporters.map((exporter) => exporter.id);
-
-      let documents: ExporterDocumentRow[] = [];
-
-      if (exporterIds.length > 0) {
-        const { data: docData } = await supabase
-          .from('exporter_documents')
-          .select('exporter_id, document_type, document_status, expiry_status, is_superseded')
-          .in('exporter_id', exporterIds)
-          .eq('is_superseded', false);
-
-        documents = (docData as ExporterDocumentRow[]) ?? [];
-      }
-
-      const docsByExporter = groupDocumentsByExporter(documents);
-      const exportersWithKyc = exporters.map((exporter) => ({
-        ...exporter,
-        kyc: computeKycStatus(docsByExporter.get(exporter.id) ?? []),
-      }));
-
-      setRecentExporters(exportersWithKyc.slice(0, 10));
-      setStats({
-        totalExporters: exporters.length,
-        pendingReview: exportersWithKyc.filter((exporter) => exporter.kyc.status === 'under_review').length,
-        verified: exportersWithKyc.filter((exporter) => exporter.kyc.status === 'verified').length,
-        docsToReview: documents.filter((doc) => doc.document_status === 'pending_review').length,
-      });
-      setLoading(false);
-    };
-
     load();
+
+    const channel = supabase
+      .channel('partner-dashboard-deals')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'deals' }, () => {
+        load();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   if (loading) {
