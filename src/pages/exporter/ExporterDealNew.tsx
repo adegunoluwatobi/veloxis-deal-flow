@@ -585,8 +585,77 @@ export default function ExporterDealNew() {
         </Card>
       )}
 
-      {/* Step 4: Review & Submit */}
+      {/* Step 4: Fee Calculator */}
       {step === 4 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Fee Calculator & Acceptance</CardTitle>
+            <CardDescription>Review the fee structure based on your payment terms. You must accept these terms before submitting.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="payment-terms">Payment Terms (days) *</Label>
+              <Input
+                id="payment-terms"
+                type="number"
+                min={minTerms}
+                max={maxTerms}
+                value={paymentTermsDays}
+                onChange={e => setPaymentTermsDays(e.target.value)}
+                placeholder={`${minTerms}–${maxTerms} days`}
+              />
+              {terms > 0 && terms < minTerms && (
+                <p className="text-xs text-destructive">Minimum payment terms is {minTerms} days</p>
+              )}
+              {terms > maxTerms && (
+                <p className="text-xs text-destructive">Maximum payment terms is {maxTerms} days</p>
+              )}
+              {terms > 30 && terms <= 60 && (
+                <p className="text-xs text-warning flex items-center gap-1"><AlertTriangle className="h-3 w-3" />Payment terms above 30 days carry higher discount fees</p>
+              )}
+              {terms > 60 && terms <= maxTerms && (
+                <p className="text-xs text-destructive flex items-center gap-1"><AlertTriangle className="h-3 w-3" />Extended payment terms above 60 days — please confirm you understand the higher fees</p>
+              )}
+            </div>
+
+            {invoiceAmount > 0 && terms >= minTerms && terms <= maxTerms && (
+              <div className="rounded-lg border border-border overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead><tr className="bg-muted/50"><th className="text-left py-2 px-4 font-medium">Field</th><th className="text-left py-2 px-4 font-medium">Value</th></tr></thead>
+                  <tbody>
+                    <tr className="border-t border-border"><td className="py-2 px-4">Invoice Amount</td><td className="py-2 px-4 font-medium">{currencySymbol}{invoiceAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</td></tr>
+                    <tr className="border-t border-border"><td className="py-2 px-4">Advance Rate</td><td className="py-2 px-4 font-medium">{advRatePct}%</td></tr>
+                    <tr className="border-t border-border"><td className="py-2 px-4">Advance Amount</td><td className="py-2 px-4 font-medium">{currencySymbol}{advanceAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</td></tr>
+                    <tr className="border-t border-border"><td className="py-2 px-4">Platform Fee ({platformFeePct}% one-off)</td><td className="py-2 px-4 font-medium">{currencySymbol}{platformFeeAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</td></tr>
+                    <tr className="border-t border-border"><td className="py-2 px-4">Discount Fee ({discountFeePctMonthly}%/month × {terms} days)</td><td className="py-2 px-4 font-medium">{currencySymbol}{discountFeeAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</td></tr>
+                    <tr className="border-t border-border"><td className="py-2 px-4">Total Fees</td><td className="py-2 px-4 font-medium">{currencySymbol}{totalFees.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</td></tr>
+                    <tr className="border-t-2 border-border"><td className="py-2 px-4 font-semibold">Net Advance to You</td><td className="py-2 px-4 font-bold">{currencySymbol}{netAdvance.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</td></tr>
+                    <tr className="border-t border-border"><td className="py-2 px-4">Late Penalty Rate</td><td className="py-2 px-4 font-medium">{latePenaltyRate.toFixed(3)}% per day after maturity</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {invoiceAmount > 0 && terms >= minTerms && terms <= maxTerms && (
+              <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="fee-acceptance"
+                    checked={feeAccepted}
+                    onCheckedChange={(v) => setFeeAccepted(v === true)}
+                  />
+                  <label htmlFor="fee-acceptance" className="text-xs text-muted-foreground leading-relaxed">
+                    I have reviewed and agree to the fee structure above. I understand the net advance, total fees, and late penalty terms. I authorise Veloxis to proceed with my application on these terms.
+                  </label>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 5: Review & Submit */}
+      {step === 5 && (
         <Card>
           <CardHeader>
             <CardTitle>Review & Submit</CardTitle>
