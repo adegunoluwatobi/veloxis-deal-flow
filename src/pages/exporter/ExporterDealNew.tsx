@@ -787,8 +787,8 @@ export default function ExporterDealNew() {
         </Card>
       )}
 
-      {/* Step 5: Review & Submit */}
-      {step === 5 && (
+      {/* Step 6: Review & Submit */}
+      {step === 6 && (
         <Card>
           <CardHeader>
             <CardTitle>Review & Submit</CardTitle>
