@@ -26,6 +26,7 @@ const ADMIN_NAV: NavItem[] = [
   { label: 'All Deals', href: '/admin/deals', icon: FileText, roles: ['super_admin', 'deal_manager'] },
   { label: 'Capital Pool', href: '/admin/capital', icon: Banknote, roles: ['super_admin', 'deal_manager'] },
   { label: 'Partners', href: '/admin/partners', icon: Building2, roles: ['super_admin'] },
+  { label: 'Pricing', href: '/admin/pricing', icon: Banknote, roles: ['super_admin'] },
   { label: 'User Management', href: '/admin/settings', icon: Settings, roles: ['super_admin'] },
 ];
 

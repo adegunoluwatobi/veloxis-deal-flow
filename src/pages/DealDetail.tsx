@@ -233,69 +233,12 @@ export default function DealDetail() {
   const handleRequestDocs = () => setRequestDocsOpen(true);
   const handleSubmitForFinalApproval = () => updateStatus('ready_for_final_approval' as DealStatus);
 
-  // Live pricing calculations
-  const pricingEditable = isDM && (deal?.status === ('sent_to_veloxis' as DealStatus) || deal?.status === 'under_review');
-  const liveAdvPct = parseFloat(editAdvPct) || 80;
-  const liveInvoiceValue = deal?.invoice_value ?? 0;
-  const liveAdvanceAmount = liveInvoiceValue * (liveAdvPct / 100);
-  const livePlatformFeePct = parseFloat(editPlatformFeePct) || 0;
-  const liveDiscountFeePct = parseFloat(editDiscountFeePct) || 0;
-  const livePaymentTerms = parseInt(editPaymentTerms) || 0;
-  // Platform fee: one-off on invoice face value
-  const livePlatformFeeAmount = liveInvoiceValue * (livePlatformFeePct / 100);
-  // Discount fee: per-month rate on advance amount, prorated by tenor
-  const liveDiscountFeeAmount = liveAdvanceAmount * (liveDiscountFeePct / 100) * (livePaymentTerms / 30);
-  const liveTotalFees = livePlatformFeeAmount + liveDiscountFeeAmount;
-  const liveNetAdvance = liveAdvanceAmount - liveTotalFees;
-  const liveRepaymentAmount = liveInvoiceValue;
-  const pricingCanSave = livePaymentTerms > 0;
+  // Pricing is now read-only — set globally by Super Admin and accepted by exporter at submission
+  const pricingEditable = false;
 
   const handleSavePricing = async () => {
-    if (!id || !deal) return;
-    const failures = validateAndScroll([
-      { fieldId: 'field-advance-pct', label: 'Advance %', condition: !!editAdvPct && parseFloat(editAdvPct) > 0 },
-      { fieldId: 'field-payment-terms', label: 'Payment Terms (days)', condition: !!editPaymentTerms && parseInt(editPaymentTerms) > 0 },
-      { fieldId: 'field-platform-fee', label: 'Platform Fee %', condition: editPlatformFeePct !== '' },
-      { fieldId: 'field-discount-fee', label: 'Discount Fee %', condition: editDiscountFeePct !== '' },
-    ]);
-    if (failures.length > 0) {
-      setValidationFailures(failures);
-      return;
-    }
-    setValidationFailures([]);
-    setPricingSaving(true);
-    try {
-      const { error } = await supabase.from('deals').update({
-        advance_percentage: liveAdvPct,
-        advance_amount: liveAdvanceAmount,
-        payment_terms_days: livePaymentTerms,
-        platform_fee_pct: livePlatformFeePct / 100,
-        platform_fee_amount: livePlatformFeeAmount,
-        discount_fee_pct: liveDiscountFeePct / 100,
-        discount_fee_amount: liveDiscountFeeAmount,
-        gross_yield: liveTotalFees,
-        net_advance_amount: liveNetAdvance,
-        repayment_amount: liveRepaymentAmount,
-      }).eq('id', id);
-      if (error) throw error;
-      await supabase.rpc('insert_audit_log', {
-        p_deal_id: id,
-        p_user_id: user?.id,
-        p_user_role: role as any,
-        p_action_type: 'pricing_recalculated' as AuditAction,
-        p_metadata: {
-          advance_pct: liveAdvPct,
-          platform_fee_pct: livePlatformFeePct,
-          discount_fee_pct: liveDiscountFeePct,
-        },
-      });
-      toast({ title: 'Pricing saved' });
-      load();
-    } catch (err: unknown) {
-      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Save failed', variant: 'destructive' });
-    } finally {
-      setPricingSaving(false);
-    }
+    // No longer needed — pricing is set globally
+    toast({ title: 'Info', description: 'Pricing is now managed globally in Admin → Pricing Configuration.' });
   };
 
   const handleApprove = async () => {
@@ -303,7 +246,7 @@ export default function DealDetail() {
     setActionLoading(true);
     try {
       const { error } = await supabase.from('deals').update({
-        status: 'pending_exporter_acceptance' as DealStatus,
+        status: 'approved' as DealStatus,
         approved_at: new Date().toISOString(),
       }).eq('id', id);
       if (error) throw error;
@@ -313,10 +256,10 @@ export default function DealDetail() {
         p_user_id: user?.id,
         p_user_role: role as any,
         p_action_type: 'deal_approved',
-        p_metadata: { actor_name: user?.email, next_status: 'pending_exporter_acceptance' },
+        p_metadata: { actor_name: user?.email, next_status: 'approved' },
       });
 
-      toast({ title: 'Deal approved', description: 'Offer sent to exporter for acceptance.' });
+      toast({ title: 'Deal approved', description: 'The deal has been approved. IPU process can now begin.' });
       setPricingOverride(false);
       load();
     } catch (err: unknown) {
@@ -402,9 +345,9 @@ export default function DealDetail() {
 
   const activeDocs = docs.filter(d => !d.is_superseded);
 
-  // Approve prerequisites tooltip
+  // Approve prerequisites — pricing accepted by exporter, IPU verified
   const approvePrereqs: ValidationRule[] = [
-    { fieldId: 'pricing-card', label: 'Pricing must be saved', condition: !!(deal?.advance_amount && deal?.payment_terms_days) },
+    { fieldId: 'pricing-card', label: 'Exporter must have accepted pricing', condition: !!(deal as any)?.fee_acceptance_at },
     { fieldId: 'ipu-section', label: 'IPU must be uploaded and verified', condition: !!(deal as any)?.ipu_verified },
   ];
   const approveTooltip = buildPrerequisiteTooltip(approvePrereqs);
@@ -449,40 +392,15 @@ export default function DealDetail() {
         </div>
       )}
 
-      {/* Exporter accepted offer banner */}
-      {deal.status === 'approved' && (deal as any).offer_accepted_at && (
+      {/* Fee acceptance banner */}
+      {deal.status === 'approved' && (deal as any).fee_acceptance_at && (
         <div className="flex items-start gap-3 rounded-lg border border-success/30 bg-success/5 p-4">
           <CheckCircle2 className="mt-0.5 h-5 w-5 text-success shrink-0" />
           <div>
-            <p className="text-sm font-medium text-foreground">Exporter Accepted Offer</p>
+            <p className="text-sm font-medium text-foreground">Deal Approved</p>
             <p className="text-sm text-muted-foreground">
-              Accepted on {new Date((deal as any).offer_accepted_at).toLocaleDateString('en-GB')} at {new Date((deal as any).offer_accepted_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}. Proceed with sending the IPU to the buyer.
+              Exporter accepted fee terms on {new Date((deal as any).fee_acceptance_at).toLocaleDateString('en-GB')}. Proceed with the IPU process.
             </p>
-          </div>
-        </div>
-      )}
-
-      {/* Exporter declined offer banner */}
-      {deal.status === ('declined_by_exporter' as DealStatus) && (
-        <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
-          <XCircle className="mt-0.5 h-5 w-5 text-destructive shrink-0" />
-          <div>
-            <p className="text-sm font-medium text-foreground">Exporter Declined Offer</p>
-            {(deal as any).offer_decline_reason && (
-              <p className="text-sm text-muted-foreground mt-1">Reason: {(deal as any).offer_decline_reason}</p>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">You may revise pricing and re-send the offer.</p>
-          </div>
-        </div>
-      )}
-
-      {/* Pending exporter acceptance banner */}
-      {deal.status === ('pending_exporter_acceptance' as DealStatus) && (
-        <div className="flex items-start gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
-          <Clock className="mt-0.5 h-5 w-5 text-primary shrink-0" />
-          <div>
-            <p className="text-sm font-medium text-foreground">Awaiting Exporter Response</p>
-            <p className="text-sm text-muted-foreground">The facility offer has been sent to the exporter. Waiting for them to accept or decline.</p>
           </div>
         </div>
       )}
@@ -582,16 +500,6 @@ export default function DealDetail() {
                 <Button size="sm" onClick={() => updateStatus('under_review')} disabled={actionLoading} className="gap-1">
                   <Clock className="h-4 w-4" /> Back to Review
                 </Button>
-              )}
-              {/* Declined by exporter — super_admin can re-send offer */}
-              {deal.status === ('declined_by_exporter' as DealStatus) && isSuperAdmin && (
-                <Button size="sm" onClick={handleResendOffer} disabled={actionLoading} className="gap-1">
-                  <Send className="h-4 w-4" /> Re-send Offer to Exporter
-                </Button>
-              )}
-              {/* Pending exporter acceptance — informational */}
-              {deal.status === ('pending_exporter_acceptance' as DealStatus) && (
-                <p className="text-sm text-muted-foreground italic">Waiting for exporter to accept or decline the facility offer.</p>
               )}
             </div>
           </CardContent>
@@ -699,112 +607,53 @@ export default function DealDetail() {
           </CardContent>
         </Card>
 
-        {/* Pricing Summary */}
+        {/* Pricing Summary — Read Only */}
         <Card className="lg:col-span-2">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base">Pricing</CardTitle>
-              {!pricingEditable && ['approved', 'ready_for_final_approval', 'ipu_sent', 'ipu_signed_awaiting_funding', 'funded_active', 'repayment_due', 'overdue', 'closed_repaid', 'closed_partial'].includes(deal.status) && (
-                <Badge variant="secondary" className="text-xs bg-success/10 text-success">Locked</Badge>
-              )}
-              {pricingEditable && (
-                <Badge variant="secondary" className="text-xs bg-warning/10 text-warning">Editable</Badge>
-              )}
+              <CardTitle className="text-base">Pricing Summary</CardTitle>
+              <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground">Read Only</Badge>
             </div>
           </CardHeader>
           <CardContent>
-            {pricingEditable ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Advance %</Label>
-                    <Input id="field-advance-pct" type="number" min="1" max="100" value={editAdvPct} onChange={e => setEditAdvPct(e.target.value)} className="mt-1" />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Payment Terms (days)</Label>
-                    <Input id="field-payment-terms" type="number" min="1" max="365" value={editPaymentTerms} onChange={e => setEditPaymentTerms(e.target.value)} className="mt-1" placeholder="e.g. 30" />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Platform Fee % (one-off)</Label>
-                    <Input id="field-platform-fee" type="number" min="0" max="100" step="0.1" value={editPlatformFeePct} onChange={e => setEditPlatformFeePct(e.target.value)} className="mt-1" />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Discount Fee % (per month)</Label>
-                    <Input id="field-discount-fee" type="number" min="0" max="100" step="0.1" value={editDiscountFeePct} onChange={e => setEditDiscountFeePct(e.target.value)} className="mt-1" />
-                  </div>
-                </div>
-                <div className="grid gap-2 text-sm border-t border-border pt-3">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Advance Amount ({liveAdvPct}%)</span>
-                    <span className="font-medium text-foreground">{sym}{liveAdvanceAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Platform Fee ({livePlatformFeePct}%, one-off)</span>
-                    <span className="font-medium text-foreground">{sym}{livePlatformFeeAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Discount Fee ({liveDiscountFeePct}%/month × {livePaymentTerms} days)</span>
-                    <span className="font-medium text-foreground">{sym}{liveDiscountFeeAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Fees</span>
-                    <span className="font-medium text-foreground">{sym}{liveTotalFees.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
-                  </div>
-                  <div className="flex justify-between border-t border-border pt-2">
-                    <span className="text-muted-foreground font-medium">Net Advance to Exporter</span>
-                    <span className="font-semibold text-foreground">{sym}{liveNetAdvance.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground font-medium">Expected Yield</span>
-                    <span className="font-semibold text-foreground">{sym}{liveTotalFees.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground font-medium">Repayment Amount</span>
-                    <span className="font-semibold text-foreground">{sym}{liveRepaymentAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button size="sm" onClick={handleSavePricing} disabled={pricingSaving || !pricingCanSave} className="gap-1">
-                    {pricingSaving ? 'Saving…' : 'Save Pricing'}
-                  </Button>
-                  {!pricingCanSave && (
-                    <span className="text-xs text-muted-foreground">Enter Payment Terms to calculate pricing</span>
-                  )}
-                </div>
+            <div className="grid gap-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Advance ({deal.advance_percentage}%)</span>
+                <span className="font-medium text-foreground">{deal.advance_amount ? `${sym}${deal.advance_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
               </div>
-            ) : (
-              <div className="grid gap-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Advance ({deal.advance_percentage}%)</span>
-                  <span className="font-medium text-foreground">{deal.advance_amount ? `${sym}${deal.advance_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Platform Fee ({((deal.platform_fee_pct ?? 0) * 100).toFixed(1)}%, one-off)</span>
-                  <span className="font-medium text-foreground">{deal.platform_fee_amount ? `${sym}${deal.platform_fee_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Discount Fee ({((deal.discount_fee_pct ?? 0) * 100).toFixed(1)}%/month × {deal.payment_terms_days ?? 0} days)</span>
-                  <span className="font-medium text-foreground">{deal.discount_fee_amount ? `${sym}${deal.discount_fee_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total Fees</span>
-                  <span className="font-medium text-foreground">{sym}{((deal.platform_fee_amount ?? 0) + (deal.discount_fee_amount ?? 0)).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div className="flex justify-between border-t border-border pt-2">
-                  <span className="text-muted-foreground font-medium">Net Advance to Exporter</span>
-                  <span className="font-semibold text-foreground">{deal.net_advance_amount ? `${sym}${deal.net_advance_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground font-medium">Expected Yield</span>
-                  <span className="font-semibold text-foreground">{deal.gross_yield ? `${sym}${deal.gross_yield.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground font-medium">Repayment Amount</span>
-                  <span className="font-semibold text-foreground">{deal.repayment_amount ? `${sym}${deal.repayment_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
-                </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Platform Fee ({((deal.platform_fee_pct ?? 0) * 100).toFixed(1)}%, one-off)</span>
+                <span className="font-medium text-foreground">{deal.platform_fee_amount ? `${sym}${deal.platform_fee_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
               </div>
-            )}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Discount Fee ({((deal.discount_fee_pct ?? 0) * 100).toFixed(1)}%/month × {deal.payment_terms_days ?? 0} days)</span>
+                <span className="font-medium text-foreground">{deal.discount_fee_amount ? `${sym}${deal.discount_fee_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Total Fees</span>
+                <span className="font-medium text-foreground">{sym}{((deal.platform_fee_amount ?? 0) + (deal.discount_fee_amount ?? 0)).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+              </div>
+              <div className="flex justify-between border-t border-border pt-2">
+                <span className="text-muted-foreground font-medium">Net Advance to Exporter</span>
+                <span className="font-semibold text-foreground">{deal.net_advance_amount ? `${sym}${deal.net_advance_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground font-medium">Expected Yield</span>
+                <span className="font-semibold text-foreground">{deal.gross_yield ? `${sym}${deal.gross_yield.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground font-medium">Repayment Amount</span>
+                <span className="font-semibold text-foreground">{deal.repayment_amount ? `${sym}${deal.repayment_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+              </div>
+              {(deal as any).fee_acceptance_at && (
+                <div className="mt-2 pt-2 border-t border-border">
+                  <p className="text-xs text-muted-foreground">
+                    Exporter accepted these terms on {new Date((deal as any).fee_acceptance_at).toLocaleDateString('en-GB')} at {new Date((deal as any).fee_acceptance_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -983,12 +832,12 @@ export default function DealDetail() {
         </DialogContent>
       </Dialog>
 
-      {/* Pricing Override Dialog */}
+      {/* Approve Confirmation Dialog */}
       <Dialog open={pricingOverride} onOpenChange={setPricingOverride}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Approve Deal</DialogTitle>
-            <DialogDescription>Confirm or adjust the advance percentage before approving. Pricing will be locked after approval.</DialogDescription>
+            <DialogDescription>Confirm that you want to approve this deal. Pricing was accepted by the exporter at submission time.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid gap-2 text-sm">
@@ -997,27 +846,16 @@ export default function DealDetail() {
                 <span className="font-medium">{sym}{(deal.invoice_value ?? 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between">
+                <span className="text-muted-foreground">Advance Amount</span>
+                <span className="font-medium">{deal.advance_amount ? `${sym}${deal.advance_amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">Payment Terms</span>
                 <span className="font-medium">{deal.payment_terms_days} days</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Subscription</span>
-                <span className="font-medium">{exporter?.subscription_tier === 'veloxis_pro' ? 'Veloxis Pro' : 'Pay As You Go'}</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Advance Percentage</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={overrideAdvPct}
-                  onChange={(e) => setOverrideAdvPct(e.target.value)}
-                  className="w-24"
-                />
-                <Percent className="h-4 w-4 text-muted-foreground" />
-              </div>
+              {(deal as any).fee_acceptance_at && (
+                <p className="text-xs text-success">Exporter accepted fee terms on {new Date((deal as any).fee_acceptance_at).toLocaleDateString('en-GB')}</p>
+              )}
             </div>
           </div>
           <DialogFooter>

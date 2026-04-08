@@ -22,6 +22,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import AdminDeals from "@/pages/AdminDeals";
 import SMEUpload from "@/pages/SMEUpload";
 import SettingsPage from "@/pages/SettingsPage";
+import PricingSettings from "@/pages/PricingSettings";
 import CapitalPool from "@/pages/CapitalPool";
 import PartnersPage from "@/pages/PartnersPage";
 import PartnerDetail from "@/pages/PartnerDetail";
@@ -128,6 +129,7 @@ const App = () => (
             <Route path="/admin/deals" element={<AdminLayout><AdminDeals /></AdminLayout>} />
             <Route path="/admin/deals/:id" element={<AdminLayout><DealDetail /></AdminLayout>} />
             <Route path="/admin/settings" element={<AdminLayout><SettingsPage /></AdminLayout>} />
+            <Route path="/admin/pricing" element={<AdminLayout><PricingSettings /></AdminLayout>} />
             <Route path="/admin/capital" element={<AdminLayout><CapitalPool /></AdminLayout>} />
             <Route path="/admin/partners" element={<AdminLayout><PartnersPage /></AdminLayout>} />
             <Route path="/admin/partners/:id" element={<AdminLayout><PartnerDetail /></AdminLayout>} />

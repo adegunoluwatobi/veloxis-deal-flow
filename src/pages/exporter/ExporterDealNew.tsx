@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Upload, Loader2, ShieldCheck } from 'lucide-react';
 import { BUYER_COUNTRY_WHITELIST } from '@/types';
 
-const STEPS = ['Bank Account', 'Invoice Details', 'Buyer Details', 'Export Details', 'Review & Submit'];
+const STEPS = ['Bank Account', 'Invoice Details', 'Buyer Details', 'Export Details', 'Fee Calculator', 'Review & Submit'];
 const INCOTERMS = ['EXW', 'FOB', 'CIF', 'DAP', 'DDP', 'Other'] as const;
 const BANK_COUNTRIES = ['Nigeria', 'United Kingdom', 'United States', 'Ghana', 'Kenya', 'South Africa'] as const;
 const CURRENCIES = [
@@ -55,6 +55,9 @@ export default function ExporterDealNew() {
   const [saveBankDetails, setSaveBankDetails] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [existingInvoicePath, setExistingInvoicePath] = useState<string | null>(null);
+  const [pricingConfig, setPricingConfig] = useState<any>(null);
+  const [paymentTermsDays, setPaymentTermsDays] = useState('');
+  const [feeAccepted, setFeeAccepted] = useState(false);
   const isEditing = !!editDealId;
 
   const [form, setForm] = useState({
@@ -84,6 +87,10 @@ export default function ExporterDealNew() {
 
   useEffect(() => {
     if (!user) return;
+    // Load pricing config
+    supabase.from('pricing_config').select('*').limit(1).maybeSingle().then(({ data }) => {
+      if (data) setPricingConfig(data);
+    });
     const load = async () => {
       const { data: exp } = await supabase
         .from('exporters')
@@ -175,19 +182,34 @@ export default function ExporterDealNew() {
 
   const currencySymbol = CURRENCIES.find(c => c.value === form.invoice_currency)?.symbol ?? '';
 
+  // Fee calculator values
+  const invoiceAmount = parseFloat(stripCommas(form.invoice_amount)) || 0;
+  const advRatePct = pricingConfig?.advance_rate_pct ?? 80;
+  const platformFeePct = pricingConfig?.platform_fee_pct ?? 1;
+  const discountFeePctMonthly = pricingConfig?.discount_fee_pct_monthly ?? 2;
+  const latePenaltyRate = pricingConfig?.late_penalty_rate_pct_daily ?? 0.067;
+  const minTerms = pricingConfig?.min_payment_terms_days ?? 30;
+  const maxTerms = pricingConfig?.max_payment_terms_days ?? 90;
+  const terms = parseInt(paymentTermsDays) || 0;
+  const advanceAmount = invoiceAmount * (advRatePct / 100);
+  const platformFeeAmount = invoiceAmount * (platformFeePct / 100);
+  const discountFeeAmount = advanceAmount * (discountFeePctMonthly / 100) * (terms / 30);
+  const totalFees = platformFeeAmount + discountFeeAmount;
+  const netAdvance = advanceAmount - totalFees;
+
   const canProceed = (s: number) => {
     switch (s) {
       case 0: return form.bank_name && form.bank_account_name && form.bank_account_number && form.bank_sort_code_iban && form.bank_country;
       case 1: return form.invoice_number && form.invoice_date && form.invoice_amount && form.invoice_currency && form.payment_due_date && (form.invoice_file || existingInvoicePath);
       case 2: return form.buyer_company_name && form.buyer_country && form.buyer_contact_name && form.buyer_contact_email && isValidEmail(form.buyer_contact_email) && form.buyer_contact_phone;
       case 3: return form.goods_description && form.export_destination && form.export_licence_number && form.hs_code && form.incoterms;
+      case 4: return terms >= minTerms && terms <= maxTerms && feeAccepted;
       default: return true;
     }
   };
 
   const handleSubmit = async (asDraft: boolean) => {
     if (!exporter || !user) return;
-    // Validate email before submit
     if (!asDraft && !isValidEmail(form.buyer_contact_email)) {
       setFieldErrors(prev => ({ ...prev, buyer_contact_email: 'Please enter a valid email address' }));
       setStep(2);
@@ -195,6 +217,11 @@ export default function ExporterDealNew() {
     }
     if (!asDraft && !form.fx_risk_acknowledged) {
       toast({ title: 'FX Risk Acknowledgement Required', description: 'Please acknowledge the FX risk before submitting.', variant: 'destructive' });
+      setStep(5);
+      return;
+    }
+    if (!asDraft && !feeAccepted) {
+      toast({ title: 'Fee Acceptance Required', description: 'Please accept the fee structure before submitting.', variant: 'destructive' });
       setStep(4);
       return;
     }
@@ -246,10 +273,27 @@ export default function ExporterDealNew() {
         licence_name_match: exportLicence ? true : null,
         fx_risk_acknowledged: form.fx_risk_acknowledged,
         settlement_currency: form.invoice_currency,
+        payment_terms_days: terms || null,
+        advance_percentage: advRatePct,
+        advance_amount: advanceAmount > 0 ? advanceAmount : null,
+        platform_fee_pct: platformFeePct / 100,
+        platform_fee_amount: platformFeeAmount > 0 ? platformFeeAmount : null,
+        discount_fee_pct: discountFeePctMonthly / 100,
+        discount_fee_amount: discountFeeAmount > 0 ? discountFeeAmount : null,
+        gross_yield: totalFees > 0 ? totalFees : null,
+        net_advance_amount: netAdvance > 0 ? netAdvance : null,
+        repayment_amount: invoiceAmount > 0 ? invoiceAmount : null,
+        snapshot_advance_rate_pct: advRatePct,
+        snapshot_platform_fee_pct: platformFeePct,
+        snapshot_discount_fee_pct: discountFeePctMonthly,
+        snapshot_late_penalty_rate_pct: latePenaltyRate,
+        demurrage_rate_daily: latePenaltyRate / 100,
       };
 
       if (!asDraft) {
         dealData.submitted_at = new Date().toISOString();
+        dealData.fee_acceptance_at = new Date().toISOString();
+        dealData.fee_acceptance_by = user.id;
       }
 
       let dealId: string;
@@ -541,8 +585,77 @@ export default function ExporterDealNew() {
         </Card>
       )}
 
-      {/* Step 4: Review & Submit */}
+      {/* Step 4: Fee Calculator */}
       {step === 4 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Fee Calculator & Acceptance</CardTitle>
+            <CardDescription>Review the fee structure based on your payment terms. You must accept these terms before submitting.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="payment-terms">Payment Terms (days) *</Label>
+              <Input
+                id="payment-terms"
+                type="number"
+                min={minTerms}
+                max={maxTerms}
+                value={paymentTermsDays}
+                onChange={e => setPaymentTermsDays(e.target.value)}
+                placeholder={`${minTerms}–${maxTerms} days`}
+              />
+              {terms > 0 && terms < minTerms && (
+                <p className="text-xs text-destructive">Minimum payment terms is {minTerms} days</p>
+              )}
+              {terms > maxTerms && (
+                <p className="text-xs text-destructive">Maximum payment terms is {maxTerms} days</p>
+              )}
+              {terms > 30 && terms <= 60 && (
+                <p className="text-xs text-warning flex items-center gap-1"><AlertTriangle className="h-3 w-3" />Payment terms above 30 days carry higher discount fees</p>
+              )}
+              {terms > 60 && terms <= maxTerms && (
+                <p className="text-xs text-destructive flex items-center gap-1"><AlertTriangle className="h-3 w-3" />Extended payment terms above 60 days — please confirm you understand the higher fees</p>
+              )}
+            </div>
+
+            {invoiceAmount > 0 && terms >= minTerms && terms <= maxTerms && (
+              <div className="rounded-lg border border-border overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead><tr className="bg-muted/50"><th className="text-left py-2 px-4 font-medium">Field</th><th className="text-left py-2 px-4 font-medium">Value</th></tr></thead>
+                  <tbody>
+                    <tr className="border-t border-border"><td className="py-2 px-4">Invoice Amount</td><td className="py-2 px-4 font-medium">{currencySymbol}{invoiceAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</td></tr>
+                    <tr className="border-t border-border"><td className="py-2 px-4">Advance Rate</td><td className="py-2 px-4 font-medium">{advRatePct}%</td></tr>
+                    <tr className="border-t border-border"><td className="py-2 px-4">Advance Amount</td><td className="py-2 px-4 font-medium">{currencySymbol}{advanceAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</td></tr>
+                    <tr className="border-t border-border"><td className="py-2 px-4">Platform Fee ({platformFeePct}% one-off)</td><td className="py-2 px-4 font-medium">{currencySymbol}{platformFeeAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</td></tr>
+                    <tr className="border-t border-border"><td className="py-2 px-4">Discount Fee ({discountFeePctMonthly}%/month × {terms} days)</td><td className="py-2 px-4 font-medium">{currencySymbol}{discountFeeAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</td></tr>
+                    <tr className="border-t border-border"><td className="py-2 px-4">Total Fees</td><td className="py-2 px-4 font-medium">{currencySymbol}{totalFees.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</td></tr>
+                    <tr className="border-t-2 border-border"><td className="py-2 px-4 font-semibold">Net Advance to You</td><td className="py-2 px-4 font-bold">{currencySymbol}{netAdvance.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</td></tr>
+                    <tr className="border-t border-border"><td className="py-2 px-4">Late Penalty Rate</td><td className="py-2 px-4 font-medium">{latePenaltyRate.toFixed(3)}% per day after maturity</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {invoiceAmount > 0 && terms >= minTerms && terms <= maxTerms && (
+              <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="fee-acceptance"
+                    checked={feeAccepted}
+                    onCheckedChange={(v) => setFeeAccepted(v === true)}
+                  />
+                  <label htmlFor="fee-acceptance" className="text-xs text-muted-foreground leading-relaxed">
+                    I have reviewed and agree to the fee structure above. I understand the net advance, total fees, and late penalty terms. I authorise Veloxis to proceed with my application on these terms.
+                  </label>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 5: Review & Submit */}
+      {step === 5 && (
         <Card>
           <CardHeader>
             <CardTitle>Review & Submit</CardTitle>
