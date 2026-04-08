@@ -17,6 +17,7 @@ import { EmailInput, isValidEmail } from '@/components/ui/email-input';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Upload, Loader2, ShieldCheck } from 'lucide-react';
 import { BUYER_COUNTRY_WHITELIST } from '@/types';
+import { cn } from '@/lib/utils';
 
 const STEPS = ['Bank Account', 'Invoice Details', 'Buyer Details', 'Export Details', 'Transaction Documents', 'Fee Calculator', 'Review & Submit'];
 const INCOTERMS = ['EXW', 'FOB', 'CIF', 'DAP', 'DDP', 'Other'] as const;
