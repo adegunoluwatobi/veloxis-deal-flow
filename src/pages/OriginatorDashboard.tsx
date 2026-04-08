@@ -114,7 +114,7 @@ export default function OriginatorDashboard() {
         <CardContent>
           {deals.length === 0 ? (
             <p className="py-8 text-center text-muted-foreground">
-              No deals yet. <Link to="/deals/new" className="text-primary underline">Create your first deal</Link>
+              No applications yet. <Link to="/deals/new" className="text-primary underline">Create your first application</Link>
             </p>
           ) : (
             <div className="space-y-3">
