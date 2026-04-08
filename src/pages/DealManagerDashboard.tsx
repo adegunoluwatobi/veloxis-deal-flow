@@ -27,18 +27,28 @@ export default function DealManagerDashboard() {
   const [config, setConfig] = useState<SystemConfig[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const load = async () => {
+    const [dealsRes, configRes] = await Promise.all([
+      supabase.from('deals').select('id, status, invoice_number, invoice_value, gbp_equivalent, buyer_company_name, created_at')
+        .order('created_at', { ascending: false }).limit(50),
+      supabase.from('system_config').select('key, value'),
+    ]);
+    setDeals((dealsRes.data as DealRow[]) ?? []);
+    setConfig((configRes.data as SystemConfig[]) ?? []);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const load = async () => {
-      const [dealsRes, configRes] = await Promise.all([
-        supabase.from('deals').select('id, status, invoice_number, invoice_value, gbp_equivalent, buyer_company_name, created_at')
-          .order('created_at', { ascending: false }).limit(50),
-        supabase.from('system_config').select('key, value'),
-      ]);
-      setDeals((dealsRes.data as DealRow[]) ?? []);
-      setConfig((configRes.data as SystemConfig[]) ?? []);
-      setLoading(false);
-    };
     load();
+
+    const channel = supabase
+      .channel('dm-dashboard-deals')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'deals' }, () => {
+        load();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const poolGbp = Number(config.find((c) => c.key === 'pilot_pool_gbp')?.value ?? 150000);
