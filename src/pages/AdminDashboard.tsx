@@ -250,7 +250,7 @@ export default function AdminDashboard() {
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base">Recent Deals</CardTitle>
+              <CardTitle className="text-base">Recent Applications</CardTitle>
             </div>
             <Button asChild variant="ghost" size="sm">
               <Link to="/admin/deals">View all <ArrowRight className="ml-1 h-4 w-4" /></Link>
