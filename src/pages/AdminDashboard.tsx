@@ -109,6 +109,18 @@ export default function AdminDashboard() {
   });
   const CURRENCY_SYMBOLS_MAP: Record<string, string> = { GBP: '£', USD: '$', EUR: '€' };
 
+  // Total repaid
+  const closedStatuses: DealStatus[] = ['closed_repaid', 'closed_partial'];
+  const closedDeals = deals.filter(d => closedStatuses.includes(d.status));
+  const totalRepaid = closedDeals.reduce((sum, d) => sum + (d.invoice_value ?? 0), 0);
+  const repaidByCurrency: Record<string, { amount: number; count: number }> = {};
+  closedDeals.forEach(d => {
+    const cur = d.invoice_currency_v2 || 'GBP';
+    if (!repaidByCurrency[cur]) repaidByCurrency[cur] = { amount: 0, count: 0 };
+    repaidByCurrency[cur].amount += d.invoice_value ?? 0;
+    repaidByCurrency[cur].count += 1;
+  });
+
   const pendingReview = deals.filter(d => d.status === 'submitted').length;
   const underReview = deals.filter(d => d.status === 'under_review').length;
   const overdueCount = deals.filter(d => d.status === 'overdue').length;
@@ -191,7 +203,7 @@ export default function AdminDashboard() {
             <Card key={cur}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Deployed in {cur}</CardTitle>
-                <Badge variant="secondary" className="text-xs">{dealCount} deal{dealCount !== 1 ? 's' : ''}</Badge>
+                <Badge variant="secondary" className="text-xs">{dealCount} application{dealCount !== 1 ? 's' : ''}</Badge>
               </CardHeader>
               <CardContent>
                 <div className="text-xl font-bold text-foreground">
@@ -202,6 +214,28 @@ export default function AdminDashboard() {
           );
         })}
       </div>
+
+      {/* Total Repaid by Currency */}
+      {closedDeals.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-3">
+          {(['GBP', 'USD', 'EUR'] as const).map(cur => {
+            const data = repaidByCurrency[cur];
+            return (
+              <Card key={`repaid-${cur}`} className="border-success/20 bg-success/5">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Repaid in {cur}</CardTitle>
+                  <Badge variant="secondary" className="text-xs bg-success/10 text-success">{data?.count ?? 0} closed</Badge>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-xl font-bold text-success">
+                    {CURRENCY_SYMBOLS_MAP[cur]}{(data?.amount ?? 0).toLocaleString()}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       {utilization > 90 && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive flex items-center gap-2">
@@ -216,7 +250,7 @@ export default function AdminDashboard() {
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base">Recent Deals</CardTitle>
+              <CardTitle className="text-base">Recent Applications</CardTitle>
             </div>
             <Button asChild variant="ghost" size="sm">
               <Link to="/admin/deals">View all <ArrowRight className="ml-1 h-4 w-4" /></Link>
@@ -224,7 +258,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             {deals.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">No deals in the system.</p>
+              <p className="py-6 text-center text-sm text-muted-foreground">No applications in the system.</p>
             ) : (
               <div className="space-y-1.5">
                 {deals.slice(0, 8).map(deal => (

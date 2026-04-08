@@ -62,7 +62,7 @@ export default function OriginatorDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Your deal pipeline at a glance</p>
+          <p className="text-sm text-muted-foreground">Your application pipeline at a glance</p>
         </div>
         <div className="flex gap-3">
           <Button asChild variant="outline">
@@ -86,7 +86,7 @@ export default function OriginatorDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Deals</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Active Applications</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -95,7 +95,7 @@ export default function OriginatorDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Deals</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Applications</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -106,7 +106,7 @@ export default function OriginatorDashboard() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent Deals</CardTitle>
+          <CardTitle>Recent Applications</CardTitle>
           <Button asChild variant="ghost" size="sm">
             <Link to="/deals">View all <ArrowRight className="ml-1 h-4 w-4" /></Link>
           </Button>
@@ -114,7 +114,7 @@ export default function OriginatorDashboard() {
         <CardContent>
           {deals.length === 0 ? (
             <p className="py-8 text-center text-muted-foreground">
-              No deals yet. <Link to="/deals/new" className="text-primary underline">Create your first deal</Link>
+              No applications yet. <Link to="/deals/new" className="text-primary underline">Create your first application</Link>
             </p>
           ) : (
             <div className="space-y-3">

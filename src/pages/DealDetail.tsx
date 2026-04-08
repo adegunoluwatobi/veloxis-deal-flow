@@ -67,6 +67,7 @@ interface DealRow {
   updated_at: string;
   exporter_id: string;
   originator_id: string;
+  gbp_equivalent: number | null;
 }
 
 interface ExporterRow {
@@ -220,7 +221,7 @@ export default function DealDetail() {
         p_metadata: { actor_name: user?.email, from: deal.status, to: newStatus, ...extraFields },
       });
 
-      toast({ title: `Deal ${DEAL_STATUS_LABELS[newStatus].toLowerCase()}` });
+      toast({ title: `Application ${DEAL_STATUS_LABELS[newStatus].toLowerCase()}` });
       load();
     } catch (err: unknown) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Action failed', variant: 'destructive' });
@@ -520,7 +521,10 @@ export default function DealDetail() {
                 </Button>
               )}
               {deal.status === ('ipu_signed_awaiting_funding' as DealStatus) && (
-                <Button size="sm" onClick={() => updateStatus('funded_active', { funded_at: new Date().toISOString(), disbursement_date: new Date().toISOString().split('T')[0] })} disabled={actionLoading} className="gap-1 bg-success hover:bg-success/90">
+                <Button size="sm" onClick={() => {
+                  const gbpEq = deal.invoice_currency_v2 === 'GBP' ? (deal.advance_amount ?? 0) : (deal.gbp_equivalent ?? deal.advance_amount ?? 0);
+                  updateStatus('funded_active', { funded_at: new Date().toISOString(), disbursement_date: new Date().toISOString().split('T')[0], gbp_equivalent: gbpEq });
+                }} disabled={actionLoading} className="gap-1 bg-success hover:bg-success/90">
                   <DollarSign className="h-4 w-4" /> Record Funding / Disbursement
                 </Button>
               )}
