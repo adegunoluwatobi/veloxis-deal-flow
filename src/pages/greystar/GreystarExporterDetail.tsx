@@ -61,12 +61,14 @@ export default function GreystarExporterDetail() {
 
   const load = async () => {
     if (!id) return;
-    const [expRes, docsRes] = await Promise.all([
+    const [expRes, docsRes, dealsRes] = await Promise.all([
       supabase.from('exporters').select('*').eq('id', id).single(),
       supabase.from('exporter_documents').select('*').eq('exporter_id', id).order('uploaded_at', { ascending: false }),
+      supabase.from('deals').select('id, deal_reference, status, invoice_value, invoice_currency_v2, buyer_company_name, created_at').eq('exporter_id', id).order('created_at', { ascending: false }),
     ]);
     setExporter(expRes.data);
     setDocuments(docsRes.data ?? []);
+    setDeals(dealsRes.data ?? []);
     setLoading(false);
   };
 
