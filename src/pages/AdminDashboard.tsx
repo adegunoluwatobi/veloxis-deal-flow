@@ -109,6 +109,18 @@ export default function AdminDashboard() {
   });
   const CURRENCY_SYMBOLS_MAP: Record<string, string> = { GBP: '£', USD: '$', EUR: '€' };
 
+  // Total repaid
+  const closedStatuses: DealStatus[] = ['closed_repaid', 'closed_partial'];
+  const closedDeals = deals.filter(d => closedStatuses.includes(d.status));
+  const totalRepaid = closedDeals.reduce((sum, d) => sum + (d.invoice_value ?? 0), 0);
+  const repaidByCurrency: Record<string, { amount: number; count: number }> = {};
+  closedDeals.forEach(d => {
+    const cur = d.invoice_currency_v2 || 'GBP';
+    if (!repaidByCurrency[cur]) repaidByCurrency[cur] = { amount: 0, count: 0 };
+    repaidByCurrency[cur].amount += d.invoice_value ?? 0;
+    repaidByCurrency[cur].count += 1;
+  });
+
   const pendingReview = deals.filter(d => d.status === 'submitted').length;
   const underReview = deals.filter(d => d.status === 'under_review').length;
   const overdueCount = deals.filter(d => d.status === 'overdue').length;
