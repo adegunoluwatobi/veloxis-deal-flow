@@ -234,8 +234,8 @@ export default function ExporterDealNew() {
       setStep(2);
       return;
     }
-    if (!asDraft && !form.fx_risk_acknowledged) {
-      toast({ title: 'FX Risk Acknowledgement Required', description: 'Please acknowledge the FX risk before submitting.', variant: 'destructive' });
+    if (!asDraft && !form.domiciliary_account_confirmed) {
+      toast({ title: 'Domiciliary Account Confirmation Required', description: 'Please confirm your domiciliary account can receive the invoice currency.', variant: 'destructive' });
       setStep(6);
       return;
     }
