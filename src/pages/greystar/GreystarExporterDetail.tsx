@@ -407,7 +407,7 @@ export default function GreystarExporterDetail() {
       </Card>
 
       {/* UBO Declarations */}
-      <UboDeclarationForm exporterId={id!} readOnly={isReadOnly} />
+      <UboDeclarationForm exporterId={id!} readOnly />
 
       {/* Sanctions & EDD — Veloxis only editable */}
       <ExporterComplianceSection
