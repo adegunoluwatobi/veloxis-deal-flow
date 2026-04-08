@@ -57,7 +57,7 @@ export default function CapitalPool() {
 
   const [poolGbp, setPoolGbp] = useState(0);
   const [deployed, setDeployed] = useState(0);
-  const [dealsByCurrency, setDealsByurrency] = useState<Record<string, number>>({});
+  const [dealsByCurrency, setDealsByCurrency] = useState<Record<string, number>>({});
   const [tranches, setTranches] = useState<Tranche[]>([]);
   const [history, setHistory] = useState<PoolHistoryRow[]>([]);
   const [users, setUsers] = useState<Record<string, string>>({});
