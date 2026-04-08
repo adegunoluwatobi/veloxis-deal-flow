@@ -179,6 +179,18 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {/* Deployed by Currency */}
+      {Object.keys(deployedByCurrency).length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-3">
+          {Object.entries(deployedByCurrency).map(([cur, amt]) => (
+            <div key={cur} className="flex items-center justify-between rounded-lg border border-border p-3">
+              <span className="text-sm font-medium text-muted-foreground">Deployed in {cur}</span>
+              <span className="text-sm font-bold text-foreground">{CURRENCY_SYMBOLS_MAP[cur] || ''}{Number(amt).toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="rounded-lg border border-border bg-warning/5 p-3 text-sm text-warning">
         Non-GBP deals are converted to GBP at manually recorded FX rates. Exchange rate movement between advance and repayment is not hedged.
       </div>
