@@ -246,7 +246,7 @@ export default function DealDetail() {
     setActionLoading(true);
     try {
       const { error } = await supabase.from('deals').update({
-        status: 'pending_exporter_acceptance' as DealStatus,
+        status: 'approved' as DealStatus,
         approved_at: new Date().toISOString(),
       }).eq('id', id);
       if (error) throw error;
@@ -256,10 +256,10 @@ export default function DealDetail() {
         p_user_id: user?.id,
         p_user_role: role as any,
         p_action_type: 'deal_approved',
-        p_metadata: { actor_name: user?.email, next_status: 'pending_exporter_acceptance' },
+        p_metadata: { actor_name: user?.email, next_status: 'approved' },
       });
 
-      toast({ title: 'Deal approved', description: 'Offer sent to exporter for acceptance.' });
+      toast({ title: 'Deal approved', description: 'The deal has been approved. IPU process can now begin.' });
       setPricingOverride(false);
       load();
     } catch (err: unknown) {
