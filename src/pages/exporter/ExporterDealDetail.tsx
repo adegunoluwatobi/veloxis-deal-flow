@@ -462,7 +462,7 @@ export default function ExporterDealDetail() {
           <DealField field="bank_name" label="Bank Name" value={deal.bank_name} />
           <DealField field="bank_account_name" label="Account Name" value={deal.bank_account_name} />
           <DealField field="bank_account_number" label="Account Number" value={deal.bank_account_number} />
-          <DealField field="bank_sort_code_iban" label="Sort Code / IBAN / SWIFT" value={deal.bank_sort_code_iban} />
+          <DealField field="bank_sort_code_iban" label="Sort Code / IBAN" value={deal.bank_sort_code_iban} />
           <DealField field="bank_country" label="Bank Country" value={deal.bank_country} />
         </CardContent>
       </Card>

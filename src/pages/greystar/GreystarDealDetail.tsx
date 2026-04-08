@@ -234,6 +234,8 @@ export default function GreystarDealDetail() {
 
   // Show pending CR info
   const crFields: FlaggedField[] = pendingCR?.fields_flagged ?? [];
+  const psym = CURRENCY_SYMBOLS[(deal?.invoice_currency_v2 as InvoiceCurrency) ?? 'GBP'] ?? '£';
+  const pfmt = (v: number | null) => v != null ? `${psym}${Number(v).toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—';
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -254,8 +256,6 @@ export default function GreystarDealDetail() {
 
       {/* Facility Offer Panel — read-only for partner when pending exporter acceptance or declined */}
       {(deal.status === 'pending_exporter_acceptance' || deal.status === 'declined_by_exporter') && (() => {
-        const psym = CURRENCY_SYMBOLS[(deal.invoice_currency_v2 as InvoiceCurrency) ?? 'GBP'] ?? '£';
-        const pfmt = (v: number | null) => v != null ? `${psym}${Number(v).toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—';
         return (
           <Card className="border-primary/30">
             <CardHeader>
@@ -377,6 +377,27 @@ export default function GreystarDealDetail() {
         onReload={loadDeal}
       />
 
+      {/* Fee & Pricing Summary — always visible to partner when pricing data exists */}
+      {deal.invoice_value != null && deal.advance_amount != null && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Fee & Pricing Summary</CardTitle></CardHeader>
+          <CardContent>
+            <Table>
+              <TableBody>
+                <TableRow><TableCell className="text-muted-foreground">Invoice Amount</TableCell><TableCell className="text-right font-medium">{pfmt(deal.invoice_value)}</TableCell></TableRow>
+                <TableRow><TableCell className="text-muted-foreground">Advance Rate</TableCell><TableCell className="text-right font-medium">{deal.advance_percentage}%</TableCell></TableRow>
+                <TableRow><TableCell className="text-muted-foreground">Advance Amount</TableCell><TableCell className="text-right font-medium">{pfmt(deal.advance_amount)}</TableCell></TableRow>
+                <TableRow><TableCell className="text-muted-foreground">Platform Fee ({((deal.platform_fee_pct ?? 0) * 100).toFixed(1)}%)</TableCell><TableCell className="text-right font-medium">{pfmt(deal.platform_fee_amount)}</TableCell></TableRow>
+                <TableRow><TableCell className="text-muted-foreground">Discount Fee ({((deal.discount_fee_pct ?? 0) * 100).toFixed(1)}%)</TableCell><TableCell className="text-right font-medium">{pfmt(deal.discount_fee_amount)}</TableCell></TableRow>
+                <TableRow><TableCell className="text-muted-foreground">Total Fees</TableCell><TableCell className="text-right font-medium">{pfmt(deal.gross_yield)}</TableCell></TableRow>
+                <TableRow className="border-t-2"><TableCell className="font-semibold">Net Advance to Exporter</TableCell><TableCell className="text-right font-bold">{pfmt(deal.net_advance_amount)}</TableCell></TableRow>
+                <TableRow><TableCell className="text-muted-foreground">Payment Terms</TableCell><TableCell className="text-right font-medium">{deal.payment_terms_days ?? '—'} days</TableCell></TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Name Match Summary */}
       <Card>
         <CardHeader><CardTitle className="text-base">Name Matching</CardTitle></CardHeader>
@@ -394,7 +415,7 @@ export default function GreystarDealDetail() {
           <Field label="Bank Name" value={deal.bank_name} />
           <Field label="Account Name" value={deal.bank_account_name} />
           <Field label="Account Number" value={deal.bank_account_number} />
-          <Field label="Sort Code / IBAN / SWIFT" value={deal.bank_sort_code_iban} />
+          <Field label="Sort Code / IBAN" value={deal.bank_sort_code_iban} />
           <Field label="Bank Country" value={deal.bank_country} />
         </CardContent>
       </Card>

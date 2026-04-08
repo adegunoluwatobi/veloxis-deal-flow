@@ -432,7 +432,7 @@ export default function ExporterDealNew() {
               <Input value={form.bank_account_number} onChange={e => updateField('bank_account_number', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Sort Code / IBAN / SWIFT *</Label>
+              <Label>Sort Code / IBAN *</Label>
               <Input value={form.bank_sort_code_iban} onChange={e => updateField('bank_sort_code_iban', e.target.value)} />
             </div>
             <div className="space-y-2">
