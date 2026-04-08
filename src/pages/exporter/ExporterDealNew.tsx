@@ -58,6 +58,7 @@ export default function ExporterDealNew() {
   const [pricingConfig, setPricingConfig] = useState<any>(null);
   const [paymentTermsDays, setPaymentTermsDays] = useState('');
   const [feeAccepted, setFeeAccepted] = useState(false);
+  const [extendedTermsConfirmed, setExtendedTermsConfirmed] = useState(false);
   const isEditing = !!editDealId;
 
   const [form, setForm] = useState({
