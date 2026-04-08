@@ -468,6 +468,54 @@ export default function GreystarExporterDetail() {
           </CardContent>
         </Card>
       )}
+
+      {/* Exporter Applications */}
+      {deals.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileText className="h-4 w-4" /> Applications ({deals.length})
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-muted-foreground text-xs">
+                    <th className="pb-2 font-medium">Reference</th>
+                    <th className="pb-2 font-medium">Buyer</th>
+                    <th className="pb-2 font-medium">Invoice Value</th>
+                    <th className="pb-2 font-medium">Status</th>
+                    <th className="pb-2 font-medium">Created</th>
+                    <th className="pb-2 font-medium"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {deals.map((deal) => {
+                    const csym = deal.invoice_currency_v2 === 'USD' ? '$' : deal.invoice_currency_v2 === 'EUR' ? '€' : '£';
+                    return (
+                      <tr key={deal.id} className="hover:bg-muted/30">
+                        <td className="py-2 font-medium text-foreground">{deal.deal_reference ?? '—'}</td>
+                        <td className="py-2">{deal.buyer_company_name ?? '—'}</td>
+                        <td className="py-2">{deal.invoice_value != null ? `${csym}${Number(deal.invoice_value).toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '—'}</td>
+                        <td className="py-2"><DealStatusBadge status={deal.status} /></td>
+                        <td className="py-2">{new Date(deal.created_at).toLocaleDateString('en-GB')}</td>
+                        <td className="py-2">
+                          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => navigate(`/greystar/deals/${deal.id}`)}>
+                            <Eye className="mr-1 h-3 w-3" /> View
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
