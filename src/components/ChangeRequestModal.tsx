@@ -24,7 +24,7 @@ const FIELD_SECTIONS: { title: string; fields: FieldDef[] }[] = [
       { field: 'bank_name', label: 'Bank Name' },
       { field: 'bank_account_name', label: 'Account Name' },
       { field: 'bank_account_number', label: 'Account Number' },
-      { field: 'bank_sort_code_iban', label: 'Sort Code / IBAN / SWIFT' },
+      { field: 'bank_sort_code_iban', label: 'Sort Code / IBAN' },
       { field: 'bank_country', label: 'Bank Country' },
     ],
   },
