@@ -181,7 +181,7 @@ export default function GreystarDealDetail() {
     setSubmitting(true);
     try {
       await supabase.from('deals').update({
-        status: 'sent_to_veloxis' as any,
+        status: 'under_review' as any,
         sent_to_veloxis_at: new Date().toISOString(),
       }).eq('id', id!);
 

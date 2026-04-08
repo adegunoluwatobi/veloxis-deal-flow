@@ -34,7 +34,7 @@ export default function IpuUploadSection({
   const [verifying, setVerifying] = useState(false);
 
   const isSuperAdminOrDM = role === 'super_admin' || role === 'deal_manager';
-  const canUpload = isSuperAdminOrDM && ['sent_to_veloxis', 'under_review', 'docs_requested', 'ready_for_final_approval'].includes(dealStatus);
+  const canUpload = isSuperAdminOrDM && ['under_review', 'docs_requested', 'ready_for_final_approval'].includes(dealStatus);
   const canVerify = isSuperAdminOrDM && ipuDocuments.length > 0 && !ipuVerified;
 
   const handleUpload = async () => {

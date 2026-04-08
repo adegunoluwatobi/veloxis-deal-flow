@@ -94,9 +94,9 @@ export default function ExporterDocRequestBanner({ dealId, dealStatus, onReload 
         .eq('status', 'pending');
 
       if (!remaining || remaining.length === 0) {
-        // All docs uploaded — move status back to sent_to_veloxis (under review)
+        // All docs uploaded — move status back to under_review
         await supabase.from('deals')
-          .update({ status: 'sent_to_veloxis' as any })
+          .update({ status: 'under_review' as any })
           .eq('id', dealId);
 
         await supabase.rpc('insert_audit_log', {
@@ -107,7 +107,7 @@ export default function ExporterDocRequestBanner({ dealId, dealStatus, onReload 
           p_metadata: {
             actor_name: user.email,
             from: 'docs_requested',
-            to: 'sent_to_veloxis',
+            to: 'under_review',
             reason: 'All requested documents uploaded',
           },
         });

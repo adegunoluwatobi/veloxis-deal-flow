@@ -7,7 +7,7 @@ export type EntityType = 'limited_company' | 'plc' | 'llp' | 'incorporated_trust
 export type CommodityType = 'solid_minerals' | 'scrap_metal' | 'manufactured_goods' | 'textiles';
 
 export type DealStatus =
-  | 'draft' | 'submitted' | 'changes_requested' | 'sent_to_veloxis'
+  | 'draft' | 'submitted' | 'changes_requested' | 'sent_to_veloxis' /* legacy, now merged into under_review */
   | 'under_review' | 'docs_requested'
   | 'ready_for_final_approval' | 'rejection_pending_approval'
   | 'pending_exporter_acceptance' | 'declined_by_exporter'
@@ -97,7 +97,7 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   draft: 'Draft',
   submitted: 'Submitted',
   changes_requested: 'Changes Requested',
-  sent_to_veloxis: 'Sent to Underwriter',
+  sent_to_veloxis: 'Under Review',
   under_review: 'Under Review',
   docs_requested: 'Documents Requested',
   ready_for_final_approval: 'Ready for Final Approval',
@@ -124,16 +124,19 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
 export const PORTAL_STATUS_OVERRIDES: Record<Portal, Partial<Record<DealStatus, string>>> = {
   exporter: {
     sent_to_veloxis: 'Under Review',
+    under_review: 'Under Review',
     pending_exporter_acceptance: 'Offer Received',
     declined_by_exporter: 'Offer Declined',
   },
   partner: {
-    sent_to_veloxis: 'Submitted to Veloxis',
+    sent_to_veloxis: 'Under Review',
+    under_review: 'Under Review',
     pending_exporter_acceptance: 'Awaiting Exporter Response',
     declined_by_exporter: 'Declined by Exporter',
   },
   veloxis: {
-    sent_to_veloxis: 'Awaiting Review',
+    sent_to_veloxis: 'Under Review',
+    under_review: 'Under Review',
     pending_exporter_acceptance: 'Pending Exporter Acceptance',
     declined_by_exporter: 'Declined by Exporter',
   },
