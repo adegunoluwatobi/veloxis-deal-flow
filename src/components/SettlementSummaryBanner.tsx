@@ -10,8 +10,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { sanitiseFilename } from '@/lib/sanitiseFilename';
-import { CURRENCY_SYMBOLS, type InvoiceCurrency, type AuditAction } from '@/types';
+import { CURRENCY_SYMBOLS, type InvoiceCurrency } from '@/types';
 import { CheckCircle2, Banknote, Download, Loader2, Send, Upload } from 'lucide-react';
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
+} from '@/components/ui/dialog';
 
 interface Props {
   dealId: string;
