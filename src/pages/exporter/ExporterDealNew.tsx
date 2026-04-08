@@ -273,10 +273,27 @@ export default function ExporterDealNew() {
         licence_name_match: exportLicence ? true : null,
         fx_risk_acknowledged: form.fx_risk_acknowledged,
         settlement_currency: form.invoice_currency,
+        payment_terms_days: terms || null,
+        advance_percentage: advRatePct,
+        advance_amount: advanceAmount > 0 ? advanceAmount : null,
+        platform_fee_pct: platformFeePct / 100,
+        platform_fee_amount: platformFeeAmount > 0 ? platformFeeAmount : null,
+        discount_fee_pct: discountFeePctMonthly / 100,
+        discount_fee_amount: discountFeeAmount > 0 ? discountFeeAmount : null,
+        gross_yield: totalFees > 0 ? totalFees : null,
+        net_advance_amount: netAdvance > 0 ? netAdvance : null,
+        repayment_amount: invoiceAmount > 0 ? invoiceAmount : null,
+        snapshot_advance_rate_pct: advRatePct,
+        snapshot_platform_fee_pct: platformFeePct,
+        snapshot_discount_fee_pct: discountFeePctMonthly,
+        snapshot_late_penalty_rate_pct: latePenaltyRate,
+        demurrage_rate_daily: latePenaltyRate / 100,
       };
 
       if (!asDraft) {
         dealData.submitted_at = new Date().toISOString();
+        dealData.fee_acceptance_at = new Date().toISOString();
+        dealData.fee_acceptance_by = user.id;
       }
 
       let dealId: string;
