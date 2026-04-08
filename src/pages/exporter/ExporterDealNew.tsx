@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { sanitiseFilename } from '@/lib/sanitiseFilename';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,8 +17,9 @@ import { EmailInput, isValidEmail } from '@/components/ui/email-input';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Upload, Loader2, ShieldCheck } from 'lucide-react';
 import { BUYER_COUNTRY_WHITELIST } from '@/types';
+import { cn } from '@/lib/utils';
 
-const STEPS = ['Bank Account', 'Invoice Details', 'Buyer Details', 'Export Details', 'Fee Calculator', 'Review & Submit'];
+const STEPS = ['Bank Account', 'Invoice Details', 'Buyer Details', 'Export Details', 'Transaction Documents', 'Fee Calculator', 'Review & Submit'];
 const INCOTERMS = ['EXW', 'FOB', 'CIF', 'DAP', 'DDP', 'Other'] as const;
 const BANK_COUNTRIES = ['Nigeria', 'United Kingdom', 'United States', 'Ghana', 'Kenya', 'South Africa'] as const;
 const CURRENCIES = [
@@ -59,6 +61,8 @@ export default function ExporterDealNew() {
   const [paymentTermsDays, setPaymentTermsDays] = useState('');
   const [feeAccepted, setFeeAccepted] = useState(false);
   const [extendedTermsConfirmed, setExtendedTermsConfirmed] = useState(false);
+  const [tradePackFiles, setTradePackFiles] = useState<Record<string, File>>({});
+  const [tradePackUploading, setTradePackUploading] = useState(false);
   const isEditing = !!editDealId;
 
   const [form, setForm] = useState({
@@ -198,13 +202,27 @@ export default function ExporterDealNew() {
   const totalFees = platformFeeAmount + discountFeeAmount;
   const netAdvance = advanceAmount - totalFees;
 
+  const REQUIRED_TRADE_DOCS = ['commercial_invoice', 'bill_of_lading', 'buyer_registration_doc'];
+  const RECOMMENDED_TRADE_DOCS = ['packing_list', 'insurance_certificate', 'nxp_form'];
+  const ALL_TRADE_DOCS = [
+    { type: 'commercial_invoice', label: 'Commercial Invoice', required: true },
+    { type: 'bill_of_lading', label: 'Bill of Lading / Airway Bill', required: true },
+    { type: 'buyer_registration_doc', label: 'Buyer Registration Document', required: true },
+    { type: 'packing_list', label: 'Packing List', required: false },
+    { type: 'insurance_certificate', label: 'Insurance Certificate', required: false },
+    { type: 'nxp_form', label: 'NXP Form (Customs Export Declaration)', required: false },
+  ];
+  const requiredDocsUploaded = REQUIRED_TRADE_DOCS.filter(t => tradePackFiles[t]).length;
+  const recommendedDocsUploaded = RECOMMENDED_TRADE_DOCS.filter(t => tradePackFiles[t]).length;
+
   const canProceed = (s: number) => {
     switch (s) {
       case 0: return form.bank_name && form.bank_account_name && form.bank_account_number && form.bank_sort_code_iban && form.bank_country;
       case 1: return form.invoice_number && form.invoice_date && form.invoice_amount && form.invoice_currency && form.payment_due_date && (form.invoice_file || existingInvoicePath);
       case 2: return form.buyer_company_name && form.buyer_country && form.buyer_contact_name && form.buyer_contact_email && isValidEmail(form.buyer_contact_email) && form.buyer_contact_phone;
       case 3: return form.goods_description && form.export_destination && form.export_licence_number && form.hs_code && form.incoterms;
-      case 4: return terms >= minTerms && terms <= maxTerms && feeAccepted && (terms <= 60 || extendedTermsConfirmed);
+      case 4: return requiredDocsUploaded === REQUIRED_TRADE_DOCS.length;
+      case 5: return terms >= minTerms && terms <= maxTerms && feeAccepted && (terms <= 60 || extendedTermsConfirmed);
       default: return true;
     }
   };
@@ -218,12 +236,12 @@ export default function ExporterDealNew() {
     }
     if (!asDraft && !form.fx_risk_acknowledged) {
       toast({ title: 'FX Risk Acknowledgement Required', description: 'Please acknowledge the FX risk before submitting.', variant: 'destructive' });
-      setStep(5);
+      setStep(6);
       return;
     }
     if (!asDraft && !feeAccepted) {
       toast({ title: 'Fee Acceptance Required', description: 'Please accept the fee structure before submitting.', variant: 'destructive' });
-      setStep(4);
+      setStep(5);
       return;
     }
     setSaving(true);
@@ -306,6 +324,24 @@ export default function ExporterDealNew() {
         const { data: newDeal, error } = await supabase.from('deals').insert(dealData).select('id').single();
         if (error) throw error;
         dealId = newDeal.id;
+      }
+
+      // Upload trade pack documents
+      for (const [docType, file] of Object.entries(tradePackFiles)) {
+        const safeName = sanitiseFilename(file.name);
+        const docPath = `deals/${dealId}/${docType}/${Date.now()}_${safeName}`;
+        const { error: docUpErr } = await supabase.storage.from('veloxis-documents').upload(docPath, file);
+        if (!docUpErr) {
+          await supabase.from('deal_documents').insert({
+            deal_id: dealId,
+            document_type: docType as any,
+            file_name: file.name,
+            file_path: docPath,
+            uploaded_by: user.id,
+            file_size_bytes: file.size,
+            mime_type: file.type,
+          });
+        }
       }
 
       // Audit log
@@ -586,8 +622,86 @@ export default function ExporterDealNew() {
         </Card>
       )}
 
-      {/* Step 4: Fee Calculator */}
+      {/* Step 4: Transaction Documents */}
       {step === 4 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Transaction Documents</CardTitle>
+            <CardDescription>Upload the trade pack documents for this application</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {ALL_TRADE_DOCS.map(doc => {
+              const file = tradePackFiles[doc.type];
+              return (
+                <div key={doc.type} className="flex items-center justify-between rounded-lg border border-border p-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {file ? (
+                      <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
+                    ) : (
+                      <AlertTriangle className="h-5 w-5 text-muted-foreground shrink-0" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">{doc.label}</p>
+                      {file && <p className="text-xs text-muted-foreground truncate">{file.name}</p>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant="secondary" className={cn("text-xs", doc.required ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary")}>
+                      {doc.required ? 'Required' : 'Recommended'}
+                    </Badge>
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.jpg,.jpeg,.png,.webp"
+                        onChange={e => {
+                          const f = e.target.files?.[0];
+                          if (f && !ALLOWED_MIME.includes(f.type)) {
+                            toast({ title: 'Invalid file type', variant: 'destructive' });
+                            return;
+                          }
+                          if (f && f.size > MAX_SIZE) {
+                            toast({ title: 'File too large (max 20 MB)', variant: 'destructive' });
+                            return;
+                          }
+                          if (f) setTradePackFiles(prev => ({ ...prev, [doc.type]: f }));
+                        }}
+                      />
+                      <Button size="sm" variant="outline" className="h-8 text-xs gap-1 pointer-events-none">
+                        <Upload className="h-3 w-3" />
+                        {file ? 'Replace' : 'Upload'}
+                      </Button>
+                    </label>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Checklist summary */}
+            <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm">
+              <p className="font-medium text-foreground">
+                {requiredDocsUploaded === REQUIRED_TRADE_DOCS.length ? (
+                  <span className="flex items-center gap-1 text-success">
+                    <CheckCircle2 className="h-4 w-4" />
+                    {requiredDocsUploaded} of {REQUIRED_TRADE_DOCS.length} required documents uploaded ✓
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    {requiredDocsUploaded} of {REQUIRED_TRADE_DOCS.length} required documents uploaded
+                  </span>
+                )}
+              </p>
+              <p className="text-muted-foreground mt-1">
+                {recommendedDocsUploaded} of {RECOMMENDED_TRADE_DOCS.length} recommended documents uploaded
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 5: Fee Calculator */}
+      {step === 5 && (
         <Card>
           <CardHeader>
             <CardTitle>Fee Calculator & Acceptance</CardTitle>
@@ -673,8 +787,8 @@ export default function ExporterDealNew() {
         </Card>
       )}
 
-      {/* Step 5: Review & Submit */}
-      {step === 5 && (
+      {/* Step 6: Review & Submit */}
+      {step === 6 && (
         <Card>
           <CardHeader>
             <CardTitle>Review & Submit</CardTitle>

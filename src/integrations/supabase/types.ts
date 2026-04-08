@@ -1520,6 +1520,10 @@ export type Database = {
         | "ipu_signed"
         | "payment_advice"
         | "buyer_registration_doc"
+        | "packing_list"
+        | "insurance_certificate"
+        | "nxp_form"
+        | "export_licence"
       deal_status:
         | "draft"
         | "submitted"
@@ -1781,6 +1785,10 @@ export const Constants = {
         "ipu_signed",
         "payment_advice",
         "buyer_registration_doc",
+        "packing_list",
+        "insurance_certificate",
+        "nxp_form",
+        "export_licence",
       ],
       deal_status: [
         "draft",

@@ -745,8 +745,6 @@ export default function DealDetail() {
       <TradePackChecklist
         dealId={deal.id}
         documents={activeDocs as any}
-        commodityType={deal.commodity_type}
-        exportDestination={(deal as any).export_destination ?? null}
         dealStatus={deal.status}
         isVeloxis={isDM}
         onReload={load}
