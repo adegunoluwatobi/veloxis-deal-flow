@@ -501,16 +501,6 @@ export default function DealDetail() {
                   <Clock className="h-4 w-4" /> Back to Review
                 </Button>
               )}
-              {/* Declined by exporter — super_admin can re-send offer */}
-              {deal.status === ('declined_by_exporter' as DealStatus) && isSuperAdmin && (
-                <Button size="sm" onClick={handleResendOffer} disabled={actionLoading} className="gap-1">
-                  <Send className="h-4 w-4" /> Re-send Offer to Exporter
-                </Button>
-              )}
-              {/* Pending exporter acceptance — informational */}
-              {deal.status === ('pending_exporter_acceptance' as DealStatus) && (
-                <p className="text-sm text-muted-foreground italic">Waiting for exporter to accept or decline the facility offer.</p>
-              )}
             </div>
           </CardContent>
         </Card>
