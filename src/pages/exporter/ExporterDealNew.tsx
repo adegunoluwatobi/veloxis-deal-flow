@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Upload, Loader2, ShieldCheck } from 'lucide-react';
 import { BUYER_COUNTRY_WHITELIST } from '@/types';
 
-const STEPS = ['Bank Account', 'Invoice Details', 'Buyer Details', 'Export Details', 'Review & Submit'];
+const STEPS = ['Bank Account', 'Invoice Details', 'Buyer Details', 'Export Details', 'Fee Calculator', 'Review & Submit'];
 const INCOTERMS = ['EXW', 'FOB', 'CIF', 'DAP', 'DDP', 'Other'] as const;
 const BANK_COUNTRIES = ['Nigeria', 'United Kingdom', 'United States', 'Ghana', 'Kenya', 'South Africa'] as const;
 const CURRENCIES = [
