@@ -111,7 +111,7 @@ export default function DealManagerDashboard() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>All Deals</CardTitle>
+          <CardTitle>All Applications</CardTitle>
           <Button asChild variant="ghost" size="sm">
             <Link to="/deals">Full pipeline <ArrowRight className="ml-1 h-4 w-4" /></Link>
           </Button>
