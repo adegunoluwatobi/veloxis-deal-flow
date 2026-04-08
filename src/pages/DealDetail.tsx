@@ -697,22 +697,11 @@ export default function DealDetail() {
         onReload={load}
       />
 
-      {/* Settlement & FX */}
+      {/* Settlement Details */}
       {isDM && (
         <SettlementFxSection
-          dealId={deal.id}
           invoiceCurrency={deal.invoice_currency_v2}
-          settlementCurrency={(deal as any).settlement_currency ?? null}
-          settlementMethod={((deal as any).settlement_method ?? null) as SettlementMethod | null}
-          fxRateAtFunding={(deal as any).fx_rate_at_funding ?? null}
-          ngnEquivalent={(deal as any).ngn_equivalent_at_disbursement ?? null}
-          advanceAmount={deal.advance_amount}
-          fxRiskAcknowledged={(deal as any).fx_risk_acknowledged ?? false}
-          cbnRepatriationDeadline={(deal as any).cbn_repatriation_deadline ?? null}
           dealStatus={deal.status}
-          isVeloxis={isDM}
-          isExporter={false}
-          onReload={load}
         />
       )}
 
