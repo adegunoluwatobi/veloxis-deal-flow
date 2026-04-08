@@ -55,6 +55,9 @@ export default function ExporterDealNew() {
   const [saveBankDetails, setSaveBankDetails] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [existingInvoicePath, setExistingInvoicePath] = useState<string | null>(null);
+  const [pricingConfig, setPricingConfig] = useState<any>(null);
+  const [paymentTermsDays, setPaymentTermsDays] = useState('');
+  const [feeAccepted, setFeeAccepted] = useState(false);
   const isEditing = !!editDealId;
 
   const [form, setForm] = useState({
