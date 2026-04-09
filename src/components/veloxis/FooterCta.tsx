@@ -29,7 +29,7 @@ export function FooterCta() {
                 Apply Now <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10" asChild>
+            <Button size="lg" variant="outline" className="border-white/40 text-primary-foreground hover:bg-white/10 bg-white/10" asChild>
               <Link to="/contact">Talk to Us</Link>
             </Button>
           </div>
