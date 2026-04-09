@@ -93,6 +93,9 @@ const App = () => (
         <AuthProvider>
           <ConfirmProvider>
           <Routes>
+            {/* Marketing website */}
+            <Route path="/website" element={<VeloxisHome />} />
+
             <Route path="/login" element={<Login />} />
             <Route path="/set-password" element={<SetPassword />} />
             <Route path="/upload/:token" element={<SMEUpload />} />
