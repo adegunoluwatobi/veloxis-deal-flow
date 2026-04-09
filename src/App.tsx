@@ -47,6 +47,9 @@ import ExporterDeals from "@/pages/exporter/ExporterDeals";
 import ExporterDealNew from "@/pages/exporter/ExporterDealNew";
 import ExporterDealDetail from "@/pages/exporter/ExporterDealDetail";
 
+// Website (marketing) pages
+import VeloxisHome from "@/pages/website/VeloxisHome";
+
 const queryClient = new QueryClient();
 
 function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
@@ -90,6 +93,9 @@ const App = () => (
         <AuthProvider>
           <ConfirmProvider>
           <Routes>
+            {/* Marketing website */}
+            <Route path="/website" element={<VeloxisHome />} />
+
             <Route path="/login" element={<Login />} />
             <Route path="/set-password" element={<SetPassword />} />
             <Route path="/upload/:token" element={<SMEUpload />} />
