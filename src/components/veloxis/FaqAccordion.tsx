@@ -1,75 +1,90 @@
-import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 
 const FAQS = [
   {
     q: "What is invoice discounting?",
-    a: "Invoice discounting is a form of short-term finance where we advance a percentage of your invoice value upfront, then collect payment from your buyer on the original terms. It's not a loan — we purchase the receivable.",
+    a: "Invoice discounting is trade finance where a financier advances cash against an unpaid invoice. Unlike a loan, there is no debt on your balance sheet. Veloxis purchases your receivable at a discount — you get cash now, we collect from your buyer at maturity. It is fully disclosed: your buyer signs a legal payment undertaking directly with Veloxis before any funds are released.",
   },
   {
-    q: "How much can I receive?",
-    a: "We typically advance up to 80% of the invoice value. The exact percentage depends on the buyer profile, trade route, and payment terms.",
-  },
-  {
-    q: "How long does the process take?",
-    a: "From submission to funding decision is usually within 24 hours. Once approved and the IPU is signed by the buyer, funds are released to your account promptly.",
+    q: "Who can use Veloxis?",
+    a: "Veloxis is for incorporated businesses anywhere in the world that export non-agricultural, non-perishable goods to verified buyers in the UK or European Economic Area. You must be onboarded through a Veloxis-approved local partner. Sole traders and unregistered partnerships are not eligible.",
   },
   {
     q: "What documents do I need?",
-    a: "A commercial invoice, bill of lading, buyer details, and your KYC documents (company registration, director ID, etc.). Our portal guides you through everything step by step.",
+    a: "At company level, uploaded once via your local partner: Certificate of Incorporation or equivalent, Director ID, and Export Authority document. Per deal: Commercial Invoice, Bill of Lading or Airway Bill, and Customs Export Declaration. Your partner will guide you through the exact requirements for your country.",
+  },
+  {
+    q: "What is an Irrevocable Payment Undertaking (IPU)?",
+    a: "The IPU is the legal instrument at the heart of every Veloxis transaction. Before funds are released, your buyer signs a formal undertaking committing to pay Veloxis directly on the invoice due date. No signed IPU means no funds released — it is the core protection for all parties.",
+  },
+  {
+    q: "How long does approval take?",
+    a: "A complete application — all documents uploaded, KYC verified by your partner, buyer details confirmed — is reviewed within 24 hours. The IPU is sent to your buyer immediately on approval. Once your buyer signs, funds are released typically within the same business day.",
+  },
+  {
+    q: "Do I need a UK bank account?",
+    a: "No. Veloxis settles funds directly to your domiciliary account in your home country. You do not need a UK or EU bank account. This is one of the key reasons the platform was built — to serve exporters excluded precisely because of this barrier.",
+  },
+  {
+    q: "What goods are eligible?",
+    a: "Eligible: solid minerals, metals and scrap, manufactured goods, textiles, processed chemicals (non-hazardous), timber and wood products, processed seafood. Not eligible: raw agricultural produce, live animals, perishables, weapons, and controlled substances.",
   },
   {
     q: "Is Veloxis a lender?",
-    a: "No. Veloxis provides invoice discounting, which means we purchase your trade receivable. This doesn't create debt on your balance sheet like a traditional loan would.",
+    a: "No. Veloxis is an invoice discounting platform — we purchase your receivable at a discount. We are buying an asset, not extending a loan. No debt appears on your balance sheet and there is no loan agreement to service.",
+  },
+  {
+    q: "What if my buyer does not pay?",
+    a: "The IPU creates a direct legal obligation between your buyer and Veloxis. If a buyer defaults, Veloxis pursues recovery directly. Your liability as an exporter is limited to the accuracy and authenticity of the trade documents you submitted.",
   },
   {
     q: "Can I use Veloxis for multiple invoices?",
-    a: "Absolutely. Once onboarded, you can submit multiple invoices through our portal. Each is assessed independently, so you can keep your trade flowing.",
+    a: "Yes. Once your KYC is verified and your profile is set up, submitting subsequent deals is significantly faster — you only need the trade documents specific to each shipment. Many exporters use Veloxis on a rolling basis across multiple buyers and shipment cycles.",
   },
 ];
 
 export function FaqAccordion() {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-100px" });
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section ref={ref} className="py-20 md:py-28 bg-muted/30">
-      <div className="container mx-auto px-4 md:px-6 max-w-2xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-            Frequently Asked Questions
-          </h2>
-        </motion.div>
+    <section className="bg-white py-16">
+      <div className="mx-auto max-w-[960px] px-8 text-center">
+        <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#0d9488] mb-2">FAQ</p>
+        <h2 className="text-[34px] font-medium leading-[1.2] text-[#111827]">
+          Everything you need to know.
+        </h2>
+        <p className="mt-3 text-[14px] text-[#6b7280] mb-7">
+          Still have questions?{" "}
+          <a href="mailto:hello@veloxis.com" className="text-[#0d9488] hover:underline">hello@veloxis.com</a>
+        </p>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.2, duration: 0.6 }}
-        >
-          <Accordion type="single" collapsible className="w-full">
-            {FAQS.map((faq, i) => (
-              <AccordionItem key={i} value={`faq-${i}`}>
-                <AccordionTrigger className="text-left text-foreground">
+        <div className="text-left space-y-2">
+          {FAQS.map((faq, i) => {
+            const isOpen = openIndex === i;
+            return (
+              <div key={i} className="overflow-hidden rounded-xl" style={{ border: "0.5px solid #e5e7eb" }}>
+                <button
+                  onClick={() => setOpenIndex(isOpen ? null : i)}
+                  className="flex w-full items-center justify-between px-5 py-4 text-left text-[14px] font-medium text-[#111827] hover:bg-[#f9fafb] transition-colors"
+                >
                   {faq.q}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground leading-relaxed">
-                  {faq.a}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </motion.div>
+                  <ChevronDown
+                    className={`h-4 w-4 shrink-0 text-[#6b7280] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                <div
+                  className="overflow-hidden transition-all duration-[250ms]"
+                  style={{ maxHeight: isOpen ? 300 : 0 }}
+                >
+                  <p className="px-5 pb-4 text-[13px] leading-[1.6] text-[#6b7280]">
+                    {faq.a}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

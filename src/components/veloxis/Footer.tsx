@@ -1,68 +1,70 @@
 import { Link } from "react-router-dom";
 
-const LINKS = {
-  Product: [
-    { label: "How It Works", href: "/how-it-works" },
-    { label: "Why Veloxis", href: "/why-veloxis" },
-    { label: "Partners", href: "/partners" },
-    { label: "FAQ", href: "/faq" },
-  ],
-  Company: [
-    { label: "About", href: "/about" },
-    { label: "Contact", href: "/contact" },
-  ],
-  Legal: [
-    { label: "Privacy Policy", href: "/privacy-policy" },
-    { label: "Terms & Conditions", href: "/terms" },
-    { label: "Disclosure", href: "/disclosure" },
-    { label: "Cookies", href: "/cookies" },
-  ],
-};
+const PRODUCT = [
+  { label: "How it works", href: "/how-it-works" },
+  { label: "Why Veloxis", href: "/why-veloxis" },
+  { label: "FAQ", href: "/faq" },
+];
+
+const COMPANY = [
+  { label: "About", href: "/about" },
+  { label: "Partners", href: "/partners" },
+  { label: "Contact", href: "/contact" },
+];
+
+const LEGAL = [
+  { label: "Privacy policy", href: "/privacy-policy" },
+  { label: "Terms & conditions", href: "/terms" },
+  { label: "Disclosure", href: "/disclosure" },
+  { label: "Cookies", href: "/cookies" },
+];
+
+function FooterColumn({ title, links }: { title: string; links: { label: string; href: string }[] }) {
+  return (
+    <div>
+      <h4 className="text-[11px] font-medium uppercase tracking-[0.08em] text-[#6b7280] mb-[14px]">{title}</h4>
+      <div className="space-y-2">
+        {links.map((link) => (
+          <Link
+            key={link.href}
+            to={link.href}
+            className="block text-[13px] text-[#6b7280] hover:text-[#111827] transition-colors"
+          >
+            {link.label}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-background">
-      <div className="container mx-auto px-4 md:px-6 py-12 md:py-16">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div>
-            <div className="flex items-center gap-1.5 mb-4">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-cyan-600 to-teal-500 flex items-center justify-center">
-                <span className="text-sm font-bold text-primary-foreground">V</span>
-              </div>
-              <span className="text-xl font-bold tracking-tight text-foreground">Veloxis</span>
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-              UK-based cross-border invoice discounting platform. Advancing up to 80% of export invoice value within 24 hours.
+    <footer className="bg-[#f9fafb]" style={{ borderTop: "0.5px solid #e5e7eb" }}>
+      <div className="mx-auto max-w-[960px] px-8 py-12">
+        <div className="grid grid-cols-2 md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-8">
+          <div className="col-span-2 md:col-span-1">
+            <Link to="/" className="text-[17px] font-medium text-[#111827] cursor-pointer">Veloxis</Link>
+            <p className="mt-2.5 text-[13px] leading-[1.6] text-[#6b7280]">
+              UK-based cross-border invoice discounting. Advancing 80% of export invoice value within 24 hours for exporters worldwide shipping to UK and EU buyers.
             </p>
-            <p className="text-sm text-muted-foreground mt-4">hello@veloxis.com</p>
+            <a href="mailto:hello@veloxis.com" className="mt-3 block text-[13px] text-[#6b7280] hover:text-[#111827]">
+              hello@veloxis.com
+            </a>
           </div>
 
-          {Object.entries(LINKS).map(([heading, links]) => (
-            <div key={heading}>
-              <h4 className="text-sm font-semibold text-foreground mb-4">{heading}</h4>
-              <ul className="space-y-2.5">
-                {links.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      to={link.href}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <FooterColumn title="Product" links={PRODUCT} />
+          <FooterColumn title="Company" links={COMPANY} />
+          <FooterColumn title="Legal" links={LEGAL} />
         </div>
 
-        <div className="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Veloxis Ltd. All rights reserved.
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Veloxis Ltd is registered in England and Wales.
-          </p>
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-2 pt-5 text-[12px] text-[#6b7280]" style={{ borderTop: "0.5px solid #e5e7eb" }}>
+          <span>© 2026 Veloxis Ltd. All rights reserved. Registered in England and Wales.</span>
+          <div className="flex gap-3">
+            <Link to="/privacy-policy" className="hover:text-[#111827]">Privacy</Link>
+            <Link to="/terms" className="hover:text-[#111827]">Terms</Link>
+            <Link to="/disclosure" className="hover:text-[#111827]">Disclosure</Link>
+          </div>
         </div>
       </div>
     </footer>
