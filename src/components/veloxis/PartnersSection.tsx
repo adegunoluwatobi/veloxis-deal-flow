@@ -1,61 +1,57 @@
-import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
-import { ArrowRight, Handshake, DollarSign, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 
 const STEPS = [
-  { icon: Handshake, title: "Refer", desc: "Introduce your exporter clients to Veloxis." },
-  { icon: DollarSign, title: "We Fund", desc: "We handle underwriting, compliance, and funding." },
-  { icon: TrendingUp, title: "You Earn", desc: "Grow your portfolio with transparent deal flow." },
+  {
+    num: "01",
+    title: "Onboard",
+    body: "Register exporters on Veloxis. Handle local KYC using our structured document system. You know the market — we give you the tools.",
+  },
+  {
+    num: "02",
+    title: "We fund",
+    body: "Veloxis underwrites buyer risk, generates the IPU, and wires the advance. You focus on origination. We handle compliance and settlement.",
+  },
+  {
+    num: "03",
+    title: "You grow",
+    body: "Build a sustainable export financing pipeline. Every funded deal deepens the relationship between your network and the platform.",
+  },
 ];
 
 export function PartnersSection() {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-100px" });
-
   return (
-    <section ref={ref} className="py-20 md:py-28 bg-background">
-      <div className="container mx-auto px-4 md:px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-            Grow your deal flow. We handle the financing.
-          </h2>
-          <p className="mt-4 text-lg text-muted-foreground max-w-xl mx-auto">
-            Finance originators and trade partners — refer your exporters to Veloxis 
-            and earn on every funded application.
-          </p>
-        </motion.div>
+    <section className="bg-white py-16 text-center" style={{ borderTop: "0.5px solid #e5e7eb" }}>
+      <div className="mx-auto max-w-[960px] px-8">
+        <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#0d9488] mb-2">For partners</p>
+        <h2 className="text-[34px] font-medium leading-[1.2] text-[#111827]">
+          Your exporters need working capital. We provide it.
+        </h2>
+        <p className="mx-auto mt-3 max-w-[480px] text-[14px] leading-[1.6] text-[#6b7280]">
+          Veloxis works with trusted local partners — finance companies, trade associations, and origination networks who bring verified exporters to the platform.
+        </p>
 
-        <div className="grid sm:grid-cols-3 gap-6 max-w-3xl mx-auto mb-10">
-          {STEPS.map((step, i) => (
-            <motion.div
-              key={step.title}
-              initial={{ opacity: 0, y: 30 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.2 + i * 0.15, duration: 0.5 }}
-              className="text-center"
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-[14px]">
+          {STEPS.map((step) => (
+            <div
+              key={step.num}
+              className="rounded-[14px] bg-[#f9fafb] p-6 text-center"
+              style={{ border: "0.5px solid #e5e7eb" }}
             >
-              <div className="mx-auto h-14 w-14 rounded-full bg-gradient-to-br from-cyan-600/10 to-teal-500/10 flex items-center justify-center mb-3">
-                <step.icon className="h-6 w-6 text-teal-600 dark:text-teal-400" />
-              </div>
-              <h3 className="font-semibold text-foreground">{step.title}</h3>
-              <p className="text-sm text-muted-foreground mt-1">{step.desc}</p>
-            </motion.div>
+              <div className="text-[34px] font-medium text-[#ccfbf1] leading-none mb-2">{step.num}</div>
+              <h3 className="text-[16px] font-medium text-[#111827] mb-2">{step.title}</h3>
+              <p className="text-[13px] leading-[1.6] text-[#6b7280]">{step.body}</p>
+            </div>
           ))}
         </div>
 
-        <div className="text-center">
-          <Button size="lg" variant="outline" className="gap-2" asChild>
-            <Link to="/partners">
-              Become a Partner <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
+        <div className="mt-6">
+          <Link
+            to="/partners"
+            className="inline-flex items-center gap-1.5 rounded-[10px] px-6 py-3 text-[14px] font-medium text-[#111827] hover:bg-[#f9fafb] transition-colors"
+            style={{ border: "0.5px solid #d1d5db" }}
+          >
+            Become a partner →
+          </Link>
         </div>
       </div>
     </section>

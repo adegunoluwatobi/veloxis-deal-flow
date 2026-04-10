@@ -1,66 +1,96 @@
-import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
-import { Landmark, Clock, Globe, FileCheck } from "lucide-react";
+import { Shield, Clock, Globe, FileText, Users } from "lucide-react";
 
-const REASONS = [
+const ROW1 = [
   {
-    icon: Landmark,
-    title: "No Loan Required",
-    desc: "Invoice discounting isn't borrowing. We buy your receivable — no debt on your balance sheet.",
+    strip: "#0d9488",
+    icon: Shield,
+    kicker: "Zero",
+    kickerLabel: "ASSETS PLEDGED",
+    title: "No collateral. Ever.",
+    body: "We finance your receivable — not your balance sheet. No property, no equipment, no personal guarantees. If the invoice is real and the buyer is verified, it qualifies. Your business stays debt-free.",
+    kickerSize: "text-[28px]",
   },
   {
+    strip: "#0f766e",
     icon: Clock,
-    title: "24-Hour Decisions",
-    desc: "Submit today, receive a decision by tomorrow. No weeks of committee approvals.",
-  },
-  {
-    icon: Globe,
-    title: "Cross-Border Specialists",
-    desc: "We understand export logistics, FX, and international buyer risk — built for this trade.",
-  },
-  {
-    icon: FileCheck,
-    title: "Clear Documentation",
-    desc: "Every fee, every rate, every step — fully disclosed upfront. No hidden charges.",
+    kicker: "24 hrs",
+    kickerLabel: "CREDIT DECISION",
+    title: "Faster than any bank.",
+    body: "Submit today. Receive a decision tomorrow. No credit committees, no branch visits, no weeks of waiting. Your next shipment cannot afford delays — so neither can your financing.",
+    kickerSize: "text-[28px]",
   },
 ];
 
-export function WhyVeloxis() {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-100px" });
+const ROW2 = [
+  {
+    strip: "#14b8a6",
+    icon: Globe,
+    kicker: "Your account",
+    kickerLabel: "IN YOUR COUNTRY",
+    title: "No UK bank needed",
+    body: "Funds go directly to your domiciliary account — no forced FX conversion, no accounts you don't control.",
+    kickerSize: "text-[22px]",
+  },
+  {
+    strip: "#0d9488",
+    icon: FileText,
+    kicker: "Legally",
+    kickerLabel: "SECURED",
+    title: "IPU-backed transactions",
+    body: "Your buyer signs an Irrevocable Payment Undertaking before any funds leave Veloxis. Every transaction is legally binding and enforceable.",
+    kickerSize: "text-[22px]",
+  },
+  {
+    strip: "#0f766e",
+    icon: Users,
+    kicker: "Local",
+    kickerLabel: "PARTNER NETWORK",
+    title: "Guided from day one",
+    body: "Local KYC partners handle your onboarding in your language and timezone. You are never navigating alone.",
+    kickerSize: "text-[22px]",
+  },
+];
 
+function FeatureCard({
+  strip, icon: Icon, kicker, kickerLabel, title, body, kickerSize,
+}: typeof ROW1[0]) {
   return (
-    <section ref={ref} className="py-20 md:py-28 bg-background">
-      <div className="container mx-auto px-4 md:px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-            Built for the trade, not the bank.
-          </h2>
-          <p className="mt-4 text-lg text-muted-foreground max-w-xl mx-auto">
-            Veloxis is purpose-built for SME exporters who need fast, transparent finance.
-          </p>
-        </motion.div>
+    <div
+      className="relative overflow-hidden rounded-2xl bg-white p-[26px] transition-all duration-200 hover:-translate-y-[3px] hover:border-[#0d9488]"
+      style={{ border: "0.5px solid #e5e7eb" }}
+    >
+      <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ backgroundColor: strip }} />
+      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-[14px] bg-[#f0fdfa]">
+        <Icon className="h-6 w-6 text-[#0d9488]" />
+      </div>
+      <div className={`${kickerSize} font-medium text-[#0d9488]`}>{kicker}</div>
+      <div className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#6b7280] mb-2.5">{kickerLabel}</div>
+      <h3 className="text-[16px] font-medium text-[#111827] mb-2">{title}</h3>
+      <p className="text-[13px] leading-[1.6] text-[#6b7280]">{body}</p>
+    </div>
+  );
+}
 
-        <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {REASONS.map((reason, i) => (
-            <motion.div
-              key={reason.title}
-              initial={{ opacity: 0, y: 30 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.2 + i * 0.1, duration: 0.5 }}
-              className="group rounded-xl border border-border bg-card p-6 hover:border-teal-500/30 hover:shadow-[0_0_30px_-10px] hover:shadow-teal-500/10 transition-all duration-300"
-            >
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-cyan-600/10 to-teal-500/10 flex items-center justify-center mb-4 group-hover:from-cyan-600/20 group-hover:to-teal-500/20 transition-colors">
-                <reason.icon className="h-5 w-5 text-teal-600 dark:text-teal-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">{reason.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{reason.desc}</p>
-            </motion.div>
+export function WhyVeloxis() {
+  return (
+    <section className="bg-white py-16" style={{ borderTop: "0.5px solid #e5e7eb" }}>
+      <div className="mx-auto max-w-[960px] px-8">
+        <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#0d9488] mb-2">Why Veloxis</p>
+        <h2 className="text-[34px] font-medium leading-[1.2] text-[#111827]">
+          Built for this trade. Not retrofitted for it.
+        </h2>
+        <p className="mt-3 max-w-[520px] text-[14px] leading-[1.6] text-[#6b7280]">
+          Every feature exists because of the specific barriers exporters in emerging markets face when trying to access working capital.
+        </p>
+
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {ROW1.map((card) => (
+            <FeatureCard key={card.title} {...card} />
+          ))}
+        </div>
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {ROW2.map((card) => (
+            <FeatureCard key={card.title} {...card} />
           ))}
         </div>
       </div>

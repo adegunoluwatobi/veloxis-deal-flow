@@ -1,45 +1,70 @@
-import { HeroGeometric } from "@/components/ui/shape-landing-hero";
-import { Typewriter } from "@/components/ui/typewriter";
-import { ArrowRight, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { TypingHeadline } from "@/components/ui/typing-headline";
+import { WorldMap } from "@/components/ui/world-map";
 
 export function HeroSection() {
   return (
-    <HeroGeometric
-      badge="Cross-Border Invoice Discounting"
-      title1="Get Paid Today."
-      title2="Ship Tomorrow."
-    >
-      <div className="mt-4 h-8 text-lg md:text-xl text-muted-foreground">
-        <Typewriter
-          text={[
-            "80% of invoice value advanced within 24 hours.",
-            "No more waiting 30–60 days for buyers to pay.",
-            "Built for cross-border SME exporters.",
-            "UK-based. Regulated. Transparent.",
-          ]}
-          speed={40}
-          deleteSpeed={25}
-          pauseDuration={2500}
-        />
-      </div>
+    <section className="bg-white" style={{ borderBottom: "0.5px solid #e5e7eb" }}>
+      <div className="mx-auto grid max-w-[1080px] grid-cols-1 md:grid-cols-2 items-center gap-10 px-8 pt-[72px] pb-16" style={{ minHeight: 520 }}>
+        {/* Left */}
+        <div>
+          {/* Pill */}
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#99f6e4] bg-[#f0fdfa] px-[14px] py-[5px] text-[12px] font-medium text-[#0f766e] mb-6">
+            <span className="relative flex h-[6px] w-[6px]">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#0d9488] opacity-75" />
+              <span className="relative inline-flex h-[6px] w-[6px] rounded-full bg-[#0d9488]" />
+            </span>
+            Working capital without borders
+          </div>
 
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
-        <Button size="lg" className="bg-gradient-to-r from-cyan-600 to-teal-500 hover:from-cyan-700 hover:to-teal-600 text-primary-foreground gap-2" asChild>
-          <Link to="/contact">
-            Get Started <ArrowRight className="h-4 w-4" />
-          </Link>
-        </Button>
-        <Button variant="outline" size="lg" asChild>
-          <Link to="/how-it-works">How It Works</Link>
-        </Button>
-      </div>
+          {/* Typing headline */}
+          <h1 className="text-[42px] font-medium leading-[1.12] text-[#111827]">
+            <TypingHeadline
+              lines={[
+                { text: "You've shipped the goods.", speed: 55 },
+                { text: "Get paid now.", speed: 68, className: "text-[#0d9488]" },
+              ]}
+            />
+          </h1>
 
-      <div className="flex items-center justify-center gap-2 mt-6 text-sm text-muted-foreground">
-        <ShieldCheck className="h-4 w-4 text-teal-500" aria-label="Trusted" />
-        UK-Based · Regulated · Transparent · 24-Hour Decisions
+          {/* Subtitle */}
+          <p className="mt-5 max-w-[400px] text-[14px] leading-[1.6] text-[#6b7280]">
+            Veloxis advances 80% of your export invoice value within 24 hours — before your UK or EU buyer's payment terms expire. No collateral. No bank required.
+          </p>
+
+          {/* Buttons */}
+          <div className="mt-6 flex items-center gap-3">
+            <Link
+              to="/contact"
+              className="inline-flex items-center gap-1.5 rounded-[10px] bg-[#0d9488] px-6 py-3 text-[14px] font-medium text-white hover:bg-[#0f766e] transition-colors"
+            >
+              Apply now →
+            </Link>
+            <Link
+              to="/how-it-works"
+              className="inline-flex items-center rounded-[10px] px-6 py-3 text-[14px] font-medium text-[#111827] transition-colors hover:bg-[#f9fafb]"
+              style={{ border: "0.5px solid #d1d5db" }}
+            >
+              How it works
+            </Link>
+          </div>
+
+          {/* Trust strip */}
+          <div className="mt-6 flex flex-wrap gap-3">
+            {["UK-Registered", "No Collateral", "24-Hour Decisions", "Domiciliary Settlement"].map((t) => (
+              <span key={t} className="flex items-center gap-1.5 text-[12px] text-[#6b7280]">
+                <span className="h-[5px] w-[5px] rounded-full bg-[#0d9488]" />
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Right — World Map */}
+        <div>
+          <WorldMap />
+        </div>
       </div>
-    </HeroGeometric>
+    </section>
   );
 }
