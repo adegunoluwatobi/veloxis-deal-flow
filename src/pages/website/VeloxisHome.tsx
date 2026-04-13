@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
@@ -15,197 +15,87 @@ import {
   CheckCircle,
   ChevronDown,
   ArrowRight,
+  ArrowDown,
   Loader2,
 } from "lucide-react";
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
-interface FaqItem {
-  q: string;
-  a: string;
+interface FaqItem { q: string; a: string }
+interface SlideData {
+  num: string;
+  icon: React.ReactNode;
+  iconBg: string;
+  title: string;
+  body: string;
+  isSolution?: boolean;
 }
 
-// ─── ICON MAP ────────────────────────────────────────────────────────────────
-
-const ICON_MAP: Record<string, React.ElementType> = {
-  clock: Clock,
-  "x-circle": XCircle,
-  "trending-up": TrendingUp,
-  "map-pin": MapPin,
-  "file-text": FileText,
-  search: Search,
-  shield: Shield,
-  "dollar-sign": DollarSign,
-  globe: Globe,
-  users: Users,
-};
-
-function IconByName({ name, className }: { name: string; className?: string }) {
-  const Comp = ICON_MAP[name] || FileText;
-  return <Comp className={className} />;
-}
-
-// ─── DATA ────────────────────────────────────────────────────────────────────
+// ─── FAQ DATA ────────────────────────────────────────────────────────────────
 
 const faqs: FaqItem[] = [
-  {
-    q: "What is invoice discounting?",
-    a: "Invoice discounting is trade finance where a financier advances cash against an unpaid invoice. Unlike a loan, there is no debt on your balance sheet. Veloxis purchases your receivable at a discount — you get cash now, we collect from your buyer at maturity. Your buyer signs a legal payment undertaking directly with Veloxis before any funds are released.",
-  },
-  {
-    q: "Who can use Veloxis?",
-    a: "Veloxis is for incorporated businesses anywhere in the world that export non-agricultural, non-perishable goods to verified buyers in the UK or European Economic Area. You must be onboarded through a Veloxis-approved local partner. Sole traders and unregistered partnerships are not eligible.",
-  },
-  {
-    q: "What is an Irrevocable Payment Undertaking (IPU)?",
-    a: "The IPU is the legal instrument at the heart of every Veloxis transaction. Before funds are released, your buyer signs a formal undertaking committing to pay Veloxis directly on the invoice due date. No signed IPU means no funds released — it is the core protection for all parties.",
-  },
-  {
-    q: "How long does approval take?",
-    a: "A complete application — all documents uploaded, KYC verified by your partner, buyer details confirmed — is reviewed within 24 hours. Once your buyer signs the IPU, funds are released typically within the same business day.",
-  },
-  {
-    q: "Do I need a UK bank account?",
-    a: "No. Veloxis settles funds directly to your domiciliary account in your home country. You do not need a UK or EU bank account. This is one of the key reasons the platform was built.",
-  },
-  {
-    q: "What goods are eligible?",
-    a: "Eligible: solid minerals, metals and scrap, manufactured goods, textiles, processed chemicals (non-hazardous), timber and wood products, processed seafood. Not eligible: raw agricultural produce, live animals, perishables, weapons, and controlled substances.",
-  },
-  {
-    q: "Is Veloxis a lender?",
-    a: "No. Veloxis is an invoice discounting platform — we purchase your receivable at a discount. We are buying an asset, not extending a loan. No debt on your balance sheet and no loan agreement to service.",
-  },
-  {
-    q: "Can I submit multiple invoices?",
-    a: "Yes. Once your KYC is verified and your profile is set up, subsequent deals are significantly faster. Many exporters use Veloxis on a rolling basis across multiple buyers and shipment cycles.",
-  },
+  { q: "What is invoice discounting?", a: "Invoice discounting is trade finance where a financier advances cash against an unpaid invoice. Unlike a loan, there is no debt on your balance sheet. Veloxis purchases your receivable at a discount — you get cash now, we collect from your buyer at maturity. Your buyer signs a legal payment undertaking directly with Veloxis before any funds are released." },
+  { q: "Who can use Veloxis?", a: "Veloxis is for incorporated businesses anywhere in the world that export non-agricultural, non-perishable goods to verified buyers in the UK or European Economic Area. You must be onboarded through a Veloxis-approved local partner. Sole traders and unregistered partnerships are not eligible." },
+  { q: "What is an Irrevocable Payment Undertaking (IPU)?", a: "The IPU is the legal instrument at the heart of every Veloxis transaction. Before funds are released, your buyer signs a formal undertaking committing to pay Veloxis directly on the invoice due date. No signed IPU means no funds released — it is the core protection for all parties." },
+  { q: "How long does approval take?", a: "A complete application — all documents uploaded, KYC verified by your partner, buyer details confirmed — is reviewed within 24 hours. Once your buyer signs the IPU, funds are released typically within the same business day." },
+  { q: "Do I need a UK bank account?", a: "No. Veloxis settles funds directly to your domiciliary account in your home country. You do not need a UK or EU bank account. This is one of the key reasons the platform was built." },
+  { q: "What goods are eligible?", a: "Eligible: solid minerals, metals and scrap, manufactured goods, textiles, processed chemicals (non-hazardous), timber and wood products, processed seafood. Not eligible: raw agricultural produce, live animals, perishables, weapons, and controlled substances." },
+  { q: "Is Veloxis a lender?", a: "No. Veloxis is an invoice discounting platform — we purchase your receivable at a discount. We are buying an asset, not extending a loan. No debt on your balance sheet and no loan agreement to service." },
+  { q: "Can I submit multiple invoices?", a: "Yes. Once your KYC is verified and your profile is set up, subsequent deals are significantly faster. Many exporters use Veloxis on a rolling basis across multiple buyers and shipment cycles." },
 ];
 
-const problems = [
+// ─── SLIDE DATA ───────────────────────────────────────────────────────────────
+
+const slides: SlideData[] = [
   {
-    icon: "clock",
+    num: "01 of 04 — The problem",
+    iconBg: "rgba(245,158,11,0.12)",
+    icon: <Clock className="w-6 h-6 text-amber-500" />,
     title: "Waiting 30–60 days for payment",
-    body: "You ship goods and wait months to be paid while still covering suppliers, staff, logistics, and overheads.",
+    body: "You ship goods and wait months to be paid while still covering suppliers, staff, logistics, and overheads. The invoice is real. The money isn't there yet.",
   },
   {
-    icon: "x-circle",
+    num: "02 of 04 — The problem",
+    iconBg: "rgba(239,68,68,0.12)",
+    icon: <XCircle className="w-6 h-6 text-red-500" />,
     title: "Banks reject emerging market exporters",
-    body: "Overseas buyers, foreign currency receivables, no UK collateral — traditional lenders decline this segment every time.",
+    body: "Overseas buyers, foreign currency receivables, no UK collateral — traditional lenders decline this segment every time. You're creditworthy. Their model just wasn't built for you.",
   },
   {
-    icon: "trending-up",
+    num: "03 of 04 — The problem",
+    iconBg: "rgba(168,85,247,0.12)",
+    icon: <TrendingUp className="w-6 h-6 text-purple-500" />,
     title: "Cash flow gaps stall growth",
-    body: "New orders get rejected. Supplier relationships break down. Growth stalls — not because of demand, but because of payment timing.",
+    body: "New orders get rejected. Supplier relationships break down. Growth stalls — not because of demand, but because of payment timing. Your business is healthy. Your cash flow isn't.",
   },
   {
-    icon: "map-pin",
+    num: "04 of 04 — The problem",
+    iconBg: "rgba(59,130,246,0.12)",
+    icon: <MapPin className="w-6 h-6 text-blue-500" />,
     title: "No domiciliary account settlement",
-    body: "Most finance platforms route funds through UK accounts you don't control. Your money should arrive where your business operates.",
+    body: "Most finance platforms route funds through UK accounts you don't control — adding FX conversion costs and delays. Your money should arrive where your business actually operates.",
+  },
+  {
+    num: "The solution",
+    iconBg: "rgba(20,184,166,0.15)",
+    icon: <Shield className="w-6 h-6 text-[#14b8a6]" />,
+    title: "Veloxis solves all of this.",
+    body: "Once approved and your buyer signs the IPU, 80% of your invoice is in your domiciliary account within 24 hours. No collateral. No UK bank needed. Legally documented end to end.",
+    isSolution: true,
   },
 ];
 
-const howItWorksSteps = [
-  {
-    icon: "file-text",
-    title: "Submit",
-    body: "Partner verifies your KYC. Upload your commercial invoice, Bill of Lading, and buyer details through the secure portal.",
-  },
-  {
-    icon: "search",
-    title: "We underwrite",
-    body: "Our team verifies documents, assesses buyer risk, and completes compliance checks within 24 hours.",
-  },
-  {
-    icon: "shield",
-    title: "Buyer signs IPU",
-    body: "Your buyer signs an Irrevocable Payment Undertaking digitally, committing to pay Veloxis on the due date.",
-  },
-  {
-    icon: "dollar-sign",
-    title: "Funds released",
-    body: "80% wired to your domiciliary account immediately. Buyer pays at maturity. We send you the residual balance.",
-  },
+const dotLabels = [
+  "Waiting to be paid",
+  "Bank rejections",
+  "Cash flow gaps",
+  "No domiciliary settlement",
+  "Veloxis solves it",
 ];
 
-const whyCards = [
-  {
-    kicker: "Zero",
-    kicker_label: "Assets pledged",
-    title: "No collateral. Ever.",
-    body: "We finance your receivable — not your balance sheet. No property, no equipment, no personal guarantees. If the invoice is real and the buyer is verified, it qualifies.",
-    icon: "shield",
-    color: "#0d9488",
-    large: true,
-  },
-  {
-    kicker: "24 hrs",
-    kicker_label: "Credit decision",
-    title: "Faster than any bank.",
-    body: "Submit today. Receive a decision tomorrow. No credit committees, no branch visits, no weeks of waiting.",
-    icon: "clock",
-    color: "#0f766e",
-    large: true,
-  },
-  {
-    kicker: "Your account",
-    kicker_label: "In your country",
-    title: "No UK bank needed",
-    body: "Funds go directly to your domiciliary account. No forced FX conversion, no accounts you don't control.",
-    icon: "globe",
-    color: "#14b8a6",
-    large: false,
-  },
-  {
-    kicker: "Legally",
-    kicker_label: "Secured",
-    title: "IPU-backed transactions",
-    body: "Your buyer signs an Irrevocable Payment Undertaking before any funds leave Veloxis. Binding and enforceable.",
-    icon: "file-text",
-    color: "#0d9488",
-    large: false,
-  },
-  {
-    kicker: "Local",
-    kicker_label: "Partner network",
-    title: "Guided from day one",
-    body: "Local KYC partners handle your onboarding in your language and timezone. You are never navigating alone.",
-    icon: "users",
-    color: "#0f766e",
-    large: false,
-  },
-];
+const solutionChecks = ["80% within 24hrs", "Zero collateral", "Domiciliary settlement", "IPU-backed legally"];
 
-const testimonials = [
-  {
-    flag: "🇳🇬",
-    name: "Adebayo O.",
-    role: "Solid minerals exporter, Nigeria",
-    quote:
-      "We shipped to our German buyer in February and needed cash for our March order. Veloxis had funds in our account within 24 hours of the IPU being signed. We have not missed an order since.",
-  },
-  {
-    flag: "🇬🇭",
-    name: "Fatima K.",
-    role: "Textile exporter, Ghana",
-    quote:
-      "Our partner handled the documents. Veloxis handled the underwriting. We tracked the status on the portal and confirmed receipt when the residual arrived.",
-  },
-  {
-    flag: "🇰🇪",
-    name: "Emmanuel N.",
-    role: "Manufactured goods exporter, Kenya",
-    quote:
-      "Finally a UK-based platform that understands cross-border trade. The buyer signs, the money moves. No guessing, no chasing, no delays.",
-  },
-  {
-    flag: "🇳🇬",
-    name: "Chidi A.",
-    role: "Trade finance partner, Nigeria",
-    quote:
-      "I refer exporters to Veloxis with full confidence. The process is transparent and clients always know exactly where their application stands.",
-  },
-];
+// ─── TICKER PILLS ─────────────────────────────────────────────────────────────
 
 const problemPills = [
   "Waiting 30–60 days for payment",
@@ -229,63 +119,64 @@ const solutionPills = [
   "No FX conversion on your advance",
 ];
 
+// ─── HOW IT WORKS / WHY CARDS DATA ───────────────────────────────────────────
+
+const howItWorksSteps = [
+  { icon: FileText, title: "Submit", body: "Partner verifies your KYC. Upload your commercial invoice, Bill of Lading, and buyer details." },
+  { icon: Search, title: "We underwrite", body: "Our team verifies documents, assesses buyer risk, and completes compliance checks within 24 hours." },
+  { icon: Shield, title: "Buyer signs IPU", body: "Your buyer signs an Irrevocable Payment Undertaking digitally, committing to pay Veloxis on the due date." },
+  { icon: DollarSign, title: "Funds released", body: "80% wired to your domiciliary account. At maturity, buyer pays Veloxis. We send you the residual." },
+];
+
+const whyCardsLarge = [
+  { kv: "Zero", kl: "Assets pledged", t: "No collateral. Ever.", b: "We finance your receivable — not your balance sheet. No property, no equipment, no personal guarantees.", c: "#0d9488", Icon: Shield },
+  { kv: "24 hrs", kl: "Credit decision", t: "Faster than any bank.", b: "Submit today. Receive a decision tomorrow. No credit committees, no branch visits, no weeks of waiting.", c: "#0f766e", Icon: Clock },
+];
+
+const whyCardsSmall = [
+  { kv: "Your account", kl: "In your country", t: "No UK bank needed", b: "Funds go directly to your domiciliary account. No forced FX conversion, no accounts you don't control.", c: "#14b8a6", Icon: Globe },
+  { kv: "Legally", kl: "Secured", t: "IPU-backed transactions", b: "Your buyer signs an Irrevocable Payment Undertaking before any funds leave Veloxis. Binding and enforceable.", c: "#0d9488", Icon: FileText },
+  { kv: "Local", kl: "Partner network", t: "Guided from day one", b: "Local KYC partners handle your onboarding in your language and timezone. You are never navigating alone.", c: "#0f766e", Icon: Users },
+];
+
+const testimonials = [
+  { flag: "🇳🇬", name: "Adebayo O.", role: "Solid minerals exporter, Nigeria", q: "We shipped to our German buyer in February and needed cash for our March order. Veloxis had funds in our account within 24 hours of the IPU being signed. We have not missed an order since." },
+  { flag: "🇬🇭", name: "Fatima K.", role: "Textile exporter, Ghana", q: "Our partner handled the documents. Veloxis handled the underwriting. We tracked the status on the portal and confirmed receipt when the residual arrived." },
+  { flag: "🇰🇪", name: "Emmanuel N.", role: "Manufactured goods exporter, Kenya", q: "Finally a UK-based platform that understands cross-border trade. The buyer signs, the money moves. No guessing, no chasing, no delays." },
+  { flag: "🇳🇬", name: "Chidi A.", role: "Trade finance partner, Nigeria", q: "I refer exporters to Veloxis with full confidence. The process is transparent and clients always know exactly where their application stands." },
+];
+
 // ─── TYPING HEADLINE ─────────────────────────────────────────────────────────
 
 function TypingHeadline() {
   const line1 = "You've shipped the goods.";
   const line2 = "Get paid now.";
-  const [displayed, setDisplayed] = useState("");
-  const [phase, setPhase] = useState<"line1" | "line2" | "pause">("line1");
+  const [text, setText] = useState("");
+  const [phase, setPhase] = useState<"l1" | "l2" | "pause">("l1");
   const idx = useRef(0);
 
   useEffect(() => {
-    let timeout: ReturnType<typeof setTimeout>;
-
-    if (phase === "line1") {
+    let t: ReturnType<typeof setTimeout>;
+    if (phase === "l1") {
       if (idx.current < line1.length) {
-        timeout = setTimeout(() => {
-          setDisplayed(line1.slice(0, idx.current + 1));
-          idx.current++;
-        }, 55);
-      } else {
-        timeout = setTimeout(() => {
-          idx.current = 0;
-          setPhase("line2");
-        }, 200);
-      }
-    } else if (phase === "line2") {
+        t = setTimeout(() => { setText(line1.slice(0, idx.current + 1)); idx.current++; }, 55);
+      } else { t = setTimeout(() => { idx.current = 0; setPhase("l2"); }, 200); }
+    } else if (phase === "l2") {
       if (idx.current < line2.length) {
-        timeout = setTimeout(() => {
-          setDisplayed(line1 + "\n" + line2.slice(0, idx.current + 1));
-          idx.current++;
-        }, 68);
-      } else {
-        timeout = setTimeout(() => {
-          idx.current = 0;
-          setPhase("pause");
-        }, 3400);
-      }
+        t = setTimeout(() => { setText(line1 + "\n" + line2.slice(0, idx.current + 1)); idx.current++; }, 68);
+      } else { t = setTimeout(() => { idx.current = 0; setPhase("pause"); }, 3400); }
     } else {
-      setDisplayed("");
-      timeout = setTimeout(() => {
-        setPhase("line1");
-      }, 400);
+      setText("");
+      t = setTimeout(() => setPhase("l1"), 400);
     }
+    return () => clearTimeout(t);
+  }, [text, phase]);
 
-    return () => clearTimeout(timeout);
-  }, [displayed, phase]);
-
-  const parts = displayed.split("\n");
-
+  const parts = text.split("\n");
   return (
     <h1 className="text-[42px] md:text-[52px] font-semibold leading-[1.1] text-white min-h-[130px]">
       {parts[0]}
-      {parts.length > 1 && (
-        <>
-          <br />
-          <span className="text-[#14b8a6]">{parts[1]}</span>
-        </>
-      )}
+      {parts.length > 1 && <><br /><span className="text-[#14b8a6]">{parts[1]}</span></>}
       <span className="inline-block w-[3px] h-[1em] bg-[#14b8a6] ml-1 align-text-bottom animate-blink" />
     </h1>
   );
@@ -293,33 +184,20 @@ function TypingHeadline() {
 
 // ─── TICKER ROW ───────────────────────────────────────────────────────────────
 
-function TickerRow({
-  items,
-  direction,
-  variant,
-}: {
-  items: string[];
-  direction: "left" | "right";
-  variant: "problem" | "solution";
-}) {
+function TickerRow({ items, direction, variant }: { items: string[]; direction: "left" | "right"; variant: "problem" | "solution" }) {
   const doubled = [...items, ...items];
   const animClass = direction === "left" ? "animate-ticker-left" : "animate-ticker-right";
-  const pillStyle =
-    variant === "problem"
-      ? "bg-white/[0.08] border-white/[0.12] text-white/60"
-      : "bg-[#14b8a6]/20 border-[#14b8a6]/30 text-[#14b8a6]";
+  const pillStyle = variant === "problem"
+    ? "bg-white/[0.08] border-white/[0.12] text-white/60"
+    : "bg-[#14b8a6]/20 border-[#14b8a6]/30 text-[#14b8a6]";
 
   return (
     <div className="relative overflow-hidden group">
-      {/* Edge masks */}
       <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-20 z-10 bg-gradient-to-r from-[#0f3530] to-transparent" />
       <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-20 z-10 bg-gradient-to-l from-[#0f3530] to-transparent" />
       <div className={`flex gap-3 w-max ${animClass} group-hover:[animation-play-state:paused]`}>
         {doubled.map((text, i) => (
-          <span
-            key={i}
-            className={`inline-flex items-center px-4 py-2 rounded-full border text-[13px] whitespace-nowrap ${pillStyle}`}
-          >
+          <span key={i} className={`inline-flex items-center px-4 py-2 rounded-full border text-[13px] whitespace-nowrap ${pillStyle}`}>
             {text}
           </span>
         ))}
@@ -328,58 +206,205 @@ function TickerRow({
   );
 }
 
+// ─── SCROLL PROBLEM SECTION ───────────────────────────────────────────────────
+
+const BAR_DURATION = 3000;
+
+function ScrollProblemSection() {
+  const [current, setCurrent] = useState(0);
+  const [exiting, setExiting] = useState<number | null>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const barRAF = useRef<number | null>(null);
+  const barStart = useRef<number | null>(null);
+  const barEls = useRef<(HTMLDivElement | null)[]>([]);
+  const currentRef = useRef(0);
+
+  const goTo = useCallback((idx: number) => {
+    if (idx === currentRef.current) return;
+    const prev = currentRef.current;
+    setExiting(prev);
+    setTimeout(() => setExiting(null), 650);
+    currentRef.current = idx;
+    setCurrent(idx);
+
+    barEls.current.forEach((b, i) => { if (b) b.style.width = i < idx ? "100%" : "0%"; });
+
+    if (barRAF.current) cancelAnimationFrame(barRAF.current);
+    barStart.current = null;
+    const bar = barEls.current[idx];
+    if (!bar) return;
+
+    function step(ts: number) {
+      if (!barStart.current) barStart.current = ts;
+      const pct = Math.min(((ts - barStart.current!) / BAR_DURATION) * 100, 100);
+      if (bar) bar.style.width = pct + "%";
+      if (pct < 100) {
+        barRAF.current = requestAnimationFrame(step);
+      } else {
+        if (currentRef.current < slides.length - 1) goTo(currentRef.current + 1);
+      }
+    }
+    barRAF.current = requestAnimationFrame(step);
+  }, []);
+
+  useEffect(() => {
+    goTo(0);
+    return () => { if (barRAF.current) cancelAnimationFrame(barRAF.current); };
+  }, [goTo]);
+
+  useEffect(() => {
+    function onScroll() {
+      const section = sectionRef.current;
+      if (!section) return;
+      const rect = section.getBoundingClientRect();
+      const total = section.offsetHeight - window.innerHeight;
+      const scrolled = Math.max(0, Math.min(1, -rect.top / total));
+      const target = Math.min(slides.length - 1, Math.floor(scrolled * slides.length));
+      if (target !== currentRef.current) {
+        if (barRAF.current) cancelAnimationFrame(barRAF.current);
+        barEls.current.forEach((b, i) => { if (b) b.style.width = i < target ? "100%" : "0%"; });
+        const prev = currentRef.current;
+        setExiting(prev);
+        setTimeout(() => setExiting(null), 650);
+        currentRef.current = target;
+        setCurrent(target);
+        barStart.current = null;
+        const bar = barEls.current[target];
+        if (bar) {
+          function step(ts: number) {
+            if (!barStart.current) barStart.current = ts;
+            const pct = Math.min(((ts - barStart.current!) / BAR_DURATION) * 100, 100);
+            if (bar) bar.style.width = pct + "%";
+            if (pct < 100) barRAF.current = requestAnimationFrame(step);
+          }
+          barRAF.current = requestAnimationFrame(step);
+        }
+      }
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const slide = slides[current];
+
+  return (
+    <section ref={sectionRef} className="relative bg-[#0a2e2b]" style={{ height: "500vh" }}>
+      <div className="sticky top-0 h-screen overflow-hidden">
+        <div className="mx-auto max-w-[960px] h-full grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center px-8">
+          {/* LEFT */}
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#14b8a6] mb-3">The problem</p>
+            <h2 className="text-[34px] font-medium leading-[1.2] text-white mb-4">
+              Every barrier.<br />One platform.
+            </h2>
+            <p className="text-[14px] leading-[1.6] text-white/50 max-w-[380px] mb-10">
+              Scroll to see the specific problems Veloxis was built to solve — and how we answer each one.
+            </p>
+
+            <div className="space-y-5">
+              {dotLabels.map((label, i) => (
+                <div key={i} className="flex flex-col gap-1.5">
+                  <button
+                    onClick={() => goTo(i)}
+                    className={`flex items-center gap-3 text-left transition-all duration-300 ${i === current ? "text-white" : "text-white/30 hover:text-white/50"}`}
+                  >
+                    <span className={`w-2 h-2 rounded-full transition-all duration-300 ${i === current ? "bg-[#14b8a6] scale-125" : "bg-white/20"}`} />
+                    {label}
+                  </button>
+                  <div className="ml-5 h-[2px] w-40 bg-white/[0.06] rounded-full overflow-hidden">
+                    <div
+                      ref={(el) => { barEls.current[i] = el; }}
+                      className="h-full bg-[#2dd4bf] rounded-full"
+                      style={{ width: "0%", transition: "none" }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* RIGHT */}
+          <div className="flex flex-col items-center justify-center">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={current}
+                initial={{ opacity: 0, y: 60, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -60, scale: 0.96 }}
+                transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
+                className={`rounded-[20px] p-10 w-full max-w-[420px] border ${slide.isSolution ? "bg-[#14b8a6]/[0.08] border-[#14b8a6]/25" : "bg-white/[0.04] border-white/[0.08]"}`}
+              >
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{ background: slide.iconBg }}>
+                  {slide.icon}
+                </div>
+                <p className="text-[12px] text-white/40 mb-2">{slide.num}</p>
+                <h3 className={`text-[22px] font-medium leading-[1.2] mb-3 ${slide.isSolution ? "text-[#14b8a6]" : "text-white"}`}>
+                  {slide.title}
+                </h3>
+                <p className="text-[14px] leading-[1.6] text-white/50">{slide.body}</p>
+                {slide.isSolution && (
+                  <div className="flex flex-wrap gap-2 mt-5">
+                    {solutionChecks.map(c => (
+                      <span key={c} className="inline-flex items-center gap-1.5 text-[12px] text-[#14b8a6] bg-[#14b8a6]/10 px-3 py-1 rounded-full">
+                        <CheckCircle className="w-3 h-3" />
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+
+            {current < slides.length - 1 && (
+              <div className="flex items-center gap-2 mt-6 text-white/20 text-[12px]">
+                <span>Scroll</span>
+                <ArrowDown className="w-3 h-3 animate-bounce" />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ─── COMPARISON ANIMATION ────────────────────────────────────────────────────
 
-const compSteps = [
-  "Documents verified",
-  "Deal approved",
-  "Buyer signs IPU",
-  "Funds released",
-];
+const compSteps = ["Documents verified", "Deal approved", "Buyer signs IPU", "Funds released"];
+
+function delay(ms: number) { return new Promise(r => setTimeout(r, ms)); }
 
 function ComparisonAnimation() {
-  const [stepState, setStepState] = useState<
-    ("waiting" | "processing" | "done")[]
-  >(["waiting", "waiting", "waiting", "waiting"]);
+  const [states, setStates] = useState<("waiting" | "processing" | "done")[]>(["waiting", "waiting", "waiting", "waiting"]);
 
   useEffect(() => {
     let cancelled = false;
-
     async function run() {
       while (!cancelled) {
-        setStepState(["waiting", "waiting", "waiting", "waiting"]);
+        setStates(["waiting", "waiting", "waiting", "waiting"]);
         await delay(800);
         for (let i = 0; i < 4; i++) {
           if (cancelled) return;
-          setStepState((prev) =>
-            prev.map((s, j) => (j === i ? "processing" : s))
-          );
+          setStates(p => p.map((s, j) => (j === i ? "processing" : s) as "waiting" | "processing" | "done"));
           await delay(1400);
           if (cancelled) return;
-          setStepState((prev) =>
-            prev.map((s, j) => (j === i ? "done" : s))
-          );
+          setStates(p => p.map((s, j) => (j === i ? "done" : s) as "waiting" | "processing" | "done"));
           await delay(400);
         }
         await delay(2800);
       }
     }
-
     run();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-[960px] mx-auto">
       {/* Old way */}
-      <div className="bg-[#f0eeeb] rounded-2xl p-8">
+      <div className="bg-[#eeece8] rounded-[20px] p-8 min-h-[400px] flex flex-col justify-between">
         <div className="bg-white rounded-xl p-5 border border-[#e5e2dd]">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#e5e2dd] text-[#999] text-sm font-medium">
-              1
-            </div>
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#e5e2dd] text-[#999] text-sm font-medium">1</div>
             <div className="flex-1">
               <p className="text-[14px] font-medium text-[#333]">Invoice submitted</p>
               <div className="flex items-center gap-1.5 mt-1">
@@ -390,35 +415,27 @@ function ComparisonAnimation() {
           </div>
         </div>
         <div className="mt-4 text-center">
-          <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#e5e2dd] text-[12px] font-medium text-[#777]">
-            Old way
-          </span>
-          <p className="text-[13px] text-[#999] mt-2">
-            Exporters wait weeks. Usually rejected. One step. Stuck.
-          </p>
+          <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#e5e2dd] text-[12px] font-medium text-[#777]">Old way</span>
+          <p className="text-[13px] text-[#999] mt-2">Exporters wait weeks. Usually rejected. One step. Stuck.</p>
         </div>
       </div>
 
       {/* With Veloxis */}
-      <div className="bg-[#e8f5f1] rounded-2xl p-8">
+      <div className="bg-[#e4efec] rounded-[20px] p-8">
         <div className="space-y-3">
           {compSteps.map((name, i) => {
-            const state = stepState[i];
-            const isDone = state === "done";
-            const isProc = state === "processing";
+            const s = states[i];
+            const isDone = s === "done";
+            const isProc = s === "processing";
             return (
               <div key={i} className="relative">
-                {i < 3 && (
-                  <div className="absolute left-4 top-9 w-px h-3 bg-[#0d9488]/20" />
-                )}
+                {i < 3 && <div className="absolute left-4 top-9 w-px h-3 bg-[#0d9488]/20" />}
                 <div className={`flex items-center gap-3 rounded-xl p-3 transition-colors duration-300 ${isDone ? "bg-[#0d9488]/10" : "bg-white"} border ${isDone ? "border-[#0d9488]/20" : "border-[#d1e8e3]"}`}>
                   <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors duration-300 ${isDone ? "bg-[#0d9488] text-white" : isProc ? "bg-[#14b8a6]/20 text-[#0d9488]" : "bg-[#d1e8e3] text-[#6b7280]"}`}>
                     {isDone ? "✓" : i + 1}
                   </div>
                   <div className="flex-1">
-                    <p className={`text-[13px] font-medium ${isDone ? "text-[#0d9488]" : "text-[#333]"}`}>
-                      {name}
-                    </p>
+                    <p className={`text-[13px] font-medium ${isDone ? "text-[#0d9488]" : "text-[#333]"}`}>{name}</p>
                     <div className="flex items-center gap-1.5">
                       {isProc && <Loader2 className="w-3 h-3 text-[#0d9488] animate-spin" />}
                       <span className={`text-[11px] ${isDone ? "text-[#0d9488]" : isProc ? "text-[#0d9488]" : "text-[#999]"}`}>
@@ -432,56 +449,27 @@ function ComparisonAnimation() {
           })}
         </div>
         <div className="mt-4 text-center">
-          <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#0d9488]/15 text-[12px] font-medium text-[#0d9488]">
-            With Veloxis
-          </span>
-          <p className="text-[13px] text-[#6b7280] mt-2">
-            Four steps. 80% in your account within 24 hours.
-          </p>
+          <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#0d9488]/15 text-[12px] font-medium text-[#0d9488]">With Veloxis</span>
+          <p className="text-[13px] text-[#6b7280] mt-2">Four steps. 80% in your account within 24 hours.</p>
         </div>
       </div>
     </div>
   );
 }
 
-function delay(ms: number) {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
 // ─── FAQ ITEM ────────────────────────────────────────────────────────────────
 
-function FaqItemComponent({
-  item,
-  isOpen,
-  onToggle,
-}: {
-  item: FaqItem;
-  isOpen: boolean;
-  onToggle: () => void;
-}) {
+function FaqItemComponent({ item, isOpen, onToggle }: { item: FaqItem; isOpen: boolean; onToggle: () => void }) {
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: "0.5px solid #e5e7eb" }}>
-      <button
-        onClick={onToggle}
-        className="flex w-full items-center justify-between px-5 py-4 text-left text-[14px] font-medium text-[#111827] hover:bg-[#f9fafb] transition-colors"
-      >
+      <button onClick={onToggle} className="flex w-full items-center justify-between px-5 py-4 text-left text-[14px] font-medium text-[#111827] hover:bg-[#f9fafb] transition-colors">
         {item.q}
-        <ChevronDown
-          className={`h-4 w-4 shrink-0 text-[#6b7280] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-        />
+        <span className={`text-[#6b7280] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>▾</span>
       </button>
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="overflow-hidden"
-          >
-            <p className="px-5 pb-4 text-[13px] leading-[1.6] text-[#6b7280]">
-              {item.a}
-            </p>
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
+            <p className="px-5 pb-4 text-[13px] leading-[1.6] text-[#6b7280]">{item.a}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -494,52 +482,27 @@ function FaqItemComponent({
 export default function VeloxisWebsite() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-  };
+  const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
   return (
     <div className="min-h-screen bg-white" style={{ scrollBehavior: "smooth" }}>
-      {/* ═══ NAV ═══ */}
-      <nav className="sticky top-0 z-50 flex items-center justify-between px-8 py-4 bg-[#0a2e2b]" style={{ borderBottom: "0.5px solid rgba(255,255,255,0.10)" }}>
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="text-[17px] font-medium text-white cursor-pointer"
-        >
-          Veloxis
-        </button>
+
+      {/* ── NAV ── */}
+      <nav className="sticky top-0 z-50 flex items-center justify-between px-8 py-4 bg-[#0a2e2b]" style={{ borderBottom: "0.5px solid rgba(255,255,255,0.07)" }}>
+        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="text-[17px] font-bold text-white cursor-pointer">Veloxis</button>
         <div className="hidden md:flex items-center gap-8">
-          {[
-            { label: "How it works", id: "hiw" },
-            { label: "Why Veloxis", id: "why" },
-            { label: "Partners", id: "partners" },
-            { label: "FAQ", id: "faq" },
-          ].map((link) => (
-            <button
-              key={link.id}
-              onClick={() => scrollTo(link.id)}
-              className="text-[14px] text-white/55 hover:text-white transition-colors"
-            >
-              {link.label}
-            </button>
+          {[{ l: "How it works", id: "hiw" }, { l: "Why Veloxis", id: "why" }, { l: "Partners", id: "partners" }, { l: "FAQ", id: "faq" }].map(link => (
+            <button key={link.id} onClick={() => scrollTo(link.id)} className="text-[14px] text-white/55 hover:text-white transition-colors">{link.l}</button>
           ))}
         </div>
         <div className="flex items-center gap-4">
-          <Link to="/login" className="text-[14px] text-white/55 hover:text-white transition-colors">
-            Log in
-          </Link>
-          <Link
-            to="/contact"
-            className="bg-[#14b8a6] text-white text-[13px] font-medium px-5 py-2.5 rounded-lg hover:bg-[#0d9488] transition-colors"
-          >
-            Get started
-          </Link>
+          <Link to="/login" className="text-[14px] text-white/55 hover:text-white transition-colors">Log in</Link>
+          <Link to="/contact" className="bg-[#14b8a6] text-white text-[13px] font-medium px-5 py-2.5 rounded-[10px] hover:bg-[#0d9488] transition-colors">Get started</Link>
         </div>
       </nav>
 
-      {/* ═══ HERO ═══ */}
+      {/* ── HERO ── */}
       <section className="relative bg-[#0a2e2b] overflow-hidden" style={{ minHeight: "max(100vh, 680px)" }}>
-        {/* Blobs */}
         <div className="absolute top-[-80px] right-[120px] w-[340px] h-[340px] rounded-full bg-[#0d9488] opacity-[0.18]" />
         <div className="absolute bottom-[40px] right-[60px] w-[220px] h-[220px] rounded-full bg-[#14b8a6] opacity-[0.12]" />
         <div className="absolute top-[200px] left-[-60px] w-[160px] h-[160px] rounded-full bg-[#0d9488] opacity-[0.10]" />
@@ -547,14 +510,12 @@ export default function VeloxisWebsite() {
         <div className="relative z-10 mx-auto max-w-[1080px] grid grid-cols-1 md:grid-cols-[55%_45%] items-center gap-12 px-8 py-20 md:py-0" style={{ minHeight: "max(100vh, 680px)" }}>
           {/* Left */}
           <div>
-            {/* Pill */}
             <div className="inline-flex items-center gap-2 rounded-full px-[14px] py-[6px] text-[12px] text-white mb-6" style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.20)" }}>
               <span className="relative flex h-[6px] w-[6px]">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#14b8a6] opacity-75" />
                 <span className="relative inline-flex h-[6px] w-[6px] rounded-full bg-[#14b8a6]" />
               </span>
               Working capital without borders
-              <ArrowRight className="w-3 h-3 text-[#14b8a6]" />
             </div>
 
             <TypingHeadline />
@@ -563,123 +524,102 @@ export default function VeloxisWebsite() {
               Get 80% of your invoice value in your account within 24 hours. No collateral required.
             </p>
 
-            {/* Buttons */}
             <div className="mt-8 flex flex-col sm:flex-row items-start gap-[14px]">
-              <Link
-                to="/contact"
-                className="inline-flex items-center gap-1.5 bg-[#14b8a6] text-white font-bold text-[15px] px-7 py-[14px] rounded-[14px] hover:bg-[#0d9488] transition-colors"
-              >
+              <Link to="/contact" className="inline-flex items-center gap-1.5 bg-[#14b8a6] text-white font-bold text-[15px] px-7 py-[14px] rounded-[14px] hover:bg-[#0d9488] transition-colors">
                 Apply now <ArrowRight className="w-4 h-4" />
               </Link>
-              <button
-                onClick={() => scrollTo("hiw")}
-                className="text-white font-semibold text-[15px] px-7 py-[14px] rounded-[14px] hover:bg-white/[0.22] transition-colors"
-                style={{ background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.40)" }}
-              >
+              <button onClick={() => scrollTo("hiw")} className="bg-white/[0.15] text-white font-semibold text-[15px] px-7 py-[14px] rounded-[14px] border border-white/40 hover:bg-white/[0.22] transition-colors">
                 How it works
               </button>
             </div>
 
-            {/* Trust strip */}
             <div className="mt-7 flex flex-wrap gap-5">
-              {["UK-Registered", "No Collateral", "24-Hour Decisions", "Domiciliary Settlement"].map((t) => (
-                <span key={t} className="flex items-center gap-1.5 text-[13px] text-white/65">
-                  <span className="h-[5px] w-[5px] rounded-full bg-[#14b8a6]" />
-                  {t}
+              {["UK-Registered", "No Collateral", "24-Hour Decisions", "Domiciliary Settlement"].map(t => (
+                <span key={t} className="flex items-center gap-2 text-[13px] text-white/50">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#14b8a6]" />{t}
                 </span>
               ))}
             </div>
           </div>
 
           {/* Right — browser mockup */}
-          <div className="relative flex justify-center">
-            {/* Glow */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-[300px] h-[300px] rounded-full bg-[#0d9488] opacity-[0.15] blur-[60px]" />
-            </div>
-            <div className="relative -rotate-[1.5deg] w-full max-w-[440px]" style={{ boxShadow: "0 32px 80px rgba(0,0,0,0.5)" }}>
-              <div className="bg-[#1a1a2e] rounded-2xl p-3 overflow-hidden">
-                {/* Chrome bar */}
-                <div className="flex items-center gap-3 bg-[#111] rounded-t-xl px-3 py-2">
-                  <div className="flex gap-1.5">
-                    <div className="w-[10px] h-[10px] rounded-full bg-[#ff5f57]" />
-                    <div className="w-[10px] h-[10px] rounded-full bg-[#ffbd2e]" />
-                    <div className="w-[10px] h-[10px] rounded-full bg-[#28c840]" />
+          <div className="relative flex items-center justify-center">
+            <div className="absolute w-[300px] h-[300px] rounded-full bg-[#0d9488] opacity-[0.15] blur-[60px]" />
+            <div className="relative -rotate-[1.5deg] w-full max-w-[440px] rounded-2xl overflow-hidden shadow-2xl" style={{ background: "#1a1a2e" }}>
+              {/* Chrome bar */}
+              <div className="flex items-center gap-2 px-4 py-2.5" style={{ background: "#111" }}>
+                <div className="flex gap-1.5">
+                  <span className="w-[10px] h-[10px] rounded-full bg-[#ff5f57]" />
+                  <span className="w-[10px] h-[10px] rounded-full bg-[#febc2e]" />
+                  <span className="w-[10px] h-[10px] rounded-full bg-[#28c840]" />
+                </div>
+                <div className="flex-1 text-center">
+                  <span className="text-[11px] text-white/30">app.veloxis.com</span>
+                </div>
+              </div>
+              {/* Dashboard */}
+              <div className="p-4 space-y-3" style={{ background: "#1e2d2b" }}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white text-[14px] font-medium">Good morning, Adebayo 👋</p>
+                    <p className="text-white/40 text-[11px]">Lagos Metals Ltd · Exporter</p>
                   </div>
-                  <div className="flex-1 bg-[#222] rounded-md px-3 py-1 text-[11px] text-[#666] text-center">
-                    app.veloxis.com
+                  <div className="w-8 h-8 rounded-full bg-[#14b8a6] flex items-center justify-center text-white text-[11px] font-medium">AO</div>
+                </div>
+                {/* Invoice card */}
+                <div className="rounded-xl p-4 space-y-3" style={{ background: "#1a2926" }}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-white/40 text-[10px]">Current application</p>
+                      <p className="text-white text-[20px] font-semibold">$45,000</p>
+                      <p className="text-white/30 text-[10px]">Invoice #INV-2026-041 · German buyer</p>
+                    </div>
+                    <span className="text-[10px] font-medium text-[#14b8a6] bg-[#14b8a6]/15 px-2 py-0.5 rounded-full">IPU Signed</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-lg p-2.5" style={{ background: "#1e2d2b" }}>
+                      <p className="text-white/30 text-[9px]">You receive</p>
+                      <p className="text-[#14b8a6] text-[16px] font-semibold">$36,000</p>
+                      <p className="text-white/20 text-[9px]">Today, 80% advance</p>
+                    </div>
+                    <div className="rounded-lg p-2.5" style={{ background: "#1e2d2b" }}>
+                      <p className="text-white/30 text-[9px]">Settlement</p>
+                      <p className="text-white text-[16px] font-semibold">May 10</p>
+                      <p className="text-white/20 text-[9px]">30-day terms</p>
+                    </div>
+                  </div>
+                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-full bg-[#14b8a6] rounded-full" style={{ width: "80%" }} />
+                  </div>
+                  <div className="flex justify-between text-[9px] text-white/30">
+                    <span>80% advanced</span><span>20% on settlement</span>
                   </div>
                 </div>
-                {/* Dashboard */}
-                <div className="bg-[#0f1f1d] p-4 space-y-3 rounded-b-xl">
-                  {/* Header */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-white text-[14px] font-medium">Good morning, Adebayo 👋</p>
-                      <p className="text-[11px] text-white/40">Lagos Metals Ltd · Exporter</p>
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-[#14b8a6]/30 flex items-center justify-center text-[11px] font-medium text-[#14b8a6]">
-                      AO
-                    </div>
-                  </div>
-                  {/* Invoice card */}
-                  <div className="bg-[#1a2926] rounded-xl p-3 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-[10px] text-white/40 uppercase tracking-wider">Current application</p>
-                        <p className="text-[20px] font-semibold text-white mt-0.5">$45,000</p>
-                        <p className="text-[11px] text-white/40">Invoice #INV-2026-041 · German buyer</p>
-                      </div>
-                      <span className="bg-[#14b8a6]/20 text-[#14b8a6] text-[10px] font-medium px-2 py-0.5 rounded-full">
-                        IPU Signed
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-[#0f1f1d] rounded-lg p-2">
-                        <p className="text-[10px] text-white/40">You receive</p>
-                        <p className="text-[16px] font-semibold text-[#14b8a6]">$36,000</p>
-                        <p className="text-[10px] text-white/30">Today, 80% advance</p>
-                      </div>
-                      <div className="bg-[#0f1f1d] rounded-lg p-2">
-                        <p className="text-[10px] text-white/40">Settlement</p>
-                        <p className="text-[16px] font-semibold text-white">May 10</p>
-                        <p className="text-[10px] text-white/30">30-day terms</p>
-                      </div>
-                    </div>
-                    <div className="w-full h-1.5 bg-[#0f1f1d] rounded-full overflow-hidden">
-                      <div className="h-full w-[80%] bg-[#14b8a6] rounded-full" />
-                    </div>
-                    <div className="flex justify-between text-[10px] text-white/30">
-                      <span>80% advanced</span>
-                      <span>20% on settlement</span>
-                    </div>
-                  </div>
-                  {/* Steps */}
-                  <div className="flex items-center gap-3">
-                    <div className="bg-[#14b8a6]/15 rounded-lg px-3 py-2 flex-1">
-                      <p className="text-[10px] text-white/40">Step 3 of 4</p>
-                      <p className="text-[12px] font-medium text-[#14b8a6]">IPU Signed ✓</p>
-                    </div>
-                    <div className="bg-[#1a2926] rounded-lg px-3 py-2 flex-1">
-                      <p className="text-[10px] text-white/40">Next</p>
-                      <p className="text-[12px] font-medium text-white">Funds Released</p>
-                    </div>
-                  </div>
-                  {/* Activity */}
+                {/* Steps */}
+                <div className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: "#1a2926" }}>
                   <div>
-                    <p className="text-[10px] text-white/40 uppercase tracking-wider mb-2">Activity</p>
-                    {[
-                      { color: "#4ade80", text: "Buyer signed IPU", time: "2h ago" },
-                      { color: "#4ade80", text: "Deal approved by Veloxis", time: "Yesterday" },
-                      { color: "#fbbf24", text: "Funds release pending", time: "Today" },
-                    ].map((row, i) => (
-                      <div key={i} className="flex items-center gap-2 py-1.5 border-t border-white/5">
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: row.color }} />
-                        <span className="text-[11px] text-white/60 flex-1">{row.text}</span>
-                        <span className="text-[10px] text-white/30">{row.time}</span>
-                      </div>
-                    ))}
+                    <p className="text-white/30 text-[9px]">Step 3 of 4</p>
+                    <p className="text-[#4ade80] text-[12px] font-medium">IPU Signed ✓</p>
                   </div>
+                  <div className="text-right">
+                    <p className="text-white/30 text-[9px]">Next</p>
+                    <p className="text-white text-[12px] font-medium">Funds Released</p>
+                  </div>
+                </div>
+                {/* Activity */}
+                <div className="space-y-1.5">
+                  <p className="text-white/30 text-[10px] font-medium">Activity</p>
+                  {[
+                    { c: "#4ade80", t: "Buyer signed IPU", time: "2h ago" },
+                    { c: "#4ade80", t: "Deal approved by Veloxis", time: "Yesterday" },
+                    { c: "#fbbf24", t: "Funds release pending", time: "Today" },
+                  ].map((row, i) => (
+                    <div key={i} className="flex items-center gap-2 text-[11px]">
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: row.c }} />
+                      <span className="text-white/50 flex-1">{row.t}</span>
+                      <span className="text-white/20">{row.time}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -687,7 +627,7 @@ export default function VeloxisWebsite() {
         </div>
       </section>
 
-      {/* ═══ STATS BAR ═══ */}
+      {/* ── STATS ── */}
       <section className="bg-[#f0fdf9] py-6" style={{ borderBottom: "0.5px solid #e5e7eb" }}>
         <div className="mx-auto max-w-[780px] grid grid-cols-2 md:grid-cols-4 gap-6 px-8 text-center">
           {[
@@ -695,7 +635,7 @@ export default function VeloxisWebsite() {
             { v: "24hrs", l: "From approval to funds" },
             { v: "30–60", l: "Day payment terms" },
             { v: "UK & EU", l: "Buyer destination markets" },
-          ].map((s) => (
+          ].map(s => (
             <div key={s.v}>
               <p className="text-[28px] font-medium text-[#0d9488]">{s.v}</p>
               <p className="text-[12px] text-[#6b7280] mt-1">{s.l}</p>
@@ -704,338 +644,219 @@ export default function VeloxisWebsite() {
         </div>
       </section>
 
-      {/* ═══ PROBLEM SECTION (dark) ═══ */}
-      <section className="bg-[#0a2e2b] py-16">
-        <div className="mx-auto max-w-[960px] px-8">
-          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#14b8a6] mb-2">The problem</p>
-          <h2 className="text-[34px] font-medium leading-[1.2] text-white">
-            You've shipped.<br />Why are you still waiting?
-          </h2>
-          <p className="mt-3 max-w-[520px] text-[14px] leading-[1.6] text-white/50">
-            The invoice exists. The buyer is real. The goods are gone. The problem is the 60 days in between.
-          </p>
+      {/* ── SCROLL PROBLEM SECTION ── */}
+      <ScrollProblemSection />
 
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {problems.map((p) => (
-              <div key={p.title} className="rounded-2xl p-6" style={{ background: "rgba(255,255,255,0.05)", border: "0.5px solid rgba(255,255,255,0.10)" }}>
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#14b8a6]/15 mb-4">
-                  <IconByName name={p.icon} className="w-5 h-5 text-[#14b8a6]" />
-                </div>
-                <h3 className="text-[15px] font-medium text-white mb-2">{p.title}</h3>
-                <p className="text-[13px] leading-[1.6] text-white/45">{p.body}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Solution banner */}
-          <div className="mt-6 rounded-2xl p-6 flex flex-col md:flex-row items-start gap-5" style={{ background: "rgba(20,184,166,0.12)", border: "0.5px solid rgba(20,184,166,0.25)" }}>
-            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#14b8a6]/20 shrink-0">
-              <Shield className="w-6 h-6 text-[#14b8a6]" />
-            </div>
-            <div>
-              <h3 className="text-[16px] font-medium text-white mb-2">Veloxis solves all of this in one platform.</h3>
-              <p className="text-[13px] text-white/50 leading-[1.6] mb-3">
-                Once approved and your buyer signs the IPU, 80% of your invoice is in your domiciliary account within 24 hours. No collateral. No UK bank needed.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                {["80% advance within 24hrs", "Zero collateral", "Domiciliary settlement", "IPU-backed legally"].map((c) => (
-                  <span key={c} className="inline-flex items-center gap-1.5 text-[12px] text-[#14b8a6]">
-                    <CheckCircle className="w-3.5 h-3.5" />
-                    {c}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
+      {/* ── TICKER ── */}
+      <section className="bg-[#0f3530] py-16 space-y-8">
+        <div className="text-center px-8 mb-6">
+          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#14b8a6] mb-3">Built for your problems</p>
+          <h2 className="text-[34px] font-medium text-white leading-[1.2] mb-3">Every barrier exporters face. Solved.</h2>
+          <p className="text-[14px] text-white/50 max-w-[480px] mx-auto">Traditional finance was built for domestic markets. Veloxis was built for cross-border export discounting.</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-[11px] text-white/30 uppercase tracking-wider px-8 mb-2">The challenges</p>
+          <TickerRow items={problemPills} direction="left" variant="problem" />
+        </div>
+        <div className="h-px bg-white/[0.06]" />
+        <div className="space-y-1">
+          <div className="h-2" />
+          <p className="text-[11px] text-[#14b8a6]/60 uppercase tracking-wider px-8 mb-2">The Veloxis solution</p>
+          <TickerRow items={solutionPills} direction="right" variant="solution" />
         </div>
       </section>
 
-      {/* ═══ TICKER ═══ */}
-      <section className="bg-[#0f3530] py-16 overflow-hidden">
-        <div className="mx-auto max-w-[960px] px-8 text-center mb-10">
-          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#14b8a6] mb-2">Built for your problems</p>
-          <h2 className="text-[34px] font-medium leading-[1.2] text-white">Every barrier exporters face. Solved.</h2>
-          <p className="mt-3 max-w-[520px] mx-auto text-[14px] leading-[1.6] text-white/50">
-            Traditional finance was built for domestic markets. Veloxis was built for cross-border export discounting.
-          </p>
-        </div>
-
-        <div className="space-y-6">
-          <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-white/30 mb-3 px-8">The challenges</p>
-            <TickerRow items={problemPills} direction="left" variant="problem" />
-          </div>
-          <div className="h-px bg-white/5" />
-          <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#14b8a6]/60 mb-3 px-8">The Veloxis solution</p>
-            <TickerRow items={solutionPills} direction="right" variant="solution" />
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ COMPARISON ═══ */}
-      <section className="py-16 px-8" style={{ background: "#f8f8f6" }}>
+      {/* ── COMPARISON ── */}
+      <section className="bg-[#f8f8f6] py-16 px-8">
         <div className="text-center mb-10">
-          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#6b7280] mb-2">The shift</p>
-          <h2 className="text-[28px] font-medium text-[#6b7280]">Banks gave you waiting.</h2>
-          <h2 className="text-[34px] font-medium text-[#111827]">Veloxis gives you working capital.</h2>
+          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#14b8a6] mb-3">The shift</p>
+          <p className="text-[20px] text-[#9ca3af] mb-1">Banks gave you waiting.</p>
+          <h2 className="text-[34px] font-medium text-[#0a2e2b] leading-[1.2]">Veloxis gives you working capital.</h2>
         </div>
         <ComparisonAnimation />
       </section>
 
-      {/* ═══ HOW IT WORKS ═══ */}
-      <section id="hiw" className="bg-[#0a2e2b] py-16">
-        <div className="mx-auto max-w-[960px] px-8">
-          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#14b8a6] mb-2">How it works</p>
-          <h2 className="text-[34px] font-medium leading-[1.2] text-white">
-            From invoice to funds.<br />Four steps.
-          </h2>
-          <p className="mt-3 max-w-[480px] text-[14px] leading-[1.6] text-white/50">
-            Built for cross-border trade — not adapted from a domestic template.
-          </p>
-
-          <div className="mt-10 relative">
-            {/* Connector line */}
-            <div className="hidden md:block absolute top-8 left-[calc(12.5%)] right-[calc(12.5%)] h-px bg-[#14b8a6]/20" />
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              {howItWorksSteps.map((step, i) => (
+      {/* ── HOW IT WORKS ── */}
+      <section id="hiw" className="bg-[#0a2e2b] py-16 px-8">
+        <div className="mx-auto max-w-[960px]">
+          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#14b8a6] mb-3 text-center">How it works</p>
+          <h2 className="text-[34px] font-medium text-white leading-[1.2] text-center mb-3">From invoice to funds.<br />Four steps.</h2>
+          <p className="text-[14px] text-white/50 max-w-[480px] mx-auto text-center mb-12">Built for cross-border trade — not adapted from a domestic template.</p>
+          <div className="relative grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="hidden md:block absolute top-7 left-[12.5%] right-[12.5%] h-[2px] bg-[#14b8a6]/20" />
+            {howItWorksSteps.map((step, i) => {
+              const Icon = step.icon;
+              return (
                 <div key={i} className="text-center relative">
-                  <div className="mx-auto w-16 h-16 rounded-full bg-[#14b8a6] flex items-center justify-center mb-4 relative z-10">
-                    <IconByName name={step.icon} className="w-7 h-7 text-white" />
+                  <div className="relative z-10 mx-auto w-14 h-14 rounded-full bg-[#0d9488] flex items-center justify-center mb-4">
+                    <div className="absolute inset-0 rounded-full bg-[#14b8a6] opacity-20 animate-ping" style={{ animationDuration: "3s" }} />
+                    <Icon className="w-6 h-6 text-white" />
                   </div>
-                  <h3 className="text-[15px] font-medium text-white mb-2">{step.title}</h3>
-                  <p className="text-[13px] leading-[1.6] text-white/45">{step.body}</p>
+                  <h3 className="text-[16px] font-medium text-white mb-2">{step.title}</h3>
+                  <p className="text-[13px] text-white/50 leading-[1.6]">{step.body}</p>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* ═══ WHY VELOXIS ═══ */}
-      <section id="why" className="bg-white py-16" style={{ borderTop: "0.5px solid #e5e7eb" }}>
-        <div className="mx-auto max-w-[960px] px-8">
-          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#0d9488] mb-2">Why Veloxis</p>
-          <h2 className="text-[34px] font-medium leading-[1.2] text-[#111827]">
-            Built for this trade.<br />Not retrofitted for it.
-          </h2>
-          <p className="mt-3 max-w-[520px] text-[14px] leading-[1.6] text-[#6b7280]">
-            Every feature exists because of the specific barriers exporters in emerging markets face when accessing working capital.
-          </p>
+      {/* ── WHY VELOXIS ── */}
+      <section id="why" className="bg-white py-16 px-8">
+        <div className="mx-auto max-w-[960px]">
+          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#14b8a6] mb-3 text-center">Why Veloxis</p>
+          <h2 className="text-[34px] font-medium text-[#111827] leading-[1.2] text-center mb-3">Built for this trade.<br />Not retrofitted for it.</h2>
+          <p className="text-[14px] text-[#6b7280] max-w-[520px] mx-auto text-center mb-10">Every feature exists because of the specific barriers exporters in emerging markets face when accessing working capital.</p>
 
-          {/* Row 1 — large cards */}
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {whyCards.filter((c) => c.large).map((card) => (
-              <div
-                key={card.title}
-                className="relative overflow-hidden rounded-2xl bg-white p-[26px] transition-all duration-200 hover:-translate-y-[3px] hover:border-[#0d9488] group"
-                style={{ border: "1px solid #e5e7eb" }}
-              >
-                <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ backgroundColor: card.color }} />
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-[14px] bg-[#f0fdfa]">
-                  <IconByName name={card.icon} className="h-6 w-6 text-[#0d9488]" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            {whyCardsLarge.map(card => {
+              const Icon = card.Icon;
+              return (
+                <div key={card.kv} className="relative bg-white rounded-2xl p-[26px] border border-[#e5e7eb] hover:border-[#0d9488] hover:-translate-y-[3px] hover:shadow-[0_6px_24px_rgba(13,148,136,0.08)] transition-all duration-200 overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: card.c }} />
+                  <div className="w-12 h-12 rounded-[14px] bg-[#f0fdfa] flex items-center justify-center mb-4">
+                    <Icon className="w-6 h-6 text-[#0d9488]" />
+                  </div>
+                  <p className="text-[28px] font-medium text-[#0d9488]">{card.kv}</p>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-[#6b7280] mb-2.5">{card.kl}</p>
+                  <h3 className="text-[16px] font-medium text-[#111827] mb-2">{card.t}</h3>
+                  <p className="text-[14px] text-[#6b7280] leading-[1.6]">{card.b}</p>
                 </div>
-                <div className="text-[28px] font-medium text-[#0d9488]">{card.kicker}</div>
-                <div className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#6b7280] mb-2.5">{card.kicker_label}</div>
-                <h3 className="text-[16px] font-medium text-[#111827] mb-2">{card.title}</h3>
-                <p className="text-[13px] leading-[1.6] text-[#6b7280]">{card.body}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* Row 2 — standard cards */}
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {whyCards.filter((c) => !c.large).map((card) => (
-              <div
-                key={card.title}
-                className="relative overflow-hidden rounded-2xl bg-white p-[26px] transition-all duration-200 hover:-translate-y-[3px] hover:border-[#0d9488] group"
-                style={{ border: "1px solid #e5e7eb" }}
-              >
-                <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ backgroundColor: card.color }} />
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-[14px] bg-[#f0fdfa]">
-                  <IconByName name={card.icon} className="h-6 w-6 text-[#0d9488]" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {whyCardsSmall.map(card => {
+              const Icon = card.Icon;
+              return (
+                <div key={card.kv} className="relative bg-white rounded-2xl p-[26px] border border-[#e5e7eb] hover:border-[#0d9488] hover:-translate-y-[3px] hover:shadow-[0_6px_24px_rgba(13,148,136,0.08)] transition-all duration-200 overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: card.c }} />
+                  <div className="w-12 h-12 rounded-[14px] bg-[#f0fdfa] flex items-center justify-center mb-4">
+                    <Icon className="w-6 h-6 text-[#0d9488]" />
+                  </div>
+                  <p className="text-[22px] font-medium text-[#0d9488]">{card.kv}</p>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-[#6b7280] mb-2.5">{card.kl}</p>
+                  <h3 className="text-[16px] font-medium text-[#111827] mb-2">{card.t}</h3>
+                  <p className="text-[14px] text-[#6b7280] leading-[1.6]">{card.b}</p>
                 </div>
-                <div className="text-[22px] font-medium text-[#0d9488]">{card.kicker}</div>
-                <div className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#6b7280] mb-2.5">{card.kicker_label}</div>
-                <h3 className="text-[16px] font-medium text-[#111827] mb-2">{card.title}</h3>
-                <p className="text-[13px] leading-[1.6] text-[#6b7280]">{card.body}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* ═══ PARTNERS ═══ */}
-      <section id="partners" className="py-16 px-8" style={{ background: "#f8f8f6" }}>
-        <div className="mx-auto max-w-[960px] text-center">
-          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#0d9488] mb-2">For partners</p>
-          <h2 className="text-[34px] font-medium leading-[1.2] text-[#111827]">
-            Your exporters need working capital.<br />We provide it.
-          </h2>
-          <p className="mx-auto mt-3 max-w-[480px] text-[14px] leading-[1.6] text-[#6b7280]">
-            Veloxis works with trusted local partners — finance companies, trade associations, and origination networks.
-          </p>
+      {/* ── PARTNERS ── */}
+      <section id="partners" className="bg-[#f8f8f6] py-16 px-8">
+        <div className="mx-auto max-w-[960px]">
+          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#14b8a6] mb-3 text-center">For partners</p>
+          <h2 className="text-[34px] font-medium text-[#111827] leading-[1.2] text-center mb-3">Your exporters need working capital.<br />We provide it.</h2>
+          <p className="text-[14px] text-[#6b7280] max-w-[480px] mx-auto text-center mb-10">Veloxis works with trusted local partners — finance companies, trade associations, and origination networks.</p>
 
-          <div className="mt-8 bg-[#0a2e2b] rounded-2xl p-6 md:p-8">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div className="bg-[#0a2e2b] rounded-[24px] p-8 md:p-10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {[
-                { num: "01", icon: "users", title: "Onboard", body: "Register exporters on Veloxis. Handle local KYC using our structured document system. You know the market — we give you the tools." },
-                { num: "02", icon: "dollar-sign", title: "We fund", body: "Veloxis underwrites buyer risk, generates the IPU, and wires the advance. You focus on origination. We handle compliance and settlement." },
-                { num: "03", icon: "trending-up", title: "You grow", body: "Build a sustainable export financing pipeline. Every funded deal deepens the relationship between your network and the platform." },
-              ].map((card) => (
-                <div key={card.num} className="rounded-xl p-5 text-left" style={{ background: "rgba(255,255,255,0.06)", borderTop: "3px solid #14b8a6" }}>
-                  <p className="text-[28px] font-medium text-white/15 leading-none mb-3">{card.num}</p>
-                  <div className="w-9 h-9 rounded-lg bg-[#14b8a6]/15 flex items-center justify-center mb-3">
-                    <IconByName name={card.icon} className="w-4 h-4 text-[#14b8a6]" />
+                { n: "01", t: "Onboard", b: "Register exporters on Veloxis. Handle local KYC using our structured document system. You know the market — we give you the tools." },
+                { n: "02", t: "We fund", b: "Veloxis underwrites buyer risk, generates the IPU, and wires the advance. You focus on origination. We handle compliance and settlement." },
+                { n: "03", t: "You grow", b: "Build a sustainable export financing pipeline. Every funded deal deepens the relationship between your network and the platform." },
+              ].map(card => (
+                <div key={card.n} className="bg-white/[0.04] rounded-xl p-6 border-t-[3px] border-t-[#14b8a6]" style={{ border: "0.5px solid rgba(255,255,255,0.08)", borderTop: "3px solid #14b8a6" }}>
+                  <p className="text-[34px] font-medium text-white/10 mb-3">{card.n}</p>
+                  <div className="w-10 h-10 rounded-lg bg-[#14b8a6]/15 flex items-center justify-center mb-3">
+                    <Users className="w-5 h-5 text-[#14b8a6]" />
                   </div>
-                  <h3 className="text-[15px] font-medium text-white mb-2">{card.title}</h3>
-                  <p className="text-[13px] leading-[1.6] text-white/45">{card.body}</p>
+                  <h3 className="text-[16px] font-medium text-white mb-2">{card.t}</h3>
+                  <p className="text-[13px] text-white/50 leading-[1.6]">{card.b}</p>
                 </div>
               ))}
             </div>
 
-            <div className="rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ background: "rgba(20,184,166,0.12)" }}>
-              <div className="text-left">
-                <p className="text-[15px] font-medium text-white">Ready to become a Veloxis partner?</p>
-                <p className="text-[13px] text-white/50">Bring your exporters. We handle the rest.</p>
+            <div className="bg-[#14b8a6]/10 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div>
+                <p className="text-white font-medium text-[15px]">Ready to become a Veloxis partner?</p>
+                <p className="text-white/50 text-[13px]">Bring your exporters. We handle the rest.</p>
               </div>
-              <Link
-                to="/partners"
-                className="inline-flex items-center gap-1.5 bg-[#14b8a6] text-white text-[14px] font-medium px-6 py-3 rounded-[14px] hover:bg-[#0d9488] transition-colors whitespace-nowrap"
-              >
-                Become a partner <ArrowRight className="w-4 h-4" />
+              <Link to="/contact" className="inline-flex items-center gap-1.5 bg-[#14b8a6] text-white font-medium text-[13px] px-5 py-2.5 rounded-lg hover:bg-[#0d9488] transition-colors whitespace-nowrap">
+                Become a partner <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ═══ TESTIMONIALS ═══ */}
-      <section className="bg-[#f9fafb] py-16">
-        <div className="mx-auto max-w-[960px] px-8 text-center">
-          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#0d9488] mb-2">What exporters say</p>
-          <h2 className="text-[34px] font-medium leading-[1.2] text-[#111827]">
-            From the corridor we serve.
-          </h2>
-
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-[14px] text-left">
-            {testimonials.map((t) => (
-              <div
-                key={t.name}
-                className="rounded-[14px] bg-white p-[22px]"
-                style={{ border: "0.5px solid #e5e7eb" }}
-              >
-                <p className="text-[13px] text-[#f59e0b] mb-2">★★★★★</p>
-                <p className="text-[13px] italic leading-[1.6] text-[#6b7280] mb-[14px]">
-                  "{t.quote}"
-                </p>
-                <div className="text-[13px] font-medium text-[#111827]">{t.flag} {t.name}</div>
-                <div className="text-[12px] text-[#6b7280]">{t.role}</div>
+      {/* ── TESTIMONIALS ── */}
+      <section className="bg-[#f9fafb] py-16 px-8">
+        <div className="mx-auto max-w-[960px]">
+          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#14b8a6] mb-3 text-center">What exporters say</p>
+          <h2 className="text-[34px] font-medium text-[#111827] leading-[1.2] text-center mb-10">From the corridor we serve.</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {testimonials.map(t => (
+              <div key={t.name} className="bg-white rounded-xl p-[22px] border border-[#e5e7eb]">
+                <p className="text-[13px] text-[#f59e0b] mb-2.5">★★★★★</p>
+                <p className="text-[13px] text-[#6b7280] italic leading-[1.6] mb-3.5">"{t.q}"</p>
+                <p className="text-[13px] font-medium text-[#111827]">{t.flag} {t.name}</p>
+                <p className="text-[12px] text-[#6b7280]">{t.role}</p>
               </div>
             ))}
           </div>
-
-          <p className="mt-6 text-[11px] text-[#6b7280]">
-            Testimonials are illustrative. Individual results vary based on invoice value, buyer terms, and underwriting outcome.
-          </p>
+          <p className="text-[11px] text-[#9ca3af] text-center mt-6">Testimonials are illustrative. Individual results vary based on invoice value, buyer terms, and underwriting outcome.</p>
         </div>
       </section>
 
-      {/* ═══ FAQ ═══ */}
-      <section id="faq" className="bg-white py-16">
-        <div className="mx-auto max-w-[960px] px-8 text-center">
-          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#0d9488] mb-2">FAQ</p>
-          <h2 className="text-[34px] font-medium leading-[1.2] text-[#111827]">
-            Everything you need to know.
-          </h2>
-          <p className="mt-3 text-[14px] text-[#6b7280] mb-7">
-            Still have questions?{" "}
-            <a href="mailto:hello@veloxis.com" className="text-[#0d9488] hover:underline">hello@veloxis.com</a>
-          </p>
-
-          <div className="text-left space-y-2">
-            {faqs.map((item, i) => (
-              <FaqItemComponent
-                key={i}
-                item={item}
-                isOpen={openFaq === i}
-                onToggle={() => setOpenFaq(openFaq === i ? null : i)}
-              />
-            ))}
-          </div>
+      {/* ── FAQ ── */}
+      <section id="faq" className="bg-white py-16 px-8">
+        <div className="mx-auto max-w-[640px] space-y-2">
+          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#14b8a6] mb-3 text-center">FAQ</p>
+          <h2 className="text-[34px] font-medium text-[#111827] leading-[1.2] text-center mb-2">Everything you need to know.</h2>
+          <p className="text-[14px] text-[#6b7280] text-center mb-8">Still have questions? hello@veloxis.com</p>
+          {faqs.map((item, i) => (
+            <FaqItemComponent key={i} item={item} isOpen={openFaq === i} onToggle={() => setOpenFaq(openFaq === i ? null : i)} />
+          ))}
         </div>
       </section>
 
-      {/* ═══ CTA ═══ */}
-      <section className="relative bg-[#0a2e2b] py-[60px] overflow-hidden">
-        <div className="absolute top-[-40px] right-[80px] w-[200px] h-[200px] rounded-full bg-[#14b8a6] opacity-[0.10]" />
-        <div className="relative z-10 mx-auto max-w-[960px] px-8 text-center">
-          <h2 className="text-[34px] font-medium text-white">
-            Your invoice is an asset.<br />Start using it.
-          </h2>
-          <p className="mx-auto mt-3 mb-[26px] max-w-[440px] text-[15px] text-[#99f6e4]/80">
-            Join exporters from emerging markets worldwide growing faster because they are not waiting 60 days to be paid.
-          </p>
-          <div className="flex items-center justify-center gap-3 flex-wrap">
-            <Link
-              to="/contact"
-              className="inline-flex items-center gap-1.5 bg-[#14b8a6] text-white font-bold text-[15px] px-7 py-[14px] rounded-[14px] hover:bg-[#0d9488] transition-colors"
-            >
+      {/* ── CTA ── */}
+      <section className="relative bg-[#0a2e2b] py-16 px-8 overflow-hidden">
+        <div className="absolute top-[-40px] right-[80px] w-[200px] h-[200px] rounded-full bg-[#0d9488] opacity-[0.12]" />
+        <div className="relative z-10 text-center max-w-[520px] mx-auto">
+          <h2 className="text-[34px] font-medium text-white leading-[1.2] mb-4">Your invoice is an asset.<br />Start using it.</h2>
+          <p className="text-[15px] text-[#99f6e4] mb-7 max-w-[440px] mx-auto">Join exporters from emerging markets worldwide growing faster because they are not waiting 60 days to be paid.</p>
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
+            <Link to="/contact" className="inline-flex items-center justify-center gap-1.5 bg-[#14b8a6] text-white font-medium text-[14px] px-6 py-3 rounded-[10px] hover:bg-[#0d9488] transition-colors">
               Apply now <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link
-              to="/contact"
-              className="text-white font-semibold text-[15px] px-7 py-[14px] rounded-[14px] hover:bg-white/10 transition-colors"
-              style={{ border: "1.5px solid rgba(255,255,255,0.35)" }}
-            >
+            <Link to="/contact" className="inline-flex items-center justify-center text-white text-[14px] px-6 py-3 rounded-[10px] border border-white/30 hover:bg-white/10 transition-colors">
               Talk to us
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ═══ FOOTER ═══ */}
-      <footer className="bg-[#071f1d]">
-        <div className="mx-auto max-w-[960px] px-8 py-12">
-          <div className="grid grid-cols-2 md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-8">
-            <div className="col-span-2 md:col-span-1">
-              <p className="text-[17px] font-medium text-white">Veloxis</p>
-              <p className="mt-2.5 text-[13px] leading-[1.6] text-white/40">
-                UK-based cross-border invoice discounting. Advancing 80% of export invoice value within 24 hours for exporters worldwide shipping to UK and EU buyers.
-              </p>
-              <p className="mt-3 text-[13px] text-white/30">hello@veloxis.com</p>
-            </div>
-            {[
-              { title: "Product", links: ["How it works", "Why Veloxis", "FAQ"] },
-              { title: "Company", links: ["About", "Partners", "Contact", "Careers"] },
-              { title: "Legal", links: ["Privacy policy", "Terms & conditions", "Disclosure", "Cookies"] },
-            ].map((col) => (
-              <div key={col.title}>
-                <h4 className="text-[11px] font-medium uppercase tracking-[0.08em] text-white/30 mb-[14px]">{col.title}</h4>
-                <div className="space-y-2">
-                  {col.links.map((l) => (
-                    <Link
-                      key={l}
-                      to={`/${l.toLowerCase().replace(/ & /g, "-").replace(/ /g, "-")}`}
-                      className="block text-[13px] text-white/40 hover:text-white transition-colors"
-                    >
-                      {l}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ))}
+      {/* ── FOOTER ── */}
+      <footer className="bg-[#071f1d] py-12 px-8" style={{ borderTop: "0.5px solid rgba(255,255,255,0.08)" }}>
+        <div className="mx-auto max-w-[960px] grid grid-cols-2 md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-8 mb-8">
+          <div>
+            <p className="text-[17px] font-medium text-white mb-2.5">Veloxis</p>
+            <p className="text-[13px] text-white/40 leading-[1.6] mb-3">UK-based cross-border invoice discounting. Advancing 80% of export invoice value within 24 hours for exporters worldwide shipping to UK and EU buyers.</p>
+            <p className="text-[13px] text-white/30">hello@veloxis.com</p>
           </div>
-          <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-2 pt-5 text-[12px] text-white/25" style={{ borderTop: "0.5px solid rgba(255,255,255,0.08)" }}>
-            <span>© 2026 Veloxis Ltd. All rights reserved. Registered in England and Wales.</span>
-            <div className="flex gap-3">
-              <Link to="/privacy-policy" className="hover:text-white/50">Privacy</Link>
-              <Link to="/terms" className="hover:text-white/50">Terms</Link>
-              <Link to="/disclosure" className="hover:text-white/50">Disclosure</Link>
+          {[
+            { title: "Product", links: ["How it works", "Why Veloxis", "FAQ"] },
+            { title: "Company", links: ["About", "Partners", "Contact", "Careers"] },
+            { title: "Legal", links: ["Privacy policy", "Terms & conditions", "Disclosure", "Cookies"] },
+          ].map(col => (
+            <div key={col.title}>
+              <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-white/30 mb-3.5">{col.title}</p>
+              {col.links.map(l => <p key={l} className="text-[13px] text-white/40 mb-2 hover:text-white/70 cursor-pointer transition-colors">{l}</p>)}
             </div>
-          </div>
+          ))}
+        </div>
+        <div className="mx-auto max-w-[960px] flex flex-col md:flex-row justify-between items-center pt-5 gap-2" style={{ borderTop: "0.5px solid rgba(255,255,255,0.08)" }}>
+          <p className="text-[12px] text-white/20">© 2026 Veloxis Ltd. All rights reserved. Registered in England and Wales.</p>
+          <p className="text-[12px] text-white/20">Privacy · Terms · Disclosure</p>
         </div>
       </footer>
+
     </div>
   );
 }
