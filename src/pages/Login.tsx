@@ -30,7 +30,7 @@ export default function Login() {
 
     // Determine role-based redirect
     const { data: { user: authUser } } = await supabase.auth.getUser();
-    if (!authUser) { setIsLoading(false); navigate('/'); return; }
+    if (!authUser) { setIsLoading(false); navigate('/dashboard'); return; }
 
     const { data: roleData } = await supabase
       .from('user_roles')
@@ -66,7 +66,7 @@ export default function Login() {
       navigate('/admin');
     } else {
       setIsLoading(false);
-      navigate('/');
+      navigate('/dashboard');
     }
   };
 

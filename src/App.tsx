@@ -93,7 +93,8 @@ const App = () => (
         <AuthProvider>
           <ConfirmProvider>
           <Routes>
-            {/* Marketing website */}
+            {/* Marketing website — homepage */}
+            <Route path="/" element={<VeloxisHome />} />
             <Route path="/website" element={<VeloxisHome />} />
 
             <Route path="/login" element={<Login />} />
@@ -141,7 +142,7 @@ const App = () => (
             <Route path="/admin/partners/:id" element={<AdminLayout><PartnerDetail /></AdminLayout>} />
 
             {/* Originator routes */}
-            <Route path="/" element={<AuthenticatedLayout><Dashboard /></AuthenticatedLayout>} />
+            <Route path="/dashboard" element={<AuthenticatedLayout><Dashboard /></AuthenticatedLayout>} />
             <Route path="/exporters" element={<AuthenticatedLayout><ExportersList /></AuthenticatedLayout>} />
             <Route path="/exporters/new" element={<AuthenticatedLayout><ExporterNew /></AuthenticatedLayout>} />
             <Route path="/exporters/:id" element={<AuthenticatedLayout><ExporterDetail /></AuthenticatedLayout>} />
