@@ -102,6 +102,22 @@
   .gradient-accent {
     background: linear-gradient(135deg, hsl(40 70% 50%), hsl(40 80% 55%));
   }
+  .gradient-veloxis {
+    background: linear-gradient(135deg, #0B3D2E, #0E5A47, #1ABC9C);
+  }
+  .gradient-veloxis-btn {
+    background: linear-gradient(135deg, #0E5A47, #1ABC9C);
+  }
+  .gradient-veloxis-btn:hover {
+    background: linear-gradient(135deg, #0B3D2E, #0E5A47);
+    box-shadow: 0 0 20px rgba(26, 188, 156, 0.3);
+  }
+  .glow-mint {
+    box-shadow: 0 0 24px rgba(95, 255, 215, 0.15);
+  }
+  .glow-mint-hover:hover {
+    box-shadow: 0 0 28px rgba(95, 255, 215, 0.25);
+  }
 }
 
 /* Validation error highlight animation */
