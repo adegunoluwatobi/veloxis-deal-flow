@@ -496,8 +496,8 @@ export default function VeloxisWebsite() {
           ))}
         </div>
         <div className="flex items-center gap-4">
-          <Link to="/login" className="text-[14px] text-white/55 hover:text-white transition-colors">Log in</Link>
-          <Link to="/contact" className="bg-[#14b8a6] text-white text-[13px] font-medium px-5 py-2.5 rounded-[10px] hover:bg-[#0d9488] transition-colors">Get started</Link>
+          <a href="https://app.veloxis.co.uk/login" className="text-[14px] text-white/55 hover:text-white transition-colors">Log in</a>
+          <a href="https://app.veloxis.co.uk/login" className="bg-[#14b8a6] text-white text-[13px] font-medium px-5 py-2.5 rounded-[10px] hover:bg-[#0d9488] transition-colors">Get started</a>
         </div>
       </nav>
 
