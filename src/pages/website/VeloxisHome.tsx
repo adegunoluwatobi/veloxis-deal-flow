@@ -18,7 +18,7 @@ import {
   ArrowDown,
   Loader2,
 } from "lucide-react";
-import veloxisLogo from "@/assets/veloxis-logo.png";
+import veloxisLogoWhite from "@/assets/veloxis-logo-white.png";
 
 // ─── BRAND COLORS ────────────────────────────────────────────────────────────
 const C = {
