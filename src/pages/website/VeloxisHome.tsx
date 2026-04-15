@@ -49,9 +49,14 @@ interface SlideData {
 // ─── FAQ DATA ────────────────────────────────────────────────────────────────
 
 const faqs: FaqItem[] = [
+  { q: "What is Veloxis?", a: "Veloxis is a UK-based trade finance platform. We advance cash to exporters who have shipped goods to buyers in the UK, EU, or US but are waiting 30 to 90 days to receive payment. We bridge that gap so exporters can trade without waiting." },
+  { q: "Where is Veloxis based?", a: "Veloxis is registered and headquartered in the United Kingdom." },
   { q: "What is invoice discounting?", a: "Invoice discounting is trade finance where a financier advances cash against an unpaid invoice. Unlike a loan, there is no debt on your balance sheet. Veloxis purchases your receivable at a discount — you get cash now, we collect from your buyer at maturity. Your buyer signs a legal payment undertaking directly with Veloxis before any funds are released." },
   { q: "Who can use Veloxis?", a: "Veloxis is for incorporated businesses anywhere in the world that export non-agricultural, non-perishable goods to verified buyers in the UK or European Economic Area. You must be onboarded through a Veloxis-approved local partner. Sole traders and unregistered partnerships are not eligible." },
-  { q: "What is an Irrevocable Payment Undertaking (IPU)?", a: "The IPU is the legal instrument at the heart of every Veloxis transaction. Before funds are released, your buyer signs a formal undertaking committing to pay Veloxis directly on the invoice due date. No signed IPU means no funds released — it is the core protection for all parties." },
+  { q: "Does Veloxis finance importers?", a: "Not directly. Veloxis finances the exporter's receivable, meaning the exporter receives the advance and the buyer pays Veloxis when the invoice falls due." },
+  { q: "Does the exporter need to be UK-registered?", a: "No. The exporter can be based anywhere. What matters is that the buyer is in the UK, EU, or US and can be verified and underwritten." },
+  { q: "Does Veloxis finance all buyers?", a: "No. Veloxis only finances transactions where the buyer is in the UK, EU, or US and can be properly verified, credit-checked, and underwritten." },
+  { q: "Is Veloxis regulated?", a: "Veloxis operates under UK law and ensures all transactions are governed by English law, providing a robust legal framework for all parties." },
   { q: "How long does approval take?", a: "A complete application — all documents uploaded, KYC verified by your partner, buyer details confirmed — is reviewed within 24 hours. Once your buyer signs the IPU, funds are released typically within the same business day." },
   { q: "Do I need a UK bank account?", a: "No. Veloxis settles funds directly to your domiciliary account in your home country. You do not need a UK or EU bank account. This is one of the key reasons the platform was built." },
   { q: "What goods are eligible?", a: "Eligible: solid minerals, metals and scrap, manufactured goods, textiles, processed chemicals (non-hazardous), timber and wood products, processed seafood. Not eligible: raw agricultural produce, live animals, perishables, weapons, and controlled substances." },
@@ -505,17 +510,17 @@ export default function VeloxisWebsite() {
 
       {/* ── NAV ── */}
       <nav className="sticky top-0 z-50 flex items-center justify-between px-8 py-3 backdrop-blur-md" style={{ background: "rgba(11,61,46,0.85)", borderBottom: "0.5px solid rgba(26,188,156,0.12)" }}>
-        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="cursor-pointer flex items-center gap-0">
-          <img src={veloxisLogo} alt="Veloxis" className="h-8 w-auto" />
-        </button>
+        <a href="/" className="cursor-pointer flex items-center gap-0">
+          <img src={veloxisLogoWhite} alt="Veloxis" className="h-8 w-auto" />
+        </a>
         <div className="hidden md:flex items-center gap-8">
           {[{ l: "How it works", id: "hiw" }, { l: "Why Veloxis", id: "why" }, { l: "Partners", id: "partners" }, { l: "FAQ", id: "faq" }].map(link => (
             <button key={link.id} onClick={() => scrollTo(link.id)} className="text-[13px] font-medium text-white/50 hover:text-[#5FFFD7] transition-colors tracking-[-0.01em]">{link.l}</button>
           ))}
         </div>
         <div className="flex items-center gap-4">
-          <a href="https://app.veloxis.co.uk/login" className="text-[13px] font-medium text-white/50 hover:text-white transition-colors">Log in</a>
-          <a href="https://app.veloxis.co.uk/login" className="gradient-veloxis-btn text-white text-[13px] font-semibold px-5 py-2.5 rounded-[10px] transition-all duration-200 glow-mint-hover">Get started</a>
+          <Link to="/login" className="text-[13px] font-medium text-white/50 hover:text-white transition-colors">Log in</Link>
+          <Link to="/login" className="gradient-veloxis-btn text-white text-[13px] font-semibold px-5 py-2.5 rounded-[10px] transition-all duration-200 glow-mint-hover">Get started</Link>
         </div>
       </nav>
 
@@ -855,7 +860,7 @@ export default function VeloxisWebsite() {
       <footer className="py-12 px-8" style={{ background: C.darkBg, borderTop: "0.5px solid rgba(26,188,156,0.08)" }}>
         <div className="mx-auto max-w-[960px] grid grid-cols-2 md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-8 mb-8">
           <div>
-            <img src={veloxisLogo} alt="Veloxis" className="h-7 w-auto mb-3" />
+            <a href="/"><img src={veloxisLogoWhite} alt="Veloxis" className="h-7 w-auto mb-3" /></a>
             <p className="text-[13px] text-white/35 leading-[1.6] mb-3">UK-based cross-border invoice discounting. Advancing 80% of export invoice value within 24 hours for exporters worldwide shipping to UK and EU buyers.</p>
             <p className="text-[13px] text-white/25">hello@veloxis.com</p>
           </div>
