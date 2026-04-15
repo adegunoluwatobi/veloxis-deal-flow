@@ -95,7 +95,7 @@ const App = () => (
           <Routes>
             {/* Marketing website — homepage */}
             <Route path="/" element={<VeloxisHome />} />
-            <Route path="/website" element={<VeloxisHome />} />
+            <Route path="/homepage" element={<VeloxisHome />} />
 
             <Route path="/login" element={<Login />} />
             <Route path="/set-password" element={<SetPassword />} />

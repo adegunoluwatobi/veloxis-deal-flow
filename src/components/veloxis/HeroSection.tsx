@@ -9,7 +9,7 @@ export function HeroSection() {
         {/* Left */}
         <div>
           {/* Pill */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#99f6e4] bg-[#f0fdfa] px-[14px] py-[5px] text-[12px] font-medium text-[#0f766e] mb-6">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#99f6e4] bg-[#f0fdfa] px-[14px] py-[5px] text-[12px] font-medium text-[#0f766e] mb-3">
             <span className="relative flex h-[6px] w-[6px]">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#0d9488] opacity-75" />
               <span className="relative inline-flex h-[6px] w-[6px] rounded-full bg-[#0d9488]" />
@@ -18,7 +18,7 @@ export function HeroSection() {
           </div>
 
           {/* Typing headline */}
-          <h1 className="text-[42px] font-medium leading-[1.12] text-[#111827]">
+          <h1 className="mb-4 text-[42px] font-medium leading-[1.12] text-[#111827]">
             <TypingHeadline
               lines={[
                 { text: "You've shipped the goods.", speed: 55 },
@@ -28,20 +28,20 @@ export function HeroSection() {
           </h1>
 
           {/* Subtitle */}
-          <p className="mt-5 max-w-[400px] text-[14px] leading-[1.6] text-[#6b7280]">
+          <p className="mb-6 max-w-[400px] text-[14px] leading-[1.6] text-[#6b7280]">
             Veloxis advances 80% of your export invoice value within 24 hours — before your UK or EU buyer's payment terms expire. No collateral. No bank required.
           </p>
 
           {/* Buttons */}
-          <div className="mt-6 flex items-center gap-3">
+          <div className="mb-6 flex items-center gap-3">
             <Link
-              to="/contact"
+              to="/login"
               className="inline-flex items-center gap-1.5 rounded-[10px] bg-[#0d9488] px-6 py-3 text-[14px] font-medium text-white hover:bg-[#0f766e] transition-colors"
             >
               Apply now →
             </Link>
             <Link
-              to="/how-it-works"
+              to="/login"
               className="inline-flex items-center rounded-[10px] px-6 py-3 text-[14px] font-medium text-[#111827] transition-colors hover:bg-[#f9fafb]"
               style={{ border: "0.5px solid #d1d5db" }}
             >
