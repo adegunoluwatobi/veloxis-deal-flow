@@ -91,10 +91,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <X className="h-5 w-5" />
           </button>
         </Link>
-          <button className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)}>
-            <X className="h-5 w-5" />
-          </button>
-        </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
           {filteredNav.map(renderNavLink)}
