@@ -525,16 +525,16 @@ export default function VeloxisWebsite() {
       </nav>
 
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden" style={{ minHeight: "max(100vh, 680px)", background: `linear-gradient(135deg, ${C.deepEmerald} 0%, ${C.darkTeal} 50%, ${C.deepEmerald} 100%)` }}>
+      <section className="relative overflow-hidden" style={{ minHeight: "max(80vh, 580px)", background: `linear-gradient(135deg, ${C.deepEmerald} 0%, ${C.darkTeal} 50%, ${C.deepEmerald} 100%)` }}>
         {/* Gradient orbs */}
         <div className="absolute top-[-80px] right-[120px] w-[340px] h-[340px] rounded-full opacity-[0.15] blur-[40px]" style={{ background: C.accent }} />
         <div className="absolute bottom-[40px] right-[60px] w-[220px] h-[220px] rounded-full opacity-[0.10] blur-[30px]" style={{ background: C.mint }} />
         <div className="absolute top-[200px] left-[-60px] w-[160px] h-[160px] rounded-full opacity-[0.08] blur-[20px]" style={{ background: C.accent }} />
 
-        <div className="relative z-10 mx-auto max-w-[1080px] grid grid-cols-1 md:grid-cols-[55%_45%] items-center gap-12 px-8 py-20 md:py-0" style={{ minHeight: "max(100vh, 680px)" }}>
+        <div className="relative z-10 mx-auto max-w-[1080px] grid grid-cols-1 md:grid-cols-[55%_45%] items-center gap-12 px-8 py-14 md:py-14" style={{ minHeight: "max(80vh, 580px)" }}>
           {/* Left */}
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full px-[14px] py-[6px] text-[12px] text-[#5FFFD7] mb-6" style={{ background: "rgba(26,188,156,0.10)", border: "1px solid rgba(26,188,156,0.25)" }}>
+            <div className="inline-flex items-center gap-2 rounded-full px-[14px] py-[6px] text-[12px] text-[#5FFFD7] mb-3" style={{ background: "rgba(26,188,156,0.10)", border: "1px solid rgba(26,188,156,0.25)" }}>
               <span className="relative flex h-[6px] w-[6px]">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#1ABC9C] opacity-75" />
                 <span className="relative inline-flex h-[6px] w-[6px] rounded-full bg-[#1ABC9C]" />
@@ -544,12 +544,12 @@ export default function VeloxisWebsite() {
 
             <TypingHeadline />
 
-            <p className="mt-5 max-w-[420px] text-[16px] leading-[1.65] text-white/60 tracking-[-0.01em]">
+            <p className="mb-6 max-w-[420px] text-[16px] leading-[1.65] text-white/60 tracking-[-0.01em]">
               Get 80% of your invoice value in your account within 24 hours. No collateral required.
             </p>
 
-            <div className="mt-8 flex flex-col sm:flex-row items-start gap-[14px]">
-              <Link to="/contact" className="inline-flex items-center gap-1.5 gradient-veloxis-btn text-white font-bold text-[15px] px-7 py-[14px] rounded-[14px] transition-all duration-200 glow-mint-hover">
+            <div className="mb-6 flex flex-col sm:flex-row items-start gap-[14px]">
+              <Link to="/login" className="inline-flex items-center gap-1.5 gradient-veloxis-btn text-white font-bold text-[15px] px-7 py-[14px] rounded-[14px] transition-all duration-200 glow-mint-hover">
                 Apply now <ArrowRight className="w-4 h-4" />
               </Link>
               <button onClick={() => scrollTo("hiw")} className="text-white font-semibold text-[15px] px-7 py-[14px] rounded-[14px] border border-[#1ABC9C]/30 hover:bg-[#1ABC9C]/10 transition-all duration-200" style={{ background: "rgba(26,188,156,0.06)" }}>
@@ -557,7 +557,7 @@ export default function VeloxisWebsite() {
               </button>
             </div>
 
-            <div className="mt-7 flex flex-wrap gap-5">
+            <div className="mt-6 flex flex-wrap gap-5">
               {["UK-Registered", "No Collateral", "24-Hour Decisions", "Domiciliary Settlement"].map(t => (
                 <span key={t} className="flex items-center gap-2 text-[13px] text-white/40">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#1ABC9C]" />{t}
