@@ -79,7 +79,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-5">
+        <Link to="/dashboard" className="flex h-16 items-center gap-3 border-b border-sidebar-border px-5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary">
             <Shield className="h-5 w-5 text-sidebar-primary-foreground" />
           </div>
@@ -87,10 +87,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <span className="text-sm font-semibold text-sidebar-foreground">Veloxis</span>
             <span className="ml-1 text-xs text-sidebar-muted">Deal Room</span>
           </div>
-          <button className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)}>
+          <button className="ml-auto lg:hidden" onClick={(e) => { e.preventDefault(); setSidebarOpen(false); }}>
             <X className="h-5 w-5" />
           </button>
-        </div>
+        </Link>
 
         <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
           {filteredNav.map(renderNavLink)}
