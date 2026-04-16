@@ -72,7 +72,7 @@ const slides: SlideData[] = [
     num: "01 of 04 — The problem",
     iconBg: "rgba(245,158,11,0.12)",
     icon: <Clock className="w-6 h-6 text-amber-500" />,
-    title: "Waiting 30–60 days for payment",
+    title: "Waiting 30 to 60 days for payment",
     body: "You ship goods and wait months to be paid while still covering suppliers, staff, logistics, and overheads. The invoice is real. The money isn't there yet.",
   },
   {
@@ -119,7 +119,7 @@ const solutionChecks = ["80% within 24hrs", "Zero collateral", "Domiciliary sett
 // ─── TICKER PILLS ─────────────────────────────────────────────────────────────
 
 const problemPills = [
-  "Waiting 30–60 days for payment",
+  "Waiting 30 to 60 days for payment",
   "Banks reject emerging market exporters",
   "No UK collateral to secure finance",
   "FX conversion costs eating margins",
@@ -568,7 +568,7 @@ export default function VeloxisWebsite() {
             </p>
 
             <div className="mt-6 flex flex-wrap gap-5">
-              {["UK-Registered", "No Collateral", "24-Hour Decisions", "Domiciliary Settlement"].map(t => (
+              {["UK Registered", "No Collateral", "24 Hour Decisions", "Domiciliary Settlement"].map(t => (
                 <span key={t} className="flex items-center gap-2 text-[13px] text-white/40">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#1ABC9C]" />{t}
                 </span>
@@ -667,7 +667,7 @@ export default function VeloxisWebsite() {
           {[
             { v: "80%", l: "Advanced on day one" },
             { v: "24hrs", l: "From approval to funds" },
-            { v: "30–60", l: "Day payment terms" },
+            { v: "30 to 60", l: "Day payment terms" },
             { v: "UK & EU", l: "Buyer destination markets" },
           ].map(s => (
             <div key={s.v}>
