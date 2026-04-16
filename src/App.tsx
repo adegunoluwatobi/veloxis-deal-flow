@@ -49,6 +49,9 @@ import ExporterDealDetail from "@/pages/exporter/ExporterDealDetail";
 
 // Website (marketing) pages
 import VeloxisHome from "@/pages/website/VeloxisHome";
+import ExporterApply from "@/pages/website/ExporterApply";
+import PartnerApply from "@/pages/website/PartnerApply";
+import ApplicationsAdmin from "@/pages/website/ApplicationsAdmin";
 
 const queryClient = new QueryClient();
 
@@ -96,6 +99,9 @@ const App = () => (
             {/* Marketing website — homepage */}
             <Route path="/" element={<VeloxisHome />} />
             <Route path="/homepage" element={<VeloxisHome />} />
+            <Route path="/apply/exporter" element={<ExporterApply />} />
+            <Route path="/apply/partner" element={<PartnerApply />} />
+            <Route path="/pipeline" element={<ApplicationsAdmin />} />
 
             <Route path="/login" element={<Login />} />
             <Route path="/set-password" element={<SetPassword />} />
