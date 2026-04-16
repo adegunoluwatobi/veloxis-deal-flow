@@ -529,7 +529,7 @@ export default function VeloxisWebsite() {
         </div>
         <div className="flex items-center gap-4">
           <Link to="/login" className="text-[13px] font-medium text-white/50 hover:text-white transition-colors">Log in</Link>
-          <Link to="/login" className="gradient-veloxis-btn text-white text-[13px] font-semibold px-5 py-2.5 rounded-[10px] transition-all duration-200 glow-mint-hover">Get started</Link>
+          <Link to="/apply/exporter" className="gradient-veloxis-btn text-white text-[13px] font-semibold px-5 py-2.5 rounded-[10px] transition-all duration-200 glow-mint-hover">Get started</Link>
         </div>
       </nav>
 
@@ -558,13 +558,14 @@ export default function VeloxisWebsite() {
             </p>
 
             <div className="mb-6 flex flex-col sm:flex-row items-start gap-[14px]">
-              <Link to="/login" className="inline-flex items-center gap-1.5 gradient-veloxis-btn text-white font-bold text-[15px] px-7 py-[14px] rounded-[14px] transition-all duration-200 glow-mint-hover">
-                Apply now <ArrowRight className="w-4 h-4" />
-              </Link>
-              <button onClick={() => scrollTo("hiw")} className="text-white font-semibold text-[15px] px-7 py-[14px] rounded-[14px] border border-[#1ABC9C]/30 hover:bg-[#1ABC9C]/10 transition-all duration-200" style={{ background: "rgba(26,188,156,0.06)" }}>
+              <button onClick={() => scrollTo("hiw")} className="inline-flex items-center gap-1.5 text-white font-semibold text-[15px] px-7 py-[14px] rounded-[14px] border border-[#1ABC9C]/30 hover:bg-[#1ABC9C]/10 transition-all duration-200" style={{ background: "rgba(26,188,156,0.06)" }}>
                 How it works
               </button>
             </div>
+
+            <p className="text-[12px] text-white/30 mb-4">
+              Applying as a market partner? <Link to="/apply/partner" className="text-[#1ABC9C] hover:text-[#5FFFD7] transition-colors">Register here →</Link>
+            </p>
 
             <div className="mt-6 flex flex-wrap gap-5">
               {["UK-Registered", "No Collateral", "24-Hour Decisions", "Domiciliary Settlement"].map(t => (
