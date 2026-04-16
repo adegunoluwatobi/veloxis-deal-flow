@@ -50,18 +50,18 @@ interface SlideData {
 // ─── FAQ DATA ────────────────────────────────────────────────────────────────
 
 const faqs: FaqItem[] = [
-  { q: "What is Veloxis?", a: "Veloxis is a UK-based trade finance platform. We advance cash to exporters who have shipped goods to buyers in the UK, EU, or US but are waiting 30 to 90 days to receive payment. We bridge that gap so exporters can trade without waiting." },
+  { q: "What is Veloxis?", a: "Veloxis is a UK based trade finance platform. We advance cash to exporters who have shipped goods to buyers in the UK, EU, or US but are waiting 30 to 90 days to receive payment. We bridge that gap so exporters can trade without waiting." },
   { q: "Where is Veloxis based?", a: "Veloxis is registered and headquartered in the United Kingdom." },
-  { q: "What is invoice discounting?", a: "Invoice discounting is trade finance where a financier advances cash against an unpaid invoice. Unlike a loan, there is no debt on your balance sheet. Veloxis purchases your receivable at a discount — you get cash now, we collect from your buyer at maturity. Your buyer signs a legal payment undertaking directly with Veloxis before any funds are released." },
-  { q: "Who can use Veloxis?", a: "Veloxis is for incorporated businesses anywhere in the world that export non-agricultural, non-perishable goods to verified buyers in the UK or European Economic Area. You must be onboarded through a Veloxis-approved local partner. Sole traders and unregistered partnerships are not eligible." },
+  { q: "What is invoice discounting?", a: "Invoice discounting is trade finance where a financier advances cash against an unpaid invoice. Unlike a loan, there is no debt on your balance sheet. Veloxis purchases your receivable at a discount. You get cash now, we collect from your buyer at maturity. Your buyer signs a legal payment undertaking directly with Veloxis before any funds are released." },
+  { q: "Who can use Veloxis?", a: "Veloxis is for incorporated businesses anywhere in the world that export non agricultural, non perishable goods to verified buyers in the UK or European Economic Area. You must be onboarded through a Veloxis approved local partner. Sole traders and unregistered partnerships are not eligible." },
   { q: "Does Veloxis finance importers?", a: "Not directly. Veloxis finances the exporter's receivable, meaning the exporter receives the advance and the buyer pays Veloxis when the invoice falls due." },
-  { q: "Does the exporter need to be UK-registered?", a: "No. The exporter can be based anywhere. What matters is that the buyer is in the UK, EU, or US and can be verified and underwritten." },
-  { q: "Does Veloxis finance all buyers?", a: "No. Veloxis only finances transactions where the buyer is in the UK, EU, or US and can be properly verified, credit-checked, and underwritten." },
+  { q: "Does the exporter need to be UK registered?", a: "No. The exporter can be based anywhere. What matters is that the buyer is in the UK, EU, or US and can be verified and underwritten." },
+  { q: "Does Veloxis finance all buyers?", a: "No. Veloxis only finances transactions where the buyer is in the UK, EU, or US and can be properly verified, credit checked, and underwritten." },
   { q: "Is Veloxis regulated?", a: "Veloxis operates under UK law and ensures all transactions are governed by English law, providing a robust legal framework for all parties." },
   { q: "How long does approval take?", a: "A complete application — all documents uploaded, KYC verified by your partner, buyer details confirmed — is reviewed within 24 hours. Once your buyer signs the IPU, funds are released typically within the same business day." },
   { q: "Do I need a UK bank account?", a: "No. Veloxis settles funds directly to your domiciliary account in your home country. You do not need a UK or EU bank account. This is one of the key reasons the platform was built." },
-  { q: "What goods are eligible?", a: "Eligible: solid minerals, metals and scrap, manufactured goods, textiles, processed chemicals (non-hazardous), timber and wood products, processed seafood. Not eligible: raw agricultural produce, live animals, perishables, weapons, and controlled substances." },
-  { q: "Is Veloxis a lender?", a: "No. Veloxis is an invoice discounting platform — we purchase your receivable at a discount. We are buying an asset, not extending a loan. No debt on your balance sheet and no loan agreement to service." },
+  { q: "What goods are eligible?", a: "Eligible: solid minerals, metals and scrap, manufactured goods, textiles, processed chemicals (non hazardous), timber and wood products, processed seafood. Not eligible: raw agricultural produce, live animals, perishables, weapons, and controlled substances." },
+  { q: "Is Veloxis a lender?", a: "No. Veloxis is an invoice discounting platform. We purchase your receivable at a discount. We are buying an asset, not extending a loan. No debt on your balance sheet and no loan agreement to service." },
   { q: "Can I submit multiple invoices?", a: "Yes. Once your KYC is verified and your profile is set up, subsequent deals are significantly faster. Many exporters use Veloxis on a rolling basis across multiple buyers and shipment cycles." },
 ];
 
@@ -72,7 +72,7 @@ const slides: SlideData[] = [
     num: "01 of 04 — The problem",
     iconBg: "rgba(245,158,11,0.12)",
     icon: <Clock className="w-6 h-6 text-amber-500" />,
-    title: "Waiting 30–60 days for payment",
+    title: "Waiting 30 to 60 days for payment",
     body: "You ship goods and wait months to be paid while still covering suppliers, staff, logistics, and overheads. The invoice is real. The money isn't there yet.",
   },
   {
@@ -114,12 +114,12 @@ const dotLabels = [
   "Veloxis solves it",
 ];
 
-const solutionChecks = ["80% within 24hrs", "Zero collateral", "Domiciliary settlement", "IPU-backed legally"];
+const solutionChecks = ["80% within 24hrs", "Zero collateral", "Domiciliary settlement", "IPU backed legally"];
 
 // ─── TICKER PILLS ─────────────────────────────────────────────────────────────
 
 const problemPills = [
-  "Waiting 30–60 days for payment",
+  "Waiting 30 to 60 days for payment",
   "Banks reject emerging market exporters",
   "No UK collateral to secure finance",
   "FX conversion costs eating margins",
@@ -133,9 +133,9 @@ const solutionPills = [
   "80% advance in your account within 24 hours",
   "Zero collateral required",
   "Domiciliary account settlement",
-  "Buyer-signed IPU for legal certainty",
-  "Partner-led KYC in your country",
-  "24-hour credit decision",
+  "Buyer signed IPU for legal certainty",
+  "Partner led KYC in your country",
+  "24 hour credit decision",
   "No UK bank account needed",
   "No FX conversion on your advance",
 ];
@@ -156,14 +156,14 @@ const whyCardsLarge = [
 
 const whyCardsSmall = [
   { kv: "Your account", kl: "In your country", t: "No UK bank needed", b: "Funds go directly to your domiciliary account. No forced FX conversion, no accounts you don't control.", c: "#1ABC9C", Icon: Globe },
-  { kv: "Legally", kl: "Secured", t: "IPU-backed transactions", b: "Your buyer signs an Irrevocable Payment Undertaking before any funds leave Veloxis. Binding and enforceable.", c: "#0E5A47", Icon: FileText },
+  { kv: "Legally", kl: "Secured", t: "IPU backed transactions", b: "Your buyer signs an Irrevocable Payment Undertaking before any funds leave Veloxis. Binding and enforceable.", c: "#0E5A47", Icon: FileText },
   { kv: "Local", kl: "Partner network", t: "Guided from day one", b: "Local KYC partners handle your onboarding in your language and timezone. You are never navigating alone.", c: "#0B3D2E", Icon: Users },
 ];
 
 const testimonials = [
   { flag: "🇳🇬", name: "Adebayo O.", role: "Solid minerals exporter, Nigeria", q: "We shipped to our German buyer in February and needed cash for our March order. Veloxis had funds in our account within 24 hours of the IPU being signed. We have not missed an order since." },
   { flag: "🇬🇭", name: "Fatima K.", role: "Textile exporter, Ghana", q: "Our partner handled the documents. Veloxis handled the underwriting. We tracked the status on the portal and confirmed receipt when the residual arrived." },
-  { flag: "🇰🇪", name: "Emmanuel N.", role: "Manufactured goods exporter, Kenya", q: "Finally a UK-based platform that understands cross-border trade. The buyer signs, the money moves. No guessing, no chasing, no delays." },
+  { flag: "🇰🇪", name: "Emmanuel N.", role: "Manufactured goods exporter, Kenya", q: "Finally a UK based platform that understands cross border trade. The buyer signs, the money moves. No guessing, no chasing, no delays." },
   { flag: "🇳🇬", name: "Chidi A.", role: "Trade finance partner, Nigeria", q: "I refer exporters to Veloxis with full confidence. The process is transparent and clients always know exactly where their application stands." },
 ];
 
@@ -510,9 +510,9 @@ export default function VeloxisWebsite() {
     <div className="min-h-screen" style={{ scrollBehavior: "smooth", background: C.deepEmerald }}>
       <Helmet>
         <title>Veloxis - Trade without waiting.</title>
-        <meta name="description" content="Veloxis is a UK-based trade finance platform that advances 80% of your invoice value within 24 hours. No collateral required." />
+        <meta name="description" content="Veloxis is a UK based trade finance platform that advances 80% of your invoice value within 24 hours. No collateral required." />
         <meta property="og:title" content="Veloxis - Trade without waiting." />
-        <meta property="og:description" content="Veloxis is a UK-based trade finance platform that advances 80% of your invoice value within 24 hours. No collateral required." />
+        <meta property="og:description" content="Veloxis is a UK based trade finance platform that advances 80% of your invoice value within 24 hours. No collateral required." />
         <meta property="og:url" content="https://veloxis-deal-flow.lovable.app/" />
         <meta property="og:image" content="https://veloxis-deal-flow.lovable.app/og-image.png" />
       </Helmet>
@@ -529,7 +529,7 @@ export default function VeloxisWebsite() {
         </div>
         <div className="flex items-center gap-4">
           <Link to="/login" className="text-[13px] font-medium text-white/50 hover:text-white transition-colors">Log in</Link>
-          <Link to="/login" className="gradient-veloxis-btn text-white text-[13px] font-semibold px-5 py-2.5 rounded-[10px] transition-all duration-200 glow-mint-hover">Get started</Link>
+          <Link to="/apply/exporter" className="gradient-veloxis-btn text-white text-[13px] font-semibold px-5 py-2.5 rounded-[10px] transition-all duration-200 glow-mint-hover">Get started</Link>
         </div>
       </nav>
 
@@ -558,16 +558,17 @@ export default function VeloxisWebsite() {
             </p>
 
             <div className="mb-6 flex flex-col sm:flex-row items-start gap-[14px]">
-              <Link to="/login" className="inline-flex items-center gap-1.5 gradient-veloxis-btn text-white font-bold text-[15px] px-7 py-[14px] rounded-[14px] transition-all duration-200 glow-mint-hover">
-                Apply now <ArrowRight className="w-4 h-4" />
-              </Link>
-              <button onClick={() => scrollTo("hiw")} className="text-white font-semibold text-[15px] px-7 py-[14px] rounded-[14px] border border-[#1ABC9C]/30 hover:bg-[#1ABC9C]/10 transition-all duration-200" style={{ background: "rgba(26,188,156,0.06)" }}>
+              <button onClick={() => scrollTo("hiw")} className="inline-flex items-center gap-1.5 text-white font-semibold text-[15px] px-7 py-[14px] rounded-[14px] border border-[#1ABC9C]/30 hover:bg-[#1ABC9C]/10 transition-all duration-200" style={{ background: "rgba(26,188,156,0.06)" }}>
                 How it works
               </button>
             </div>
 
+            <p className="text-[12px] text-white/30 mb-4">
+              Applying as a market partner? <Link to="/apply/partner" className="text-[#1ABC9C] hover:text-[#5FFFD7] transition-colors">Register here →</Link>
+            </p>
+
             <div className="mt-6 flex flex-wrap gap-5">
-              {["UK-Registered", "No Collateral", "24-Hour Decisions", "Domiciliary Settlement"].map(t => (
+              {["UK Registered", "No Collateral", "24 Hour Decisions", "Domiciliary Settlement"].map(t => (
                 <span key={t} className="flex items-center gap-2 text-[13px] text-white/40">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#1ABC9C]" />{t}
                 </span>
@@ -618,7 +619,7 @@ export default function VeloxisWebsite() {
                     <div className="rounded-lg p-2.5" style={{ background: "rgba(255,255,255,0.03)" }}>
                       <p className="text-white/30 text-[9px]">Settlement</p>
                       <p className="text-white text-[16px] font-semibold">May 10</p>
-                      <p className="text-white/20 text-[9px]">30-day terms</p>
+                      <p className="text-white/20 text-[9px]">30 day terms</p>
                     </div>
                   </div>
                   <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -666,7 +667,7 @@ export default function VeloxisWebsite() {
           {[
             { v: "80%", l: "Advanced on day one" },
             { v: "24hrs", l: "From approval to funds" },
-            { v: "30–60", l: "Day payment terms" },
+            { v: "30 to 60", l: "Day payment terms" },
             { v: "UK & EU", l: "Buyer destination markets" },
           ].map(s => (
             <div key={s.v}>
@@ -685,7 +686,7 @@ export default function VeloxisWebsite() {
         <div className="text-center px-8 mb-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#1ABC9C] mb-3">Built for your problems</p>
           <h2 className="text-[34px] font-semibold text-white leading-[1.2] tracking-[-0.01em] mb-3">Every barrier exporters face. Solved.</h2>
-          <p className="text-[14px] text-white/45 max-w-[480px] mx-auto">Traditional finance was built for domestic markets. Veloxis was built for cross-border export discounting.</p>
+          <p className="text-[14px] text-white/45 max-w-[480px] mx-auto">Traditional finance was built for domestic markets. Veloxis was built for cross border export discounting.</p>
         </div>
         <div className="space-y-1">
           <p className="text-[11px] text-white/25 uppercase tracking-wider px-8 mb-2">The challenges</p>
@@ -714,7 +715,7 @@ export default function VeloxisWebsite() {
         <div className="mx-auto max-w-[960px]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#1ABC9C] mb-3 text-center">How it works</p>
           <h2 className="text-[34px] font-semibold text-white leading-[1.2] tracking-[-0.01em] text-center mb-3">From invoice to funds.<br />Four steps.</h2>
-          <p className="text-[14px] text-white/45 max-w-[480px] mx-auto text-center mb-12">Built for cross-border trade — not adapted from a domestic template.</p>
+          <p className="text-[14px] text-white/45 max-w-[480px] mx-auto text-center mb-12">Built for cross border trade, not adapted from a domestic template.</p>
           <div className="relative grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="hidden md:block absolute top-7 left-[12.5%] right-[12.5%] h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(26,188,156,0.3), transparent)" }} />
             {howItWorksSteps.map((step, i) => {
@@ -809,7 +810,7 @@ export default function VeloxisWebsite() {
                 <p className="text-white font-semibold text-[15px]">Ready to become a Veloxis partner?</p>
                 <p className="text-white/45 text-[13px]">Bring your exporters. We handle the rest.</p>
               </div>
-              <Link to="/contact" className="inline-flex items-center gap-1.5 gradient-veloxis-btn text-white font-semibold text-[13px] px-5 py-2.5 rounded-lg transition-all duration-200 glow-mint-hover whitespace-nowrap">
+              <Link to="/apply/partner" className="inline-flex items-center gap-1.5 gradient-veloxis-btn text-white font-semibold text-[13px] px-5 py-2.5 rounded-lg transition-all duration-200 glow-mint-hover whitespace-nowrap">
                 Become a partner <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -855,11 +856,11 @@ export default function VeloxisWebsite() {
           <h2 className="text-[34px] font-semibold text-white leading-[1.2] tracking-[-0.01em] mb-4">Your invoice is an asset.<br />Start using it.</h2>
           <p className="text-[15px] text-[#5FFFD7]/80 mb-7 max-w-[440px] mx-auto">Join exporters from emerging markets worldwide growing faster because they are not waiting 60 days to be paid.</p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
-            <Link to="/contact" className="inline-flex items-center justify-center gap-1.5 gradient-veloxis-btn text-white font-semibold text-[14px] px-6 py-3 rounded-[10px] transition-all duration-200 glow-mint-hover">
-              Apply now <ArrowRight className="w-4 h-4" />
+            <Link to="/apply/exporter" className="inline-flex items-center justify-center gap-1.5 gradient-veloxis-btn text-white font-semibold text-[14px] px-6 py-3 rounded-[10px] transition-all duration-200 glow-mint-hover">
+              Get started <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link to="/contact" className="inline-flex items-center justify-center text-white text-[14px] px-6 py-3 rounded-[10px] border border-[#1ABC9C]/30 hover:bg-[#1ABC9C]/10 transition-all duration-200">
-              Talk to us
+            <Link to="/login" className="inline-flex items-center justify-center text-white text-[14px] px-6 py-3 rounded-[10px] border border-[#1ABC9C]/30 hover:bg-[#1ABC9C]/10 transition-all duration-200">
+              Log in
             </Link>
           </div>
         </div>
@@ -870,7 +871,7 @@ export default function VeloxisWebsite() {
         <div className="mx-auto max-w-[960px] grid grid-cols-2 md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-8 mb-8">
           <div>
             <a href="/"><img src={veloxisLogoWhite} alt="Veloxis" className="h-9 w-auto mb-3" /></a>
-            <p className="text-[13px] text-white/35 leading-[1.6] mb-3">UK-based cross-border invoice discounting. Advancing 80% of export invoice value within 24 hours for exporters worldwide shipping to UK and EU buyers.</p>
+            <p className="text-[13px] text-white/35 leading-[1.6] mb-3">UK based cross border invoice discounting. Advancing 80% of export invoice value within 24 hours for exporters worldwide shipping to UK and EU buyers.</p>
             <p className="text-[13px] text-white/25">hello@veloxis.com</p>
           </div>
           {[

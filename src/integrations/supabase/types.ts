@@ -831,6 +831,63 @@ export type Database = {
         }
         Relationships: []
       }
+      exporter_applications: {
+        Row: {
+          admin_notes: string | null
+          assigned_partner: string | null
+          buyer_countries: string[]
+          commodity: string
+          company_name: string
+          country: string
+          created_at: string
+          deal_description: string | null
+          email: string
+          expansion_activated: boolean
+          full_name: string
+          id: string
+          invoice_size: string
+          phone: string
+          shipment_frequency: string
+          status: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          assigned_partner?: string | null
+          buyer_countries?: string[]
+          commodity: string
+          company_name: string
+          country: string
+          created_at?: string
+          deal_description?: string | null
+          email: string
+          expansion_activated?: boolean
+          full_name: string
+          id?: string
+          invoice_size: string
+          phone: string
+          shipment_frequency: string
+          status?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          assigned_partner?: string | null
+          buyer_countries?: string[]
+          commodity?: string
+          company_name?: string
+          country?: string
+          created_at?: string
+          deal_description?: string | null
+          email?: string
+          expansion_activated?: boolean
+          full_name?: string
+          id?: string
+          invoice_size?: string
+          phone?: string
+          shipment_frequency?: string
+          status?: string
+        }
+        Relationships: []
+      }
       exporter_bank_accounts: {
         Row: {
           account_currency: string | null
@@ -1233,6 +1290,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      partner_applications: {
+        Row: {
+          admin_notes: string | null
+          company_name: string
+          countries_covered: string[]
+          created_at: string
+          description: string | null
+          email: string
+          full_name: string
+          id: string
+          network_size: string
+          partner_type: string
+          phone: string
+          sectors: string[]
+          status: string
+          website: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          company_name: string
+          countries_covered?: string[]
+          created_at?: string
+          description?: string | null
+          email: string
+          full_name: string
+          id?: string
+          network_size: string
+          partner_type: string
+          phone: string
+          sectors?: string[]
+          status?: string
+          website?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          company_name?: string
+          countries_covered?: string[]
+          created_at?: string
+          description?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          network_size?: string
+          partner_type?: string
+          phone?: string
+          sectors?: string[]
+          status?: string
+          website?: string | null
+        }
+        Relationships: []
       }
       partner_organisations: {
         Row: {
