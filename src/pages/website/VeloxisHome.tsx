@@ -810,7 +810,7 @@ export default function VeloxisWebsite() {
                 <p className="text-white font-semibold text-[15px]">Ready to become a Veloxis partner?</p>
                 <p className="text-white/45 text-[13px]">Bring your exporters. We handle the rest.</p>
               </div>
-              <Link to="/contact" className="inline-flex items-center gap-1.5 gradient-veloxis-btn text-white font-semibold text-[13px] px-5 py-2.5 rounded-lg transition-all duration-200 glow-mint-hover whitespace-nowrap">
+              <Link to="/apply/partner" className="inline-flex items-center gap-1.5 gradient-veloxis-btn text-white font-semibold text-[13px] px-5 py-2.5 rounded-lg transition-all duration-200 glow-mint-hover whitespace-nowrap">
                 Become a partner <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -856,11 +856,11 @@ export default function VeloxisWebsite() {
           <h2 className="text-[34px] font-semibold text-white leading-[1.2] tracking-[-0.01em] mb-4">Your invoice is an asset.<br />Start using it.</h2>
           <p className="text-[15px] text-[#5FFFD7]/80 mb-7 max-w-[440px] mx-auto">Join exporters from emerging markets worldwide growing faster because they are not waiting 60 days to be paid.</p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
-            <Link to="/contact" className="inline-flex items-center justify-center gap-1.5 gradient-veloxis-btn text-white font-semibold text-[14px] px-6 py-3 rounded-[10px] transition-all duration-200 glow-mint-hover">
-              Apply now <ArrowRight className="w-4 h-4" />
+            <Link to="/apply/exporter" className="inline-flex items-center justify-center gap-1.5 gradient-veloxis-btn text-white font-semibold text-[14px] px-6 py-3 rounded-[10px] transition-all duration-200 glow-mint-hover">
+              Get started <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link to="/contact" className="inline-flex items-center justify-center text-white text-[14px] px-6 py-3 rounded-[10px] border border-[#1ABC9C]/30 hover:bg-[#1ABC9C]/10 transition-all duration-200">
-              Talk to us
+            <Link to="/login" className="inline-flex items-center justify-center text-white text-[14px] px-6 py-3 rounded-[10px] border border-[#1ABC9C]/30 hover:bg-[#1ABC9C]/10 transition-all duration-200">
+              Log in
             </Link>
           </div>
         </div>
