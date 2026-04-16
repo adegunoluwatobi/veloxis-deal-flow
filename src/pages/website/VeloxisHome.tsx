@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import {
   Clock,
   XCircle,
@@ -507,11 +508,19 @@ export default function VeloxisWebsite() {
 
   return (
     <div className="min-h-screen" style={{ scrollBehavior: "smooth", background: C.deepEmerald }}>
+      <Helmet>
+        <title>Veloxis - Trade without waiting.</title>
+        <meta name="description" content="Veloxis is a UK-based trade finance platform that advances 80% of your invoice value within 24 hours. No collateral required." />
+        <meta property="og:title" content="Veloxis - Trade without waiting." />
+        <meta property="og:description" content="Veloxis is a UK-based trade finance platform that advances 80% of your invoice value within 24 hours. No collateral required." />
+        <meta property="og:url" content="https://veloxis-deal-flow.lovable.app/" />
+        <meta property="og:image" content="https://veloxis-deal-flow.lovable.app/og-image.png" />
+      </Helmet>
 
       {/* ── NAV ── */}
       <nav className="sticky top-0 z-50 flex items-center justify-between px-8 py-3 backdrop-blur-md" style={{ background: "rgba(11,61,46,0.85)", borderBottom: "0.5px solid rgba(26,188,156,0.12)" }}>
         <a href="/" className="cursor-pointer flex items-center gap-0">
-          <img src={veloxisLogoWhite} alt="Veloxis" className="h-8 w-auto" />
+          <img src={veloxisLogoWhite} alt="Veloxis" className="h-10 w-auto" />
         </a>
         <div className="hidden md:flex items-center gap-8">
           {[{ l: "How it works", id: "hiw" }, { l: "Why Veloxis", id: "why" }, { l: "Partners", id: "partners" }, { l: "FAQ", id: "faq" }].map(link => (
@@ -860,7 +869,7 @@ export default function VeloxisWebsite() {
       <footer className="py-12 px-8" style={{ background: C.darkBg, borderTop: "0.5px solid rgba(26,188,156,0.08)" }}>
         <div className="mx-auto max-w-[960px] grid grid-cols-2 md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-8 mb-8">
           <div>
-            <a href="/"><img src={veloxisLogoWhite} alt="Veloxis" className="h-7 w-auto mb-3" /></a>
+            <a href="/"><img src={veloxisLogoWhite} alt="Veloxis" className="h-9 w-auto mb-3" /></a>
             <p className="text-[13px] text-white/35 leading-[1.6] mb-3">UK-based cross-border invoice discounting. Advancing 80% of export invoice value within 24 hours for exporters worldwide shipping to UK and EU buyers.</p>
             <p className="text-[13px] text-white/25">hello@veloxis.com</p>
           </div>
