@@ -120,7 +120,7 @@ export default function ExporterApply() {
         invoice_size: form.invoice_size,
         shipment_frequency: form.shipment_frequency,
         email: form.email.trim(),
-        phone: `${form.phone_code} ${form.phone.trim()}`,
+        phone: `${DIAL_COUNTRIES.find(c => c.iso === form.phone_iso)?.dial ?? "+234"} ${form.phone.trim()}`,
         deal_description: form.deal_description.trim() || null,
         assigned_partner: partner || null,
         status,
@@ -262,9 +262,7 @@ export default function ExporterApply() {
           <div data-field-error={errors.phone || undefined}>
             <label className="block text-[12px] font-medium text-white/50 mb-1.5">Phone / WhatsApp *</label>
             <div className="flex gap-2">
-              <select className="rounded-lg px-3 py-3 text-[14px] text-white border border-white/10 outline-none w-[100px]" style={{ background: inputBg }} value={form.phone_code} onChange={e => set("phone_code", e.target.value)}>
-                {phoneCodes.map(p => <option key={p.code} value={p.code}>{p.code} {p.country}</option>)}
-              </select>
+              <CountryPhoneSelect value={form.phone_iso} onChange={iso => set("phone_iso", iso)} />
               <input className={`flex-1 ${inputClass("phone")}`} style={{ background: inputBg }} placeholder="Phone number" value={form.phone} onChange={e => set("phone", e.target.value)} />
             </div>
           </div>
