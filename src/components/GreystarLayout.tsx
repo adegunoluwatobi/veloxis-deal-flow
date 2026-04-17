@@ -4,9 +4,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard, Users, FileText, LogOut, Briefcase,
-  Menu, X, ChevronRight, Building, Settings,
+  Menu, X, ChevronRight, Settings, Inbox,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import veloxisLogoWhite from '@/assets/veloxis-logo-white.png';
 
 interface NavItem {
   label: string;
@@ -19,6 +20,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Exporters', href: '/greystar/exporters', icon: Users },
   { label: 'Applications', href: '/greystar/deals', icon: Briefcase },
   { label: 'Review Queue', href: '/greystar/review', icon: FileText },
+  { label: 'Registration Pipeline', href: '/pipeline', icon: Inbox },
 ];
 
 export default function GreystarLayout({ children }: { children: React.ReactNode }) {
@@ -48,18 +50,12 @@ export default function GreystarLayout({ children }: { children: React.ReactNode
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex h-16 items-center gap-3 border-b border-[hsl(160,30%,25%)] px-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[hsl(160,50%,35%)]">
-            <Building className="h-5 w-5 text-[hsl(0,0%,100%)]" />
-          </div>
-          <div>
-            <span className="text-sm font-semibold">Greystar</span>
-            <span className="ml-1 text-xs text-[hsl(160,20%,55%)]">Intake</span>
-          </div>
-          <button className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)}>
+        <Link to="/" className="flex h-16 items-center border-b border-[hsl(160,30%,25%)] px-5">
+          <img src={veloxisLogoWhite} alt="Veloxis" className="h-7 w-auto" />
+          <button className="ml-auto lg:hidden" onClick={(e) => { e.preventDefault(); setSidebarOpen(false); }}>
             <X className="h-5 w-5" />
           </button>
-        </div>
+        </Link>
 
         <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
           {navItems.map((item) => {

@@ -3,10 +3,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
-  Shield, LayoutDashboard, Users, FileText, Settings, LogOut,
-  Menu, X, ChevronRight, ShieldCheck, Banknote, Building2,
+  LayoutDashboard, Users, FileText, Settings, LogOut,
+  Menu, X, ChevronRight, ShieldCheck, Banknote, Building2, Inbox,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import veloxisLogoWhite from '@/assets/veloxis-logo-white.png';
 
 interface NavItem {
   label: string;
@@ -24,6 +25,7 @@ const NAV_ITEMS: NavItem[] = [
 const ADMIN_NAV: NavItem[] = [
   { label: 'Admin Dashboard', href: '/admin', icon: ShieldCheck, roles: ['super_admin', 'deal_manager'] },
   { label: 'All Applications', href: '/admin/deals', icon: FileText, roles: ['super_admin', 'deal_manager'] },
+  { label: 'Registration Pipeline', href: '/pipeline', icon: Inbox, roles: ['super_admin', 'deal_manager'] },
   { label: 'Capital Pool', href: '/admin/capital', icon: Banknote, roles: ['super_admin', 'deal_manager'] },
   { label: 'Partners', href: '/admin/partners', icon: Building2, roles: ['super_admin'] },
   { label: 'Pricing', href: '/admin/pricing', icon: Banknote, roles: ['super_admin'] },
@@ -79,14 +81,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <Link to="/dashboard" className="flex h-16 items-center gap-3 border-b border-sidebar-border px-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary">
-            <Shield className="h-5 w-5 text-sidebar-primary-foreground" />
-          </div>
-          <div>
-            <span className="text-sm font-semibold text-sidebar-foreground">Veloxis</span>
-            <span className="ml-1 text-xs text-sidebar-muted">Deal Room</span>
-          </div>
+        <Link to="/" className="flex h-16 items-center border-b border-sidebar-border px-5">
+          <img src={veloxisLogoWhite} alt="Veloxis" className="h-7 w-auto" />
           <button className="ml-auto lg:hidden" onClick={(e) => { e.preventDefault(); setSidebarOpen(false); }}>
             <X className="h-5 w-5" />
           </button>
