@@ -4,6 +4,8 @@ import { Helmet } from "react-helmet";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle, ArrowRight } from "lucide-react";
 import veloxisLogoWhite from "@/assets/veloxis-logo-white.png";
+import { CountryPhoneSelect } from "@/components/ui/country-phone-select";
+import { DIAL_COUNTRIES } from "@/lib/countriesDial";
 
 const C = { deepEmerald: "#0B3D2E" };
 
@@ -38,23 +40,16 @@ const partnerTypes = ["Trade Agent", "Compliance & KYC Partner", "Business Intro
 const sectorOptions = ["Agriculture", "Minerals & Metals", "FMCG", "Processed Foods", "Other"];
 const networkSizes = ["1–10", "11–50", "51–200", "200+"];
 
-const phoneCodes = [
-  { code: "+234", country: "NG" }, { code: "+233", country: "GH" }, { code: "+254", country: "KE" },
-  { code: "+27", country: "ZA" }, { code: "+255", country: "TZ" }, { code: "+44", country: "UK" },
-  { code: "+1", country: "US" }, { code: "+91", country: "IN" }, { code: "+971", country: "AE" },
-  { code: "+49", country: "DE" }, { code: "+33", country: "FR" },
-];
-
 interface FormData {
   full_name: string; company_name: string; countries_covered: string[];
   partner_type: string; sectors: string[]; network_size: string;
-  email: string; phone_code: string; phone: string; description: string; website: string;
+  email: string; phone_iso: string; phone: string; description: string; website: string;
 }
 
 export default function PartnerApply() {
   const [form, setForm] = useState<FormData>({
     full_name: "", company_name: "", countries_covered: [], partner_type: "",
-    sectors: [], network_size: "", email: "", phone_code: "+234", phone: "",
+    sectors: [], network_size: "", email: "", phone_iso: "NG", phone: "",
     description: "", website: "",
   });
   const [errors, setErrors] = useState<Record<string, boolean>>({});
