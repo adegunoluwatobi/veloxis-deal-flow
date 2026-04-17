@@ -4,6 +4,8 @@ import { Helmet } from "react-helmet";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle, ArrowRight } from "lucide-react";
 import veloxisLogoWhite from "@/assets/veloxis-logo-white.png";
+import { CountryPhoneSelect } from "@/components/ui/country-phone-select";
+import { DIAL_COUNTRIES } from "@/lib/countriesDial";
 
 const C = {
   deepEmerald: "#0B3D2E",
@@ -53,33 +55,6 @@ const buyerCountries = ["United Kingdom", "European Union", "United States"];
 const invoiceSizes = ["Under £10k", "£10k–£50k", "£50k–£100k", "£100k–£500k", "Over £500k"];
 const shipmentFreqs = ["1–2 per month", "3–5 per month", "6–10 per month", "10+ per month"];
 
-const phoneCodes = [
-  { code: "+234", country: "NG" },
-  { code: "+233", country: "GH" },
-  { code: "+254", country: "KE" },
-  { code: "+27", country: "ZA" },
-  { code: "+255", country: "TZ" },
-  { code: "+44", country: "UK" },
-  { code: "+1", country: "US" },
-  { code: "+91", country: "IN" },
-  { code: "+86", country: "CN" },
-  { code: "+971", country: "AE" },
-  { code: "+49", country: "DE" },
-  { code: "+33", country: "FR" },
-  { code: "+39", country: "IT" },
-  { code: "+34", country: "ES" },
-  { code: "+31", country: "NL" },
-  { code: "+61", country: "AU" },
-  { code: "+55", country: "BR" },
-  { code: "+81", country: "JP" },
-  { code: "+82", country: "KR" },
-  { code: "+966", country: "SA" },
-  { code: "+20", country: "EG" },
-  { code: "+251", country: "ET" },
-  { code: "+221", country: "SN" },
-  { code: "+225", country: "CI" },
-];
-
 interface FormData {
   full_name: string;
   company_name: string;
@@ -89,7 +64,7 @@ interface FormData {
   invoice_size: string;
   shipment_frequency: string;
   email: string;
-  phone_code: string;
+  phone_iso: string;
   phone: string;
   deal_description: string;
 }
@@ -98,7 +73,7 @@ export default function ExporterApply() {
   const [form, setForm] = useState<FormData>({
     full_name: "", company_name: "", country: "", commodity: "",
     buyer_countries: [], invoice_size: "", shipment_frequency: "",
-    email: "", phone_code: "+234", phone: "", deal_description: "",
+    email: "", phone_iso: "NG", phone: "", deal_description: "",
   });
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
