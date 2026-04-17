@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Lock, ArrowRight } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Loader2 } from "lucide-react";
 import veloxisLogoWhite from "@/assets/veloxis-logo-white.png";
 
 const C = { deepEmerald: "#0B3D2E", accent: "#1ABC9C" };
@@ -23,9 +24,8 @@ const exporterStatuses = ["routed", "in_progress", "funded", "rejected"];
 const partnerStatuses = ["under_review", "approved", "rejected", "on_hold"];
 
 export default function ApplicationsAdmin() {
-  const [authed, setAuthed] = useState(false);
-  const [password, setPassword] = useState("");
-  const [pwError, setPwError] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<"routed" | "expansion" | "partners">("routed");
   const [exporterApps, setExporterApps] = useState<ExporterApp[]>([]);
   const [partnerApps, setPartnerApps] = useState<PartnerApp[]>([]);
@@ -34,15 +34,16 @@ export default function ApplicationsAdmin() {
   const [activateCountry, setActivateCountry] = useState<string | null>(null);
   const [activatePartnerName, setActivatePartnerName] = useState("");
 
-  const checkPassword = () => {
-    if (password === "veloxis2026") { setAuthed(true); setPwError(false); }
-    else setPwError(true);
-  };
-
   useEffect(() => {
-    if (!authed) return;
+    if (authLoading) return;
+    if (!user) { navigate("/login", { replace: true }); return; }
     loadData();
-  }, [authed]);
+  }, [authLoading, user, navigate]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/login", { replace: true });
+  };
 
   const loadData = async () => {
     setLoading(true);
