@@ -558,6 +558,9 @@ export default function VeloxisWebsite() {
             </p>
 
             <div className="mb-6 flex flex-col sm:flex-row items-start gap-[14px]">
+              <Link to="/apply/exporter" className="inline-flex items-center gap-1.5 gradient-veloxis-btn text-white font-semibold text-[15px] px-7 py-[14px] rounded-[14px] transition-all duration-200 glow-mint-hover">
+                Apply now <ArrowRight className="w-4 h-4" />
+              </Link>
               <button onClick={() => scrollTo("hiw")} className="inline-flex items-center gap-1.5 text-white font-semibold text-[15px] px-7 py-[14px] rounded-[14px] border border-[#1ABC9C]/30 hover:bg-[#1ABC9C]/10 transition-all duration-200" style={{ background: "rgba(26,188,156,0.06)" }}>
                 How it works
               </button>

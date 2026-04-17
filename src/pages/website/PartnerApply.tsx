@@ -4,6 +4,8 @@ import { Helmet } from "react-helmet";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle, ArrowRight } from "lucide-react";
 import veloxisLogoWhite from "@/assets/veloxis-logo-white.png";
+import { CountryPhoneSelect } from "@/components/ui/country-phone-select";
+import { DIAL_COUNTRIES } from "@/lib/countriesDial";
 
 const C = { deepEmerald: "#0B3D2E" };
 
@@ -38,23 +40,16 @@ const partnerTypes = ["Trade Agent", "Compliance & KYC Partner", "Business Intro
 const sectorOptions = ["Agriculture", "Minerals & Metals", "FMCG", "Processed Foods", "Other"];
 const networkSizes = ["1–10", "11–50", "51–200", "200+"];
 
-const phoneCodes = [
-  { code: "+234", country: "NG" }, { code: "+233", country: "GH" }, { code: "+254", country: "KE" },
-  { code: "+27", country: "ZA" }, { code: "+255", country: "TZ" }, { code: "+44", country: "UK" },
-  { code: "+1", country: "US" }, { code: "+91", country: "IN" }, { code: "+971", country: "AE" },
-  { code: "+49", country: "DE" }, { code: "+33", country: "FR" },
-];
-
 interface FormData {
   full_name: string; company_name: string; countries_covered: string[];
   partner_type: string; sectors: string[]; network_size: string;
-  email: string; phone_code: string; phone: string; description: string; website: string;
+  email: string; phone_iso: string; phone: string; description: string; website: string;
 }
 
 export default function PartnerApply() {
   const [form, setForm] = useState<FormData>({
     full_name: "", company_name: "", countries_covered: [], partner_type: "",
-    sectors: [], network_size: "", email: "", phone_code: "+234", phone: "",
+    sectors: [], network_size: "", email: "", phone_iso: "NG", phone: "",
     description: "", website: "",
   });
   const [errors, setErrors] = useState<Record<string, boolean>>({});
@@ -98,7 +93,7 @@ export default function PartnerApply() {
         sectors: form.sectors,
         network_size: form.network_size,
         email: form.email.trim(),
-        phone: `${form.phone_code} ${form.phone.trim()}`,
+        phone: `${DIAL_COUNTRIES.find(c => c.iso === form.phone_iso)?.dial ?? "+234"} ${form.phone.trim()}`,
         description: form.description.trim() || null,
         website: form.website.trim() || null,
         status: "under_review",
@@ -229,9 +224,7 @@ export default function PartnerApply() {
           <div data-field-error={errors.phone || undefined}>
             <label className="block text-[12px] font-medium text-white/50 mb-1.5">Phone / WhatsApp *</label>
             <div className="flex gap-2">
-              <select className="rounded-lg px-3 py-3 text-[14px] text-white border border-white/10 outline-none w-[100px]" style={{ background: inputBg }} value={form.phone_code} onChange={e => set("phone_code", e.target.value)}>
-                {phoneCodes.map(p => <option key={p.code} value={p.code}>{p.code} {p.country}</option>)}
-              </select>
+              <CountryPhoneSelect value={form.phone_iso} onChange={iso => set("phone_iso", iso)} />
               <input className={`flex-1 ${inputClass("phone")}`} style={{ background: inputBg }} placeholder="Phone number" value={form.phone} onChange={e => set("phone", e.target.value)} />
             </div>
           </div>
