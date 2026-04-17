@@ -110,35 +110,10 @@ export default function ApplicationsAdmin() {
 
   const fmtDate = (d: string) => new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 
-  if (!authed) {
+  if (authLoading || !user) {
     return (
-      <div className="min-h-screen flex flex-col" style={{ background: C.deepEmerald }}>
-        <nav className="flex items-center justify-between px-8 py-3" style={{ borderBottom: "0.5px solid rgba(26,188,156,0.12)" }}>
-          <Link to="/"><img src={veloxisLogoWhite} alt="Veloxis" className="h-10 w-auto" /></Link>
-        </nav>
-        <div className="flex-1 flex items-center justify-center px-8">
-          <div className="w-full max-w-[360px]">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(26,188,156,0.15)" }}>
-              <Lock className="w-6 h-6 text-[#1ABC9C]" />
-            </div>
-            <h2 className="text-[24px] font-semibold text-white text-center mb-6">Applications Admin</h2>
-            <div className="space-y-3">
-              <input
-                type="password"
-                className={`w-full rounded-lg px-4 py-3 text-[14px] text-white placeholder:text-white/30 outline-none border ${pwError ? "border-red-500" : "border-white/10"}`}
-                style={{ background: inputBg }}
-                placeholder="Enter password"
-                value={password}
-                onChange={e => { setPassword(e.target.value); setPwError(false); }}
-                onKeyDown={e => e.key === "Enter" && checkPassword()}
-              />
-              {pwError && <p className="text-red-400 text-[12px]">Incorrect password</p>}
-              <button onClick={checkPassword} className="w-full gradient-veloxis-btn text-white font-semibold text-[14px] py-3 rounded-lg">
-                Access panel
-              </button>
-            </div>
-          </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: C.deepEmerald }}>
+        <Loader2 className="w-6 h-6 text-[#1ABC9C] animate-spin" />
       </div>
     );
   }
@@ -147,7 +122,12 @@ export default function ApplicationsAdmin() {
     <div className="min-h-screen" style={{ background: C.deepEmerald }}>
       <nav className="flex items-center justify-between px-8 py-3" style={{ borderBottom: "0.5px solid rgba(26,188,156,0.12)" }}>
         <Link to="/"><img src={veloxisLogoWhite} alt="Veloxis" className="h-10 w-auto" /></Link>
-        <span className="text-[13px] text-white/40">Applications Admin</span>
+        <div className="flex items-center gap-4">
+          <span className="text-[13px] text-white/40">Applications Admin</span>
+          <button onClick={handleSignOut} className="text-[12px] text-[#1ABC9C] border border-[#1ABC9C]/30 px-3 py-1 rounded hover:bg-[#1ABC9C]/10 transition-colors">
+            Sign out
+          </button>
+        </div>
       </nav>
 
       <div className="mx-auto max-w-[1200px] px-8 py-8">
