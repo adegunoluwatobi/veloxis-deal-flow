@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Lock, ArrowRight } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Loader2 } from "lucide-react";
 import veloxisLogoWhite from "@/assets/veloxis-logo-white.png";
 
 const C = { deepEmerald: "#0B3D2E", accent: "#1ABC9C" };
@@ -23,9 +24,8 @@ const exporterStatuses = ["routed", "in_progress", "funded", "rejected"];
 const partnerStatuses = ["under_review", "approved", "rejected", "on_hold"];
 
 export default function ApplicationsAdmin() {
-  const [authed, setAuthed] = useState(false);
-  const [password, setPassword] = useState("");
-  const [pwError, setPwError] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<"routed" | "expansion" | "partners">("routed");
   const [exporterApps, setExporterApps] = useState<ExporterApp[]>([]);
   const [partnerApps, setPartnerApps] = useState<PartnerApp[]>([]);
@@ -34,15 +34,16 @@ export default function ApplicationsAdmin() {
   const [activateCountry, setActivateCountry] = useState<string | null>(null);
   const [activatePartnerName, setActivatePartnerName] = useState("");
 
-  const checkPassword = () => {
-    if (password === "veloxis2026") { setAuthed(true); setPwError(false); }
-    else setPwError(true);
-  };
-
   useEffect(() => {
-    if (!authed) return;
+    if (authLoading) return;
+    if (!user) { navigate("/login", { replace: true }); return; }
     loadData();
-  }, [authed]);
+  }, [authLoading, user, navigate]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/login", { replace: true });
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -109,35 +110,10 @@ export default function ApplicationsAdmin() {
 
   const fmtDate = (d: string) => new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 
-  if (!authed) {
+  if (authLoading || !user) {
     return (
-      <div className="min-h-screen flex flex-col" style={{ background: C.deepEmerald }}>
-        <nav className="flex items-center justify-between px-8 py-3" style={{ borderBottom: "0.5px solid rgba(26,188,156,0.12)" }}>
-          <Link to="/"><img src={veloxisLogoWhite} alt="Veloxis" className="h-10 w-auto" /></Link>
-        </nav>
-        <div className="flex-1 flex items-center justify-center px-8">
-          <div className="w-full max-w-[360px]">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(26,188,156,0.15)" }}>
-              <Lock className="w-6 h-6 text-[#1ABC9C]" />
-            </div>
-            <h2 className="text-[24px] font-semibold text-white text-center mb-6">Applications Admin</h2>
-            <div className="space-y-3">
-              <input
-                type="password"
-                className={`w-full rounded-lg px-4 py-3 text-[14px] text-white placeholder:text-white/30 outline-none border ${pwError ? "border-red-500" : "border-white/10"}`}
-                style={{ background: inputBg }}
-                placeholder="Enter password"
-                value={password}
-                onChange={e => { setPassword(e.target.value); setPwError(false); }}
-                onKeyDown={e => e.key === "Enter" && checkPassword()}
-              />
-              {pwError && <p className="text-red-400 text-[12px]">Incorrect password</p>}
-              <button onClick={checkPassword} className="w-full gradient-veloxis-btn text-white font-semibold text-[14px] py-3 rounded-lg">
-                Access panel
-              </button>
-            </div>
-          </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: C.deepEmerald }}>
+        <Loader2 className="w-6 h-6 text-[#1ABC9C] animate-spin" />
       </div>
     );
   }
@@ -146,7 +122,12 @@ export default function ApplicationsAdmin() {
     <div className="min-h-screen" style={{ background: C.deepEmerald }}>
       <nav className="flex items-center justify-between px-8 py-3" style={{ borderBottom: "0.5px solid rgba(26,188,156,0.12)" }}>
         <Link to="/"><img src={veloxisLogoWhite} alt="Veloxis" className="h-10 w-auto" /></Link>
-        <span className="text-[13px] text-white/40">Applications Admin</span>
+        <div className="flex items-center gap-4">
+          <span className="text-[13px] text-white/40">Applications Admin</span>
+          <button onClick={handleSignOut} className="text-[12px] text-[#1ABC9C] border border-[#1ABC9C]/30 px-3 py-1 rounded hover:bg-[#1ABC9C]/10 transition-colors">
+            Sign out
+          </button>
+        </div>
       </nav>
 
       <div className="mx-auto max-w-[1200px] px-8 py-8">
