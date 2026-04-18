@@ -91,14 +91,28 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
 
   const activateCountryHandler = async (country: string) => {
     if (!activatePartnerName.trim()) return;
-    // Update all pending_expansion apps from this country
+    // Bulk-update all pending_expansion apps from this country with the chosen partner
     await supabase.from("exporter_applications" as any)
-      .update({ status: "activated", assigned_partner: activatePartnerName.trim(), expansion_activated: true } as any)
+      .update({ status: "routed", assigned_partner: activatePartnerName.trim(), expansion_activated: true } as any)
       .eq("country", country).eq("status", "pending_expansion");
     setActivateCountry(null);
     setActivatePartnerName("");
     loadData();
   };
+
+  const assignSinglePartner = async () => {
+    if (!assignAppId || !assignSelectedPartner.trim()) return;
+    await supabase.from("exporter_applications" as any)
+      .update({ status: "routed", assigned_partner: assignSelectedPartner.trim(), expansion_activated: true } as any)
+      .eq("id", assignAppId);
+    setAssignAppId(null);
+    setAssignSelectedPartner("");
+    loadData();
+  };
+
+  // Approved partners covering a given country (no hardcoded list)
+  const approvedPartnersForCountry = (country: string) =>
+    partnerApps.filter(p => p.status === "approved" && (p.countries_covered || []).includes(country));
 
   const routed = exporterApps.filter(a => a.status !== "pending_expansion" && a.status !== "contacted" && a.status !== "activated");
   const expansion = exporterApps.filter(a => ["pending_expansion", "contacted", "activated"].includes(a.status));
@@ -117,6 +131,9 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
   const fmtDate = (d: string) => new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 
   if (authLoading || !user) {
+    if (embedded) {
+      return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+    }
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: C.deepEmerald }}>
         <Loader2 className="w-6 h-6 text-[#1ABC9C] animate-spin" />
