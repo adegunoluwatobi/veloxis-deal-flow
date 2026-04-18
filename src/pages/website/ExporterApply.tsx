@@ -104,14 +104,14 @@ export default function ExporterApply() {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      // Look up active partner organisations operating in this country
-      const { data: activePartners } = await supabase
-        .from("partner_organisations" as any)
-        .select("name, country, is_active")
-        .eq("is_active", true)
-        .eq("country", form.country);
+      // Look up active partners covering this country via a public security-definer RPC.
+      // The exporter form is unauthenticated, so it cannot read partner_organisations directly.
+      const { data: activePartners, error: lookupError } = await supabase
+        .rpc("lookup_active_partners_for_country" as any, { p_country: form.country });
 
-      const matches = (activePartners as any[]) || [];
+      if (lookupError) console.error("Partner lookup failed", lookupError);
+
+      const matches = (activePartners as { name: string }[] | null) || [];
 
       // Auto-assign only when exactly one active partner covers the country.
       // Multiple matches => leave unassigned for admin to choose.
