@@ -26,7 +26,8 @@ import PricingSettings from "@/pages/PricingSettings";
 import CapitalPool from "@/pages/CapitalPool";
 import PartnersPage from "@/pages/PartnersPage";
 import PartnerDetail from "@/pages/PartnerDetail";
-import NotFound from "@/pages/NotFound";
+import BrandedNotFound from "@/pages/website/BrandedNotFound";
+import LegalPage from "@/pages/website/LegalPage";
 
 // Greystar pages
 import GreystarDashboard from "@/pages/greystar/GreystarDashboard";
@@ -128,6 +129,7 @@ const App = () => (
             <Route path="/greystar/deals/:id" element={<GreystarRoute><GreystarDealDetail /></GreystarRoute>} />
             <Route path="/greystar/review" element={<GreystarRoute><GreystarReviewQueue /></GreystarRoute>} />
             <Route path="/greystar/settings" element={<GreystarRoute><GreystarSettings /></GreystarRoute>} />
+            <Route path="/greystar/pipeline" element={<GreystarRoute><ApplicationsAdmin embedded /></GreystarRoute>} />
 
             {/* Exporter portal routes (require approved onboarding) */}
             <Route path="/exporter" element={<ExporterRoute><ExporterDashboardPage /></ExporterRoute>} />
@@ -157,7 +159,14 @@ const App = () => (
             <Route path="/deals/new" element={<AuthenticatedLayout><DealNew /></AuthenticatedLayout>} />
             <Route path="/deals/:id" element={<AuthenticatedLayout><DealDetail /></AuthenticatedLayout>} />
 
-            <Route path="*" element={<NotFound />} />
+            {/* Legal pages */}
+            <Route path="/privacy" element={<LegalPage slug="privacy" />} />
+            <Route path="/privacy-policy" element={<LegalPage slug="privacy" />} />
+            <Route path="/terms" element={<LegalPage slug="terms" />} />
+            <Route path="/disclosure" element={<LegalPage slug="disclosure" />} />
+            <Route path="/cookies" element={<LegalPage slug="cookies" />} />
+
+            <Route path="*" element={<BrandedNotFound />} />
           </Routes>
           </ConfirmProvider>
         </AuthProvider>
