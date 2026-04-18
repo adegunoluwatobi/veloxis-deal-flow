@@ -141,7 +141,7 @@ export default function AdminDashboard() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pool Size (GBP)</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pool Size</CardTitle>
             <Banknote className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -150,7 +150,7 @@ export default function AdminDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Deployed (GBP equiv.)</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Deployed (GBP equiv.)</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -202,7 +202,7 @@ export default function AdminDashboard() {
           return (
             <Card key={cur}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Deployed in {cur}</CardTitle>
+                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Deployed · {cur}</CardTitle>
                 <Badge variant="secondary" className="text-xs">{dealCount} application{dealCount !== 1 ? 's' : ''}</Badge>
               </CardHeader>
               <CardContent>
@@ -223,7 +223,7 @@ export default function AdminDashboard() {
             return (
               <Card key={`repaid-${cur}`} className="border-success/20 bg-success/5">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Repaid in {cur}</CardTitle>
+                  <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Repaid · {cur}</CardTitle>
                   <Badge variant="secondary" className="text-xs bg-success/10 text-success">{data?.count ?? 0} closed</Badge>
                 </CardHeader>
                 <CardContent>
