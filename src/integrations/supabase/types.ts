@@ -1694,6 +1694,12 @@ export type Database = {
       }
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
       is_veloxis_staff: { Args: { _user_id: string }; Returns: boolean }
+      lookup_active_partners_for_country: {
+        Args: { p_country: string }
+        Returns: {
+          name: string
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
