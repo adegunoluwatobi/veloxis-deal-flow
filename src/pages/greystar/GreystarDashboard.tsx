@@ -80,6 +80,15 @@ export default function GreystarDashboard() {
       verified: exportersWithKyc.filter((exporter) => exporter.kyc.status === 'verified').length,
       docsToReview: documents.filter((doc) => doc.document_status === 'pending_review').length,
     });
+
+    // Load routed leads from exporter_applications matched by partner desk name
+    const { data: leads } = await supabase
+      .from('exporter_applications' as any)
+      .select('id, full_name, company_name, country, commodity, invoice_size, email, phone, assigned_partner, status, created_at')
+      .eq('status', 'routed')
+      .order('created_at', { ascending: false });
+    setRoutedLeads(((leads as any) || []) as RoutedLead[]);
+
     setLoading(false);
   };
 
