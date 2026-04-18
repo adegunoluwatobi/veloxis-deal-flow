@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard, Users, FileText, LogOut, Briefcase,
-  Menu, X, ChevronRight, Settings, Inbox,
+  Menu, X, ChevronRight, Inbox,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import veloxisLogoWhite from '@/assets/veloxis-logo-white.png';
@@ -27,7 +27,7 @@ export default function GreystarLayout({ children }: { children: React.ReactNode
   const { user, role, signOut } = useAuth();
   const navItems = [
     ...NAV_ITEMS,
-    ...(role === 'partner_admin' ? [{ label: 'Team', href: '/greystar/settings', icon: Settings }] : []),
+    ...(role === 'partner_admin' ? [{ label: 'Team', href: '/greystar/settings', icon: Users }] : []),
   ];
   const location = useLocation();
   const navigate = useNavigate();
