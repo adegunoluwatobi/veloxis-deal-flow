@@ -19,6 +19,7 @@ type PartnerApp = {
   partner_type: string; sectors: string[]; network_size: string; email: string; phone: string;
   description: string | null; website: string | null; status: string; admin_notes: string | null; created_at: string;
 };
+type PartnerOrg = { id: string; name: string; country: string | null };
 
 const exporterStatuses = ["routed", "in_progress", "funded", "rejected"];
 const partnerStatuses = ["under_review", "approved", "rejected", "on_hold"];
