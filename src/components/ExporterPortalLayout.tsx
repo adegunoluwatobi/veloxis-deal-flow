@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -65,6 +66,7 @@ export default function ExporterPortalLayout({ children }: { children: React.Rea
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
+      <Helmet><title>Exporter · Veloxis</title></Helmet>
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-50 flex w-64 flex-col transition-transform duration-200 lg:static lg:translate-x-0',
