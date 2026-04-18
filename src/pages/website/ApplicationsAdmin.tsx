@@ -269,7 +269,7 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
                           <div className="flex items-center gap-3">
                             <span className={`text-[13px] font-medium ${embedded ? "text-primary" : "text-[#5FFFD7]"}`}>{count} application{count > 1 ? "s" : ""}</span>
                             <button
-                              onClick={() => { setActivateCountry(country); setActivatePartnerName(partnersForCountry.length === 1 ? partnersForCountry[0].company_name : ""); }}
+                              onClick={() => { setActivateCountry(country); setActivatePartnerName(partnersForCountry.length === 1 ? partnersForCountry[0].name : ""); }}
                               disabled={!hasPartners}
                               className={`text-[11px] px-3 py-1 rounded transition-colors ${
                                 hasPartners
