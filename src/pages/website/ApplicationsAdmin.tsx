@@ -23,7 +23,11 @@ type PartnerApp = {
 const exporterStatuses = ["routed", "in_progress", "funded", "rejected"];
 const partnerStatuses = ["under_review", "approved", "rejected", "on_hold"];
 
-export default function ApplicationsAdmin() {
+interface ApplicationsAdminProps {
+  embedded?: boolean;
+}
+
+export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdminProps = {}) {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState<"routed" | "expansion" | "partners">("routed");
@@ -33,6 +37,8 @@ export default function ApplicationsAdmin() {
   const [editingNotes, setEditingNotes] = useState<Record<string, string>>({});
   const [activateCountry, setActivateCountry] = useState<string | null>(null);
   const [activatePartnerName, setActivatePartnerName] = useState("");
+  const [assignAppId, setAssignAppId] = useState<string | null>(null);
+  const [assignSelectedPartner, setAssignSelectedPartner] = useState("");
 
   useEffect(() => {
     if (authLoading) return;
