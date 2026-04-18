@@ -798,7 +798,7 @@ export default function VeloxisWebsite() {
                 { n: "03", t: "You grow", b: "Build a sustainable export financing pipeline. Every funded deal deepens the relationship between your network and the platform." },
               ].map(card => (
                 <div key={card.n} className="rounded-xl p-6" style={{ background: "rgba(255,255,255,0.03)", border: "0.5px solid rgba(26,188,156,0.12)", borderTop: "3px solid #1ABC9C" }}>
-                  <p className="text-[34px] font-semibold text-white/8 mb-3">{card.n}</p>
+                  
                   <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: "rgba(26,188,156,0.12)" }}>
                     <Users className="w-5 h-5 text-[#1ABC9C]" />
                   </div>
