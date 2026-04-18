@@ -47,7 +47,7 @@ const countries = [
   "Zambia","Zimbabwe",
 ];
 
-const buyerCountries = ["United Kingdom", "European Union", "United States"];
+const buyerCountries = ["United Kingdom", "European Union"];
 const invoiceSizes = ["Under £10k", "£10k–£50k", "£50k–£100k", "£100k–£500k", "Over £500k"];
 const shipmentFreqs = ["1–2 per month", "3–5 per month", "6–10 per month", "10+ per month"];
 
@@ -104,19 +104,18 @@ export default function ExporterApply() {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      // Look up approved partners covering this country (no hardcoded map)
-      const { data: approvedPartners } = await supabase
-        .from("partner_applications" as any)
-        .select("company_name, countries_covered, status")
-        .eq("status", "approved");
+      // Look up active partner organisations operating in this country
+      const { data: activePartners } = await supabase
+        .from("partner_organisations" as any)
+        .select("name, country, is_active")
+        .eq("is_active", true)
+        .eq("country", form.country);
 
-      const matches = ((approvedPartners as any[]) || []).filter(
-        p => Array.isArray(p.countries_covered) && p.countries_covered.includes(form.country)
-      );
+      const matches = (activePartners as any[]) || [];
 
-      // Auto-assign only when exactly one approved partner covers the country.
+      // Auto-assign only when exactly one active partner covers the country.
       // Multiple matches => leave unassigned for admin to choose.
-      const autoAssigned = matches.length === 1 ? matches[0].company_name : null;
+      const autoAssigned = matches.length === 1 ? matches[0].name : null;
       const status = matches.length >= 1 ? "routed" : "pending_expansion";
 
       const { error } = await supabase.from("exporter_applications" as any).insert({
