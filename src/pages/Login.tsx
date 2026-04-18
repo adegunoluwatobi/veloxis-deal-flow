@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { EmailInput } from '@/components/ui/email-input';
 import { useToast } from '@/hooks/use-toast';
+import { Eye, EyeOff } from 'lucide-react';
 import veloxisLogo from '@/assets/veloxis-logo-white.png';
 
 const C = { deepEmerald: '#1a3a34', surface: '#1f4038', accent: '#2a9d8f', accentHover: '#238578' };
@@ -14,6 +15,7 @@ const C = { deepEmerald: '#1a3a34', surface: '#1f4038', accent: '#2a9d8f', accen
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
