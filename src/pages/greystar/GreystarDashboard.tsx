@@ -185,6 +185,50 @@ export default function GreystarDashboard() {
           )}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Routed Applications</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">New exporter leads assigned to your partner desk</p>
+          </div>
+          <Badge variant="secondary">{routedLeads.length}</Badge>
+        </CardHeader>
+        <CardContent>
+          {routedLeads.length === 0 ? (
+            <p className="py-8 text-center text-muted-foreground">No routed applications yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <th className="py-2 pr-3">Name</th>
+                    <th className="py-2 pr-3">Company</th>
+                    <th className="py-2 pr-3">Country</th>
+                    <th className="py-2 pr-3">Commodity</th>
+                    <th className="py-2 pr-3">Invoice Size</th>
+                    <th className="py-2 pr-3">Email</th>
+                    <th className="py-2">Submitted</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {routedLeads.map((lead) => (
+                    <tr key={lead.id} className="border-b border-border/60 hover:bg-muted/40 transition-colors">
+                      <td className="py-3 pr-3 font-medium text-foreground">{lead.full_name}</td>
+                      <td className="py-3 pr-3 text-muted-foreground">{lead.company_name}</td>
+                      <td className="py-3 pr-3 text-muted-foreground">{lead.country}</td>
+                      <td className="py-3 pr-3 text-muted-foreground">{lead.commodity}</td>
+                      <td className="py-3 pr-3 text-muted-foreground">{lead.invoice_size}</td>
+                      <td className="py-3 pr-3 text-muted-foreground">{lead.email}</td>
+                      <td className="py-3 text-muted-foreground">{new Date(lead.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

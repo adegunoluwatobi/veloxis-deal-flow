@@ -109,7 +109,7 @@ export default function GreystarExportersList() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Exporters</h1>
-          <p className="text-sm text-muted-foreground">Nigerian SME profiles managed by your organisation</p>
+          <p className="text-sm text-muted-foreground">Exporter profiles managed by your organisation</p>
         </div>
         <Button asChild>
           <Link to="/greystar/exporters/new"><Plus className="mr-2 h-4 w-4" />New Exporter</Link>
