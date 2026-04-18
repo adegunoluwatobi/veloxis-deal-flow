@@ -26,8 +26,11 @@ export function PartnersSection() {
         <h2 className="text-[34px] font-medium leading-[1.2] text-[#111827]">
           Your exporters need working capital. We provide it.
         </h2>
-        <p className="mx-auto mt-3 max-w-[480px] text-[14px] leading-[1.6] text-[#6b7280]">
-          Veloxis works with trusted local partners — finance companies, trade associations, and origination networks who bring verified exporters to the platform.
+        <p className="mx-auto mt-3 max-w-[520px] text-[14px] leading-[1.6] text-[#6b7280]">
+          Veloxis works with trusted local partners including finance companies, trade associations, and origination networks.
+        </p>
+        <p className="mx-auto mt-2 max-w-[520px] text-[13px] text-[#6b7280]">
+          Currently active across Nigeria, Ghana, and Kenya, with new corridors opening each quarter.
         </p>
 
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-[14px]">
@@ -46,7 +49,7 @@ export function PartnersSection() {
 
         <div className="mt-6">
           <Link
-            to="/partners"
+            to="/apply/partner"
             className="inline-flex items-center gap-1.5 rounded-[10px] px-6 py-3 text-[14px] font-medium text-[#111827] hover:bg-[#f9fafb] transition-colors"
             style={{ border: "0.5px solid #d1d5db" }}
           >
