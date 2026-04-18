@@ -133,9 +133,9 @@ const solutionPills = [
   "80% advance in your account within 24 hours",
   "Zero collateral required",
   "Domiciliary account settlement",
-  "Buyer signed IPU for legal certainty",
-  "Partner led KYC in your country",
-  "24 hour credit decision",
+  "Buyer-signed IPU or confirmed letter of credit",
+  "In-country, partner-led KYC",
+  "24-hour credit decision",
   "No UK bank account needed",
   "No FX conversion on your advance",
 ];
@@ -143,10 +143,10 @@ const solutionPills = [
 // ─── HOW IT WORKS / WHY CARDS DATA ───────────────────────────────────────────
 
 const howItWorksSteps = [
-  { icon: FileText, title: "Submit", body: "Partner verifies your KYC. Upload your commercial invoice, Bill of Lading, and buyer details." },
+  { icon: FileText, title: "Submit", body: "Partner verifies your KYC. Upload your commercial invoice, bill of lading, and buyer details." },
   { icon: Search, title: "We underwrite", body: "Our team verifies documents, assesses buyer risk, and completes compliance checks within 24 hours." },
-  { icon: Shield, title: "Buyer signs IPU", body: "Your buyer signs an Irrevocable Payment Undertaking digitally, committing to pay Veloxis on the due date." },
-  { icon: DollarSign, title: "Funds released", body: "80% wired to your domiciliary account. At maturity, buyer pays Veloxis. We send you the residual." },
+  { icon: Shield, title: "Buyer signs IPU or confirms LC", body: "Your buyer either signs an Irrevocable Payment Undertaking digitally or arranges a confirmed letter of credit from their bank, committing to pay Veloxis on the due date." },
+  { icon: DollarSign, title: "Funds released", body: "80% wired to your domiciliary account. At maturity, the buyer (or the confirming bank under the LC) pays Veloxis. We send you the residual." },
 ];
 
 const whyCardsLarge = [
@@ -156,8 +156,8 @@ const whyCardsLarge = [
 
 const whyCardsSmall = [
   { kv: "Your account", kl: "In your country", t: "No UK bank needed", b: "Funds go directly to your domiciliary account. No forced FX conversion, no accounts you don't control.", c: "#1ABC9C", Icon: Globe },
-  { kv: "Legally", kl: "Secured", t: "IPU backed transactions", b: "Your buyer signs an Irrevocable Payment Undertaking before any funds leave Veloxis. Binding and enforceable.", c: "#0E5A47", Icon: FileText },
-  { kv: "Local", kl: "Partner network", t: "Guided from day one", b: "Local KYC partners handle your onboarding in your language and timezone. You are never navigating alone.", c: "#0B3D2E", Icon: Users },
+  { kv: "Legally", kl: "Secured", t: "IPU- or LC-backed transactions", b: "Your buyer either signs an Irrevocable Payment Undertaking or arranges a confirmed letter of credit before any funds leave Veloxis. Binding and enforceable.", c: "#0E5A47", Icon: FileText },
+  { kv: "Local", kl: "Partner network", t: "Partner-led from day one", b: "Local KYC partners handle your onboarding in your language and timezone. You are never navigating alone.", c: "#0B3D2E", Icon: Users },
 ];
 
 const testimonials = [
