@@ -347,8 +347,8 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
                       >
                         <option value="">Select partner...</option>
                         {assignChoices.map(p => (
-                          <option key={p.id} value={p.company_name}>
-                            {p.full_name} — {p.company_name} — {assignAppRecord.country}
+                          <option key={p.id} value={p.name}>
+                            {p.name} — {assignAppRecord.country}
                           </option>
                         ))}
                       </select>
