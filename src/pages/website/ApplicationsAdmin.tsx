@@ -197,7 +197,31 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
                       <td className={`py-3 px-3 ${embedded ? "text-muted-foreground" : "text-white/60"}`}>{a.country}</td>
                       <td className={`py-3 px-3 ${embedded ? "text-muted-foreground" : "text-white/60"}`}>{a.commodity}</td>
                       <td className={`py-3 px-3 ${embedded ? "text-muted-foreground" : "text-white/60"}`}>{a.invoice_size}</td>
-                      <td className={`py-3 px-3 ${embedded ? "text-primary" : "text-[#1ABC9C]"}`}>{a.assigned_partner || "—"}</td>
+                      <td className="py-3 px-3">
+                        {(() => {
+                          const choices = activePartnersForCountry(a.country);
+                          if (choices.length === 0) {
+                            return <span className={embedded ? "text-muted-foreground" : "text-white/40"}>{a.assigned_partner || "—"}</span>;
+                          }
+                          return (
+                            <select
+                              value={a.assigned_partner ?? ""}
+                              onChange={e => reassignRoutedPartner(a.id, e.target.value)}
+                              className={`rounded px-2 py-1 text-[12px] outline-none ${embedded ? "bg-background border border-border text-foreground" : "text-white border border-white/10"}`}
+                              style={embedded ? undefined : { background: inputBg }}
+                            >
+                              <option value="">— Unassigned —</option>
+                              {choices.map(p => (
+                                <option key={p.id} value={p.name}>{p.name}</option>
+                              ))}
+                              {/* Preserve a partner name that no longer matches an active org */}
+                              {a.assigned_partner && !choices.some(p => p.name === a.assigned_partner) && (
+                                <option value={a.assigned_partner}>{a.assigned_partner} (legacy)</option>
+                              )}
+                            </select>
+                          );
+                        })()}
+                      </td>
                       <td className="py-3 px-3">
                         <select value={a.status} onChange={e => updateExporterStatus(a.id, e.target.value)}
                           className={`rounded px-2 py-1 text-[12px] outline-none ${embedded ? "bg-background border border-border text-foreground" : "text-white border border-white/10"}`}
