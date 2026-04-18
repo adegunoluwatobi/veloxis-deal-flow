@@ -66,7 +66,7 @@ export default function ExporterPortalLayout({ children }: { children: React.Rea
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <aside
+      <Helmet><title>Exporter · Veloxis</title></Helmet>
         className={cn(
           'fixed inset-y-0 left-0 z-50 flex w-64 flex-col transition-transform duration-200 lg:static lg:translate-x-0',
           'bg-[hsl(220,25%,18%)] text-[hsl(220,20%,90%)]',
