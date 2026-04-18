@@ -93,9 +93,9 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
     setExporterApps(p => p.map(a => a.id === id ? { ...a, status: "contacted" } : a));
   };
 
-  // Approved partners covering a given country (no hardcoded list)
-  const approvedPartnersForCountry = (country: string) =>
-    partnerApps.filter(p => p.status === "approved" && (p.countries_covered || []).includes(country));
+  // Active partner organisations covering a given country (source of truth = partner_organisations)
+  const activePartnersForCountry = (country: string) =>
+    partnerOrgs.filter(p => (p.country ?? "").toLowerCase() === (country ?? "").toLowerCase());
 
   const activateCountryHandler = async (country: string) => {
     if (!activatePartnerName.trim()) return;
@@ -115,6 +115,14 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
     setAssignAppId(null);
     setAssignSelectedPartner("");
     loadData();
+  };
+
+  // Reassign a routed application to a different partner (or set initial partner if missing)
+  const reassignRoutedPartner = async (appId: string, partnerName: string) => {
+    await supabase.from("exporter_applications" as any)
+      .update({ assigned_partner: partnerName || null } as any)
+      .eq("id", appId);
+    setExporterApps(p => p.map(a => a.id === appId ? { ...a, assigned_partner: partnerName || null } : a));
   };
 
   const routed = exporterApps.filter(a => a.status !== "pending_expansion" && a.status !== "contacted" && a.status !== "activated");
