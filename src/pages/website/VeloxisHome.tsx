@@ -150,7 +150,7 @@ const howItWorksSteps = [
 ];
 
 const whyCardsLarge = [
-  { kv: "Zero", kl: "Assets pledged", t: "No collateral. Ever.", b: "We finance your receivable — not your balance sheet. No property, no equipment, no personal guarantees.", c: "#1ABC9C", Icon: Shield },
+  { kv: "Zero", kl: "Assets pledged", t: "No collateral. Ever.", b: "We finance your receivable, not your balance sheet. No property, no equipment, no personal guarantees.", c: "#1ABC9C", Icon: Shield },
   { kv: "24 hrs", kl: "Credit decision", t: "Faster than any bank.", b: "Submit today. Receive a decision tomorrow. No credit committees, no branch visits, no weeks of waiting.", c: "#0E5A47", Icon: Clock },
 ];
 
@@ -171,7 +171,7 @@ const testimonials = [
 
 function TypingHeadline() {
   const line1 = "You've shipped the goods.";
-  const line2 = "Get paid now.";
+  const line2 = "Get paid in 24 hours.";
   const [text, setText] = useState("");
   const [phase, setPhase] = useState<"l1" | "l2" | "pause">("l1");
   const idx = useRef(0);
@@ -319,7 +319,7 @@ function ScrollProblemSection() {
               Every barrier.<br />One platform.
             </h2>
             <p className="text-[14px] leading-[1.6] text-white/45 max-w-[380px] mb-10">
-              Scroll to see the specific problems Veloxis was built to solve — and how we answer each one.
+              Scroll to see the specific problems Veloxis was built to solve, and how we answer each one.
             </p>
 
             <div className="space-y-5">
@@ -689,7 +689,7 @@ export default function VeloxisWebsite() {
         <div className="text-center px-8 mb-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#1ABC9C] mb-3">Built for your problems</p>
           <h2 className="text-[34px] font-semibold text-white leading-[1.2] tracking-[-0.01em] mb-3">Every barrier exporters face. Solved.</h2>
-          <p className="text-[14px] text-white/45 max-w-[480px] mx-auto">Traditional finance was built for domestic markets. Veloxis was built for cross border export discounting.</p>
+          <p className="text-[14px] text-white/45 max-w-[480px] mx-auto">Traditional finance was built for domestic markets. Veloxis was built for cross-border export discounting.</p>
         </div>
         <div className="space-y-1">
           <p className="text-[11px] text-white/25 uppercase tracking-wider px-8 mb-2">The challenges</p>
@@ -718,7 +718,7 @@ export default function VeloxisWebsite() {
         <div className="mx-auto max-w-[960px]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#1ABC9C] mb-3 text-center">How it works</p>
           <h2 className="text-[34px] font-semibold text-white leading-[1.2] tracking-[-0.01em] text-center mb-3">From invoice to funds.<br />Four steps.</h2>
-          <p className="text-[14px] text-white/45 max-w-[480px] mx-auto text-center mb-12">Built for cross border trade, not adapted from a domestic template.</p>
+          <p className="text-[14px] text-white/45 max-w-[480px] mx-auto text-center mb-12">Built for cross-border trade, not adapted from a domestic template.</p>
           <div className="relative grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="hidden md:block absolute top-7 left-[12.5%] right-[12.5%] h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(26,188,156,0.3), transparent)" }} />
             {howItWorksSteps.map((step, i) => {
@@ -793,7 +793,7 @@ export default function VeloxisWebsite() {
           <div className="rounded-[24px] p-8 md:p-10" style={{ background: "rgba(0,0,0,0.2)", border: "0.5px solid rgba(26,188,156,0.1)" }}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {[
-                { n: "01", t: "Onboard", b: "Register exporters on Veloxis. Handle local KYC using our structured document system. You know the market — we give you the tools." },
+                { n: "01", t: "Onboard", b: "Register exporters on Veloxis. Handle local KYC using our structured document system. You know the market, we give you the tools." },
                 { n: "02", t: "We fund", b: "Veloxis underwrites buyer risk, generates the IPU, and wires the advance. You focus on origination. We handle compliance and settlement." },
                 { n: "03", t: "You grow", b: "Build a sustainable export financing pipeline. Every funded deal deepens the relationship between your network and the platform." },
               ].map(card => (
