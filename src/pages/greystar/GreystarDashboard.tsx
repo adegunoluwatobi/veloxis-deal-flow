@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus, ArrowRight, FileText, CheckCircle2, Clock } from 'lucide-react';
+import { Users, Plus, ArrowRight, FileText, CheckCircle2, Clock, Inbox } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { computeKycStatus, groupDocumentsByExporter, type KycDocumentLike } from '@/lib/computeKycStatus';
 
@@ -32,9 +32,16 @@ interface DashboardStats {
   docsToReview: number;
 }
 
+interface RoutedLead {
+  id: string; full_name: string; company_name: string; country: string;
+  commodity: string; invoice_size: string; email: string; phone: string;
+  assigned_partner: string | null; status: string; created_at: string;
+}
+
 export default function GreystarDashboard() {
   const [stats, setStats] = useState<DashboardStats>({ totalExporters: 0, pendingReview: 0, verified: 0, docsToReview: 0 });
   const [recentExporters, setRecentExporters] = useState<RecentExporter[]>([]);
+  const [routedLeads, setRoutedLeads] = useState<RoutedLead[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
