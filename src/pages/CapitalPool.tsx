@@ -262,10 +262,8 @@ export default function CapitalPool() {
 
       {/* Live FX rate line */}
       {fxRates && (
-        <div className="text-xs text-muted-foreground flex items-center gap-1">
-          <span>1 GBP = {fxRates.USD.toFixed(4)} USD | 1 GBP = {fxRates.EUR.toFixed(4)} EUR</span>
-          <span>—</span>
-          <span>Live rate via ExchangeRate-API{fxUpdatedAt ? `, updated ${format(new Date(fxUpdatedAt), 'dd MMM yyyy HH:mm')}` : ''}</span>
+        <div className="text-xs text-muted-foreground">
+          1 GBP = {fxRates.USD.toFixed(4)} USD · 1 GBP = {fxRates.EUR.toFixed(4)} EUR · Live FX rate{fxUpdatedAt ? `, updated ${format(new Date(fxUpdatedAt), 'dd MMM yyyy HH:mm')}` : ''}
         </div>
       )}
 
@@ -317,7 +315,7 @@ export default function CapitalPool() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">{tranches.length}</div>
-            <p className="text-xs text-muted-foreground">capital inputs recorded</p>
+            <p className="text-xs text-muted-foreground">tranches recorded</p>
           </CardContent>
         </Card>
       </div>

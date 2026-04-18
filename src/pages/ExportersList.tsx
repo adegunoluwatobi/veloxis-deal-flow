@@ -110,7 +110,7 @@ export default function ExportersList() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Exporters</h1>
-          <p className="text-sm text-muted-foreground">Nigerian SME profiles</p>
+          <p className="text-sm text-muted-foreground">Exporter profiles</p>
         </div>
         {(role === 'partner_staff' || role === 'partner_admin') && (
           <Button asChild>

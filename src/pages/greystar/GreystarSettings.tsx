@@ -147,9 +147,9 @@ export default function GreystarSettings() {
       <div className="flex items-center gap-3">
         <Settings className="h-6 w-6 text-[hsl(160,50%,35%)]" />
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Team Management</h1>
+          <h1 className="text-2xl font-bold text-foreground">Team</h1>
           <p className="text-sm text-muted-foreground">
-            {orgName ? `Manage staff and exporters for ${orgName}` : "Manage your organisation's staff and exporters"}
+            {orgName ? `Manage staff for ${orgName}` : "Manage your organisation's staff"}
           </p>
         </div>
       </div>

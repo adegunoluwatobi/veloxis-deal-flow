@@ -153,9 +153,12 @@ export default function GreystarExportersList() {
                     {statusMeta.icon === 'expired' && <XCircle className="h-3 w-3" />}
                     {statusMeta.label}
                   </Badge>
-                  <Badge variant="secondary" className={cn('font-medium', kyc.color)}>
-                    {kyc.badgeLabel}
-                  </Badge>
+                  {/* Only show KYC pill once onboarding is approved (avoids "Approved + KYC Complete" dual-pill noise) */}
+                  {exporter.onboarding_status === 'onboarding_approved' && (
+                    <Badge variant="secondary" className={cn('font-medium', kyc.color)}>
+                      {kyc.badgeLabel}
+                    </Badge>
+                  )}
                 </div>
               </Link>
             );

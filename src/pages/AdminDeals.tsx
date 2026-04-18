@@ -194,16 +194,16 @@ export default function AdminDeals() {
                   </TableCell>
                   <TableCell className="text-sm font-medium text-foreground tabular-nums">
                     {deal.invoice_value != null
-                      ? `${deal.invoice_value.toLocaleString('en-GB', { minimumFractionDigits: 2 })}`
+                      ? `${({ GBP: '£', USD: '$', EUR: '€', NGN: '₦' } as Record<string, string>)[deal.invoice_currency_v2 ?? 'GBP'] ?? ''}${deal.invoice_value.toLocaleString('en-GB', { minimumFractionDigits: 2 })}`
                       : '—'}
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{deal.payment_terms_days ?? '—'}d</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{deal.payment_terms_days != null ? `${deal.payment_terms_days} days` : '—'}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {deal.commodity_type ? COMMODITY_TYPE_LABELS[deal.commodity_type] : '—'}
                   </TableCell>
                   <TableCell><DealStatusBadge status={deal.status} portal="veloxis" /></TableCell>
                   <TableCell className="text-xs text-muted-foreground tabular-nums">
-                    {new Date(deal.created_at).toLocaleDateString('en-GB')}
+                    {new Date(deal.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </TableCell>
                 </TableRow>
               ))}

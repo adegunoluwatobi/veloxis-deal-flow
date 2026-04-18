@@ -16,20 +16,18 @@ interface NavItem {
   roles: string[];
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['super_admin', 'deal_manager'] },
-  { label: 'Exporters', href: '/exporters', icon: Users, roles: ['super_admin', 'deal_manager'] },
-  { label: 'Applications', href: '/deals', icon: FileText, roles: ['super_admin', 'deal_manager'] },
-];
+// Top cluster only shown for non-admin internal roles (none today, kept for future)
+const NAV_ITEMS: NavItem[] = [];
 
 const ADMIN_NAV: NavItem[] = [
-  { label: 'Admin Dashboard', href: '/admin', icon: ShieldCheck, roles: ['super_admin', 'deal_manager'] },
-  { label: 'All Applications', href: '/admin/deals', icon: FileText, roles: ['super_admin', 'deal_manager'] },
+  { label: 'Overview', href: '/admin', icon: ShieldCheck, roles: ['super_admin', 'deal_manager'] },
+  { label: 'Exporters', href: '/exporters', icon: Users, roles: ['super_admin', 'deal_manager'] },
+  { label: 'Applications', href: '/admin/deals', icon: FileText, roles: ['super_admin', 'deal_manager'] },
   { label: 'Registration Pipeline', href: '/admin/registration-pipeline', icon: Inbox, roles: ['super_admin', 'deal_manager'] },
   { label: 'Capital Pool', href: '/admin/capital', icon: Banknote, roles: ['super_admin', 'deal_manager'] },
   { label: 'Partners', href: '/admin/partners', icon: Building2, roles: ['super_admin'] },
   { label: 'Pricing', href: '/admin/pricing', icon: Banknote, roles: ['super_admin'] },
-  { label: 'User Management', href: '/admin/settings', icon: Settings, roles: ['super_admin'] },
+  { label: 'User Management', href: '/admin/users', icon: Settings, roles: ['super_admin'] },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -91,13 +89,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
           {filteredNav.map(renderNavLink)}
 
-          {filteredAdmin.length > 0 && (
-            <>
-              <div className="my-3 border-t border-sidebar-border" />
-              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-sidebar-muted">Admin</p>
-              {filteredAdmin.map(renderNavLink)}
-            </>
-          )}
+          {filteredAdmin.length > 0 && filteredAdmin.map(renderNavLink)}
         </nav>
 
         <div className="border-t border-sidebar-border p-4">
