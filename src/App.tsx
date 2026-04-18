@@ -141,6 +141,7 @@ const App = () => (
             <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
             <Route path="/admin/deals" element={<AdminLayout><AdminDeals /></AdminLayout>} />
             <Route path="/admin/deals/:id" element={<AdminLayout><DealDetail /></AdminLayout>} />
+            <Route path="/admin/registration-pipeline" element={<AdminLayout><ApplicationsAdmin embedded /></AdminLayout>} />
             <Route path="/admin/settings" element={<AdminLayout><SettingsPage /></AdminLayout>} />
             <Route path="/admin/pricing" element={<AdminLayout><PricingSettings /></AdminLayout>} />
             <Route path="/admin/capital" element={<AdminLayout><CapitalPool /></AdminLayout>} />
