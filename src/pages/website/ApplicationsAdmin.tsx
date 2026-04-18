@@ -404,7 +404,7 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
                                     Contacted
                                   </button>
                                   {choices.length > 0 && (
-                                    <button onClick={() => { setAssignAppId(a.id); setAssignSelectedPartner(choices.length === 1 ? choices[0].company_name : ""); }}
+                                    <button onClick={() => { setAssignAppId(a.id); setAssignSelectedPartner(choices.length === 1 ? choices[0].name : ""); }}
                                       className={`text-[11px] px-2 py-0.5 rounded ${embedded ? "border border-primary text-primary hover:bg-primary/10" : "text-[#5FFFD7] border border-[#1ABC9C]/40 hover:bg-[#1ABC9C]/10"}`}>
                                       Assign ({choices.length})
                                     </button>
