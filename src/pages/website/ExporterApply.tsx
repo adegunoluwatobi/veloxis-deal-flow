@@ -16,13 +16,9 @@ const C = {
   textPrimary: "#FFFFFF",
 };
 
-const partnerMap: Record<string, string> = {
-  Nigeria: "Nigeria Partner Desk",
-  Ghana: "Ghana Partner Desk",
-  Kenya: "Kenya Partner Desk",
-  "South Africa": "Southern Africa Partner Desk",
-  Tanzania: "East Africa Partner Desk",
-};
+// Routing is now driven by the partner_applications table.
+// A country only has an active partner when at least one row exists with status = 'approved'
+// AND that country in countries_covered. Otherwise the application enters the expansion queue.
 
 const countries = [
   "Afghanistan","Albania","Algeria","Angola","Argentina","Armenia","Australia","Austria","Azerbaijan",
@@ -108,8 +104,20 @@ export default function ExporterApply() {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      const partner = partnerMap[form.country];
-      const status = partner ? "routed" : "pending_expansion";
+      // Look up approved partners covering this country (no hardcoded map)
+      const { data: approvedPartners } = await supabase
+        .from("partner_applications" as any)
+        .select("company_name, countries_covered, status")
+        .eq("status", "approved");
+
+      const matches = ((approvedPartners as any[]) || []).filter(
+        p => Array.isArray(p.countries_covered) && p.countries_covered.includes(form.country)
+      );
+
+      // Auto-assign only when exactly one approved partner covers the country.
+      // Multiple matches => leave unassigned for admin to choose.
+      const autoAssigned = matches.length === 1 ? matches[0].company_name : null;
+      const status = matches.length >= 1 ? "routed" : "pending_expansion";
 
       const { error } = await supabase.from("exporter_applications" as any).insert({
         full_name: form.full_name.trim(),
@@ -122,16 +130,24 @@ export default function ExporterApply() {
         email: form.email.trim(),
         phone: `${DIAL_COUNTRIES.find(c => c.iso === form.phone_iso)?.dial ?? "+234"} ${form.phone.trim()}`,
         deal_description: form.deal_description.trim() || null,
-        assigned_partner: partner || null,
+        assigned_partner: autoAssigned,
         status,
       } as any);
 
       if (error) throw error;
 
-      if (partner) {
-        setResultMessage(`Your application has been received and routed to the Veloxis partner covering ${form.country}.`);
+      if (status === "routed") {
+        setResultMessage(
+          autoAssigned
+            ? `Your application has been received and routed to ${autoAssigned}.`
+            : `Your application has been received. Our admin team will assign one of our active partners in ${form.country}.`
+        );
       } else {
-        setResultMessage(`Thank you. We are not yet active in ${form.country} but your application has been saved. We will contact you when we launch there.`);
+        setResultMessage(
+          `Thank you for your interest in Veloxis. We are currently expanding our network to ${form.country}. ` +
+          `Your application has been saved and our team will be in touch as soon as we launch in your region. ` +
+          `Trade without waiting. — The Veloxis Team`
+        );
       }
       setSubmitted(true);
     } catch (err) {
