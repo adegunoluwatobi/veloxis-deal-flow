@@ -169,14 +169,21 @@ const testimonials = [
 
 // ─── TYPING HEADLINE ─────────────────────────────────────────────────────────
 
+function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 function TypingHeadline() {
   const line1 = "You've shipped the goods.";
-  const line2 = "Get paid now.";
-  const [text, setText] = useState("");
-  const [phase, setPhase] = useState<"l1" | "l2" | "pause">("l1");
+  const line2 = "Get paid in 24 hours.";
+  const [reduced] = useState(() => prefersReducedMotion());
+  const [text, setText] = useState(reduced ? line1 + "\n" + line2 : "");
+  const [phase, setPhase] = useState<"l1" | "l2" | "pause">(reduced ? "pause" : "l1");
   const idx = useRef(0);
 
   useEffect(() => {
+    if (reduced) return;
     let t: ReturnType<typeof setTimeout>;
     if (phase === "l1") {
       if (idx.current < line1.length) {
@@ -191,14 +198,14 @@ function TypingHeadline() {
       t = setTimeout(() => setPhase("l1"), 400);
     }
     return () => clearTimeout(t);
-  }, [text, phase]);
+  }, [text, phase, reduced]);
 
   const parts = text.split("\n");
   return (
     <h1 className="text-[42px] md:text-[52px] font-semibold leading-[1.1] tracking-[-0.02em] text-white min-h-[130px]">
       {parts[0]}
       {parts.length > 1 && <><br /><span className="text-[#5FFFD7]">{parts[1]}</span></>}
-      <span className="inline-block w-[3px] h-[1em] bg-[#5FFFD7] ml-1 align-text-bottom animate-blink" />
+      {!reduced && <span className="inline-block w-[3px] h-[1em] bg-[#5FFFD7] ml-1 align-text-bottom animate-blink" />}
     </h1>
   );
 }
@@ -571,7 +578,7 @@ export default function VeloxisWebsite() {
             </p>
 
             <div className="mt-6 flex flex-wrap gap-5">
-              {["UK Registered", "No Collateral", "24 Hour Decisions", "Domiciliary Settlement"].map(t => (
+              {["UK registered", "No collateral", "24-hour decisions", "Domiciliary settlement"].map(t => (
                 <span key={t} className="flex items-center gap-2 text-[13px] text-white/40">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#1ABC9C]" />{t}
                 </span>
@@ -718,7 +725,7 @@ export default function VeloxisWebsite() {
         <div className="mx-auto max-w-[960px]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#1ABC9C] mb-3 text-center">How it works</p>
           <h2 className="text-[34px] font-semibold text-white leading-[1.2] tracking-[-0.01em] text-center mb-3">From invoice to funds.<br />Four steps.</h2>
-          <p className="text-[14px] text-white/45 max-w-[480px] mx-auto text-center mb-12">Built for cross border trade, not adapted from a domestic template.</p>
+          <p className="text-[14px] text-white/45 max-w-[480px] mx-auto text-center mb-12">Built for cross-border trade. Not adapted from a domestic template.</p>
           <div className="relative grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="hidden md:block absolute top-7 left-[12.5%] right-[12.5%] h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(26,188,156,0.3), transparent)" }} />
             {howItWorksSteps.map((step, i) => {
@@ -788,7 +795,8 @@ export default function VeloxisWebsite() {
         <div className="mx-auto max-w-[960px]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#1ABC9C] mb-3 text-center">For partners</p>
           <h2 className="text-[34px] font-semibold text-white leading-[1.2] tracking-[-0.01em] text-center mb-3">Your exporters need working capital.<br />We provide it.</h2>
-          <p className="text-[14px] text-white/45 max-w-[480px] mx-auto text-center mb-10">Veloxis works with trusted local partners — finance companies, trade associations, and origination networks.</p>
+          <p className="text-[14px] text-white/45 max-w-[560px] mx-auto text-center mb-2">Veloxis works with trusted local partners including finance companies, trade associations, and origination networks.</p>
+          <p className="text-[13px] text-white/35 max-w-[560px] mx-auto text-center mb-10">Currently active across Nigeria, Ghana, and Kenya, with new corridors opening each quarter.</p>
 
           <div className="rounded-[24px] p-8 md:p-10" style={{ background: "rgba(0,0,0,0.2)", border: "0.5px solid rgba(26,188,156,0.1)" }}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -821,22 +829,14 @@ export default function VeloxisWebsite() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ── */}
+      {/* ── BUILT FOR THE CORRIDOR (replaces testimonials) ── */}
       <section className="py-16 px-8" style={{ background: C.darkTeal }}>
-        <div className="mx-auto max-w-[960px]">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#1ABC9C] mb-3 text-center">What exporters say</p>
-          <h2 className="text-[34px] font-semibold text-white leading-[1.2] tracking-[-0.01em] text-center mb-10">From the corridor we serve.</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {testimonials.map(t => (
-              <div key={t.name} className="rounded-xl p-[22px]" style={{ background: "rgba(255,255,255,0.03)", border: "0.5px solid rgba(26,188,156,0.12)" }}>
-                <p className="text-[13px] text-[#fbbf24] mb-2.5">★★★★★</p>
-                <p className="text-[13px] text-white/50 italic leading-[1.6] mb-3.5">"{t.q}"</p>
-                <p className="text-[13px] font-semibold text-white">{t.flag} {t.name}</p>
-                <p className="text-[12px] text-white/35">{t.role}</p>
-              </div>
-            ))}
-          </div>
-          <p className="text-[11px] text-white/20 text-center mt-6">Testimonials are illustrative. Individual results vary based on invoice value, buyer terms, and underwriting outcome.</p>
+        <div className="mx-auto max-w-[760px] text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#1ABC9C] mb-3">Our focus</p>
+          <h2 className="text-[34px] font-semibold text-white leading-[1.2] tracking-[-0.01em] mb-4">Built for the corridor we serve</h2>
+          <p className="text-[15px] leading-[1.7] text-white/55">
+            Veloxis focuses on exporters in Africa shipping to verified buyers in the UK and EU. Every deal is underwritten on the buyer, the invoice, and either a buyer-signed IPU or a confirmed letter of credit, with in-country KYC handled by our origination partners.
+          </p>
         </div>
       </section>
 
@@ -845,7 +845,7 @@ export default function VeloxisWebsite() {
         <div className="mx-auto max-w-[640px] space-y-2">
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#1ABC9C] mb-3 text-center">FAQ</p>
           <h2 className="text-[34px] font-semibold text-white leading-[1.2] tracking-[-0.01em] text-center mb-2">Everything you need to know.</h2>
-          <p className="text-[14px] text-white/40 text-center mb-8">Still have questions? hello@veloxis.com</p>
+          <p className="text-[14px] text-white/40 text-center mb-8">Still have questions? <a href="mailto:hello@veloxis.co.uk" className="text-[#5FFFD7] hover:underline">hello@veloxis.co.uk</a></p>
           {faqs.map((item, i) => (
             <FaqItemComponent key={i} item={item} isOpen={openFaq === i} onToggle={() => setOpenFaq(openFaq === i ? null : i)} />
           ))}
@@ -856,7 +856,7 @@ export default function VeloxisWebsite() {
       <section className="relative py-16 px-8 overflow-hidden" style={{ background: `linear-gradient(135deg, ${C.deepEmerald}, ${C.darkTeal})` }}>
         <div className="absolute top-[-40px] right-[80px] w-[200px] h-[200px] rounded-full opacity-[0.10] blur-[40px]" style={{ background: C.mint }} />
         <div className="relative z-10 text-center max-w-[520px] mx-auto">
-          <h2 className="text-[34px] font-semibold text-white leading-[1.2] tracking-[-0.01em] mb-4">Your invoice is an asset.<br />Start using it.</h2>
+          <h2 className="text-[34px] font-semibold text-white leading-[1.2] tracking-[-0.01em] mb-4">Your invoice is an asset.<br />Convert it to cash.</h2>
           <p className="text-[15px] text-[#5FFFD7]/80 mb-7 max-w-[440px] mx-auto">Join exporters from emerging markets worldwide growing faster because they are not waiting 60 days to be paid.</p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Link to="/apply/exporter" className="inline-flex items-center justify-center gap-1.5 gradient-veloxis-btn text-white font-semibold text-[14px] px-6 py-3 rounded-[10px] transition-all duration-200 glow-mint-hover">
@@ -874,23 +874,24 @@ export default function VeloxisWebsite() {
         <div className="mx-auto max-w-[960px] grid grid-cols-2 md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-8 mb-8">
           <div>
             <a href="/"><img src={veloxisLogoWhite} alt="Veloxis" className="h-9 w-auto mb-3" /></a>
-            <p className="text-[13px] text-white/35 leading-[1.6] mb-3">UK based cross border invoice discounting. Advancing 80% of export invoice value within 24 hours for exporters worldwide shipping to UK and EU buyers.</p>
-            <p className="text-[13px] text-white/25">hello@veloxis.com</p>
+            <p className="text-[13px] text-white/35 leading-[1.6] mb-3">UK-based cross-border invoice discounting. Advancing 80% of export invoice value within 24 hours for exporters worldwide shipping to UK and EU buyers.</p>
+            <a href="mailto:hello@veloxis.co.uk" className="text-[13px] text-white/40 hover:text-[#5FFFD7] transition-colors">hello@veloxis.co.uk</a>
           </div>
           {[
-            { title: "Product", links: ["How it works", "Why Veloxis", "FAQ"] },
-            { title: "Company", links: ["About", "Partners", "Contact", "Careers"] },
-            { title: "Legal", links: ["Privacy policy", "Terms & conditions", "Disclosure", "Cookies"] },
+            { title: "Product", links: [{ l: "How it works", h: "#hiw" }, { l: "Why Veloxis", h: "#why" }, { l: "FAQ", h: "#faq" }] },
+            { title: "Company", links: [{ l: "Partners", h: "#partners" }, { l: "Contact", h: "mailto:hello@veloxis.co.uk" }] },
+            { title: "Legal", links: [{ l: "Privacy policy", h: "/privacy" }, { l: "Terms & conditions", h: "/terms" }, { l: "Disclosure", h: "/disclosure" }, { l: "Cookies", h: "/cookies" }] },
           ].map(col => (
             <div key={col.title}>
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/25 mb-3.5">{col.title}</p>
-              {col.links.map(l => <p key={l} className="text-[13px] text-white/35 mb-2 hover:text-[#5FFFD7] cursor-pointer transition-colors">{l}</p>)}
+              {col.links.map(l => (
+                <a key={l.l} href={l.h} className="block text-[13px] text-white/35 mb-2 hover:text-[#5FFFD7] cursor-pointer transition-colors">{l.l}</a>
+              ))}
             </div>
           ))}
         </div>
-        <div className="mx-auto max-w-[960px] flex flex-col md:flex-row justify-between items-center pt-5 gap-2" style={{ borderTop: "0.5px solid rgba(26,188,156,0.08)" }}>
-          <p className="text-[12px] text-white/15">© 2026 Veloxis Ltd. All rights reserved. Registered in England and Wales.</p>
-          <p className="text-[12px] text-white/15">Privacy · Terms · Disclosure</p>
+        <div className="mx-auto max-w-[960px] pt-5" style={{ borderTop: "0.5px solid rgba(26,188,156,0.08)" }}>
+          <p className="text-[12px] text-white/15">© 2026 Veloxis Ltd (Company number 15663333). Registered in England and Wales.</p>
         </div>
       </footer>
 
