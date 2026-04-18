@@ -153,7 +153,7 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
 
   // ============ Inner content (shared between embedded and standalone) ============
   const assignAppRecord = expansion.find(a => a.id === assignAppId) || null;
-  const assignChoices = assignAppRecord ? approvedPartnersForCountry(assignAppRecord.country) : [];
+  const assignChoices = assignAppRecord ? activePartnersForCountry(assignAppRecord.country) : [];
 
   const Inner = (
     <>
@@ -234,7 +234,7 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
                   <h3 className={`text-[14px] font-semibold mb-4 ${embedded ? "text-foreground" : "text-white"}`}>Country Frequency</h3>
                   <div className="space-y-2">
                     {sortedCountries.map(([country, count]) => {
-                      const partnersForCountry = approvedPartnersForCountry(country);
+                      const partnersForCountry = activePartnersForCountry(country);
                       const hasPartners = partnersForCountry.length > 0;
                       return (
                         <div key={country} className="flex items-center justify-between">
@@ -270,7 +270,7 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
                     <p className="text-[13px] text-white/45 mb-4">
                       Select an approved partner to receive all pending applications from {activateCountry}.
                     </p>
-                    {approvedPartnersForCountry(activateCountry).length === 0 ? (
+                    {activePartnersForCountry(activateCountry).length === 0 ? (
                       <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 mb-4 text-[12px] text-amber-300">
                         No approved partners cover {activateCountry} yet. Approve a partner application first under the Partner Applications tab.
                       </div>
@@ -282,7 +282,7 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
                         onChange={e => setActivatePartnerName(e.target.value)}
                       >
                         <option value="">Select partner...</option>
-                        {approvedPartnersForCountry(activateCountry).map(p => (
+                        {activePartnersForCountry(activateCountry).map(p => (
                           <option key={p.id} value={p.company_name}>
                             {p.full_name} — {p.company_name} — {activateCountry}
                           </option>
@@ -353,7 +353,7 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
                   </thead>
                   <tbody>
                     {expansion.map((a, i) => {
-                      const choices = approvedPartnersForCountry(a.country);
+                      const choices = activePartnersForCountry(a.country);
                       return (
                         <tr key={a.id} className={`border-b ${embedded ? "border-border hover:bg-muted/40" : "border-white/5 hover:bg-[#1ABC9C]/5"} transition-colors ${i % 2 === 0 && !embedded ? "bg-white/[0.02]" : ""}`}>
                           <td className={`py-3 px-3 ${embedded ? "text-foreground" : "text-white"}`}>{a.full_name}</td>
