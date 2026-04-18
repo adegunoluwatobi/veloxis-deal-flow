@@ -52,7 +52,6 @@ import VeloxisHome from "@/pages/website/VeloxisHome";
 import ExporterApply from "@/pages/website/ExporterApply";
 import PartnerApply from "@/pages/website/PartnerApply";
 import ApplicationsAdmin from "@/pages/website/ApplicationsAdmin";
-import { Privacy, Terms, Disclosure, Cookies } from "@/pages/website/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -104,12 +103,6 @@ const App = () => (
             <Route path="/apply/partner" element={<PartnerApply />} />
             <Route path="/pipeline" element={<ApplicationsAdmin />} />
 
-            {/* Legal stub pages */}
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/disclosure" element={<Disclosure />} />
-            <Route path="/cookies" element={<Cookies />} />
-
             <Route path="/login" element={<Login />} />
             <Route path="/set-password" element={<SetPassword />} />
             <Route path="/upload/:token" element={<SMEUpload />} />
@@ -134,7 +127,6 @@ const App = () => (
             <Route path="/greystar/deals" element={<GreystarRoute><GreystarDeals /></GreystarRoute>} />
             <Route path="/greystar/deals/:id" element={<GreystarRoute><GreystarDealDetail /></GreystarRoute>} />
             <Route path="/greystar/review" element={<GreystarRoute><GreystarReviewQueue /></GreystarRoute>} />
-            <Route path="/greystar/pipeline" element={<GreystarRoute><ApplicationsAdmin embedded /></GreystarRoute>} />
             <Route path="/greystar/settings" element={<GreystarRoute><GreystarSettings /></GreystarRoute>} />
 
             {/* Exporter portal routes (require approved onboarding) */}

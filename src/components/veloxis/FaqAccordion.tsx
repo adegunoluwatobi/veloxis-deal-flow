@@ -56,7 +56,7 @@ export function FaqAccordion() {
         </h2>
         <p className="mt-3 text-[14px] text-[#6b7280] mb-7">
           Still have questions?{" "}
-          <a href="mailto:hello@veloxis.co.uk" className="text-[#0d9488] hover:underline">hello@veloxis.co.uk</a>
+          <a href="mailto:hello@veloxis.com" className="text-[#0d9488] hover:underline">hello@veloxis.com</a>
         </p>
 
         <div className="text-left space-y-2">

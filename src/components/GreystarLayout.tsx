@@ -20,7 +20,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Exporters', href: '/greystar/exporters', icon: Users },
   { label: 'Applications', href: '/greystar/deals', icon: Briefcase },
   { label: 'Review Queue', href: '/greystar/review', icon: FileText },
-  { label: 'Registration Pipeline', href: '/greystar/pipeline', icon: Inbox },
+  { label: 'Registration Pipeline', href: '/pipeline', icon: Inbox },
 ];
 
 export default function GreystarLayout({ children }: { children: React.ReactNode }) {

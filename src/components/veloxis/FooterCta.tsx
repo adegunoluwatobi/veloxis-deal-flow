@@ -5,7 +5,7 @@ export function FooterCta() {
     <section className="bg-[#0d9488] py-[60px]">
       <div className="mx-auto max-w-[960px] px-8 text-center">
         <h2 className="text-[34px] font-medium text-white">
-          Your invoice is an asset. Convert it to cash.
+          Your invoice is an asset. Start using it.
         </h2>
         <p className="mx-auto mt-3 mb-[26px] max-w-[440px] text-[15px] text-[#99f6e4]">
           Join exporters from emerging markets worldwide growing faster because they are not waiting 60 days to be paid.
