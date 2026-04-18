@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus, ArrowRight, FileText, CheckCircle2, Clock } from 'lucide-react';
+import { Users, Plus, ArrowRight, FileText, CheckCircle2, Clock, Inbox } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { computeKycStatus, groupDocumentsByExporter, type KycDocumentLike } from '@/lib/computeKycStatus';
 
@@ -32,9 +32,16 @@ interface DashboardStats {
   docsToReview: number;
 }
 
+interface RoutedLead {
+  id: string; full_name: string; company_name: string; country: string;
+  commodity: string; invoice_size: string; email: string; phone: string;
+  assigned_partner: string | null; status: string; created_at: string;
+}
+
 export default function GreystarDashboard() {
   const [stats, setStats] = useState<DashboardStats>({ totalExporters: 0, pendingReview: 0, verified: 0, docsToReview: 0 });
   const [recentExporters, setRecentExporters] = useState<RecentExporter[]>([]);
+  const [routedLeads, setRoutedLeads] = useState<RoutedLead[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -73,6 +80,15 @@ export default function GreystarDashboard() {
       verified: exportersWithKyc.filter((exporter) => exporter.kyc.status === 'verified').length,
       docsToReview: documents.filter((doc) => doc.document_status === 'pending_review').length,
     });
+
+    // Load routed leads from exporter_applications matched by partner desk name
+    const { data: leads } = await supabase
+      .from('exporter_applications' as any)
+      .select('id, full_name, company_name, country, commodity, invoice_size, email, phone, assigned_partner, status, created_at')
+      .eq('status', 'routed')
+      .order('created_at', { ascending: false });
+    setRoutedLeads(((leads as any) || []) as RoutedLead[]);
+
     setLoading(false);
   };
 
