@@ -1697,6 +1697,7 @@ export type Database = {
       lookup_active_partners_for_country: {
         Args: { p_country: string }
         Returns: {
+          id: string
           name: string
         }[]
       }
