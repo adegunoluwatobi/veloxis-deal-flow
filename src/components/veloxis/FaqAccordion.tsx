@@ -8,7 +8,7 @@ const FAQS = [
   },
   {
     q: "Who can use Veloxis?",
-    a: "Veloxis is for incorporated businesses anywhere in the world that export non-agricultural, non-perishable goods to verified buyers in the UK or European Economic Area. You must be onboarded through a Veloxis-approved local partner. Sole traders and unregistered partnerships are not eligible.",
+    a: "Veloxis is for incorporated businesses anywhere in the world that export goods to verified buyers in the UK or EU. You must be onboarded through a Veloxis-approved local partner. Sole traders and unregistered partnerships are not eligible.",
   },
   {
     q: "What documents do I need?",
@@ -28,7 +28,7 @@ const FAQS = [
   },
   {
     q: "What goods are eligible?",
-    a: "Eligible: solid minerals, metals and scrap, manufactured goods, textiles, processed chemicals (non-hazardous), timber and wood products, processed seafood. Not eligible: raw agricultural produce, live animals, perishables, weapons, and controlled substances.",
+    a: "Veloxis finances all legal export goods, including solid minerals, metals and scrap, manufactured goods, textiles, processed chemicals, timber and wood products, seafood, and agricultural and perishable produce shipped under standard trade terms. The only exclusions are weapons, controlled substances, and any goods prohibited under UK sanctions or applicable export controls.",
   },
   {
     q: "Is Veloxis a lender?",
@@ -56,7 +56,7 @@ export function FaqAccordion() {
         </h2>
         <p className="mt-3 text-[14px] text-[#6b7280] mb-7">
           Still have questions?{" "}
-          <a href="mailto:hello@veloxis.com" className="text-[#0d9488] hover:underline">hello@veloxis.com</a>
+          <a href="mailto:hello@veloxis.co.uk" className="text-[#0d9488] hover:underline">hello@veloxis.co.uk</a>
         </p>
 
         <div className="text-left space-y-2">
