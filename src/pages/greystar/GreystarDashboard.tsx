@@ -154,6 +154,51 @@ export default function GreystarDashboard() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2"><Inbox className="h-4 w-4 text-primary" /> Routed Applications</CardTitle>
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/greystar/pipeline">View pipeline <ArrowRight className="ml-1 h-4 w-4" /></Link>
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {routedLeads.length === 0 ? (
+            <p className="py-8 text-center text-muted-foreground">
+              No routed leads yet. New exporter applications assigned to your desk will appear here.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-border text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <th className="py-2 pr-3">Name</th>
+                    <th className="py-2 pr-3">Company</th>
+                    <th className="py-2 pr-3">Country</th>
+                    <th className="py-2 pr-3">Commodity</th>
+                    <th className="py-2 pr-3">Invoice size</th>
+                    <th className="py-2 pr-3">Email</th>
+                    <th className="py-2 pr-3">Submitted</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {routedLeads.slice(0, 10).map((lead) => (
+                    <tr key={lead.id} className="border-b border-border hover:bg-muted/40 transition-colors">
+                      <td className="py-3 pr-3 text-foreground">{lead.full_name}</td>
+                      <td className="py-3 pr-3 text-muted-foreground">{lead.company_name}</td>
+                      <td className="py-3 pr-3 text-muted-foreground">{lead.country}</td>
+                      <td className="py-3 pr-3 text-muted-foreground">{lead.commodity}</td>
+                      <td className="py-3 pr-3 text-muted-foreground">{lead.invoice_size}</td>
+                      <td className="py-3 pr-3 text-muted-foreground">{lead.email}</td>
+                      <td className="py-3 pr-3 text-muted-foreground">{new Date(lead.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Recent Exporters</CardTitle>
           <Button asChild variant="ghost" size="sm">
             <Link to="/greystar/exporters">View all <ArrowRight className="ml-1 h-4 w-4" /></Link>

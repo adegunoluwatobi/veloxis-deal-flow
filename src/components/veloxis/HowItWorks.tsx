@@ -11,13 +11,13 @@ const STEPS = [
   },
   {
     num: "03",
-    title: "Buyer signs IPU",
-    body: "We send your buyer an Irrevocable Payment Undertaking. They sign digitally, committing to pay Veloxis directly on the invoice due date.",
+    title: "Buyer signs IPU or confirms LC",
+    body: "Your buyer either signs an Irrevocable Payment Undertaking digitally or arranges a confirmed letter of credit from their bank, committing to pay Veloxis on the due date.",
   },
   {
     num: "04",
     title: "Funds released",
-    body: "80% wired to your domiciliary account immediately. At maturity, buyer pays Veloxis. We deduct fees and send you the residual balance.",
+    body: "80% is wired to your domiciliary account. At maturity, the buyer — or the confirming bank under the LC — pays Veloxis. We send you the residual.",
   },
 ];
 
@@ -30,7 +30,7 @@ export function HowItWorks() {
           From invoice to funds. Four steps.
         </h2>
         <p className="mt-3 max-w-[480px] text-[14px] leading-[1.6] text-[#6b7280]">
-          Built for cross-border trade — not adapted from a domestic template.
+          Built for cross-border trade. Not adapted from a domestic template.
         </p>
 
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-[14px]">

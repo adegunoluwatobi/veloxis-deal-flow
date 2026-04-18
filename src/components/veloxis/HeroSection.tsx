@@ -22,7 +22,7 @@ export function HeroSection() {
             <TypingHeadline
               lines={[
                 { text: "You've shipped the goods.", speed: 55 },
-                { text: "Get paid now.", speed: 68, className: "text-[#0d9488]" },
+                { text: "Get paid in 24 hours.", speed: 68, className: "text-[#0d9488]" },
               ]}
             />
           </h1>
@@ -51,7 +51,7 @@ export function HeroSection() {
 
           {/* Trust strip */}
           <div className="mt-6 flex flex-wrap gap-3">
-            {["UK-Registered", "No Collateral", "24-Hour Decisions", "Domiciliary Settlement"].map((t) => (
+            {["UK registered", "No collateral", "24-hour decisions", "Domiciliary settlement"].map((t) => (
               <span key={t} className="flex items-center gap-1.5 text-[12px] text-[#6b7280]">
                 <span className="h-[5px] w-[5px] rounded-full bg-[#0d9488]" />
                 {t}
