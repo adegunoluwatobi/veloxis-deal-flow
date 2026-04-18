@@ -319,7 +319,7 @@ function ScrollProblemSection() {
               Every barrier.<br />One platform.
             </h2>
             <p className="text-[14px] leading-[1.6] text-white/45 max-w-[380px] mb-10">
-              Scroll to see the specific problems Veloxis was built to solve — and how we answer each one.
+              Scroll to see the specific problems Veloxis was built to solve, and how we answer each one.
             </p>
 
             <div className="space-y-5">
