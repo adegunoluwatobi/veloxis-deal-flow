@@ -34,6 +34,7 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
   const [tab, setTab] = useState<"routed" | "expansion" | "partners">("routed");
   const [exporterApps, setExporterApps] = useState<ExporterApp[]>([]);
   const [partnerApps, setPartnerApps] = useState<PartnerApp[]>([]);
+  const [partnerOrgs, setPartnerOrgs] = useState<PartnerOrg[]>([]);
   const [loading, setLoading] = useState(false);
   const [editingNotes, setEditingNotes] = useState<Record<string, string>>({});
   const [activateCountry, setActivateCountry] = useState<string | null>(null);
@@ -54,12 +55,14 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
 
   const loadData = async () => {
     setLoading(true);
-    const [{ data: exp }, { data: part }] = await Promise.all([
+    const [{ data: exp }, { data: part }, { data: orgs }] = await Promise.all([
       supabase.from("exporter_applications" as any).select("*").order("created_at", { ascending: false }),
       supabase.from("partner_applications" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("partner_organisations").select("id, name, country").eq("is_active", true).order("name"),
     ]);
     setExporterApps((exp as any) || []);
     setPartnerApps((part as any) || []);
+    setPartnerOrgs((orgs as any) || []);
     setLoading(false);
   };
 
