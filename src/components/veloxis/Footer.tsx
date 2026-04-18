@@ -1,19 +1,18 @@
 import { Link } from "react-router-dom";
 
 const PRODUCT = [
-  { label: "How it works", href: "/how-it-works" },
-  { label: "Why Veloxis", href: "/why-veloxis" },
-  { label: "FAQ", href: "/faq" },
+  { label: "How it works", href: "/#hiw" },
+  { label: "Why Veloxis", href: "/#why" },
+  { label: "FAQ", href: "/#faq" },
 ];
 
 const COMPANY = [
-  { label: "About", href: "/about" },
-  { label: "Partners", href: "/partners" },
-  { label: "Contact", href: "/contact" },
+  { label: "Partners", href: "/#partners" },
+  { label: "Contact", href: "mailto:hello@veloxis.co.uk" },
 ];
 
 const LEGAL = [
-  { label: "Privacy policy", href: "/privacy-policy" },
+  { label: "Privacy policy", href: "/privacy" },
   { label: "Terms & conditions", href: "/terms" },
   { label: "Disclosure", href: "/disclosure" },
   { label: "Cookies", href: "/cookies" },
@@ -24,15 +23,18 @@ function FooterColumn({ title, links }: { title: string; links: { label: string;
     <div>
       <h4 className="text-[11px] font-medium uppercase tracking-[0.08em] text-[#6b7280] mb-[14px]">{title}</h4>
       <div className="space-y-2">
-        {links.map((link) => (
-          <Link
-            key={link.href}
-            to={link.href}
-            className="block text-[13px] text-[#6b7280] hover:text-[#111827] transition-colors"
-          >
-            {link.label}
-          </Link>
-        ))}
+        {links.map((link) => {
+          const isExternal = link.href.startsWith("mailto:") || link.href.startsWith("http") || link.href.includes("#");
+          return isExternal ? (
+            <a key={link.href} href={link.href} className="block text-[13px] text-[#6b7280] hover:text-[#111827] transition-colors">
+              {link.label}
+            </a>
+          ) : (
+            <Link key={link.href} to={link.href} className="block text-[13px] text-[#6b7280] hover:text-[#111827] transition-colors">
+              {link.label}
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
@@ -48,8 +50,8 @@ export function Footer() {
             <p className="mt-2.5 text-[13px] leading-[1.6] text-[#6b7280]">
               UK-based cross-border invoice discounting. Advancing 80% of export invoice value within 24 hours for exporters worldwide shipping to UK and EU buyers.
             </p>
-            <a href="mailto:hello@veloxis.com" className="mt-3 block text-[13px] text-[#6b7280] hover:text-[#111827]">
-              hello@veloxis.com
+            <a href="mailto:hello@veloxis.co.uk" className="mt-3 block text-[13px] text-[#6b7280] hover:text-[#111827]">
+              hello@veloxis.co.uk
             </a>
           </div>
 
@@ -58,13 +60,8 @@ export function Footer() {
           <FooterColumn title="Legal" links={LEGAL} />
         </div>
 
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-2 pt-5 text-[12px] text-[#6b7280]" style={{ borderTop: "0.5px solid #e5e7eb" }}>
-          <span>© 2026 Veloxis Ltd. All rights reserved. Registered in England and Wales.</span>
-          <div className="flex gap-3">
-            <Link to="/privacy-policy" className="hover:text-[#111827]">Privacy</Link>
-            <Link to="/terms" className="hover:text-[#111827]">Terms</Link>
-            <Link to="/disclosure" className="hover:text-[#111827]">Disclosure</Link>
-          </div>
+        <div className="mt-6 pt-5 text-[12px] text-[#6b7280]" style={{ borderTop: "0.5px solid #e5e7eb" }}>
+          <span>© 2026 Veloxis Ltd (Company number 15663333). Registered in England and Wales.</span>
         </div>
       </div>
     </footer>
