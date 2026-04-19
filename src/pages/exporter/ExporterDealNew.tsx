@@ -38,6 +38,7 @@ interface ExporterProfile {
   id: string;
   company_name: string;
   originator_id: string;
+  export_licence_number: string | null;
 }
 
 interface ExportLicenceDoc {
