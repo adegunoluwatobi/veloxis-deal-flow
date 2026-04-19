@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { ArrowLeft, Upload, FileText, AlertTriangle, CheckCircle2, XCircle, Clock, Eye, Download } from 'lucide-react';
-import { type KycStatus, type ExporterDocumentType, type SanctionsScreeningStatus } from '@/types';
+import { type KycStatus, type ExporterDocumentType, type SanctionsScreeningStatus, formatEntityType } from '@/types';
+import PipelineStatusBadge from '@/components/PipelineStatusBadge';
 import { cn } from '@/lib/utils';
 import { DOC_TYPE_LABELS, buildDocTypeOptions } from '@/lib/docTypeOptions';
 import { computeKycStatus } from '@/lib/computeKycStatus';
@@ -223,21 +224,30 @@ export default function GreystarExporterDetail() {
         );
       })()}
 
-      {/* Onboarding Approval Banner — partner only */}
-      {isPartner && exporter.onboarding_status === 'onboarding_submitted' && (
+      {/* Onboarding Approval Banner — partner only.
+          The partner approval is a recommendation: it forwards the exporter to
+          Veloxis for final approval. It does NOT activate the account. */}
+      {isPartner && exporter.onboarding_status === 'onboarding_submitted' && !exporter.forwarded_to_veloxis_at && !exporter.activated_at && (
         <Card className="border-warning">
           <CardContent className="flex items-center justify-between py-4">
             <div className="flex items-center gap-3">
               <Clock className="h-5 w-5 text-warning" />
               <div>
-                <p className="font-semibold text-foreground">Onboarding Pending Approval</p>
-                <p className="text-xs text-muted-foreground">This exporter has submitted their onboarding details and is awaiting your approval.</p>
+                <p className="font-semibold text-foreground">Onboarding Ready for Veloxis Review</p>
+                <p className="text-xs text-muted-foreground">
+                  This exporter has submitted onboarding. Forward to Veloxis for final approval, or reject if changes are needed.
+                </p>
               </div>
             </div>
             <div className="flex gap-2">
               <Button size="sm" variant="outline" className="text-destructive" onClick={async () => {
                 if (!user || !id) return;
-                await supabase.from('exporters').update({ onboarding_status: 'onboarding_rejected' as any }).eq('id', id);
+                await supabase.from('exporters').update({
+                  onboarding_status: 'onboarding_rejected' as any,
+                  rejected_at: new Date().toISOString(),
+                  rejected_by: user.id,
+                  rejection_reason: 'Returned by partner for changes',
+                } as any).eq('id', id);
                 await supabase.rpc('insert_audit_log', {
                   p_exporter_id: id, p_user_id: user.id, p_user_role: 'partner_staff' as any,
                   p_action_type: 'onboarding_rejected' as any, p_metadata: {},
@@ -249,16 +259,33 @@ export default function GreystarExporterDetail() {
               </Button>
               <Button size="sm" onClick={async () => {
                 if (!user || !id) return;
-                await supabase.from('exporters').update({ onboarding_status: 'onboarding_approved' as any }).eq('id', id);
+                await supabase.from('exporters').update({
+                  forwarded_to_veloxis_at: new Date().toISOString(),
+                  forwarded_to_veloxis_by: user.id,
+                } as any).eq('id', id);
                 await supabase.rpc('insert_audit_log', {
                   p_exporter_id: id, p_user_id: user.id, p_user_role: 'partner_staff' as any,
-                  p_action_type: 'onboarding_approved' as any, p_metadata: {},
+                  p_action_type: 'onboarding_approved' as any,
+                  p_metadata: { action: 'forwarded_to_veloxis' },
                 });
-                toast({ title: 'Onboarding approved' });
+                toast({ title: 'Forwarded to Veloxis', description: 'Veloxis will review and activate the exporter.' });
                 load();
               }}>
-                <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Approve Onboarding
+                <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Approve & Forward to Veloxis
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Read-only confirmation once forwarded */}
+      {isPartner && exporter.forwarded_to_veloxis_at && !exporter.activated_at && (
+        <Card className="border-purple-500/40 bg-purple-500/5">
+          <CardContent className="flex items-center gap-3 py-4">
+            <CheckCircle2 className="h-5 w-5 text-purple-500" />
+            <div>
+              <p className="font-semibold text-foreground">Forwarded to Veloxis on {new Date(exporter.forwarded_to_veloxis_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+              <p className="text-xs text-muted-foreground">Awaiting Veloxis final approval. The exporter will be activated by a Veloxis administrator.</p>
             </div>
           </CardContent>
         </Card>
@@ -282,15 +309,17 @@ export default function GreystarExporterDetail() {
         <CardContent>
           <dl className="grid grid-cols-2 gap-4 text-sm">
             <div><dt className="text-muted-foreground">RC Number</dt><dd className="font-medium">{exporter.rc_number}</dd></div>
-            <div><dt className="text-muted-foreground">Entity Type</dt><dd className="font-medium">{exporter.entity_type}</dd></div>
+            <div><dt className="text-muted-foreground">Entity Type</dt><dd className="font-medium">{formatEntityType(exporter.entity_type)}</dd></div>
             <div><dt className="text-muted-foreground">Director</dt><dd className="font-medium">{exporter.director_name}</dd></div>
             <div><dt className="text-muted-foreground">Contact Email</dt><dd className="font-medium">{exporter.contact_email ?? '—'}</dd></div>
-            <div><dt className="text-muted-foreground">Onboarding</dt><dd className="font-medium capitalize">{(exporter.onboarding_status || 'invited').replace(/_/g, ' ')}</dd></div>
+            <div><dt className="text-muted-foreground">Pipeline Status</dt><dd><PipelineStatusBadge status={exporter.pipeline_status} /></dd></div>
             <div>
               <dt className="text-muted-foreground">Forwarded to Veloxis</dt>
               <dd className="font-medium">
-                {exporter.forwarded_to_veloxis_at
-                  ? new Date(exporter.forwarded_to_veloxis_at).toLocaleDateString()
+                {exporter.forwarded_to_veloxis_at || ['routed', 'approved'].includes(exporter.pipeline_status)
+                  ? (exporter.forwarded_to_veloxis_at
+                      ? new Date(exporter.forwarded_to_veloxis_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                      : 'Yes')
                   : 'Not yet'}
               </dd>
             </div>

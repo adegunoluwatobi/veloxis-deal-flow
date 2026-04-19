@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, MailCheck, Clock, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { ENTITY_TYPE_LABELS, type EntityType, type OnboardingStatus } from '@/types';
+import { ENTITY_TYPE_LABELS, formatEntityType, type EntityType, type OnboardingStatus } from '@/types';
 import { cn } from '@/lib/utils';
 import { computeKycStatus, groupDocumentsByExporter, type KycDocumentLike } from '@/lib/computeKycStatus';
 
@@ -141,7 +141,7 @@ export default function GreystarExportersList() {
                 <div>
                   <p className="font-medium text-foreground">{exporter.company_name}</p>
                   <p className="text-sm text-muted-foreground">
-                    RC {exporter.rc_number} · {ENTITY_TYPE_LABELS[exporter.entity_type]} · {exporter.contact_email ?? 'No email'}
+                    RC {exporter.rc_number} · {formatEntityType(exporter.entity_type)} · {exporter.contact_email ?? 'No email'}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

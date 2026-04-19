@@ -19,7 +19,7 @@ import DealAuditTrail from '@/components/DealAuditTrail';
 import { cn } from '@/lib/utils';
 import { computeKycStatus, type KycDocumentLike } from '@/lib/computeKycStatus';
 import {
-  DEAL_STATUS_LABELS, KYC_STATUS_LABELS, ENTITY_TYPE_LABELS,
+  DEAL_STATUS_LABELS, KYC_STATUS_LABELS, ENTITY_TYPE_LABELS, formatEntityType,
   COMMODITY_TYPE_LABELS, CURRENCY_SYMBOLS,
   type DealStatus, type KycStatus, type EntityType, type CommodityType, type InvoiceCurrency,
   type AuditAction, type SanctionsScreeningStatus, type BuyerCreditCheckStatus,
@@ -555,7 +555,7 @@ export default function DealDetail() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Entity</span>
-                  <span className="font-medium text-foreground">{ENTITY_TYPE_LABELS[exporter.entity_type]}</span>
+                  <span className="font-medium text-foreground">{formatEntityType(exporter.entity_type)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">KYC</span>
