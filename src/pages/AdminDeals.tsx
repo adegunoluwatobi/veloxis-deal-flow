@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import DealStatusBadge from '@/components/DealStatusBadge';
+import { BuyerVerificationIcon } from '@/components/BuyerVerificationCard';
 import { cn } from '@/lib/utils';
 import { Search, ArrowUpDown } from 'lucide-react';
 import {
@@ -29,6 +30,9 @@ interface DealRow {
   created_at: string;
   updated_at: string;
   exporter_id: string;
+  buyer_ch_verified: boolean | null;
+  buyer_ch_found: boolean | null;
+  buyer_ch_company_status: string | null;
 }
 
 interface ExporterMap {
@@ -51,7 +55,7 @@ export default function AdminDeals() {
     const load = async () => {
       const [dealsRes, exportersRes] = await Promise.all([
         supabase.from('deals')
-          .select('id, status, invoice_number, invoice_value, invoice_currency_v2, buyer_company_name, buyer_country, commodity_type, payment_terms_days, advance_percentage, created_at, updated_at, exporter_id')
+          .select('id, status, invoice_number, invoice_value, invoice_currency_v2, buyer_company_name, buyer_country, commodity_type, payment_terms_days, advance_percentage, created_at, updated_at, exporter_id, buyer_ch_verified, buyer_ch_found, buyer_ch_company_status')
           .order('created_at', { ascending: false }),
         supabase.from('exporters').select('id, company_name'),
       ]);
@@ -189,8 +193,16 @@ export default function AdminDeals() {
                   <TableCell className="text-sm text-muted-foreground truncate max-w-[150px]">
                     {exporterNames[deal.exporter_id] || '—'}
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground truncate max-w-[150px]">
-                    {deal.buyer_company_name || '—'}
+                  <TableCell className="text-sm text-muted-foreground truncate max-w-[180px]">
+                    <div className="flex items-center gap-1.5">
+                      <BuyerVerificationIcon
+                        buyerCountry={deal.buyer_country}
+                        buyer_ch_verified={deal.buyer_ch_verified}
+                        buyer_ch_found={deal.buyer_ch_found}
+                        buyer_ch_company_status={deal.buyer_ch_company_status}
+                      />
+                      <span className="truncate">{deal.buyer_company_name || '—'}</span>
+                    </div>
                   </TableCell>
                   <TableCell className="text-sm font-medium text-foreground tabular-nums">
                     {deal.invoice_value != null

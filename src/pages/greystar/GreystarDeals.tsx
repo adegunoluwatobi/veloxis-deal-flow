@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DealStatusBadge from '@/components/DealStatusBadge';
+import { BuyerVerificationIcon } from '@/components/BuyerVerificationCard';
 import type { DealStatus } from '@/types';
 
 interface DealRow {
@@ -15,6 +16,10 @@ interface DealRow {
   invoice_value: number | null;
   invoice_currency_v2: string | null;
   buyer_company_name: string | null;
+  buyer_country: string | null;
+  buyer_ch_verified: boolean | null;
+  buyer_ch_found: boolean | null;
+  buyer_ch_company_status: string | null;
   submitted_at: string | null;
   created_at: string;
   exporter_id: string;
@@ -39,7 +44,7 @@ export default function GreystarDeals() {
     const load = async () => {
       const { data } = await supabase
         .from('deals')
-        .select('id, deal_reference, status, invoice_number, invoice_value, invoice_currency_v2, buyer_company_name, submitted_at, created_at, exporter_id, exporters(company_name)')
+        .select('id, deal_reference, status, invoice_number, invoice_value, invoice_currency_v2, buyer_company_name, buyer_country, buyer_ch_verified, buyer_ch_found, buyer_ch_company_status, submitted_at, created_at, exporter_id, exporters(company_name)')
         .order('created_at', { ascending: false });
       setDeals((data as any[]) ?? []);
       setLoading(false);
@@ -101,8 +106,16 @@ export default function GreystarDeals() {
             >
               <div>
                 <p className="font-medium text-foreground">{deal.deal_reference || deal.id.slice(0, 8)}</p>
-                <p className="text-sm text-muted-foreground">
-                  {(deal.exporters as any)?.company_name ?? 'Unknown Exporter'} · {deal.buyer_company_name || 'No buyer'}
+                <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <span>{(deal.exporters as any)?.company_name ?? 'Unknown Exporter'}</span>
+                  <span>·</span>
+                  <BuyerVerificationIcon
+                    buyerCountry={deal.buyer_country}
+                    buyer_ch_verified={deal.buyer_ch_verified}
+                    buyer_ch_found={deal.buyer_ch_found}
+                    buyer_ch_company_status={deal.buyer_ch_company_status}
+                  />
+                  <span>{deal.buyer_company_name || 'No buyer'}</span>
                 </p>
               </div>
               <div className="flex items-center gap-3">
