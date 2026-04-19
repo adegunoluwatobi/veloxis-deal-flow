@@ -179,12 +179,12 @@ export default function ExporterDashboard() {
     return map;
   }, [documents]);
 
-  const completedCount = REQUIRED_DOCS.filter((r) => {
+  const docCompletedCount = REQUIRED_DOCS.filter((r) => {
     const d = docStatusByType.get(r.type);
     return d && d.document_status !== 'rejected';
   }).length;
 
-  const verifiedCount = REQUIRED_DOCS.filter((r) => {
+  const docVerifiedCount = REQUIRED_DOCS.filter((r) => {
     const d = docStatusByType.get(r.type);
     return d?.document_status === 'verified';
   }).length;
@@ -216,11 +216,17 @@ export default function ExporterDashboard() {
     );
   }
 
-  const kyc = computeKycStatus(documents);
+  // Address counts as a 4th KYC item once line1 + city are populated. No document upload required.
+  const addressComplete = !!(exporter.registered_address_line1 && exporter.registered_city);
+  const totalRequiredCount = REQUIRED_DOCS.length + 1; // 3 docs + address
+  const completedCount = docCompletedCount + (addressComplete ? 1 : 0);
+  const verifiedCount = docVerifiedCount + (addressComplete ? 1 : 0);
+
+  const kyc = computeKycStatus(documents, 0, addressComplete);
   const initial = (exporter.company_name || '?').charAt(0).toUpperCase();
   const rcPending = !exporter.rc_number || exporter.rc_number.toLowerCase() === 'pending';
-  const allDocsComplete = completedCount === REQUIRED_DOCS.length;
-  const isFullyVerified = verifiedCount === REQUIRED_DOCS.length;
+  const allDocsComplete = completedCount === totalRequiredCount;
+  const isFullyVerified = verifiedCount === totalRequiredCount;
 
   const registeredAddress = [
     exporter.registered_address_line1,
