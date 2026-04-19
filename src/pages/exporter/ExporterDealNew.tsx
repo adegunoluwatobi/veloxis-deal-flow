@@ -141,6 +141,12 @@ export default function ExporterDealNew() {
               bank_account_number: deal.bank_account_number ?? '',
               bank_sort_code_iban: deal.bank_sort_code_iban ?? '',
               bank_country: deal.bank_country ?? '',
+              beneficiary_bank_name: (deal as any).beneficiary_bank_name ?? '',
+              beneficiary_swift_bic: (deal as any).beneficiary_swift_bic ?? '',
+              beneficiary_iban: (deal as any).beneficiary_iban ?? '',
+              beneficiary_bank_address: (deal as any).beneficiary_bank_address ?? '',
+              correspondent_bank_name: (deal as any).correspondent_bank_name ?? '',
+              correspondent_swift_bic: (deal as any).correspondent_swift_bic ?? '',
               invoice_number: deal.invoice_number ?? '',
               invoice_date: deal.invoice_date ?? '',
               invoice_amount: deal.invoice_value ? deal.invoice_value.toLocaleString('en-GB') : '',
@@ -154,7 +160,8 @@ export default function ExporterDealNew() {
               buyer_contact_phone: deal.buyer_contact_phone ?? '',
               goods_description: deal.goods_description ?? '',
               export_destination: deal.export_destination ?? '',
-              export_licence_number: deal.export_licence_number ?? '',
+              // Prefer deal value if present, else KYC profile value (already set above)
+              export_licence_number: deal.export_licence_number ?? exp.export_licence_number ?? '',
               hs_code: deal.hs_code ?? '',
               incoterms: deal.incoterms ?? '',
             }));
