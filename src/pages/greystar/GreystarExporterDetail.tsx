@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { sanitiseFilename } from '@/lib/sanitiseFilename';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -44,8 +44,14 @@ export default function GreystarExporterDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, role } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const confirm = useConfirm();
+  // Context-aware navigation: this component is mounted at both /greystar/exporters/:id (partner)
+  // and /exporters/:id (super_admin / deal_manager). Use the current path to pick the right back-link.
+  const isVeloxisRoute = location.pathname.startsWith('/exporters');
+  const exportersListPath = isVeloxisRoute ? '/exporters' : '/greystar/exporters';
+  const dealDetailPath = (dealId: string) => isVeloxisRoute ? `/deals/${dealId}` : `/greystar/deals/${dealId}`;
   const [exporter, setExporter] = useState<any>(null);
   const [documents, setDocuments] = useState<any[]>([]);
   const [deals, setDeals] = useState<any[]>([]);
@@ -201,7 +207,7 @@ export default function GreystarExporterDetail() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <Button variant="ghost" size="sm" onClick={() => navigate('/greystar/exporters')} className="gap-2">
+      <Button variant="ghost" size="sm" onClick={() => navigate(exportersListPath)} className="gap-2">
         <ArrowLeft className="h-4 w-4" /> Back to Exporters
       </Button>
 
@@ -590,7 +596,7 @@ export default function GreystarExporterDetail() {
                         <td className="py-2"><DealStatusBadge status={deal.status} /></td>
                         <td className="py-2">{new Date(deal.created_at).toLocaleDateString('en-GB')}</td>
                         <td className="py-2">
-                          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => navigate(`/greystar/deals/${deal.id}`)}>
+                          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => navigate(dealDetailPath(deal.id))}>
                             <Eye className="mr-1 h-3 w-3" /> View
                           </Button>
                         </td>

@@ -14,7 +14,7 @@ import SetPassword from "@/pages/SetPassword";
 import Dashboard from "@/pages/Dashboard";
 import ExportersList from "@/pages/ExportersList";
 import ExporterNew from "@/pages/ExporterNew";
-import ExporterDetail from "@/pages/ExporterDetail";
+import ExporterDetail from "@/pages/greystar/GreystarExporterDetail";
 import DealsList from "@/pages/DealsList";
 import DealNew from "@/pages/DealNew";
 import DealDetail from "@/pages/DealDetail";
