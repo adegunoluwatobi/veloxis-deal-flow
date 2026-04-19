@@ -835,6 +835,7 @@ export type Database = {
         Row: {
           admin_notes: string | null
           assigned_partner: string | null
+          assigned_partner_id: string | null
           buyer_countries: string[]
           commodity: string
           company_name: string
@@ -843,6 +844,7 @@ export type Database = {
           deal_description: string | null
           email: string
           expansion_activated: boolean
+          exporter_id: string | null
           full_name: string
           id: string
           invoice_size: string
@@ -853,6 +855,7 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           assigned_partner?: string | null
+          assigned_partner_id?: string | null
           buyer_countries?: string[]
           commodity: string
           company_name: string
@@ -861,6 +864,7 @@ export type Database = {
           deal_description?: string | null
           email: string
           expansion_activated?: boolean
+          exporter_id?: string | null
           full_name: string
           id?: string
           invoice_size: string
@@ -871,6 +875,7 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           assigned_partner?: string | null
+          assigned_partner_id?: string | null
           buyer_countries?: string[]
           commodity?: string
           company_name?: string
@@ -879,6 +884,7 @@ export type Database = {
           deal_description?: string | null
           email?: string
           expansion_activated?: boolean
+          exporter_id?: string | null
           full_name?: string
           id?: string
           invoice_size?: string
@@ -886,7 +892,22 @@ export type Database = {
           shipment_frequency?: string
           status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "exporter_applications_assigned_partner_id_fkey"
+            columns: ["assigned_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner_organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exporter_applications_exporter_id_fkey"
+            columns: ["exporter_id"]
+            isOneToOne: false
+            referencedRelation: "exporters"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       exporter_bank_accounts: {
         Row: {
@@ -1658,6 +1679,10 @@ export type Database = {
           warning_triggered: boolean
           would_deploy_gbp: number
         }[]
+      }
+      default_originator_for_partner_org: {
+        Args: { p_org_id: string }
+        Returns: string
       }
       delete_email: {
         Args: { message_id: number; queue_name: string }
