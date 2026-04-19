@@ -13,7 +13,7 @@ import type { ExporterDocumentType } from '@/types';
 const REQUIRED_DOCS: { type: ExporterDocumentType; label: string; needsExpiry: boolean }[] = [
   { type: 'cac_certificate', label: 'CAC Certificate', needsExpiry: false },
   { type: 'director_id', label: 'Director ID', needsExpiry: true },
-  { type: 'nepc_certificate', label: 'NEPC Certificate', needsExpiry: true },
+  { type: 'nepc_certificate', label: 'Export Licence', needsExpiry: true },
 ];
 
 const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];

@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 const DOC_TYPE_LABELS: Record<string, string> = {
   cac_certificate: 'CAC Certificate',
   director_id: 'Director ID',
-  nepc_certificate: 'NEPC Certificate',
+  nepc_certificate: 'Export Licence',
   other: 'Other',
 };
 

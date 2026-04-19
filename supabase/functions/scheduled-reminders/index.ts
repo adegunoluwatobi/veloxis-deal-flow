@@ -20,7 +20,7 @@ const APP_URL = (Deno.env.get('SITE_URL') ?? 'https://app.veloxis.co.uk').replac
 const DOC_LABELS: Record<string, string> = {
   cac_certificate: 'CAC Certificate',
   director_id: 'Director ID',
-  nepc_certificate: 'NEPC Certificate',
+  nepc_certificate: 'Export Licence',
   ubo_declaration_doc: 'UBO Declaration',
   source_of_funds_doc: 'Source of Funds Statement',
   bank_statements: 'Bank Statements',
