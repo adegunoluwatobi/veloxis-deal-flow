@@ -202,7 +202,52 @@ Deno.serve(async (req) => {
       } as any).eq("id", exporter_id);
     }
 
-    return new Response(JSON.stringify({ 
+    // Email #1 — branded Veloxis invitation. We send this in addition to
+    // Supabase's default invite email so the exporter receives the brand-
+    // consistent template; the redirect URL is the same so either link works.
+    try {
+      // Resolve partner organisation name via the originator's role
+      const { data: expWithOrig } = await adminClient
+        .from("exporters")
+        .select("id, originator_id")
+        .eq("id", exporter_id)
+        .maybeSingle();
+      let partnerOrganisationName = "your partner";
+      if (expWithOrig?.originator_id) {
+        const { data: roleRow } = await adminClient
+          .from("user_roles")
+          .select("partner_organisation_id")
+          .eq("user_id", expWithOrig.originator_id)
+          .in("role", ["partner_admin", "partner_staff"])
+          .maybeSingle();
+        if (roleRow?.partner_organisation_id) {
+          const { data: org } = await adminClient
+            .from("partner_organisations")
+            .select("name")
+            .eq("id", roleRow.partner_organisation_id)
+            .maybeSingle();
+          if (org?.name) partnerOrganisationName = org.name;
+        }
+      }
+
+      const firstName = (typeof full_name === "string" && full_name.trim().split(/\s+/)[0]) || exporter.director_name?.split(/\s+/)[0] || "";
+      await adminClient.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "exporter-invitation",
+          recipientEmail: email,
+          idempotencyKey: `exporter-invitation-${exporter_id}-${new Date().toISOString().slice(0, 10)}`,
+          templateData: {
+            firstName,
+            partnerOrganisationName,
+            acceptUrl: redirectTo,
+          },
+        },
+      });
+    } catch (emailErr) {
+      console.warn("exporter-invitation email failed:", emailErr);
+    }
+
+    return new Response(JSON.stringify({
       user_id: inviteData?.user?.id,
       invited: true,
       reset_email_sent: false,

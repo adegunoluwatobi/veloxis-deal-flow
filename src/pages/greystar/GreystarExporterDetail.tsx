@@ -23,6 +23,7 @@ import UboDeclarationForm from '@/components/UboDeclarationForm';
 import ExporterComplianceSection from '@/components/ExporterComplianceSection';
 import BankAccountVerification from '@/components/BankAccountVerification';
 import DealStatusBadge from '@/components/DealStatusBadge';
+import { sendOnboardingEmail, resolvePartnerAdminRecipient, resolveAdminRecipient, appUrl } from '@/lib/sendOnboardingEmail';
 
 const DOC_STATUS_COLORS: Record<string, string> = {
   pending_review: 'bg-warning/10 text-warning',
@@ -252,6 +253,27 @@ export default function GreystarExporterDetail() {
                   p_exporter_id: id, p_user_id: user.id, p_user_role: 'partner_staff' as any,
                   p_action_type: 'onboarding_rejected' as any, p_metadata: {},
                 });
+                // Email #6 — partner rejects onboarding (→ exporter)
+                try {
+                  const { data: roleRow } = await supabase
+                    .from('user_roles').select('partner_organisation_id')
+                    .eq('user_id', user.id).in('role', ['partner_admin', 'partner_staff']).maybeSingle();
+                  const { data: org } = roleRow?.partner_organisation_id
+                    ? await supabase.from('partner_organisations').select('name').eq('id', roleRow.partner_organisation_id).maybeSingle()
+                    : { data: null };
+                  if (exporter?.contact_email) {
+                    void sendOnboardingEmail({
+                      templateName: 'partner-rejects-onboarding',
+                      recipientEmail: exporter.contact_email,
+                      idempotencyKey: `partner-reject-${id}-${Date.now()}`,
+                      templateData: {
+                        exporterContactName: exporter.director_name || '',
+                        partnerOrganisationName: org?.name || 'your partner',
+                        rejectionReason: 'Returned by partner for changes',
+                      },
+                    });
+                  }
+                } catch (e) { console.warn('partner-rejects-onboarding email failed', e); }
                 toast({ title: 'Onboarding rejected' });
                 load();
               }}>
@@ -268,6 +290,42 @@ export default function GreystarExporterDetail() {
                   p_action_type: 'onboarding_approved' as any,
                   p_metadata: { action: 'forwarded_to_veloxis' },
                 });
+                // Emails #5 (→ exporter) and #7 (→ admin)
+                try {
+                  const { data: roleRow } = await supabase
+                    .from('user_roles').select('partner_organisation_id')
+                    .eq('user_id', user.id).in('role', ['partner_admin', 'partner_staff']).maybeSingle();
+                  const { data: org } = roleRow?.partner_organisation_id
+                    ? await supabase.from('partner_organisations').select('name').eq('id', roleRow.partner_organisation_id).maybeSingle()
+                    : { data: null };
+                  const orgName = org?.name || 'your partner';
+                  if (exporter?.contact_email) {
+                    void sendOnboardingEmail({
+                      templateName: 'partner-approves-onboarding',
+                      recipientEmail: exporter.contact_email,
+                      idempotencyKey: `partner-approve-${id}`,
+                      templateData: {
+                        exporterContactName: exporter.director_name || '',
+                        partnerOrganisationName: orgName,
+                        dashboardUrl: appUrl('/exporter'),
+                      },
+                    });
+                  }
+                  const adminEmail = await resolveAdminRecipient();
+                  void sendOnboardingEmail({
+                    templateName: 'partner-forwards-to-veloxis',
+                    recipientEmail: adminEmail,
+                    idempotencyKey: `forwarded-${id}`,
+                    templateData: {
+                      exporterCompanyName: exporter?.company_name || '',
+                      partnerOrganisationName: orgName,
+                      country: exporter?.country || '',
+                      commodity: exporter?.primary_commodity || '',
+                      submittedDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+                      adminUrl: appUrl('/admin/applications'),
+                    },
+                  });
+                } catch (e) { console.warn('forward-to-veloxis emails failed', e); }
                 toast({ title: 'Forwarded to Veloxis', description: 'Veloxis will review and activate the exporter.' });
                 load();
               }}>

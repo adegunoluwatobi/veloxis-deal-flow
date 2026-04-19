@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ENTITY_TYPE_LABELS, type EntityType, type ExporterDocumentType } from '@/types';
 import { Building2, Loader2, Clock, Upload, FileText, CheckCircle2, Lock } from 'lucide-react';
 import { sanitiseFilename } from '@/lib/sanitiseFilename';
+import { sendOnboardingEmail, resolvePartnerAdminRecipient, appUrl } from '@/lib/sendOnboardingEmail';
 import UboDeclarationForm from '@/components/UboDeclarationForm';
 
 export default function ExporterOnboarding() {
@@ -113,6 +114,18 @@ export default function ExporterOnboarding() {
       document_status: 'pending_review',
     });
     if (docErr) throw docErr;
+  };
+
+  // Resolves the partner admin recipient for this exporter, used by submit emails.
+  const resolveExporterPartnerRecipient = async () => {
+    if (!exporter?.originator_id) return null;
+    const { data: roleRow } = await supabase
+      .from('user_roles')
+      .select('partner_organisation_id')
+      .eq('user_id', exporter.originator_id)
+      .in('role', ['partner_admin', 'partner_staff'])
+      .maybeSingle();
+    return resolvePartnerAdminRecipient(roleRow?.partner_organisation_id ?? null);
   };
 
   const handleUploadSof = async () => {
@@ -218,6 +231,37 @@ export default function ExporterOnboarding() {
         .eq('id', exporter.id);
 
       if (error) throw error;
+
+      // Emails #3 (form submitted) and #4 (KYC docs uploaded). In the
+      // Veloxis flow the exporter must have all docs uploaded before submit
+      // is allowed, so both partner-facing notifications fire here.
+      try {
+        const recipient = await resolveExporterPartnerRecipient();
+        if (recipient?.email) {
+          void sendOnboardingEmail({
+            templateName: 'onboarding-form-submitted',
+            recipientEmail: recipient.email,
+            idempotencyKey: `onboarding-submitted-${exporter.id}`,
+            templateData: {
+              partnerAdminName: recipient.fullName,
+              exporterCompanyName: form.company_name.trim(),
+              applicationUrl: appUrl(`/greystar/exporters/${exporter.id}`),
+            },
+          });
+          void sendOnboardingEmail({
+            templateName: 'kyc-documents-uploaded',
+            recipientEmail: recipient.email,
+            idempotencyKey: `kyc-docs-${exporter.id}`,
+            templateData: {
+              partnerAdminName: recipient.fullName,
+              exporterCompanyName: form.company_name.trim(),
+              applicationUrl: appUrl(`/greystar/exporters/${exporter.id}`),
+            },
+          });
+        }
+      } catch (e) {
+        console.warn('partner submit notifications failed', e);
+      }
 
       await supabase.rpc('insert_audit_log', {
         p_exporter_id: exporter.id,

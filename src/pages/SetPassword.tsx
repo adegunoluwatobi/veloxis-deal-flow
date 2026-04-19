@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { getConfiguredPublicAppUrl, getConfiguredSetPasswordUrl, isDisallowedAuthCallbackHost } from '@/lib/publicAppUrl';
+import { sendOnboardingEmail, resolvePartnerAdminRecipient, appUrl } from '@/lib/sendOnboardingEmail';
 import { Shield, CheckCircle2, Loader2 } from 'lucide-react';
 
 export default function SetPassword() {
@@ -280,8 +281,42 @@ export default function SetPassword() {
           .from('exporters')
           .update({ onboarding_status: 'password_set' as any, invite_accepted_at: new Date().toISOString() } as any)
           .eq('exporter_user_id', user.id);
+
+        // Email #2 — notify partner admin that exporter accepted the invite
+        try {
+          const { data: exp } = await supabase
+            .from('exporters')
+            .select('id, company_name, originator_id')
+            .eq('exporter_user_id', user.id)
+            .maybeSingle();
+          if (exp?.id && exp?.company_name) {
+            // Resolve partner organisation via originator's role
+            const { data: roleRow } = await supabase
+              .from('user_roles')
+              .select('partner_organisation_id')
+              .eq('user_id', exp.originator_id)
+              .in('role', ['partner_admin', 'partner_staff'])
+              .maybeSingle();
+            const partnerOrgId = roleRow?.partner_organisation_id ?? null;
+            const recipient = await resolvePartnerAdminRecipient(partnerOrgId);
+            if (recipient?.email) {
+              void sendOnboardingEmail({
+                templateName: 'exporter-accepted-invite',
+                recipientEmail: recipient.email,
+                idempotencyKey: `exporter-accepted-${exp.id}`,
+                templateData: {
+                  partnerAdminName: recipient.fullName,
+                  exporterCompanyName: exp.company_name,
+                  dashboardUrl: appUrl(`/greystar/exporters/${exp.id}`),
+                },
+              });
+            }
+          }
+        } catch (e) {
+          console.warn('exporter-accepted-invite email failed', e);
+        }
       }
-      
+
       setDone(true);
       toast({ title: 'Password set', description: 'Redirecting to onboarding…' });
       setTimeout(() => navigate('/exporter/onboarding'), 2000);
