@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import type { ExporterDocumentType } from '@/types';
 import { DOC_TYPE_LABELS, buildDocTypeOptions } from '@/lib/docTypeOptions';
 import DocumentRequestSection from '@/components/DocumentRequestSection';
+import { CountrySelect } from '@/components/ui/country-select';
 
 export default function ExporterDocuments() {
   const { user } = useAuth();
