@@ -305,6 +305,20 @@ export type Database = {
           beneficiary_bank_name: string | null
           beneficiary_iban: string | null
           beneficiary_swift_bic: string | null
+          buyer_ch_company_name: string | null
+          buyer_ch_company_number: string | null
+          buyer_ch_company_status: string | null
+          buyer_ch_found: boolean | null
+          buyer_ch_raw_response: Json | null
+          buyer_ch_registered_address: string | null
+          buyer_ch_search_term: string | null
+          buyer_ch_sic_codes: string[] | null
+          buyer_ch_verified: boolean
+          buyer_ch_verified_at: string | null
+          buyer_ch_verified_by: string | null
+          buyer_ch_verified_by_role:
+            | Database["public"]["Enums"]["app_role"]
+            | null
           buyer_company_name: string | null
           buyer_contact_email: string | null
           buyer_contact_name: string | null
@@ -423,6 +437,20 @@ export type Database = {
           beneficiary_bank_name?: string | null
           beneficiary_iban?: string | null
           beneficiary_swift_bic?: string | null
+          buyer_ch_company_name?: string | null
+          buyer_ch_company_number?: string | null
+          buyer_ch_company_status?: string | null
+          buyer_ch_found?: boolean | null
+          buyer_ch_raw_response?: Json | null
+          buyer_ch_registered_address?: string | null
+          buyer_ch_search_term?: string | null
+          buyer_ch_sic_codes?: string[] | null
+          buyer_ch_verified?: boolean
+          buyer_ch_verified_at?: string | null
+          buyer_ch_verified_by?: string | null
+          buyer_ch_verified_by_role?:
+            | Database["public"]["Enums"]["app_role"]
+            | null
           buyer_company_name?: string | null
           buyer_contact_email?: string | null
           buyer_contact_name?: string | null
@@ -541,6 +569,20 @@ export type Database = {
           beneficiary_bank_name?: string | null
           beneficiary_iban?: string | null
           beneficiary_swift_bic?: string | null
+          buyer_ch_company_name?: string | null
+          buyer_ch_company_number?: string | null
+          buyer_ch_company_status?: string | null
+          buyer_ch_found?: boolean | null
+          buyer_ch_raw_response?: Json | null
+          buyer_ch_registered_address?: string | null
+          buyer_ch_search_term?: string | null
+          buyer_ch_sic_codes?: string[] | null
+          buyer_ch_verified?: boolean
+          buyer_ch_verified_at?: string | null
+          buyer_ch_verified_by?: string | null
+          buyer_ch_verified_by_role?:
+            | Database["public"]["Enums"]["app_role"]
+            | null
           buyer_company_name?: string | null
           buyer_contact_email?: string | null
           buyer_contact_name?: string | null
@@ -643,6 +685,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "deals_buyer_ch_verified_by_fkey"
+            columns: ["buyer_ch_verified_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "deals_export_licence_document_id_fkey"
             columns: ["export_licence_document_id"]
@@ -2002,6 +2051,8 @@ export type Database = {
         | "kyc_change_requested"
         | "kyc_change_approved"
         | "kyc_change_rejected"
+        | "buyer_ch_verified"
+        | "buyer_ch_not_found"
       buyer_credit_check_status: "pending" | "pass" | "refer" | "fail"
       change_request_status: "pending" | "resolved" | "cancelled"
       commodity_type:
@@ -2288,6 +2339,8 @@ export const Constants = {
         "kyc_change_requested",
         "kyc_change_approved",
         "kyc_change_rejected",
+        "buyer_ch_verified",
+        "buyer_ch_not_found",
       ],
       buyer_credit_check_status: ["pending", "pass", "refer", "fail"],
       change_request_status: ["pending", "resolved", "cancelled"],
