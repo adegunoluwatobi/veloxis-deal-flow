@@ -453,15 +453,23 @@ export default function ExporterDashboard() {
                 const isRejected = status === 'rejected';
                 const isMissing = !doc;
 
+                const isClickable = isMissing || isRejected;
+                const Wrapper: React.ElementType = isClickable ? Link : 'div';
+                const wrapperProps = isClickable
+                  ? { to: `/exporter/documents?type=${type}` }
+                  : {};
+
                 return (
-                  <div
+                  <Wrapper
                     key={type}
+                    {...wrapperProps}
                     className={cn(
-                      'rounded-lg border p-4 transition-colors',
+                      'rounded-lg border p-4 transition-all',
+                      isClickable && 'cursor-pointer hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                       isVerified && 'border-success/40 bg-success/5',
                       isPending && 'border-blue-400/40 bg-blue-50/60 dark:bg-blue-500/5',
-                      isRejected && 'border-destructive/40 bg-destructive/5',
-                      isMissing && 'border-amber-400/40 bg-amber-100/40 dark:bg-amber-500/10'
+                      isRejected && 'border-destructive/40 bg-destructive/5 hover:bg-destructive/10',
+                      isMissing && 'border-amber-400/40 bg-amber-100/40 dark:bg-amber-500/10 hover:bg-amber-200/50 dark:hover:bg-amber-500/15'
                     )}
                   >
                     <div className="flex flex-col gap-3">
@@ -495,7 +503,7 @@ export default function ExporterDashboard() {
                         </Badge>
                       </div>
                     </div>
-                  </div>
+                  </Wrapper>
                 );
               })}
             </div>

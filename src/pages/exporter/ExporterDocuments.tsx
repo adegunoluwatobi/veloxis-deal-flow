@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { sanitiseFilename } from '@/lib/sanitiseFilename';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -18,6 +19,8 @@ import DocumentRequestSection from '@/components/DocumentRequestSection';
 export default function ExporterDocuments() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const uploadCardRef = useRef<HTMLDivElement>(null);
   const [exporter, setExporter] = useState<any>(null);
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +31,18 @@ export default function ExporterDocuments() {
     file: null as File | null,
     export_licence_number: '',
   });
+
+  // Pre-select doc type from ?type=... and scroll to upload card
+  useEffect(() => {
+    const type = searchParams.get('type') as ExporterDocumentType | null;
+    if (type) {
+      setForm((prev) => ({ ...prev, document_type: type }));
+      // Wait for layout
+      setTimeout(() => {
+        uploadCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [searchParams]);
 
   const load = async () => {
     if (!user) return;
@@ -135,7 +150,7 @@ export default function ExporterDocuments() {
       </div>
 
       {/* Upload Form */}
-      <Card>
+      <Card ref={uploadCardRef}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Upload className="h-4 w-4" /> Upload Document</CardTitle>
           <CardDescription>Accepted: CAC Certificate, Director ID, Export Licence. All uploads go to your partner for review.</CardDescription>
