@@ -199,11 +199,15 @@ export default function ExporterDocuments() {
       {/* Upload Form */}
       <Card ref={uploadCardRef}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Upload className="h-4 w-4" /> Upload Document</CardTitle>
-          <CardDescription>Accepted: CAC Certificate, Director ID, Export Licence. All uploads go to your partner for review.</CardDescription>
+          <CardTitle className="flex items-center gap-2"><Upload className="h-4 w-4" /> {isAddressType ? 'Registered Address' : 'Upload Document'}</CardTitle>
+          <CardDescription>
+            {isAddressType
+              ? 'Enter your registered company address. This saves directly to your Company Profile — no document upload required.'
+              : 'Accepted: CAC Certificate, Director ID, Export Licence. All uploads go to your partner for review.'}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {enabledOptions.length === 0 ? (
+          {enabledOptions.length === 0 && !isAddressType ? (
             <p className="text-sm text-muted-foreground">All mandatory document types have been uploaded or are pending review.</p>
           ) : (
             <>
@@ -214,43 +218,99 @@ export default function ExporterDocuments() {
                     <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                     <SelectContent>
                       {docTypeOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value} disabled={opt.disabled}>{opt.label}</SelectItem>
+                        <SelectItem key={opt.value} value={opt.value} disabled={opt.disabled && opt.value !== 'registered_address_proof'}>{opt.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Expiry Date <span className="text-destructive">*</span></Label>
-                  <Input type="date" value={form.expiry_date} onChange={(e) => setForm({ ...form, expiry_date: e.target.value })} required />
-                </div>
+                {!isAddressType && (
+                  <div className="space-y-2">
+                    <Label>Expiry Date <span className="text-destructive">*</span></Label>
+                    <Input type="date" value={form.expiry_date} onChange={(e) => setForm({ ...form, expiry_date: e.target.value })} required />
+                  </div>
+                )}
               </div>
-              {form.document_type === 'nepc_certificate' && (
-                <div className="space-y-2">
-                  <Label>Export Licence Number <span className="text-destructive">*</span></Label>
-                  <Input
-                    value={form.export_licence_number}
-                    onChange={(e) => setForm({ ...form, export_licence_number: e.target.value })}
-                    placeholder="Enter your export licence number"
-                  />
-                  <p className="text-xs text-muted-foreground">This will be saved to your company profile and pre-filled on future deals.</p>
-                </div>
+
+              {isAddressType ? (
+                <>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2 md:col-span-2">
+                      <Label>Address line 1 <span className="text-destructive">*</span></Label>
+                      <Input
+                        value={addressForm.registered_address_line1}
+                        onChange={(e) => setAddressForm({ ...addressForm, registered_address_line1: e.target.value })}
+                        placeholder="Street and number"
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label>Address line 2</Label>
+                      <Input
+                        value={addressForm.registered_address_line2}
+                        onChange={(e) => setAddressForm({ ...addressForm, registered_address_line2: e.target.value })}
+                        placeholder="Apartment, suite, building (optional)"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>City <span className="text-destructive">*</span></Label>
+                      <Input
+                        value={addressForm.registered_city}
+                        onChange={(e) => setAddressForm({ ...addressForm, registered_city: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Postcode</Label>
+                      <Input
+                        value={addressForm.registered_postcode}
+                        onChange={(e) => setAddressForm({ ...addressForm, registered_postcode: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label>Country</Label>
+                      <Input
+                        value={addressForm.registered_country}
+                        onChange={(e) => setAddressForm({ ...addressForm, registered_country: e.target.value })}
+                        placeholder="e.g. Nigeria"
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    onClick={handleSaveAddress}
+                    disabled={savingAddress || !addressForm.registered_address_line1.trim() || !addressForm.registered_city.trim()}
+                  >
+                    {savingAddress ? 'Saving…' : addressComplete ? 'Update Address' : 'Save Address'}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  {form.document_type === 'nepc_certificate' && (
+                    <div className="space-y-2">
+                      <Label>Export Licence Number <span className="text-destructive">*</span></Label>
+                      <Input
+                        value={form.export_licence_number}
+                        onChange={(e) => setForm({ ...form, export_licence_number: e.target.value })}
+                        placeholder="Enter your export licence number"
+                      />
+                      <p className="text-xs text-muted-foreground">This will be saved to your company profile and pre-filled on future deals.</p>
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <Label>File</Label>
+                    <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setForm({ ...form, file: e.target.files?.[0] ?? null })} />
+                  </div>
+                  <Button
+                    onClick={handleUpload}
+                    disabled={
+                      !form.document_type ||
+                      !form.file ||
+                      !form.expiry_date ||
+                      uploading ||
+                      (form.document_type === 'nepc_certificate' && !form.export_licence_number.trim())
+                    }
+                  >
+                    {uploading ? 'Uploading…' : 'Upload'}
+                  </Button>
+                </>
               )}
-              <div className="space-y-2">
-                <Label>File</Label>
-                <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setForm({ ...form, file: e.target.files?.[0] ?? null })} />
-              </div>
-              <Button
-                onClick={handleUpload}
-                disabled={
-                  !form.document_type ||
-                  !form.file ||
-                  !form.expiry_date ||
-                  uploading ||
-                  (form.document_type === 'nepc_certificate' && !form.export_licence_number.trim())
-                }
-              >
-                {uploading ? 'Uploading…' : 'Upload'}
-              </Button>
             </>
           )}
         </CardContent>
