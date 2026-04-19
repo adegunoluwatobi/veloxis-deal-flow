@@ -43,11 +43,28 @@ export default function DealsList() {
     load();
   }, [user, role]);
 
+  // Build deduplicated status options: collapse statuses that share the same label
+  // (e.g. `under_review` and `sent_to_veloxis` both display as "Under Review") into
+  // a single dropdown entry whose value is a `|`-joined list of underlying statuses.
+  const statusOptions = (() => {
+    const byLabel = new Map<string, string[]>();
+    (Object.entries(DEAL_STATUS_LABELS) as [DealStatus, string][]).forEach(([val, label]) => {
+      const existing = byLabel.get(label) ?? [];
+      existing.push(val);
+      byLabel.set(label, existing);
+    });
+    return Array.from(byLabel.entries()).map(([label, vals]) => ({
+      value: vals.join('|'),
+      label,
+    }));
+  })();
+
   const filtered = deals.filter((d) => {
     const matchSearch = !search ||
       (d.invoice_number ?? '').toLowerCase().includes(search.toLowerCase()) ||
       (d.buyer_company_name ?? '').toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === 'all' || d.status === statusFilter;
+    const matchStatus =
+      statusFilter === 'all' || statusFilter.split('|').includes(d.status);
     return matchSearch && matchStatus;
   });
 
@@ -76,8 +93,8 @@ export default function DealsList() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>
-            {Object.entries(DEAL_STATUS_LABELS).map(([val, label]) => (
-              <SelectItem key={val} value={val}>{label}</SelectItem>
+            {statusOptions.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
