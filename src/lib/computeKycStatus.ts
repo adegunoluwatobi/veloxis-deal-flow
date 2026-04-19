@@ -99,7 +99,7 @@ export function computeKycStatus(
     };
   }
 
-  if (pending.length > 0 && missing.length === 0) {
+  if (pending.length > 0 && missing.length === 0 && addressComplete) {
     return {
       status: 'under_review',
       label: 'Under Review',
@@ -111,19 +111,23 @@ export function computeKycStatus(
     };
   }
 
-  if (missing.length > 0) {
+  if (missing.length > 0 || !addressComplete) {
+    const parts = [
+      ...missing.map((m) => m.type === 'cac_certificate' ? 'CAC Certificate' : m.type === 'director_id' ? 'Director ID' : 'Export Licence'),
+      ...(!addressComplete ? [ADDRESS_LABEL] : []),
+    ];
     return {
       status: 'pending_documents',
       label: 'Pending Documents',
       badgeLabel: 'Pending Documents',
-      description: 'Please upload your CAC Certificate, Director ID, Export Licence, and Registered Address Proof.',
+      description: `Please complete: ${parts.join(', ')}.`,
       color: 'bg-muted text-muted-foreground',
       borderColor: 'border-muted bg-muted/30',
       icon: 'muted',
     };
   }
 
-  if (verified.length === MANDATORY.length) {
+  if (verified.length === MANDATORY.length && addressComplete) {
     return {
       status: 'verified',
       label: 'Complete',
