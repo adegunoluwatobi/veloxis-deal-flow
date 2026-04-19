@@ -37,6 +37,7 @@ import IpuUploadSection from '@/components/IpuUploadSection';
 import TradePackChecklist from '@/components/TradePackChecklist';
 import OverdueActionsPanel from '@/components/OverdueActionsPanel';
 import RequestDocsModal from '@/components/RequestDocsModal';
+import BuyerVerificationCard from '@/components/BuyerVerificationCard';
 import type { SettlementMethod } from '@/types';
 import {
   sendDealApprovedEmails,
@@ -588,7 +589,7 @@ export default function DealDetail() {
               <CardTitle className="text-base">Buyer</CardTitle>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             <div className="grid gap-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Company</span>
@@ -607,6 +608,24 @@ export default function DealDetail() {
                 <span className="font-medium text-foreground">{deal.buyer_contact_email || '—'}</span>
               </div>
             </div>
+            <BuyerVerificationCard
+              dealId={deal.id}
+              buyerCompanyName={deal.buyer_company_name}
+              buyerCountry={deal.buyer_country}
+              buyer_ch_verified={(deal as any).buyer_ch_verified}
+              buyer_ch_verified_at={(deal as any).buyer_ch_verified_at}
+              buyer_ch_verified_by={(deal as any).buyer_ch_verified_by}
+              buyer_ch_verified_by_role={(deal as any).buyer_ch_verified_by_role}
+              buyer_ch_company_number={(deal as any).buyer_ch_company_number}
+              buyer_ch_company_status={(deal as any).buyer_ch_company_status}
+              buyer_ch_company_name={(deal as any).buyer_ch_company_name}
+              buyer_ch_registered_address={(deal as any).buyer_ch_registered_address}
+              buyer_ch_sic_codes={(deal as any).buyer_ch_sic_codes}
+              buyer_ch_search_term={(deal as any).buyer_ch_search_term}
+              buyer_ch_found={(deal as any).buyer_ch_found}
+              canVerify={isDM}
+              onVerified={load}
+            />
           </CardContent>
         </Card>
 

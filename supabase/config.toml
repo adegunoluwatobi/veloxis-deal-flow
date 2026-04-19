@@ -15,3 +15,5 @@ project_id = "mesvzeqhqdokyysyfknn"
     verify_jwt = false
   [functions.scheduled-reminders]
     verify_jwt = false
+  [functions.verify-buyer-companies-house]
+    verify_jwt = true

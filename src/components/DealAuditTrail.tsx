@@ -45,6 +45,8 @@ const EVENT_CONFIG: Record<string, { label: string; icon: typeof FileText; color
   payment_advice_submitted: { label: 'Buyer Payment Recorded', icon: DollarSign, color: 'text-success' },
   exporter_receipt_confirmed: { label: 'Exporter Confirmed Receipt', icon: CheckCircle2, color: 'text-success' },
   pricing_recalculated: { label: 'Pricing Recalculated', icon: DollarSign, color: 'text-muted-foreground' },
+  buyer_ch_verified: { label: 'Buyer Verified on Companies House', icon: CheckCircle2, color: 'text-success' },
+  buyer_ch_not_found: { label: 'Buyer Not Found on Companies House', icon: AlertTriangle, color: 'text-destructive' },
 };
 
 const ROLE_LABELS: Record<string, string> = {
