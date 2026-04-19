@@ -183,10 +183,7 @@ export default function ExporterDashboard() {
 
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex items-start gap-5">
-            <div
-              className="flex h-20 w-20 items-center justify-center rounded-2xl text-3xl font-bold text-veloxis-deep shadow-lg"
-              style={{ background: '#14b8a6' }}
-            >
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-veloxis-teal text-3xl font-bold text-veloxis-deep shadow-lg">
               {initial}
             </div>
             <div className="space-y-3">
