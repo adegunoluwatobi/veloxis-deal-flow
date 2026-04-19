@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search } from 'lucide-react';
@@ -19,9 +19,11 @@ interface ExporterRow {
   director_name: string;
   kyc_status: KycStatus;
   created_at: string;
+  country?: string | null;
+  is_active?: boolean;
+  originator_id?: string;
 }
 
-// Docs per exporter for live KYC computation
 interface ExporterDocRow {
   exporter_id: string;
   document_type: string;
@@ -30,76 +32,173 @@ interface ExporterDocRow {
   is_superseded: boolean;
 }
 
+interface AdminExporterRow extends ExporterRow {
+  partner_name: string;
+  commodity: string;
+  deal_count: number;
+}
+
 export default function ExportersList() {
   const { user, role } = useAuth();
   const [exporters, setExporters] = useState<ExporterRow[]>([]);
+  const [adminRows, setAdminRows] = useState<AdminExporterRow[]>([]);
   const [exporterDocs, setExporterDocs] = useState<ExporterDocRow[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
+  const isVeloxis = role === 'super_admin' || role === 'deal_manager';
+
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const isVeloxis = role === 'super_admin' || role === 'deal_manager';
-
       if (isVeloxis) {
-        // Only show exporters who have at least one deal at under_review or beyond
-        const veloxisStatuses = [
-          'under_review', 'docs_requested', 'ready_for_final_approval',
-          'rejection_pending_approval', 'approved', 'rejected', 'ipu_sent', 'ipu_expired',
-          'ipu_signed_awaiting_funding', 'funded_active', 'repayment_due', 'overdue',
-          'closed_repaid', 'closed_partial', 'rejected_by_veloxis',
-        ] as const;
-        const { data: deals } = await supabase.from('deals')
-          .select('exporter_id')
-          .in('status', [...veloxisStatuses]);
-        const exporterIds = [...new Set((deals ?? []).map(d => d.exporter_id))];
-
-        if (exporterIds.length === 0) {
-          setExporters([]);
-          setLoading(false);
-          return;
-        }
-
-        const { data } = await supabase.from('exporters')
-          .select('id, company_name, rc_number, entity_type, director_name, kyc_status, created_at')
-          .in('id', exporterIds)
+        // Admin / Veloxis view: directory of all exporters that have been activated
+        // (i.e. assigned to a partner). Excludes anything still in Routed/Expansion queue.
+        const { data: exps } = await supabase
+          .from('exporters')
+          .select('id, company_name, rc_number, entity_type, director_name, kyc_status, created_at, country, is_active, originator_id')
           .order('created_at', { ascending: false });
-        setExporters((data as ExporterRow[]) ?? []);
 
-        const ids = (data ?? []).map(e => e.id);
-        if (ids.length > 0) {
-          const { data: docs } = await supabase
-            .from('exporter_documents')
-            .select('exporter_id, document_type, document_status, expiry_status, is_superseded')
-            .in('exporter_id', ids)
-            .eq('is_superseded', false);
-          setExporterDocs((docs as ExporterDocRow[]) ?? []);
-        }
-      } else {
-        let query = supabase.from('exporters').select('id, company_name, rc_number, entity_type, director_name, kyc_status, created_at')
-          .order('created_at', { ascending: false });
-        if (role === 'partner_staff' || role === 'partner_admin') {
-          query = query.eq('originator_id', user.id);
-        }
-        const { data } = await query;
-        const ids = (data ?? []).map(e => e.id);
-        setExporters((data as ExporterRow[]) ?? []);
+        const exporterList = (exps as ExporterRow[]) ?? [];
+        const ids = exporterList.map(e => e.id);
+        const originatorIds = [...new Set(exporterList.map(e => e.originator_id).filter(Boolean) as string[])];
 
-        if (ids.length > 0) {
-          const { data: docs } = await supabase
-            .from('exporter_documents')
-            .select('exporter_id, document_type, document_status, expiry_status, is_superseded')
-            .in('exporter_id', ids)
-            .eq('is_superseded', false);
-          setExporterDocs((docs as ExporterDocRow[]) ?? []);
-        }
+        const [rolesRes, appsRes, dealsRes] = await Promise.all([
+          originatorIds.length > 0
+            ? supabase.from('user_roles')
+                .select('user_id, partner_organisation_id, role, partner_organisations(name)')
+                .in('user_id', originatorIds)
+                .in('role', ['partner_admin', 'partner_staff'])
+            : Promise.resolve({ data: [] as any[] }),
+          ids.length > 0
+            ? supabase.from('exporter_applications' as any)
+                .select('exporter_id, commodity')
+                .in('exporter_id', ids)
+            : Promise.resolve({ data: [] as any[] }),
+          ids.length > 0
+            ? supabase.from('deals')
+                .select('exporter_id')
+                .in('exporter_id', ids)
+            : Promise.resolve({ data: [] as any[] }),
+        ]);
+
+        const partnerByOriginator = new Map<string, string>();
+        ((rolesRes as any).data ?? []).forEach((r: any) => {
+          const name = r.partner_organisations?.name ?? '—';
+          if (!partnerByOriginator.has(r.user_id)) partnerByOriginator.set(r.user_id, name);
+        });
+        const commodityByExporter = new Map<string, string>();
+        ((appsRes as any).data ?? []).forEach((a: any) => {
+          if (a.exporter_id && a.commodity) commodityByExporter.set(a.exporter_id, a.commodity);
+        });
+        const dealCountByExporter = new Map<string, number>();
+        ((dealsRes as any).data ?? []).forEach((d: any) => {
+          dealCountByExporter.set(d.exporter_id, (dealCountByExporter.get(d.exporter_id) ?? 0) + 1);
+        });
+
+        setAdminRows(exporterList.map(e => ({
+          ...e,
+          partner_name: e.originator_id ? (partnerByOriginator.get(e.originator_id) ?? '—') : '—',
+          commodity: commodityByExporter.get(e.id) ?? '—',
+          deal_count: dealCountByExporter.get(e.id) ?? 0,
+        })));
+        setLoading(false);
+        return;
+      }
+
+      // Partner / originator view (unchanged)
+      let query = supabase.from('exporters').select('id, company_name, rc_number, entity_type, director_name, kyc_status, created_at')
+        .order('created_at', { ascending: false });
+      if (role === 'partner_staff' || role === 'partner_admin') {
+        query = query.eq('originator_id', user.id);
+      }
+      const { data } = await query;
+      const ids = (data ?? []).map(e => e.id);
+      setExporters((data as ExporterRow[]) ?? []);
+
+      if (ids.length > 0) {
+        const { data: docs } = await supabase
+          .from('exporter_documents')
+          .select('exporter_id, document_type, document_status, expiry_status, is_superseded')
+          .in('exporter_id', ids)
+          .eq('is_superseded', false);
+        setExporterDocs((docs as ExporterDocRow[]) ?? []);
       }
       setLoading(false);
     };
     load();
-  }, [user, role]);
+  }, [user, role, isVeloxis]);
 
+  // ===== Admin / Veloxis view =====
+  if (isVeloxis) {
+    const filteredAdmin = adminRows.filter(e =>
+      e.company_name.toLowerCase().includes(search.toLowerCase()) ||
+      (e.country ?? '').toLowerCase().includes(search.toLowerCase()) ||
+      e.partner_name.toLowerCase().includes(search.toLowerCase())
+    );
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Exporters</h1>
+          <p className="text-sm text-muted-foreground">Permanent exporter directory — populated when an application is assigned to a partner</p>
+        </div>
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search by company, country, or partner…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        {loading ? (
+          <p className="py-10 text-center text-muted-foreground">Loading…</p>
+        ) : filteredAdmin.length === 0 ? (
+          <Card>
+            <CardContent className="py-10 text-center text-muted-foreground">
+              {search ? 'No exporters match your search.' : 'No exporters yet. Assign a routed application to a partner to populate this directory.'}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-muted/40">
+                <tr>
+                  {['Company', 'Country', 'Commodity', 'Assigned Partner', 'Status', 'Deals'].map(h => (
+                    <th key={h} className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAdmin.map(exp => (
+                  <tr key={exp.id} className="border-t border-border hover:bg-muted/30 transition-colors">
+                    <td className="px-4 py-3">
+                      <Link to={`/exporters/${exp.id}`} className="font-medium text-foreground hover:underline">
+                        {exp.company_name}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{exp.country ?? '—'}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{exp.commodity}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{exp.partner_name}</td>
+                    <td className="px-4 py-3">
+                      <Badge variant="secondary" className={cn('font-medium', exp.is_active ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground')}>
+                        {exp.is_active ? 'Active' : 'Suspended'}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground tabular-nums">{exp.deal_count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ===== Partner / originator view =====
   const filtered = exporters.filter((e) =>
     e.company_name.toLowerCase().includes(search.toLowerCase()) ||
     e.rc_number.toLowerCase().includes(search.toLowerCase())
