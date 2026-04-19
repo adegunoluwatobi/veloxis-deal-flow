@@ -297,6 +297,26 @@ export default function ExporterDealNew() {
       setStep(2);
       return;
     }
+    if (!asDraft && paymentBeforeInvoice) {
+      setFieldErrors(prev => ({ ...prev, payment_due_date: 'Payment date cannot be before the invoice date' }));
+      setStep(1);
+      return;
+    }
+    if (!asDraft && form.beneficiary_swift_bic && !isValidSwift(form.beneficiary_swift_bic)) {
+      setFieldErrors(prev => ({ ...prev, beneficiary_swift_bic: 'Please enter a valid SWIFT/BIC code (8 or 11 characters)' }));
+      setStep(0);
+      return;
+    }
+    if (!asDraft && form.beneficiary_iban && !isValidIban(form.beneficiary_iban)) {
+      setFieldErrors(prev => ({ ...prev, beneficiary_iban: 'Please enter a valid IBAN number' }));
+      setStep(0);
+      return;
+    }
+    if (!asDraft && form.correspondent_swift_bic && !isValidSwift(form.correspondent_swift_bic)) {
+      setFieldErrors(prev => ({ ...prev, correspondent_swift_bic: 'Please enter a valid SWIFT/BIC code (8 or 11 characters)' }));
+      setStep(0);
+      return;
+    }
     if (!asDraft && !form.domiciliary_account_confirmed) {
       toast({ title: 'Domiciliary Account Confirmation Required', description: 'Please confirm your domiciliary account can receive the invoice currency.', variant: 'destructive' });
       setStep(6);
