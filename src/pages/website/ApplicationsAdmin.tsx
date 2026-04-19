@@ -239,7 +239,7 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
             <select
               disabled={disabled}
               value={a.assigned_partner_id ?? ""}
-              onChange={e => assignPartner(a, e.target.value)}
+              onChange={e => requestAssignPartner(a, e.target.value)}
               className={`rounded px-2 py-1 text-[12px] outline-none disabled:opacity-50 ${embedded ? "bg-background border border-border text-foreground" : "text-white border border-white/10"}`}
               style={embedded ? undefined : { background: inputBg }}
             >
