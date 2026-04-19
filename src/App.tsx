@@ -139,6 +139,8 @@ const App = () => (
             <Route path="/greystar/settings" element={<GreystarRoute><GreystarSettings /></GreystarRoute>} />
             {/* Registration Pipeline is admin-only — partners are redirected to their Applications view */}
             <Route path="/greystar/pipeline" element={<Navigate to="/greystar/deals" replace />} />
+            <Route path="/greystar/account/organisation" element={<GreystarRoute><PartnerOrgProfile /></GreystarRoute>} />
+            <Route path="/greystar/account/team" element={<GreystarRoute><PartnerTeamMembers /></GreystarRoute>} />
 
             {/* Exporter portal routes (require approved onboarding) */}
             <Route path="/exporter" element={<ExporterRoute><ExporterDashboardPage /></ExporterRoute>} />
@@ -147,13 +149,17 @@ const App = () => (
             <Route path="/exporter/deals/:id/edit" element={<ExporterRoute><ExporterDealNew /></ExporterRoute>} />
             <Route path="/exporter/deals/:id" element={<ExporterRoute><ExporterDealDetail /></ExporterRoute>} />
             <Route path="/exporter/documents" element={<ExporterRoute><ExporterDocuments /></ExporterRoute>} />
+            <Route path="/exporter/account/profile" element={<ExporterRoute><ExporterCompanyProfile /></ExporterRoute>} />
+            <Route path="/exporter/account/settings" element={<ExporterRoute><AccountSettings /></ExporterRoute>} />
 
             {/* Admin routes */}
             <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
             <Route path="/admin/deals" element={<AdminLayout><AdminDeals /></AdminLayout>} />
             <Route path="/admin/deals/:id" element={<AdminLayout><DealDetail /></AdminLayout>} />
             <Route path="/admin/registration-pipeline" element={<AdminLayout><ApplicationsAdmin embedded /></AdminLayout>} />
-            <Route path="/admin/users" element={<AdminLayout><SettingsPage /></AdminLayout>} />
+            <Route path="/admin/users" element={<AdminLayout><AdminUserDirectory /></AdminLayout>} />
+            <Route path="/admin/account" element={<AdminLayout><AccountSettings /></AdminLayout>} />
+            <Route path="/greystar/account" element={<GreystarRoute><AccountSettings /></GreystarRoute>} />
             <Route path="/admin/settings" element={<AdminLayout><SettingsPage /></AdminLayout>} />
             <Route path="/admin/pricing" element={<AdminLayout><PricingSettings /></AdminLayout>} />
             <Route path="/admin/capital" element={<AdminLayout><CapitalPool /></AdminLayout>} />
