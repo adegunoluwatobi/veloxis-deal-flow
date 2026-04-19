@@ -243,9 +243,9 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
             className={`rounded px-2 py-1 text-[12px] outline-none disabled:opacity-50 ${embedded ? "bg-background border border-border text-foreground" : "text-white border border-white/10"}`}
             style={embedded ? undefined : { background: inputBg }}
           >
-            <option value="routed">routed</option>
-            <option value="expansion">expansion</option>
-            <option value="assigned" disabled>assigned (auto)</option>
+            <option value="routed">Routed</option>
+            <option value="expansion">Expansion</option>
+            <option value="assigned" disabled>Assigned (auto)</option>
           </select>
         </td>
       </>
@@ -378,7 +378,7 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
                         <select value={a.status} onChange={e => updatePartnerStatus(a.id, e.target.value)}
                           className={`rounded px-2 py-1 text-[12px] outline-none ${embedded ? "bg-background border border-border text-foreground" : "text-white border border-white/10"}`}
                           style={embedded ? undefined : { background: inputBg }}>
-                          {partnerStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                          {partnerStatuses.map(s => <option key={s} value={s}>{s.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</option>)}
                         </select>
                       </td>
                       <td className={`py-3 px-3 ${embedded ? "text-muted-foreground" : "text-white/40"}`}>{fmtDate(a.created_at)}</td>
