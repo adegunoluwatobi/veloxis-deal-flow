@@ -12,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { Info, Loader2, Building2, History } from 'lucide-react';
+import { Loader2, Building2, History } from 'lucide-react';
 
 const TEAL = '#0BA4A4';
 
