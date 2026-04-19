@@ -106,7 +106,7 @@ export default function BuyerVerificationCard(props: BuyerVerificationCardProps)
       return (
         <div className="rounded-md border border-border bg-card p-3 space-y-2.5">
           <div className="flex items-center justify-between gap-2">
-            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 gap-1">
+            <Badge className="bg-success/15 text-success hover:bg-success/15 gap-1 border border-success/30">
               <ShieldCheck className="h-3 w-3" /> Verified on Companies House
             </Badge>
             {canVerify && (
@@ -122,7 +122,7 @@ export default function BuyerVerificationCard(props: BuyerVerificationCardProps)
             <DefRow label="Status" value={
               <span className={cn(
                 'font-medium',
-                tone === 'active' && 'text-emerald-600 dark:text-emerald-400',
+                tone === 'active' && 'text-success',
                 tone === 'inactive' && 'text-destructive',
                 tone === 'unknown' && 'text-muted-foreground'
               )}>{formatStatus(buyer_ch_company_status)}</span>
@@ -132,8 +132,8 @@ export default function BuyerVerificationCard(props: BuyerVerificationCardProps)
           </dl>
 
           {tone === 'inactive' && (
-            <div className="flex items-start gap-2 rounded-md border border-amber-300/60 bg-amber-50 p-2 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
-              <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+            <div className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-2 text-xs text-warning-foreground">
+              <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-warning" />
               <span>This company is not currently active on Companies House. Review before proceeding.</span>
             </div>
           )}
@@ -227,7 +227,7 @@ export function BuyerVerificationIcon({
   }
   const tone = statusTone(buyer_ch_company_status);
   if (tone === 'active') {
-    return <span title="Verified — Active" className="inline-flex items-center text-emerald-600 dark:text-emerald-400"><ShieldCheck className="h-3.5 w-3.5" /></span>;
+    return <span title="Verified — Active" className="inline-flex items-center text-success"><ShieldCheck className="h-3.5 w-3.5" /></span>;
   }
-  return <span title={`Verified — ${formatStatus(buyer_ch_company_status)} (review)`} className="inline-flex items-center text-amber-600 dark:text-amber-400"><AlertTriangle className="h-3.5 w-3.5" /></span>;
+  return <span title={`Verified — ${formatStatus(buyer_ch_company_status)} (review)`} className="inline-flex items-center text-warning"><AlertTriangle className="h-3.5 w-3.5" /></span>;
 }
