@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import {
-  KYC_STATUS_LABELS, ENTITY_TYPE_LABELS,
+  KYC_STATUS_LABELS, ENTITY_TYPE_LABELS, formatEntityType,
   type KycStatus, type EntityType, type ExporterDocumentType, type ExpiryStatus,
 } from '@/types';
 import { cn } from '@/lib/utils';
@@ -220,7 +220,7 @@ export default function ExporterDetail() {
             </div>
             <div>
               <CardTitle className="text-lg">{exporter.company_name}</CardTitle>
-              <CardDescription>RC {exporter.rc_number} · {ENTITY_TYPE_LABELS[exporter.entity_type]}</CardDescription>
+              <CardDescription>RC {exporter.rc_number} · {formatEntityType(exporter.entity_type)}</CardDescription>
             </div>
             <Badge variant="secondary" className={cn('ml-auto font-medium', kyc.color)}>
               {kyc.label}

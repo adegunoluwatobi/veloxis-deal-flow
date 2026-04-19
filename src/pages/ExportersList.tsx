@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { ENTITY_TYPE_LABELS, type KycStatus, type EntityType } from '@/types';
+import { ENTITY_TYPE_LABELS, formatEntityType, type KycStatus, type EntityType } from '@/types';
 import { cn } from '@/lib/utils';
 import { computeKycStatus } from '@/lib/computeKycStatus';
 
@@ -247,7 +247,7 @@ export default function ExportersList() {
               <div>
                 <p className="font-medium text-foreground">{exp.company_name}</p>
                 <p className="text-sm text-muted-foreground">
-                  RC {exp.rc_number} · {ENTITY_TYPE_LABELS[exp.entity_type]} · {exp.director_name}
+                  RC {exp.rc_number} · {formatEntityType(exp.entity_type)} · {exp.director_name}
                 </p>
               </div>
               {(() => {
