@@ -3,7 +3,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
-import WebsiteLayout from "@/components/veloxis/WebsiteLayout";
+import { WebsiteLayout } from "@/components/veloxis/WebsiteLayout";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
@@ -132,7 +132,7 @@ export default function Unsubscribe() {
 
             {(state.kind === "success" || state.kind === "already") && (
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-emerald-700">
+                <div className="flex items-center gap-2 text-primary">
                   <CheckCircle2 className="h-5 w-5" />
                   <span className="font-medium">
                     {state.kind === "success"
