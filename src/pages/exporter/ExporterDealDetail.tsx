@@ -464,6 +464,12 @@ export default function ExporterDealDetail() {
           <DealField field="bank_account_number" label="Account Number" value={deal.bank_account_number} />
           <DealField field="bank_sort_code_iban" label="Sort Code / IBAN" value={deal.bank_sort_code_iban} />
           <DealField field="bank_country" label="Bank Country" value={deal.bank_country} />
+          <DealField field="beneficiary_bank_name" label="Beneficiary Bank Name" value={(deal as any).beneficiary_bank_name} />
+          <DealField field="beneficiary_swift_bic" label="Beneficiary SWIFT/BIC" value={(deal as any).beneficiary_swift_bic} />
+          <DealField field="beneficiary_iban" label="Beneficiary IBAN" value={(deal as any).beneficiary_iban} />
+          <DealField field="beneficiary_bank_address" label="Beneficiary Bank Address" value={(deal as any).beneficiary_bank_address} />
+          <DealField field="correspondent_bank_name" label="Correspondent Bank Name" value={(deal as any).correspondent_bank_name} />
+          <DealField field="correspondent_swift_bic" label="Correspondent SWIFT/BIC" value={(deal as any).correspondent_swift_bic} />
         </CardContent>
       </Card>
 
