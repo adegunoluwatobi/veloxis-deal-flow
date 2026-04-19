@@ -811,21 +811,46 @@ export default function ExporterDealNew() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Export Licence Number *</Label>
-              <Input value={form.export_licence_number} onChange={e => updateField('export_licence_number', e.target.value)} />
+              <Label htmlFor="export_licence_number">Export Licence Number *</Label>
+              {exporter.export_licence_number ? (
+                <>
+                  <div className="relative">
+                    <Input
+                      id="export_licence_number"
+                      value={form.export_licence_number}
+                      readOnly
+                      disabled
+                      className="pr-9 bg-muted/50"
+                    />
+                    <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    This is the export licence number from your onboarding profile. To update it, contact support@veloxis.co.uk.
+                  </p>
+                </>
+              ) : (
+                <Input
+                  id="export_licence_number"
+                  value={form.export_licence_number}
+                  onChange={e => updateField('export_licence_number', e.target.value)}
+                  placeholder="Enter your export licence number"
+                />
+              )}
             </div>
             <div className="space-y-2">
-              <Label>HS Code *</Label>
-              <Input value={form.hs_code} onChange={e => updateField('hs_code', e.target.value)} placeholder="e.g. 2601.11" />
+              <Label htmlFor="hs_code">HS Code</Label>
+              <Input id="hs_code" value={form.hs_code} onChange={e => updateField('hs_code', e.target.value)} placeholder="e.g. 1006.30" />
+              <p className="text-xs text-muted-foreground">Optional — Harmonised System commodity code (e.g. 1006.30 for milled rice)</p>
             </div>
             <div className="space-y-2">
-              <Label>Incoterms *</Label>
+              <Label htmlFor="incoterms">Incoterms</Label>
               <Select value={form.incoterms} onValueChange={v => updateField('incoterms', v)}>
-                <SelectTrigger><SelectValue placeholder="Select incoterms" /></SelectTrigger>
+                <SelectTrigger id="incoterms"><SelectValue placeholder="Select incoterms" /></SelectTrigger>
                 <SelectContent>
                   {INCOTERMS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">Optional — delivery terms agreed with the buyer (e.g. FOB, CIF, DDP)</p>
             </div>
 
             <div className="rounded-lg border border-border bg-muted/30 p-4">
