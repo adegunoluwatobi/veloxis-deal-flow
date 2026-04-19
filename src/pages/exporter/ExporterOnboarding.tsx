@@ -274,30 +274,79 @@ export default function ExporterOnboarding() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="company_name">Company Name *</Label>
-              <Input id="company_name" placeholder="e.g. Adire Textiles Ltd" value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} />
+              <Input
+                id="company_name"
+                required
+                aria-invalid={!!fieldError('company_name')}
+                placeholder="e.g. Adire Textiles Ltd"
+                value={form.company_name}
+                onChange={(e) => setForm({ ...form, company_name: e.target.value })}
+                onBlur={() => markTouched('company_name')}
+                className={fieldError('company_name') ? 'border-destructive focus-visible:ring-destructive' : ''}
+              />
+              {fieldError('company_name') && <p className="text-xs text-destructive">{fieldError('company_name')}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="rc_number">RC Number *</Label>
-              <Input id="rc_number" placeholder="e.g. RC123456" value={form.rc_number} onChange={(e) => setForm({ ...form, rc_number: e.target.value })} />
+              <Input
+                id="rc_number"
+                required
+                aria-invalid={!!fieldError('rc_number')}
+                placeholder="e.g. RC123456"
+                value={form.rc_number}
+                onChange={(e) => setForm({ ...form, rc_number: e.target.value })}
+                onBlur={() => markTouched('rc_number')}
+                className={fieldError('rc_number') ? 'border-destructive focus-visible:ring-destructive' : ''}
+              />
+              {fieldError('rc_number') && <p className="text-xs text-destructive">{fieldError('rc_number')}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="entity_type">Entity Type *</Label>
-              <Select value={form.entity_type} onValueChange={(v) => setForm({ ...form, entity_type: v as EntityType })}>
-                <SelectTrigger><SelectValue placeholder="Select entity type" /></SelectTrigger>
+              <Select
+                value={form.entity_type}
+                onValueChange={(v) => { setForm({ ...form, entity_type: v as EntityType }); markTouched('entity_type'); }}
+              >
+                <SelectTrigger
+                  id="entity_type"
+                  aria-invalid={!!fieldError('entity_type')}
+                  onBlur={() => markTouched('entity_type')}
+                  className={fieldError('entity_type') ? 'border-destructive focus-visible:ring-destructive' : ''}
+                >
+                  <SelectValue placeholder="Select entity type" />
+                </SelectTrigger>
                 <SelectContent>
                   {(Object.entries(ENTITY_TYPE_LABELS) as [EntityType, string][]).map(([val, label]) => (
                     <SelectItem key={val} value={val}>{label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {fieldError('entity_type') && <p className="text-xs text-destructive">{fieldError('entity_type')}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="director_name">Director Name *</Label>
-              <Input id="director_name" placeholder="Full name of primary director" value={form.director_name} onChange={(e) => setForm({ ...form, director_name: e.target.value })} />
+              <Input
+                id="director_name"
+                required
+                aria-invalid={!!fieldError('director_name')}
+                placeholder="Full name of primary director"
+                value={form.director_name}
+                onChange={(e) => setForm({ ...form, director_name: e.target.value })}
+                onBlur={() => markTouched('director_name')}
+                className={fieldError('director_name') ? 'border-destructive focus-visible:ring-destructive' : ''}
+              />
+              {fieldError('director_name') && <p className="text-xs text-destructive">{fieldError('director_name')}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="contact_email">Contact Email *</Label>
-              <EmailInput id="contact_email" placeholder="exporter@company.ng" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} />
+              <EmailInput
+                id="contact_email"
+                required
+                placeholder="exporter@company.ng"
+                value={form.contact_email}
+                onChange={(e) => setForm({ ...form, contact_email: e.target.value })}
+                onBlur={() => markTouched('contact_email')}
+                error={fieldError('contact_email') ?? undefined}
+              />
             </div>
           </CardContent>
         </Card>
