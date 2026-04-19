@@ -1839,6 +1839,14 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_notification_recipient_admin: { Args: never; Returns: string }
+      get_partner_admin_email: {
+        Args: { p_org_id: string }
+        Returns: {
+          email: string
+          full_name: string
+        }[]
+      }
       get_partner_org_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
