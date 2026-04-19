@@ -88,7 +88,7 @@ export type AuditAction =
   | 'demurrage_updated' | 'internal_note_added' | 'deal_closed' | 'deal_status_changed'
   | 'pricing_recalculated' | 'document_superseded' | 'exporter_created' | 'kyc_verified'
   | 'kyc_rejected' | 'upload_token_generated' | 'exporter_document_uploaded'
-  | 'exporter_document_verified';
+  | 'exporter_document_verified' | 'buyer_ch_verified' | 'buyer_ch_not_found';
 
 // UI Label Maps
 export type Portal = 'exporter' | 'partner' | 'veloxis';
