@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Info, Loader2, Building2 } from 'lucide-react';
+import { CountrySelect } from '@/components/ui/country-select';
 
 const TEAL = '#0BA4A4';
 
@@ -126,7 +127,10 @@ export default function PartnerOrgProfile() {
             <Field label="Address line 2" value={form.registered_address_line2} onChange={(v) => update('registered_address_line2', v)} disabled={readOnly} />
             <Field label="City" value={form.registered_city} onChange={(v) => update('registered_city', v)} disabled={readOnly} />
             <Field label="Postcode" value={form.registered_postcode} onChange={(v) => update('registered_postcode', v)} disabled={readOnly} />
-            <Field label="Country" value={form.registered_country} onChange={(v) => update('registered_country', v)} disabled={readOnly} />
+            <div className="space-y-2">
+              <Label>Country</Label>
+              <CountrySelect value={form.registered_country ?? ''} onChange={(v) => update('registered_country', v)} disabled={readOnly} />
+            </div>
           </div>
         </CardContent>
       </Card>

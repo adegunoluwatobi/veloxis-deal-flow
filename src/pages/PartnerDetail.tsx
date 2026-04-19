@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ArrowLeft, Building2, Users, FileText, ShieldCheck, Ban, CheckCircle2, Edit } from 'lucide-react';
+import { CountrySelect } from '@/components/ui/country-select';
 import { type DealStatus } from '@/types';
 
 export default function PartnerDetail() {
@@ -277,7 +278,7 @@ export default function PartnerDetail() {
           </DialogHeader>
           <div className="space-y-4">
             <div><Label>Name</Label><Input value={editName} onChange={e => setEditName(e.target.value)} /></div>
-            <div><Label>Country</Label><Input value={editCountry} onChange={e => setEditCountry(e.target.value)} /></div>
+            <div><Label>Country</Label><CountrySelect value={editCountry} onChange={setEditCountry} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEdit(false)}>Cancel</Button>

@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { Loader2, Building2, History } from 'lucide-react';
+import { CountrySelect } from '@/components/ui/country-select';
 
 const TEAL = '#0BA4A4';
 
@@ -228,7 +229,10 @@ export default function ExporterCompanyProfile() {
             <Field label="Address line 2" value={form.registered_address_line2 as string} onChange={(v) => update('registered_address_line2', v)} />
             <Field label="City" value={form.registered_city as string} onChange={(v) => update('registered_city', v)} />
             <Field label="Postcode" value={form.registered_postcode as string} onChange={(v) => update('registered_postcode', v)} />
-            <Field label="Country" value={form.registered_country as string} onChange={(v) => update('registered_country', v)} />
+            <div className="space-y-2">
+              <Label>Country</Label>
+              <CountrySelect value={(form.registered_country as string) ?? ''} onChange={(v) => update('registered_country', v)} />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -252,7 +256,10 @@ export default function ExporterCompanyProfile() {
               <Field label="Address line 2" value={form.trading_address_line2 as string} onChange={(v) => update('trading_address_line2', v)} />
               <Field label="City" value={form.trading_city as string} onChange={(v) => update('trading_city', v)} />
               <Field label="Postcode" value={form.trading_postcode as string} onChange={(v) => update('trading_postcode', v)} />
-              <Field label="Country" value={form.trading_country as string} onChange={(v) => update('trading_country', v)} />
+              <div className="space-y-2">
+                <Label>Country</Label>
+                <CountrySelect value={(form.trading_country as string) ?? ''} onChange={(v) => update('trading_country', v)} />
+              </div>
             </div>
           </CardContent>
         )}

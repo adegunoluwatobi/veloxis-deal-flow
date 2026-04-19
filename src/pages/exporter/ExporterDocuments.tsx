@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import type { ExporterDocumentType } from '@/types';
 import { DOC_TYPE_LABELS, buildDocTypeOptions } from '@/lib/docTypeOptions';
 import DocumentRequestSection from '@/components/DocumentRequestSection';
+import { CountrySelect } from '@/components/ui/country-select';
 
 export default function ExporterDocuments() {
   const { user } = useAuth();
@@ -280,10 +281,9 @@ export default function ExporterDocuments() {
                     </div>
                     <div className="space-y-2 md:col-span-2">
                       <Label>Country</Label>
-                      <Input
+                      <CountrySelect
                         value={addressForm.registered_country}
-                        onChange={(e) => setAddressForm({ ...addressForm, registered_country: e.target.value })}
-                        placeholder="e.g. Nigeria"
+                        onChange={(v) => setAddressForm({ ...addressForm, registered_country: v })}
                       />
                     </div>
                   </div>
