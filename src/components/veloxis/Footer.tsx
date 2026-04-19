@@ -67,8 +67,9 @@ export function Footer() {
           <FooterColumn title="Legal" links={LEGAL} />
         </div>
 
-        <div className="mt-6 pt-5 text-[12px] text-[#6b7280]" style={{ borderTop: "0.5px solid #e5e7eb" }}>
-          © 2026 Veloxis Ltd (Company number 15663333). Registered in England and Wales.
+        <div className="mt-6 pt-5 text-[12px] leading-[1.6] text-[#6b7280] space-y-1" style={{ borderTop: "0.5px solid #e5e7eb" }}>
+          <div>© 2026 Veloxis Ltd (Company number 15663333). Registered in England and Wales.</div>
+          <div>Registered office: Exeter Business Park, 1 Emperor Way, Exeter, EX1 3QS, United Kingdom.</div>
         </div>
       </div>
     </footer>
