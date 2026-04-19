@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import DealStatusBadge from '@/components/DealStatusBadge';
 import { Plus } from 'lucide-react';
 import type { DealStatus } from '@/types';
@@ -20,11 +21,14 @@ interface DealRow {
   created_at: string;
 }
 
+const REQUIRED_KYC_DOC_TYPES = ['cac_certificate', 'director_id', 'nepc_certificate'] as const;
+
 export default function ExporterDeals() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [deals, setDeals] = useState<DealRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [exporterId, setExporterId] = useState<string | null>(null);
+  const [allDocsComplete, setAllDocsComplete] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -35,14 +39,23 @@ export default function ExporterDeals() {
         .eq('exporter_user_id', user.id)
         .maybeSingle();
       if (!exp) { setLoading(false); return; }
-      setExporterId(exp.id);
 
-      const { data } = await supabase
-        .from('deals')
-        .select('id, deal_reference, status, invoice_number, invoice_value, invoice_currency_v2, buyer_company_name, submitted_at, created_at')
-        .eq('exporter_id', exp.id)
-        .order('created_at', { ascending: false });
-      setDeals((data as DealRow[]) ?? []);
+      const [{ data: dealsData }, { data: docsData }] = await Promise.all([
+        supabase
+          .from('deals')
+          .select('id, deal_reference, status, invoice_number, invoice_value, invoice_currency_v2, buyer_company_name, submitted_at, created_at')
+          .eq('exporter_id', exp.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('exporter_documents')
+          .select('document_type')
+          .eq('exporter_id', exp.id)
+          .eq('is_superseded', false),
+      ]);
+
+      setDeals((dealsData as DealRow[]) ?? []);
+      const uploadedTypes = new Set((docsData ?? []).map((d) => d.document_type));
+      setAllDocsComplete(REQUIRED_KYC_DOC_TYPES.every((t) => uploadedTypes.has(t)));
       setLoading(false);
     };
     load();
@@ -53,6 +66,27 @@ export default function ExporterDeals() {
     return map[c ?? ''] ?? '';
   };
 
+  const submitButton = (key: string) => (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className={!allDocsComplete ? 'cursor-not-allowed' : undefined}>
+          <Button
+            disabled={!allDocsComplete}
+            onClick={() => navigate('/exporter/deals/new')}
+            className="disabled:pointer-events-none disabled:opacity-60"
+          >
+            <Plus className="mr-2 h-4 w-4" />Submit Application
+          </Button>
+        </span>
+      </TooltipTrigger>
+      {!allDocsComplete && (
+        <TooltipContent side="bottom" className="max-w-xs">
+          Upload all 3 KYC documents (CAC Certificate, Director ID, Export Licence) to enable new applications.
+        </TooltipContent>
+      )}
+    </Tooltip>
+  );
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -60,9 +94,7 @@ export default function ExporterDeals() {
           <h1 className="text-2xl font-bold text-foreground">My Applications</h1>
           <p className="text-sm text-muted-foreground">Your trade finance applications</p>
         </div>
-        <Button asChild>
-          <Link to="/exporter/deals/new"><Plus className="mr-2 h-4 w-4" />Submit Application</Link>
-        </Button>
+        {submitButton('header')}
       </div>
 
       {loading ? (
@@ -71,9 +103,7 @@ export default function ExporterDeals() {
         <Card>
           <CardContent className="py-16 text-center">
             <p className="text-muted-foreground mb-4">You have no applications yet. Submit your first application to get started.</p>
-            <Button asChild>
-              <Link to="/exporter/deals/new"><Plus className="mr-2 h-4 w-4" />Submit Application</Link>
-            </Button>
+            {submitButton('empty')}
           </CardContent>
         </Card>
       ) : (
