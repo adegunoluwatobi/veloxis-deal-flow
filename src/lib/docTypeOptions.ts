@@ -4,7 +4,7 @@ const DOC_TYPE_LABELS: Record<ExporterDocumentType, string> = {
   cac_certificate: 'CAC Certificate',
   director_id: 'Director ID',
   nepc_certificate: 'Export Licence',
-  registered_address_proof: 'Registered Address Proof',
+  registered_address_proof: 'Registered Address',
   ubo_declaration_doc: 'UBO Declaration',
   source_of_funds_doc: 'Source of Funds',
   bank_statements: 'Bank Statements',
