@@ -186,7 +186,11 @@ const App = () => (
             <Route path="/cookies" element={<LegalPage slug="cookies" />} />
 
             {/* Notifications (role-aware shell) */}
-            <Route path="/notifications" element={<NotificationsRoute />} />
+            <Route path="/notifications" element={
+              <ProtectedRoute>
+                <NotificationsRoleShell><NotificationsPage /></NotificationsRoleShell>
+              </ProtectedRoute>
+            } />
 
             {/* Email unsubscribe */}
             <Route path="/unsubscribe" element={<Unsubscribe />} />
