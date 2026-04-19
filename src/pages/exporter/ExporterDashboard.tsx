@@ -234,7 +234,7 @@ export default function ExporterDashboard() {
               </TooltipTrigger>
               {!allDocsComplete && (
                 <TooltipContent side="bottom" className="max-w-xs">
-                  Upload all 3 KYC documents (CAC Certificate, Director ID, Export Licence) to enable new applications.
+                  Upload all 4 KYC documents (CAC Certificate, Director ID, Export Licence, Registered Address Proof) to enable new applications.
                 </TooltipContent>
               )}
             </Tooltip>
