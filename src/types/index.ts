@@ -207,6 +207,23 @@ export const ENTITY_TYPE_LABELS: Record<EntityType, string> = {
   incorporated_trustee: 'Incorporated Trustee',
 };
 
+// Defensive map covering enum values that may legitimately appear in legacy
+// data even though they're not in the EntityType union (sole_trader,
+// partnership, other). Use this everywhere Entity Type is rendered.
+const ENTITY_TYPE_FALLBACK_LABELS: Record<string, string> = {
+  sole_trader: 'Sole Trader',
+  partnership: 'Partnership',
+  other: 'Other',
+};
+
+export function formatEntityType(value: string | null | undefined): string {
+  if (!value) return '—';
+  if (value in ENTITY_TYPE_LABELS) return ENTITY_TYPE_LABELS[value as EntityType];
+  if (value in ENTITY_TYPE_FALLBACK_LABELS) return ENTITY_TYPE_FALLBACK_LABELS[value];
+  // Fallback: prettify snake_case
+  return value.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
 export const COMMODITY_TYPE_LABELS: Record<CommodityType, string> = {
   solid_minerals: 'Solid Minerals',
   scrap_metal: 'Scrap Metal',
