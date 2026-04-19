@@ -175,7 +175,13 @@ export default function ExporterDocuments() {
       });
 
       setForm({ document_type: '', expiry_date: '', file: null, export_licence_number: '' });
-      toast({ title: 'Document uploaded', description: 'Your document has been submitted for review.' });
+      // Strip ?type= so the form doesn't auto-reselect this just-uploaded type
+      if (searchParams.get('type')) {
+        const next = new URLSearchParams(searchParams);
+        next.delete('type');
+        setSearchParams(next, { replace: true });
+      }
+      toast({ title: 'Document uploaded', description: 'Your document has been submitted to your partner for review.' });
       load();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Upload failed';
