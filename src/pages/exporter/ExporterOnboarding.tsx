@@ -261,56 +261,32 @@ export default function ExporterOnboarding() {
             <CardDescription>All fields are required</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="company_name">Company Name *</Label>
-              <Input
-                id="company_name"
-                required
-                aria-invalid={!!fieldError('company_name')}
-                placeholder="e.g. Adire Textiles Ltd"
-                value={form.company_name}
-                onChange={(e) => setForm({ ...form, company_name: e.target.value })}
-                onBlur={() => markTouched('company_name')}
-                className={fieldError('company_name') ? 'border-destructive focus-visible:ring-destructive' : ''}
-              />
-              {fieldError('company_name') && <p className="text-xs text-destructive">{fieldError('company_name')}</p>}
+            <div className="space-y-3 rounded-md border border-border bg-muted/40 p-4">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <Lock className="h-3.5 w-3.5" /> Set by your Veloxis administrator
+              </div>
+              <div className="grid gap-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Company Name</Label>
+                  <p className="mt-1 text-sm font-medium text-foreground">{form.company_name || '—'}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">RC Number</Label>
+                  <p className="mt-1 text-sm font-medium text-foreground">{form.rc_number || '—'}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Entity Type</Label>
+                  <p className="mt-1 text-sm font-medium text-foreground">
+                    {form.entity_type ? ENTITY_TYPE_LABELS[form.entity_type as EntityType] : '—'}
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                These details were set by your Veloxis administrator. If any information is incorrect, contact{' '}
+                <a href="mailto:support@veloxis.co.uk" className="underline">support@veloxis.co.uk</a>.
+              </p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="rc_number">RC Number *</Label>
-              <Input
-                id="rc_number"
-                required
-                aria-invalid={!!fieldError('rc_number')}
-                placeholder="e.g. RC123456"
-                value={form.rc_number}
-                onChange={(e) => setForm({ ...form, rc_number: e.target.value })}
-                onBlur={() => markTouched('rc_number')}
-                className={fieldError('rc_number') ? 'border-destructive focus-visible:ring-destructive' : ''}
-              />
-              {fieldError('rc_number') && <p className="text-xs text-destructive">{fieldError('rc_number')}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="entity_type">Entity Type *</Label>
-              <Select
-                value={form.entity_type}
-                onValueChange={(v) => { setForm({ ...form, entity_type: v as EntityType }); markTouched('entity_type'); }}
-              >
-                <SelectTrigger
-                  id="entity_type"
-                  aria-invalid={!!fieldError('entity_type')}
-                  onBlur={() => markTouched('entity_type')}
-                  className={fieldError('entity_type') ? 'border-destructive focus-visible:ring-destructive' : ''}
-                >
-                  <SelectValue placeholder="Select entity type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(Object.entries(ENTITY_TYPE_LABELS) as [EntityType, string][]).map(([val, label]) => (
-                    <SelectItem key={val} value={val}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {fieldError('entity_type') && <p className="text-xs text-destructive">{fieldError('entity_type')}</p>}
-            </div>
+
             <div className="space-y-2">
               <Label htmlFor="director_name">Director Name *</Label>
               <Input
