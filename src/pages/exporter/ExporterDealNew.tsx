@@ -74,6 +74,14 @@ export default function ExporterDealNew() {
     bank_account_number: '',
     bank_sort_code_iban: '',
     bank_country: '',
+    // Beneficiary bank (Payment & Banking Details)
+    beneficiary_bank_name: '',
+    beneficiary_swift_bic: '',
+    beneficiary_iban: '',
+    beneficiary_bank_address: '',
+    // Correspondent (intermediary) bank
+    correspondent_bank_name: '',
+    correspondent_swift_bic: '',
     invoice_number: '',
     invoice_date: '',
     invoice_amount: '',
