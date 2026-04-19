@@ -110,11 +110,15 @@ export default function ExporterDealNew() {
     const load = async () => {
       const { data: exp } = await supabase
         .from('exporters')
-        .select('id, company_name, originator_id')
+        .select('id, company_name, originator_id, export_licence_number')
         .eq('exporter_user_id', user.id)
         .maybeSingle();
       if (exp) {
-        setExporter(exp);
+        setExporter(exp as ExporterProfile);
+        // Pre-populate export licence number from KYC profile
+        if (exp.export_licence_number) {
+          setForm(f => ({ ...f, export_licence_number: exp.export_licence_number ?? '' }));
+        }
         const { data: banks } = await supabase
           .from('exporter_bank_accounts')
           .select('*')
