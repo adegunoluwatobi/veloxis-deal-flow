@@ -1123,6 +1123,8 @@ export type Database = {
       }
       exporters: {
         Row: {
+          activated_at: string | null
+          activated_by: string | null
           company_name: string
           contact_email: string | null
           country: string
@@ -1131,6 +1133,7 @@ export type Database = {
           edd_completed: boolean
           edd_required: boolean
           entity_type: Database["public"]["Enums"]["entity_type"]
+          expansion_override: boolean
           exporter_user_id: string | null
           forwarded_to_veloxis_at: string | null
           forwarded_to_veloxis_by: string | null
@@ -1143,6 +1146,7 @@ export type Database = {
           kyc_verified_by: string | null
           onboarding_status: Database["public"]["Enums"]["onboarding_status"]
           originator_id: string
+          pipeline_status: Database["public"]["Enums"]["pipeline_status"]
           primary_commodity: string | null
           rc_number: string
           registered_address_line1: string | null
@@ -1150,6 +1154,10 @@ export type Database = {
           registered_city: string | null
           registered_country: string | null
           registered_postcode: string | null
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          routed_at: string | null
           sanctions_screening_status: Database["public"]["Enums"]["sanctions_screening_status"]
           source_of_funds_statement: string | null
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
@@ -1163,6 +1171,8 @@ export type Database = {
           vat_number: string | null
         }
         Insert: {
+          activated_at?: string | null
+          activated_by?: string | null
           company_name: string
           contact_email?: string | null
           country?: string
@@ -1171,6 +1181,7 @@ export type Database = {
           edd_completed?: boolean
           edd_required?: boolean
           entity_type: Database["public"]["Enums"]["entity_type"]
+          expansion_override?: boolean
           exporter_user_id?: string | null
           forwarded_to_veloxis_at?: string | null
           forwarded_to_veloxis_by?: string | null
@@ -1183,6 +1194,7 @@ export type Database = {
           kyc_verified_by?: string | null
           onboarding_status?: Database["public"]["Enums"]["onboarding_status"]
           originator_id: string
+          pipeline_status?: Database["public"]["Enums"]["pipeline_status"]
           primary_commodity?: string | null
           rc_number: string
           registered_address_line1?: string | null
@@ -1190,6 +1202,10 @@ export type Database = {
           registered_city?: string | null
           registered_country?: string | null
           registered_postcode?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          routed_at?: string | null
           sanctions_screening_status?: Database["public"]["Enums"]["sanctions_screening_status"]
           source_of_funds_statement?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
@@ -1203,6 +1219,8 @@ export type Database = {
           vat_number?: string | null
         }
         Update: {
+          activated_at?: string | null
+          activated_by?: string | null
           company_name?: string
           contact_email?: string | null
           country?: string
@@ -1211,6 +1229,7 @@ export type Database = {
           edd_completed?: boolean
           edd_required?: boolean
           entity_type?: Database["public"]["Enums"]["entity_type"]
+          expansion_override?: boolean
           exporter_user_id?: string | null
           forwarded_to_veloxis_at?: string | null
           forwarded_to_veloxis_by?: string | null
@@ -1223,6 +1242,7 @@ export type Database = {
           kyc_verified_by?: string | null
           onboarding_status?: Database["public"]["Enums"]["onboarding_status"]
           originator_id?: string
+          pipeline_status?: Database["public"]["Enums"]["pipeline_status"]
           primary_commodity?: string | null
           rc_number?: string
           registered_address_line1?: string | null
@@ -1230,6 +1250,10 @@ export type Database = {
           registered_city?: string | null
           registered_country?: string | null
           registered_postcode?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          routed_at?: string | null
           sanctions_screening_status?: Database["public"]["Enums"]["sanctions_screening_status"]
           source_of_funds_statement?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
@@ -1799,6 +1823,10 @@ export type Database = {
           would_deploy_gbp: number
         }[]
       }
+      compute_pipeline_status: {
+        Args: { _exporter: Database["public"]["Tables"]["exporters"]["Row"] }
+        Returns: Database["public"]["Enums"]["pipeline_status"]
+      }
       default_originator_for_partner_org: {
         Args: { p_org_id: string }
         Returns: string
@@ -2025,6 +2053,16 @@ export type Database = {
         | "onboarding_submitted"
         | "onboarding_approved"
         | "onboarding_rejected"
+      pipeline_status:
+        | "invited"
+        | "onboarding_started"
+        | "pending_documents"
+        | "under_review"
+        | "pending_veloxis"
+        | "routed"
+        | "approved"
+        | "rejected"
+        | "expansion"
       repayment_reconciliation_status: "exact" | "short_payment" | "overpayment"
       sanctions_screening_status: "pending_screening" | "clear" | "flagged"
       settlement_method_type: "dom_account" | "naira_account"
@@ -2309,6 +2347,17 @@ export const Constants = {
         "onboarding_submitted",
         "onboarding_approved",
         "onboarding_rejected",
+      ],
+      pipeline_status: [
+        "invited",
+        "onboarding_started",
+        "pending_documents",
+        "under_review",
+        "pending_veloxis",
+        "routed",
+        "approved",
+        "rejected",
+        "expansion",
       ],
       repayment_reconciliation_status: [
         "exact",
