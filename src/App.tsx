@@ -62,6 +62,8 @@ import ExporterCompanyProfile from "@/pages/account/ExporterCompanyProfile";
 import PartnerOrgProfile from "@/pages/account/PartnerOrgProfile";
 import PartnerTeamMembers from "@/pages/account/PartnerTeamMembers";
 import AdminUserDirectory from "@/pages/account/AdminUserDirectory";
+import NotificationsPage from "@/pages/NotificationsPage";
+import NotificationsRoleShell from "@/components/NotificationsRoleShell";
 
 const queryClient = new QueryClient();
 
@@ -182,6 +184,13 @@ const App = () => (
             <Route path="/terms" element={<LegalPage slug="terms" />} />
             <Route path="/disclosure" element={<LegalPage slug="disclosure" />} />
             <Route path="/cookies" element={<LegalPage slug="cookies" />} />
+
+            {/* Notifications (role-aware shell) */}
+            <Route path="/notifications" element={
+              <ProtectedRoute>
+                <NotificationsRoleShell><NotificationsPage /></NotificationsRoleShell>
+              </ProtectedRoute>
+            } />
 
             {/* Email unsubscribe */}
             <Route path="/unsubscribe" element={<Unsubscribe />} />

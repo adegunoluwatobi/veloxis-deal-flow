@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import veloxisLogoWhite from '@/assets/veloxis-logo-white.png';
+import NotificationBell from '@/components/NotificationBell';
 
 const NAV_ITEMS = [
   { label: 'My Profile', href: '/exporter', icon: LayoutDashboard },
@@ -136,6 +137,7 @@ export default function ExporterPortalLayout({ children }: { children: React.Rea
             <Menu className="h-5 w-5 text-foreground" />
           </button>
           <div className="flex-1" />
+          <NotificationBell />
         </header>
         <main className="flex-1 overflow-y-auto p-6 lg:p-8">
           {children}
