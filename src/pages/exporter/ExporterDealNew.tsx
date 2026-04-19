@@ -237,12 +237,53 @@ export default function ExporterDealNew() {
   const requiredDocsUploaded = REQUIRED_TRADE_DOCS.filter(t => tradePackFiles[t]).length;
   const recommendedDocsUploaded = RECOMMENDED_TRADE_DOCS.filter(t => tradePackFiles[t]).length;
 
+  // Date validation: payment date cannot be before invoice date
+  const paymentBeforeInvoice =
+    !!form.invoice_date && !!form.payment_due_date && form.payment_due_date < form.invoice_date;
+
+  // If invoice date moves past current payment date, clear payment date and surface error
+  useEffect(() => {
+    if (form.invoice_date && form.payment_due_date && form.payment_due_date < form.invoice_date) {
+      setForm(f => ({ ...f, payment_due_date: '' }));
+      setFieldErrors(prev => ({
+        ...prev,
+        payment_due_date: 'Payment date cannot be before the invoice date',
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.invoice_date]);
+
+  const correspondentSwiftValid =
+    !form.correspondent_swift_bic || isValidSwift(form.correspondent_swift_bic);
+
   const canProceed = (s: number) => {
     switch (s) {
-      case 0: return form.bank_name && form.bank_account_name && form.bank_account_number && form.bank_sort_code_iban && form.bank_country;
-      case 1: return form.invoice_number && form.invoice_date && form.invoice_amount && form.invoice_currency && form.payment_due_date && (form.invoice_file || existingInvoicePath);
+      case 0:
+        return Boolean(
+          form.bank_name &&
+          form.bank_account_name &&
+          form.bank_account_number &&
+          form.bank_sort_code_iban &&
+          form.bank_country &&
+          form.beneficiary_bank_name &&
+          form.beneficiary_swift_bic &&
+          isValidSwift(form.beneficiary_swift_bic) &&
+          form.beneficiary_iban &&
+          isValidIban(form.beneficiary_iban) &&
+          correspondentSwiftValid
+        );
+      case 1:
+        return Boolean(
+          form.invoice_number &&
+          form.invoice_date &&
+          form.invoice_amount &&
+          form.invoice_currency &&
+          form.payment_due_date &&
+          !paymentBeforeInvoice &&
+          (form.invoice_file || existingInvoicePath)
+        );
       case 2: return form.buyer_company_name && form.buyer_country && form.buyer_contact_name && form.buyer_contact_email && isValidEmail(form.buyer_contact_email) && form.buyer_contact_phone;
-      case 3: return form.goods_description && form.export_destination && form.export_licence_number && form.hs_code && form.incoterms;
+      case 3: return form.goods_description && form.export_destination && form.export_licence_number;
       case 4: return requiredDocsUploaded === REQUIRED_TRADE_DOCS.length;
       case 5: return terms >= minTerms && terms <= maxTerms && feeAccepted && (terms <= 60 || extendedTermsConfirmed);
       default: return true;
