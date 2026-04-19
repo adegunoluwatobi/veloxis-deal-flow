@@ -47,12 +47,36 @@ export function validateAndScroll(rules: ValidationRule[]): ValidationFailure[] 
     }
   });
 
-  // Scroll to first failing field
-  const firstEl = document.getElementById(failures[0].fieldId);
+  // Scroll to + focus first failing field so the cursor lands in it immediately
+  const firstEl = document.getElementById(failures[0].fieldId) as HTMLElement | null;
   if (firstEl) {
     setTimeout(() => {
       firstEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 100);
+      // Focus the field (or the first focusable child if it's a wrapper)
+      const focusTarget: HTMLElement | null =
+        typeof (firstEl as any).focus === 'function' && firstEl.tabIndex !== -1 && (
+          firstEl.tagName === 'INPUT' ||
+          firstEl.tagName === 'TEXTAREA' ||
+          firstEl.tagName === 'SELECT' ||
+          firstEl.tagName === 'BUTTON' ||
+          firstEl.isContentEditable
+        )
+          ? firstEl
+          : firstEl.querySelector<HTMLElement>(
+              'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled]), button:not([disabled]), [contenteditable="true"], [tabindex]:not([tabindex="-1"])'
+            );
+      try {
+        focusTarget?.focus({ preventScroll: true });
+        // For text inputs, place caret at the end
+        const el = focusTarget as HTMLInputElement | HTMLTextAreaElement | null;
+        if (el && 'setSelectionRange' in el && typeof el.value === 'string') {
+          const len = el.value.length;
+          el.setSelectionRange(len, len);
+        }
+      } catch {
+        /* ignore focus errors (e.g. non-focusable element) */
+      }
+    }, 150);
   }
 
   return failures;
