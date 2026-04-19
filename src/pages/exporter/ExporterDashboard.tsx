@@ -514,6 +514,57 @@ export default function ExporterDashboard() {
                   </Wrapper>
                 );
               })}
+
+              {/* Address tile (4th KYC item) — driven by structured fields, not a document upload */}
+              {(() => {
+                const isVerified = addressComplete;
+                const isMissing = !addressComplete;
+                const isClickable = isMissing;
+                const Wrapper: React.ElementType = isClickable ? Link : 'div';
+                const wrapperProps = isClickable
+                  ? { to: '/exporter/account/profile' }
+                  : {};
+                return (
+                  <Wrapper
+                    key={ADDRESS_KYC_KEY}
+                    {...wrapperProps}
+                    className={cn(
+                      'rounded-lg border p-4 transition-all',
+                      isClickable && 'cursor-pointer hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      isVerified && 'border-success/40 bg-success/5',
+                      isMissing && 'border-amber-400/40 bg-amber-100/40 dark:bg-amber-500/10 hover:bg-amber-200/50 dark:hover:bg-amber-500/15'
+                    )}
+                  >
+                    <div className="flex flex-col gap-3">
+                      <div className={cn(
+                        'flex h-10 w-10 items-center justify-center rounded-md',
+                        isVerified && 'bg-success/15 text-success',
+                        isMissing && 'bg-amber-400/20 text-amber-700 dark:text-amber-400'
+                      )}>
+                        <MapPin className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground leading-tight">Registered Address</p>
+                        {isVerified && (
+                          <p className="mt-1 text-[11px] text-muted-foreground truncate">
+                            {[exporter.registered_city, exporter.registered_country].filter(Boolean).join(', ')}
+                          </p>
+                        )}
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            'mt-2 text-[10px] font-bold uppercase tracking-wider border',
+                            isVerified && 'border-success/40 bg-success/10 text-success',
+                            isMissing && 'border-amber-400/40 bg-amber-400/10 text-amber-700 dark:text-amber-400'
+                          )}
+                        >
+                          {isVerified ? 'Complete' : 'Missing'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </Wrapper>
+                );
+              })()}
             </div>
           </CardContent>
         </Card>
