@@ -391,8 +391,7 @@ export default function ExporterDashboard() {
                 <ProfileRow label="Company name" value={exporter.company_name} />
                 <ProfileRow
                   label="RC number"
-                  value={rcPending ? 'Pending' : exporter.rc_number}
-                  valueClassName={rcPending ? 'text-amber-600 dark:text-amber-400 font-semibold' : undefined}
+                  value={rcPending ? '—' : exporter.rc_number}
                 />
                 <ProfileRow
                   label="KYC status"
