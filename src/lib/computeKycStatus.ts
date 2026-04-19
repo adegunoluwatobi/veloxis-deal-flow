@@ -19,7 +19,10 @@ export interface ComputedKyc {
   icon: 'success' | 'warning' | 'destructive' | 'muted';
 }
 
-const MANDATORY: ExporterDocumentType[] = ['cac_certificate', 'director_id', 'nepc_certificate', 'registered_address_proof'];
+// Registered Address is captured as structured fields on the exporters row, not a document upload.
+// Pass `addressComplete = false` to signal that the exporter has not filled in their address yet.
+const MANDATORY: ExporterDocumentType[] = ['cac_certificate', 'director_id', 'nepc_certificate'];
+const ADDRESS_LABEL = 'Registered Address';
 
 export function groupDocumentsByExporter<T extends { exporter_id?: string | null }>(docs: T[]) {
   const grouped = new Map<string, T[]>();
@@ -38,7 +41,11 @@ export function groupDocumentsByExporter<T extends { exporter_id?: string | null
  * Derive KYC status live from the active (non-superseded) documents list.
  * Priority: outstanding requests > rejected > expired > pending_review > pending upload > verified
  */
-export function computeKycStatus(activeDocs: KycDocumentLike[], pendingRequestCount = 0): ComputedKyc {
+export function computeKycStatus(
+  activeDocs: KycDocumentLike[],
+  pendingRequestCount = 0,
+  addressComplete = true,
+): ComputedKyc {
   if (pendingRequestCount > 0) {
     return {
       status: 'rejected',
@@ -92,7 +99,7 @@ export function computeKycStatus(activeDocs: KycDocumentLike[], pendingRequestCo
     };
   }
 
-  if (pending.length > 0 && missing.length === 0) {
+  if (pending.length > 0 && missing.length === 0 && addressComplete) {
     return {
       status: 'under_review',
       label: 'Under Review',
@@ -104,19 +111,23 @@ export function computeKycStatus(activeDocs: KycDocumentLike[], pendingRequestCo
     };
   }
 
-  if (missing.length > 0) {
+  if (missing.length > 0 || !addressComplete) {
+    const parts = [
+      ...missing.map((m) => m.type === 'cac_certificate' ? 'CAC Certificate' : m.type === 'director_id' ? 'Director ID' : 'Export Licence'),
+      ...(!addressComplete ? [ADDRESS_LABEL] : []),
+    ];
     return {
       status: 'pending_documents',
       label: 'Pending Documents',
       badgeLabel: 'Pending Documents',
-      description: 'Please upload your CAC Certificate, Director ID, Export Licence, and Registered Address Proof.',
+      description: `Please complete: ${parts.join(', ')}.`,
       color: 'bg-muted text-muted-foreground',
       borderColor: 'border-muted bg-muted/30',
       icon: 'muted',
     };
   }
 
-  if (verified.length === MANDATORY.length) {
+  if (verified.length === MANDATORY.length && addressComplete) {
     return {
       status: 'verified',
       label: 'Complete',

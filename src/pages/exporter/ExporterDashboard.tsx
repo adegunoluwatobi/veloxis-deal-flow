@@ -40,8 +40,10 @@ const REQUIRED_DOCS: Array<{ type: string; label: string; icon: React.ComponentT
   { type: 'cac_certificate', label: 'CAC Certificate', icon: FileText },
   { type: 'director_id', label: 'Director ID', icon: User },
   { type: 'nepc_certificate', label: 'Export Licence', icon: Shield },
-  { type: 'registered_address_proof', label: 'Address Proof', icon: MapPin },
 ];
+
+// 4th KYC item — captured as structured address fields on the exporter row, not a document upload
+const ADDRESS_KYC_KEY = '__registered_address__';
 
 const PENDING_DEAL_STATUSES: DealStatus[] = [
   'draft', 'submitted', 'under_review', 'changes_requested', 'docs_requested',
@@ -177,12 +179,12 @@ export default function ExporterDashboard() {
     return map;
   }, [documents]);
 
-  const completedCount = REQUIRED_DOCS.filter((r) => {
+  const docCompletedCount = REQUIRED_DOCS.filter((r) => {
     const d = docStatusByType.get(r.type);
     return d && d.document_status !== 'rejected';
   }).length;
 
-  const verifiedCount = REQUIRED_DOCS.filter((r) => {
+  const docVerifiedCount = REQUIRED_DOCS.filter((r) => {
     const d = docStatusByType.get(r.type);
     return d?.document_status === 'verified';
   }).length;
@@ -214,11 +216,17 @@ export default function ExporterDashboard() {
     );
   }
 
-  const kyc = computeKycStatus(documents);
+  // Address counts as a 4th KYC item once line1 + city are populated. No document upload required.
+  const addressComplete = !!(exporter.registered_address_line1 && exporter.registered_city);
+  const totalRequiredCount = REQUIRED_DOCS.length + 1; // 3 docs + address
+  const completedCount = docCompletedCount + (addressComplete ? 1 : 0);
+  const verifiedCount = docVerifiedCount + (addressComplete ? 1 : 0);
+
+  const kyc = computeKycStatus(documents, 0, addressComplete);
   const initial = (exporter.company_name || '?').charAt(0).toUpperCase();
   const rcPending = !exporter.rc_number || exporter.rc_number.toLowerCase() === 'pending';
-  const allDocsComplete = completedCount === REQUIRED_DOCS.length;
-  const isFullyVerified = verifiedCount === REQUIRED_DOCS.length;
+  const allDocsComplete = completedCount === totalRequiredCount;
+  const isFullyVerified = verifiedCount === totalRequiredCount;
 
   const registeredAddress = [
     exporter.registered_address_line1,
@@ -417,12 +425,12 @@ export default function ExporterDashboard() {
                     ? `All documents verified by Veloxis on ${formatDate(exporter.kyc_verified_at) || 'review date'}`
                     : allDocsComplete
                       ? 'All documents uploaded and pending review.'
-                      : `Upload all ${REQUIRED_DOCS.length} documents to unlock deal submissions`}
+                      : `Complete all ${totalRequiredCount} items to unlock deal submissions`}
                 </p>
               </div>
               {isFullyVerified && (
                 <Badge className="bg-success/15 text-success hover:bg-success/20 border-success/30 text-xs">
-                  {verifiedCount} / {REQUIRED_DOCS.length} Verified
+                  {verifiedCount} / {totalRequiredCount} Verified
                 </Badge>
               )}
             </div>
@@ -431,14 +439,14 @@ export default function ExporterDashboard() {
               <div className="flex items-center justify-between text-xs font-medium">
                 <span className="text-muted-foreground">Verification progress</span>
                 <span className={isFullyVerified ? 'text-success' : allDocsComplete ? 'text-success' : 'text-amber-700 dark:text-amber-400'}>
-                  {isFullyVerified ? `${verifiedCount} of ${REQUIRED_DOCS.length} verified` : `${completedCount} of ${REQUIRED_DOCS.length} complete`}
+                  {isFullyVerified ? `${verifiedCount} of ${totalRequiredCount} verified` : `${completedCount} of ${totalRequiredCount} complete`}
                 </span>
               </div>
               <Progress
                 value={
                   isFullyVerified
                     ? 100
-                    : (completedCount / REQUIRED_DOCS.length) * 100
+                    : (completedCount / totalRequiredCount) * 100
                 }
                 className={cn('h-1.5', allDocsComplete ? '[&>div]:bg-success' : '[&>div]:bg-amber-500')}
               />
@@ -506,6 +514,57 @@ export default function ExporterDashboard() {
                   </Wrapper>
                 );
               })}
+
+              {/* Address tile (4th KYC item) — driven by structured fields, not a document upload */}
+              {(() => {
+                const isVerified = addressComplete;
+                const isMissing = !addressComplete;
+                const isClickable = isMissing;
+                const Wrapper: React.ElementType = isClickable ? Link : 'div';
+                const wrapperProps = isClickable
+                  ? { to: '/exporter/account/profile' }
+                  : {};
+                return (
+                  <Wrapper
+                    key={ADDRESS_KYC_KEY}
+                    {...wrapperProps}
+                    className={cn(
+                      'rounded-lg border p-4 transition-all',
+                      isClickable && 'cursor-pointer hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      isVerified && 'border-success/40 bg-success/5',
+                      isMissing && 'border-amber-400/40 bg-amber-100/40 dark:bg-amber-500/10 hover:bg-amber-200/50 dark:hover:bg-amber-500/15'
+                    )}
+                  >
+                    <div className="flex flex-col gap-3">
+                      <div className={cn(
+                        'flex h-10 w-10 items-center justify-center rounded-md',
+                        isVerified && 'bg-success/15 text-success',
+                        isMissing && 'bg-amber-400/20 text-amber-700 dark:text-amber-400'
+                      )}>
+                        <MapPin className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground leading-tight">Registered Address</p>
+                        {isVerified && (
+                          <p className="mt-1 text-[11px] text-muted-foreground truncate">
+                            {[exporter.registered_city, exporter.registered_country].filter(Boolean).join(', ')}
+                          </p>
+                        )}
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            'mt-2 text-[10px] font-bold uppercase tracking-wider border',
+                            isVerified && 'border-success/40 bg-success/10 text-success',
+                            isMissing && 'border-amber-400/40 bg-amber-400/10 text-amber-700 dark:text-amber-400'
+                          )}
+                        >
+                          {isVerified ? 'Complete' : 'Missing'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </Wrapper>
+                );
+              })()}
             </div>
           </CardContent>
         </Card>

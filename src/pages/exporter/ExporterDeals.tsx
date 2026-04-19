@@ -21,7 +21,7 @@ interface DealRow {
   created_at: string;
 }
 
-const REQUIRED_KYC_DOC_TYPES = ['cac_certificate', 'director_id', 'nepc_certificate', 'registered_address_proof'] as const;
+const REQUIRED_KYC_DOC_TYPES = ['cac_certificate', 'director_id', 'nepc_certificate'] as const;
 
 export default function ExporterDeals() {
   const { user } = useAuth();
@@ -35,7 +35,7 @@ export default function ExporterDeals() {
     const load = async () => {
       const { data: exp } = await supabase
         .from('exporters')
-        .select('id')
+        .select('id, registered_address_line1, registered_city')
         .eq('exporter_user_id', user.id)
         .maybeSingle();
       if (!exp) { setLoading(false); return; }
@@ -55,7 +55,9 @@ export default function ExporterDeals() {
 
       setDeals((dealsData as DealRow[]) ?? []);
       const uploadedTypes = new Set((docsData ?? []).map((d) => d.document_type));
-      setAllDocsComplete(REQUIRED_KYC_DOC_TYPES.every((t) => uploadedTypes.has(t)));
+      const docsOk = REQUIRED_KYC_DOC_TYPES.every((t) => uploadedTypes.has(t));
+      const addressOk = !!(exp.registered_address_line1 && exp.registered_city);
+      setAllDocsComplete(docsOk && addressOk);
       setLoading(false);
     };
     load();
