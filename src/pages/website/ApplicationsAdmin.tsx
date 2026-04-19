@@ -52,6 +52,7 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
   const [loading, setLoading] = useState(false);
   const [editingNotes, setEditingNotes] = useState<Record<string, string>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [pendingAssign, setPendingAssign] = useState<{ app: ExporterApp; partner: PartnerOrg } | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
