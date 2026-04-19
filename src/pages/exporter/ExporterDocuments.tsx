@@ -41,17 +41,24 @@ export default function ExporterDocuments() {
     registered_country: '',
   });
 
-  // Pre-select doc type from ?type=... and scroll to upload card
+  // Pre-select doc type from ?type=... ONLY if it's still uploadable (not pending/verified).
   useEffect(() => {
     const type = searchParams.get('type') as ExporterDocumentType | null;
-    if (type) {
+    if (!type || loading) return;
+    const existing = documents.find((d) => d.document_type === type && !d.is_superseded);
+    const stillUploadable = !existing || existing.document_status === 'rejected' || existing.expiry_status === 'expired';
+    if (stillUploadable) {
       setForm((prev) => ({ ...prev, document_type: type }));
-      // Wait for layout
       setTimeout(() => {
         uploadCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
+    } else {
+      // Already submitted — strip the query param so the form stays empty.
+      const next = new URLSearchParams(searchParams);
+      next.delete('type');
+      setSearchParams(next, { replace: true });
     }
-  }, [searchParams]);
+  }, [searchParams, loading, documents, setSearchParams]);
 
   const load = async () => {
     if (!user) return;
