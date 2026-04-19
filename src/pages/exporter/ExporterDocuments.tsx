@@ -26,13 +26,14 @@ export default function ExporterDocuments() {
     document_type: '' as ExporterDocumentType | '',
     expiry_date: '',
     file: null as File | null,
+    export_licence_number: '',
   });
 
   const load = async () => {
     if (!user) return;
     const { data: exp } = await supabase
       .from('exporters')
-      .select('id, company_name')
+      .select('id, company_name, export_licence_number')
       .eq('exporter_user_id', user.id)
       .limit(1)
       .maybeSingle();
@@ -61,6 +62,10 @@ export default function ExporterDocuments() {
       toast({ title: 'Expiry date required', description: 'Please set an expiry date for this document.', variant: 'destructive' });
       return;
     }
+    if (form.document_type === 'nepc_certificate' && !form.export_licence_number.trim()) {
+      toast({ title: 'Export licence number required', description: 'Please enter the export licence number.', variant: 'destructive' });
+      return;
+    }
     setUploading(true);
     try {
       const file = form.file;
@@ -82,6 +87,15 @@ export default function ExporterDocuments() {
       });
       if (docErr) throw docErr;
 
+      // Persist export licence number on exporter profile when uploading the licence
+      if (form.document_type === 'nepc_certificate') {
+        const { error: expErr } = await supabase
+          .from('exporters')
+          .update({ export_licence_number: form.export_licence_number.trim() })
+          .eq('id', exporter.id);
+        if (expErr) throw expErr;
+      }
+
       await supabase.rpc('insert_audit_log', {
         p_exporter_id: exporter.id,
         p_user_id: user.id,
@@ -90,7 +104,7 @@ export default function ExporterDocuments() {
         p_metadata: { document_type: form.document_type, file_name: file.name, uploaded_by: 'exporter' },
       });
 
-      setForm({ document_type: '', expiry_date: '', file: null });
+      setForm({ document_type: '', expiry_date: '', file: null, export_licence_number: '' });
       toast({ title: 'Document uploaded', description: 'Your document has been submitted for review.' });
       load();
     } catch (err: unknown) {
@@ -124,7 +138,7 @@ export default function ExporterDocuments() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Upload className="h-4 w-4" /> Upload Document</CardTitle>
-          <CardDescription>Accepted: CAC Certificate, Director ID, NEPC Certificate. All uploads go to your partner for review.</CardDescription>
+          <CardDescription>Accepted: CAC Certificate, Director ID, Export Licence. All uploads go to your partner for review.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {enabledOptions.length === 0 ? (
@@ -148,11 +162,31 @@ export default function ExporterDocuments() {
                   <Input type="date" value={form.expiry_date} onChange={(e) => setForm({ ...form, expiry_date: e.target.value })} required />
                 </div>
               </div>
+              {form.document_type === 'nepc_certificate' && (
+                <div className="space-y-2">
+                  <Label>Export Licence Number <span className="text-destructive">*</span></Label>
+                  <Input
+                    value={form.export_licence_number}
+                    onChange={(e) => setForm({ ...form, export_licence_number: e.target.value })}
+                    placeholder="Enter your NEPC export licence number"
+                  />
+                  <p className="text-xs text-muted-foreground">This will be saved to your company profile and pre-filled on future deals.</p>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>File</Label>
                 <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setForm({ ...form, file: e.target.files?.[0] ?? null })} />
               </div>
-              <Button onClick={handleUpload} disabled={!form.document_type || !form.file || !form.expiry_date || uploading}>
+              <Button
+                onClick={handleUpload}
+                disabled={
+                  !form.document_type ||
+                  !form.file ||
+                  !form.expiry_date ||
+                  uploading ||
+                  (form.document_type === 'nepc_certificate' && !form.export_licence_number.trim())
+                }
+              >
                 {uploading ? 'Uploading…' : 'Upload'}
               </Button>
             </>
