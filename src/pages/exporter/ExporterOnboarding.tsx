@@ -11,7 +11,7 @@ import { EmailInput, isValidEmail } from '@/components/ui/email-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { ENTITY_TYPE_LABELS, type EntityType, type ExporterDocumentType } from '@/types';
-import { Building2, Loader2, Clock, Upload, FileText, CheckCircle2 } from 'lucide-react';
+import { Building2, Loader2, Clock, Upload, FileText, CheckCircle2, Lock } from 'lucide-react';
 import { sanitiseFilename } from '@/lib/sanitiseFilename';
 import UboDeclarationForm from '@/components/UboDeclarationForm';
 
