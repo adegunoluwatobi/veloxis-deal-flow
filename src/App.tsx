@@ -55,6 +55,13 @@ import ExporterApply from "@/pages/website/ExporterApply";
 import PartnerApply from "@/pages/website/PartnerApply";
 import ApplicationsAdmin from "@/pages/website/ApplicationsAdmin";
 
+// Account pages
+import AccountSettings from "@/pages/account/AccountSettings";
+import ExporterCompanyProfile from "@/pages/account/ExporterCompanyProfile";
+import PartnerOrgProfile from "@/pages/account/PartnerOrgProfile";
+import PartnerTeamMembers from "@/pages/account/PartnerTeamMembers";
+import AdminUserDirectory from "@/pages/account/AdminUserDirectory";
+
 const queryClient = new QueryClient();
 
 function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
