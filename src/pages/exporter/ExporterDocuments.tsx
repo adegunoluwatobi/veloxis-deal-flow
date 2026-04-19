@@ -19,7 +19,8 @@ import DocumentRequestSection from '@/components/DocumentRequestSection';
 export default function ExporterDocuments() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const uploadCardRef = useRef<HTMLDivElement>(null);
   const [exporter, setExporter] = useState<any>(null);
   const [documents, setDocuments] = useState<any[]>([]);
