@@ -23,6 +23,21 @@ import { template as veloxisApprovesExporterToPartner } from './veloxis-approves
 import { template as veloxisRejectsExporterToExporter } from './veloxis-rejects-exporter-to-exporter.tsx'
 import { template as veloxisRejectsExporterToPartner } from './veloxis-rejects-exporter-to-partner.tsx'
 
+// Stage 2 — Deal lifecycle (Emails 10–16). Each lifecycle event has a
+// dedicated template per recipient (exporter / partner) so wording stays
+// audience-appropriate.
+import { template as dealApprovedToExporter } from './deal-approved-to-exporter.tsx'
+import { template as dealApprovedToPartner } from './deal-approved-to-partner.tsx'
+import { template as ipuSignedToExporter } from './ipu-signed-to-exporter.tsx'
+import { template as dealFundedToExporter } from './deal-funded-to-exporter.tsx'
+import { template as dealFundedToPartner } from './deal-funded-to-partner.tsx'
+import { template as dealOverdueToExporter } from './deal-overdue-to-exporter.tsx'
+import { template as dealOverdueToPartner } from './deal-overdue-to-partner.tsx'
+import { template as paymentReceivedToExporter } from './payment-received-to-exporter.tsx'
+import { template as paymentReceivedToPartner } from './payment-received-to-partner.tsx'
+import { template as dealClosedToExporter } from './deal-closed-to-exporter.tsx'
+import { template as dealClosedToPartner } from './deal-closed-to-partner.tsx'
+
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'exporter-invitation': exporterInvitation,
   'exporter-accepted-invite': exporterAcceptedInvite,
@@ -35,4 +50,15 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'veloxis-approves-exporter-to-partner': veloxisApprovesExporterToPartner,
   'veloxis-rejects-exporter-to-exporter': veloxisRejectsExporterToExporter,
   'veloxis-rejects-exporter-to-partner': veloxisRejectsExporterToPartner,
+  'deal-approved-to-exporter': dealApprovedToExporter,
+  'deal-approved-to-partner': dealApprovedToPartner,
+  'ipu-signed-to-exporter': ipuSignedToExporter,
+  'deal-funded-to-exporter': dealFundedToExporter,
+  'deal-funded-to-partner': dealFundedToPartner,
+  'deal-overdue-to-exporter': dealOverdueToExporter,
+  'deal-overdue-to-partner': dealOverdueToPartner,
+  'payment-received-to-exporter': paymentReceivedToExporter,
+  'payment-received-to-partner': paymentReceivedToPartner,
+  'deal-closed-to-exporter': dealClosedToExporter,
+  'deal-closed-to-partner': dealClosedToPartner,
 }

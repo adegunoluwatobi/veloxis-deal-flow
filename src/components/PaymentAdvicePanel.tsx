@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { sanitiseFilename } from '@/lib/sanitiseFilename';
 import { CURRENCY_SYMBOLS, type InvoiceCurrency } from '@/types';
 import { Banknote, Loader2 } from 'lucide-react';
+import { sendPaymentReceivedEmails } from '@/lib/sendDealEmail';
 import { differenceInDays, parseISO } from 'date-fns';
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
@@ -135,6 +136,9 @@ export default function PaymentAdvicePanel({
           residual_balance: residual,
         },
       });
+
+      // Email #14 — notify exporter + partner that buyer payment was received
+      void sendPaymentReceivedEmails(dealId);
 
       toast({ title: 'Payment advice recorded', description: 'Application status updated to Payment Received — Pending Settlement.' });
       setOpen(false);

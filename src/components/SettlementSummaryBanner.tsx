@@ -15,6 +15,7 @@ import { CheckCircle2, Banknote, Download, Loader2, Send, Upload } from 'lucide-
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
+import { sendDealClosedEmails } from '@/lib/sendDealEmail';
 
 interface Props {
   dealId: string;
@@ -179,6 +180,9 @@ export default function SettlementSummaryBanner({
         p_action_type: 'exporter_receipt_confirmed' as any,
         p_metadata: { actor_name: user.email, notes: confirmNotes.trim() || undefined },
       });
+
+      // Email #15/#16 — notify exporter + partner the deal is closed
+      void sendDealClosedEmails(dealId);
 
       toast({ title: 'Receipt confirmed', description: 'Application has been closed as Repaid.' });
       onReload();
