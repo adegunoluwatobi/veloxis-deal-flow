@@ -49,6 +49,8 @@ const FIELDS: Array<keyof ExporterRow> = [
 export default function ExporterCompanyProfile() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const addressRef = useRef<HTMLDivElement>(null);
   const [form, setForm] = useState<Partial<ExporterRow>>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -112,6 +114,15 @@ export default function ExporterCompanyProfile() {
       setForm(init);
     }
   }, [exporter]);
+
+  // Deep-link: scroll to address section when ?section=address
+  useEffect(() => {
+    if (searchParams.get('section') === 'address' && addressRef.current && !isLoading) {
+      setTimeout(() => {
+        addressRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 200);
+    }
+  }, [searchParams, isLoading]);
 
   const update = (k: keyof ExporterRow, v: any) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -206,8 +217,11 @@ export default function ExporterCompanyProfile() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader><CardTitle>Registered Address</CardTitle></CardHeader>
+      <Card ref={addressRef} className={searchParams.get('section') === 'address' ? 'ring-2 ring-veloxis-teal/40 scroll-mt-24' : 'scroll-mt-24'}>
+        <CardHeader>
+          <CardTitle>Registered Address</CardTitle>
+          <CardDescription>Complete these fields to satisfy the Registered Address KYC requirement.</CardDescription>
+        </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Address line 1" value={form.registered_address_line1 as string} onChange={(v) => update('registered_address_line1', v)} />
