@@ -62,8 +62,23 @@ import ExporterCompanyProfile from "@/pages/account/ExporterCompanyProfile";
 import PartnerOrgProfile from "@/pages/account/PartnerOrgProfile";
 import PartnerTeamMembers from "@/pages/account/PartnerTeamMembers";
 import AdminUserDirectory from "@/pages/account/AdminUserDirectory";
+import NotificationsPage from "@/pages/NotificationsPage";
 
 const queryClient = new QueryClient();
+
+function NotificationsRoute() {
+  return (
+    <ProtectedRoute>
+      <NotificationsLayoutSwitch />
+    </ProtectedRoute>
+  );
+}
+
+function NotificationsLayoutSwitch() {
+  // Render inside the appropriate shell based on the user's role.
+  const RoleShell = require('@/components/NotificationsRoleShell').default;
+  return <RoleShell><NotificationsPage /></RoleShell>;
+}
 
 function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -182,6 +197,9 @@ const App = () => (
             <Route path="/terms" element={<LegalPage slug="terms" />} />
             <Route path="/disclosure" element={<LegalPage slug="disclosure" />} />
             <Route path="/cookies" element={<LegalPage slug="cookies" />} />
+
+            {/* Notifications (role-aware shell) */}
+            <Route path="/notifications" element={<NotificationsRoute />} />
 
             {/* Email unsubscribe */}
             <Route path="/unsubscribe" element={<Unsubscribe />} />
