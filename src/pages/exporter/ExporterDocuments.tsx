@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { sanitiseFilename } from '@/lib/sanitiseFilename';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,7 +19,8 @@ import DocumentRequestSection from '@/components/DocumentRequestSection';
 export default function ExporterDocuments() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const uploadCardRef = useRef<HTMLDivElement>(null);
   const [exporter, setExporter] = useState<any>(null);
   const [documents, setDocuments] = useState<any[]>([]);
@@ -40,17 +41,24 @@ export default function ExporterDocuments() {
     registered_country: '',
   });
 
-  // Pre-select doc type from ?type=... and scroll to upload card
+  // Pre-select doc type from ?type=... ONLY if it's still uploadable (not pending/verified).
   useEffect(() => {
     const type = searchParams.get('type') as ExporterDocumentType | null;
-    if (type) {
+    if (!type || loading) return;
+    const existing = documents.find((d) => d.document_type === type && !d.is_superseded);
+    const stillUploadable = !existing || existing.document_status === 'rejected' || existing.expiry_status === 'expired';
+    if (stillUploadable) {
       setForm((prev) => ({ ...prev, document_type: type }));
-      // Wait for layout
       setTimeout(() => {
         uploadCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
+    } else {
+      // Already submitted — strip the query param so the form stays empty.
+      const next = new URLSearchParams(searchParams);
+      next.delete('type');
+      setSearchParams(next, { replace: true });
     }
-  }, [searchParams]);
+  }, [searchParams, loading, documents, setSearchParams]);
 
   const load = async () => {
     if (!user) return;
@@ -167,7 +175,13 @@ export default function ExporterDocuments() {
       });
 
       setForm({ document_type: '', expiry_date: '', file: null, export_licence_number: '' });
-      toast({ title: 'Document uploaded', description: 'Your document has been submitted for review.' });
+      // Strip ?type= so the form doesn't auto-reselect this just-uploaded type
+      if (searchParams.get('type')) {
+        const next = new URLSearchParams(searchParams);
+        next.delete('type');
+        setSearchParams(next, { replace: true });
+      }
+      toast({ title: 'Document uploaded', description: 'Your document has been submitted to your partner for review.' });
       load();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Upload failed';
