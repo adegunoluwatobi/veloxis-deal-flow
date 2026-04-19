@@ -45,12 +45,51 @@ export default function PartnersPage() {
 
   const load = async () => {
     const { data: orgs } = await supabase.from('partner_organisations').select('*').order('created_at', { ascending: false });
-    setPartners((orgs ?? []) as PartnerOrg[]);
+    const orgList = (orgs ?? []) as PartnerOrg[];
 
-    // Count exporters per org by looking at originator's org
-    const { data: roles } = await supabase.from('user_roles').select('user_id, partner_organisation_id').in('role', ['partner_admin', 'partner_staff']);
+    // Pull partner_admin / partner_staff role rows so we can both count exporters and
+    // fall back to the linked admin user's email when admin_email is empty.
+    const { data: roles } = await supabase
+      .from('user_roles')
+      .select('user_id, partner_organisation_id, role')
+      .in('role', ['partner_admin', 'partner_staff']);
+
     const orgByUser: Record<string, string> = {};
-    (roles ?? []).forEach((r: any) => { if (r.partner_organisation_id) orgByUser[r.user_id] = r.partner_organisation_id; });
+    const userIds = new Set<string>();
+    (roles ?? []).forEach((r: any) => {
+      if (r.partner_organisation_id) orgByUser[r.user_id] = r.partner_organisation_id;
+      userIds.add(r.user_id);
+    });
+
+    // Fetch user emails to backfill admin email when partner_organisations.admin_email is null
+    let usersById: Record<string, { email: string }> = {};
+    if (userIds.size > 0) {
+      const { data: usersData } = await supabase
+        .from('users')
+        .select('id, email')
+        .in('id', Array.from(userIds));
+      (usersData ?? []).forEach((u: any) => { usersById[u.id] = { email: u.email }; });
+    }
+
+    // Prefer partner_admin email, then partner_staff, then admin_email column
+    const adminEmailByOrg: Record<string, string> = {};
+    const staffEmailByOrg: Record<string, string> = {};
+    (roles ?? []).forEach((r: any) => {
+      if (!r.partner_organisation_id) return;
+      const email = usersById[r.user_id]?.email;
+      if (!email) return;
+      if (r.role === 'partner_admin' && !adminEmailByOrg[r.partner_organisation_id]) {
+        adminEmailByOrg[r.partner_organisation_id] = email;
+      } else if (r.role === 'partner_staff' && !staffEmailByOrg[r.partner_organisation_id]) {
+        staffEmailByOrg[r.partner_organisation_id] = email;
+      }
+    });
+
+    const enriched = orgList.map(p => ({
+      ...p,
+      admin_email: p.admin_email || adminEmailByOrg[p.id] || staffEmailByOrg[p.id] || null,
+    }));
+    setPartners(enriched);
 
     const { data: exporters } = await supabase.from('exporters').select('id, originator_id');
     const eCounts: Record<string, number> = {};
