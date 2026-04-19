@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ENTITY_TYPE_LABELS, type EntityType, type ExporterDocumentType } from '@/types';
 import { Building2, Loader2, Clock, Upload, FileText, CheckCircle2, Lock } from 'lucide-react';
 import { sanitiseFilename } from '@/lib/sanitiseFilename';
+import { sendOnboardingEmail, resolvePartnerAdminRecipient, appUrl } from '@/lib/sendOnboardingEmail';
 import UboDeclarationForm from '@/components/UboDeclarationForm';
 
 export default function ExporterOnboarding() {
