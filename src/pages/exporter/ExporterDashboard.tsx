@@ -522,7 +522,7 @@ export default function ExporterDashboard() {
                 const isClickable = isMissing;
                 const Wrapper: React.ElementType = isClickable ? Link : 'div';
                 const wrapperProps = isClickable
-                  ? { to: '/exporter/account/profile' }
+                  ? { to: '/exporter/account/profile?section=address' }
                   : {};
                 return (
                   <Wrapper
