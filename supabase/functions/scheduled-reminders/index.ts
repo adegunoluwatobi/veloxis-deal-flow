@@ -68,6 +68,7 @@ Deno.serve(async (req) => {
     ipuPending: 0,
     maturity7: 0,
     maturity1: 0,
+    missingInvitesFixed: 0,
     failed: 0,
   };
 
