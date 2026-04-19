@@ -39,12 +39,15 @@ const REQUIRED_DOCS: Array<{ type: string; label: string; icon: React.ComponentT
 ];
 
 const PENDING_DEAL_STATUSES: DealStatus[] = [
-  'draft', 'under_review', 'changes_requested', 'docs_requested',
-  'pending_originator_approval', 'pending_veloxis_approval',
-  'pending_exporter_acceptance', 'approved',
+  'draft', 'submitted', 'under_review', 'changes_requested', 'docs_requested',
+  'ready_for_final_approval', 'pending_exporter_acceptance', 'approved',
+  'ipu_sent', 'ipu_signed_awaiting_funding',
 ];
-const ACTIVE_DEAL_STATUSES: DealStatus[] = ['funded', 'overdue', 'payment_received'];
-const CLOSED_DEAL_STATUSES: DealStatus[] = ['settled', 'rejected', 'declined', 'cancelled'];
+const ACTIVE_DEAL_STATUSES: DealStatus[] = ['funded_active', 'repayment_due', 'overdue', 'payment_received', 'in_collections'];
+const CLOSED_DEAL_STATUSES: DealStatus[] = [
+  'closed_repaid', 'closed_partial', 'rejected', 'rejected_by_partner', 'rejected_by_veloxis',
+  'declined_by_exporter', 'ipu_expired',
+];
 
 function getActionMessage(status: DealStatus): { icon: React.ReactNode; message: string } {
   switch (status) {
