@@ -68,7 +68,14 @@ export default function GreystarDeals() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           {TABS.map(t => (
-            <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>
+            <TabsTrigger key={t.value} value={t.value} className="gap-2">
+              {t.label}
+              {t.value === 'closed' && (
+                <span className="ml-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  {closedCount}
+                </span>
+              )}
+            </TabsTrigger>
           ))}
         </TabsList>
       </Tabs>
