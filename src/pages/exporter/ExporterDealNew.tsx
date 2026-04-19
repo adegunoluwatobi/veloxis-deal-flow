@@ -537,6 +537,123 @@ export default function ExporterDealNew() {
               <Checkbox id="save-bank" checked={saveBankDetails} onCheckedChange={(v) => setSaveBankDetails(v === true)} />
               <label htmlFor="save-bank" className="text-sm text-muted-foreground">Save bank details for future applications</label>
             </div>
+
+            {/* Payment & Banking Details — Beneficiary + Correspondent */}
+            <div className="pt-6 border-t border-border space-y-4">
+              <div>
+                <h3 className="text-base font-semibold text-foreground">Payment & Banking Details</h3>
+                <p className="text-xs text-muted-foreground mt-1">SWIFT/IBAN routing details required for international settlement.</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="beneficiary_bank_name">Beneficiary Bank Name *</Label>
+                <Input
+                  id="beneficiary_bank_name"
+                  value={form.beneficiary_bank_name}
+                  onChange={e => updateField('beneficiary_bank_name', e.target.value)}
+                  placeholder="e.g. Standard Chartered Bank"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="beneficiary_swift_bic">Beneficiary Bank SWIFT/BIC Code *</Label>
+                <Input
+                  id="beneficiary_swift_bic"
+                  value={form.beneficiary_swift_bic}
+                  onChange={e => updateField('beneficiary_swift_bic', normaliseSwift(e.target.value))}
+                  onBlur={() => {
+                    if (form.beneficiary_swift_bic && !isValidSwift(form.beneficiary_swift_bic)) {
+                      setFieldErrors(p => ({ ...p, beneficiary_swift_bic: 'Please enter a valid SWIFT/BIC code (8 or 11 characters)' }));
+                    }
+                  }}
+                  placeholder="e.g. SCBLGB2L"
+                  maxLength={11}
+                />
+                {fieldErrors.beneficiary_swift_bic && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />{fieldErrors.beneficiary_swift_bic}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="beneficiary_iban">Beneficiary IBAN Number *</Label>
+                <Input
+                  id="beneficiary_iban"
+                  value={formatIbanForDisplay(form.beneficiary_iban)}
+                  onChange={e => updateField('beneficiary_iban', stripIban(e.target.value))}
+                  onBlur={() => {
+                    if (form.beneficiary_iban && !isValidIban(form.beneficiary_iban)) {
+                      setFieldErrors(p => ({ ...p, beneficiary_iban: 'Please enter a valid IBAN number' }));
+                    }
+                  }}
+                  placeholder="e.g. GB29 NWBK 6016 1331 9268 19"
+                />
+                {fieldErrors.beneficiary_iban && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />{fieldErrors.beneficiary_iban}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="beneficiary_bank_address">Beneficiary Bank Address</Label>
+                <Textarea
+                  id="beneficiary_bank_address"
+                  value={form.beneficiary_bank_address}
+                  onChange={e => updateField('beneficiary_bank_address', e.target.value)}
+                  placeholder="Bank's registered address (optional)"
+                  rows={2}
+                />
+              </div>
+
+              <div className="pt-4 border-t border-border space-y-4">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-foreground">Correspondent Bank Details</h4>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button type="button" className="text-muted-foreground hover:text-foreground" aria-label="What is a correspondent bank?">
+                        <Info className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      A correspondent bank is an intermediary bank used when the beneficiary bank does not have a direct relationship with the sending bank. Not always required.
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <p className="text-xs text-muted-foreground">Optional — only required for some international transfers.</p>
+
+                <div className="space-y-2">
+                  <Label htmlFor="correspondent_bank_name">Correspondent Bank Name</Label>
+                  <Input
+                    id="correspondent_bank_name"
+                    value={form.correspondent_bank_name}
+                    onChange={e => updateField('correspondent_bank_name', e.target.value)}
+                    placeholder="Optional"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="correspondent_swift_bic">Correspondent Bank SWIFT/BIC Code</Label>
+                  <Input
+                    id="correspondent_swift_bic"
+                    value={form.correspondent_swift_bic}
+                    onChange={e => updateField('correspondent_swift_bic', normaliseSwift(e.target.value))}
+                    onBlur={() => {
+                      if (form.correspondent_swift_bic && !isValidSwift(form.correspondent_swift_bic)) {
+                        setFieldErrors(p => ({ ...p, correspondent_swift_bic: 'Please enter a valid SWIFT/BIC code (8 or 11 characters)' }));
+                      }
+                    }}
+                    placeholder="Optional"
+                    maxLength={11}
+                  />
+                  {fieldErrors.correspondent_swift_bic && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" />{fieldErrors.correspondent_swift_bic}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
