@@ -21,7 +21,7 @@ interface DealRow {
   created_at: string;
 }
 
-const REQUIRED_KYC_DOC_TYPES = ['cac_certificate', 'director_id', 'nepc_certificate'] as const;
+const REQUIRED_KYC_DOC_TYPES = ['cac_certificate', 'director_id', 'nepc_certificate', 'registered_address_proof'] as const;
 
 export default function ExporterDeals() {
   const { user } = useAuth();
@@ -81,7 +81,7 @@ export default function ExporterDeals() {
       </TooltipTrigger>
       {!allDocsComplete && (
         <TooltipContent side="bottom" className="max-w-xs">
-          Upload all 3 KYC documents (CAC Certificate, Director ID, Export Licence) to enable new applications.
+          Upload all 4 KYC documents (CAC Certificate, Director ID, Export Licence, Registered Address Proof) to enable new applications.
         </TooltipContent>
       )}
     </Tooltip>

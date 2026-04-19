@@ -1,0 +1,1 @@
+ALTER TYPE public.exporter_document_type ADD VALUE IF NOT EXISTS 'registered_address_proof';

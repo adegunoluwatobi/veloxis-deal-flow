@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
   AlertTriangle, CheckCircle2, FileText, ArrowRight, Clock, Upload,
-  Banknote, Plus, Pencil, User, Calendar, Shield, UploadCloud, FileX,
+  Banknote, Plus, Pencil, User, Calendar, Shield, UploadCloud, FileX, MapPin,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { computeKycStatus } from '@/lib/computeKycStatus';
@@ -37,6 +37,7 @@ const REQUIRED_DOCS: Array<{ type: string; label: string; icon: React.ComponentT
   { type: 'cac_certificate', label: 'CAC Certificate', icon: FileText },
   { type: 'director_id', label: 'Director ID', icon: User },
   { type: 'nepc_certificate', label: 'Export Licence', icon: Shield },
+  { type: 'registered_address_proof', label: 'Registered Address', icon: MapPin },
 ];
 
 const PENDING_DEAL_STATUSES: DealStatus[] = [
@@ -233,7 +234,7 @@ export default function ExporterDashboard() {
               </TooltipTrigger>
               {!allDocsComplete && (
                 <TooltipContent side="bottom" className="max-w-xs">
-                  Upload all 3 KYC documents (CAC Certificate, Director ID, Export Licence) to enable new applications.
+                  Upload all 4 KYC documents (CAC Certificate, Director ID, Export Licence, Registered Address Proof) to enable new applications.
                 </TooltipContent>
               )}
             </Tooltip>
@@ -329,7 +330,7 @@ export default function ExporterDashboard() {
               />
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {REQUIRED_DOCS.map(({ type, label, icon: Icon }) => {
                 const doc = docStatusByType.get(type);
                 const status = doc?.document_status;

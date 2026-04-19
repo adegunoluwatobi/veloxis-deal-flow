@@ -2118,6 +2118,7 @@ export type Database = {
         | "ubo_declaration_doc"
         | "source_of_funds_doc"
         | "bank_statements"
+        | "registered_address_proof"
       invoice_currency: "GBP" | "USD" | "EUR" | "NGN"
       kyc_status:
         | "pending_documents"
@@ -2412,6 +2413,7 @@ export const Constants = {
         "ubo_declaration_doc",
         "source_of_funds_doc",
         "bank_statements",
+        "registered_address_proof",
       ],
       invoice_currency: ["GBP", "USD", "EUR", "NGN"],
       kyc_status: [

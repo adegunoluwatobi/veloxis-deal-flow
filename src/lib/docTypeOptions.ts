@@ -4,6 +4,7 @@ const DOC_TYPE_LABELS: Record<ExporterDocumentType, string> = {
   cac_certificate: 'CAC Certificate',
   director_id: 'Director ID',
   nepc_certificate: 'Export Licence',
+  registered_address_proof: 'Registered Address Proof',
   ubo_declaration_doc: 'UBO Declaration',
   source_of_funds_doc: 'Source of Funds',
   bank_statements: 'Bank Statements',
@@ -23,7 +24,7 @@ export type DocOption = {
  * - no upload → enabled
  */
 export function buildDocTypeOptions(activeDocs: Array<{ document_type: string; document_status: string; expiry_status?: string }>): DocOption[] {
-  const MANDATORY: ExporterDocumentType[] = ['cac_certificate', 'director_id', 'nepc_certificate'];
+  const MANDATORY: ExporterDocumentType[] = ['cac_certificate', 'director_id', 'nepc_certificate', 'registered_address_proof'];
 
   return MANDATORY.map((type) => {
     const existing = activeDocs.find((d) => d.document_type === type);
