@@ -115,6 +115,35 @@ export default function ExporterOnboarding() {
     if (docErr) throw docErr;
   };
 
+  // Email #4 — notify partner once both required KYC docs are present.
+  // Only fires after onboarding has been submitted (i.e. partner is now waiting on docs).
+  const notifyPartnerKycComplete = async () => {
+    if (!exporter) return;
+    if (exporter.onboarding_status !== 'onboarding_submitted') return;
+    try {
+      const { data: roleRow } = await supabase
+        .from('user_roles')
+        .select('partner_organisation_id')
+        .eq('user_id', exporter.originator_id)
+        .in('role', ['partner_admin', 'partner_staff'])
+        .maybeSingle();
+      const recipient = await resolvePartnerAdminRecipient(roleRow?.partner_organisation_id ?? null);
+      if (!recipient?.email) return;
+      void sendOnboardingEmail({
+        templateName: 'kyc-documents-uploaded',
+        recipientEmail: recipient.email,
+        idempotencyKey: `kyc-docs-${exporter.id}`,
+        templateData: {
+          partnerAdminName: recipient.fullName,
+          exporterCompanyName: exporter.company_name,
+          applicationUrl: appUrl(`/greystar/exporters/${exporter.id}`),
+        },
+      });
+    } catch (e) {
+      console.warn('kyc-documents-uploaded email failed', e);
+    }
+  };
+
   const handleUploadSof = async () => {
     if (!sofFile) return;
     setUploading(true);
