@@ -25,11 +25,19 @@ export default function ExporterDocuments() {
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [savingAddress, setSavingAddress] = useState(false);
   const [form, setForm] = useState({
     document_type: '' as ExporterDocumentType | '',
     expiry_date: '',
     file: null as File | null,
     export_licence_number: '',
+  });
+  const [addressForm, setAddressForm] = useState({
+    registered_address_line1: '',
+    registered_address_line2: '',
+    registered_city: '',
+    registered_postcode: '',
+    registered_country: '',
   });
 
   // Pre-select doc type from ?type=... and scroll to upload card
@@ -48,12 +56,19 @@ export default function ExporterDocuments() {
     if (!user) return;
     const { data: exp } = await supabase
       .from('exporters')
-      .select('id, company_name, export_licence_number')
+      .select('id, company_name, export_licence_number, registered_address_line1, registered_address_line2, registered_city, registered_postcode, registered_country')
       .eq('exporter_user_id', user.id)
       .limit(1)
       .maybeSingle();
     if (exp) {
       setExporter(exp);
+      setAddressForm({
+        registered_address_line1: exp.registered_address_line1 ?? '',
+        registered_address_line2: exp.registered_address_line2 ?? '',
+        registered_city: exp.registered_city ?? '',
+        registered_postcode: exp.registered_postcode ?? '',
+        registered_country: exp.registered_country ?? '',
+      });
       const { data: docs } = await supabase
         .from('exporter_documents')
         .select('*')
@@ -70,6 +85,38 @@ export default function ExporterDocuments() {
   const supersededDocs = documents.filter((d) => d.is_superseded);
   const docTypeOptions = buildDocTypeOptions(activeDocs);
   const enabledOptions = docTypeOptions.filter((o) => !o.disabled);
+  const isAddressType = form.document_type === 'registered_address_proof';
+  const addressComplete = !!(exporter?.registered_address_line1 && exporter?.registered_city);
+
+  const handleSaveAddress = async () => {
+    if (!user || !exporter) return;
+    if (!addressForm.registered_address_line1.trim() || !addressForm.registered_city.trim()) {
+      toast({ title: 'Missing fields', description: 'Address line 1 and City are required.', variant: 'destructive' });
+      return;
+    }
+    setSavingAddress(true);
+    try {
+      const { error } = await supabase
+        .from('exporters')
+        .update({
+          registered_address_line1: addressForm.registered_address_line1.trim(),
+          registered_address_line2: addressForm.registered_address_line2.trim() || null,
+          registered_city: addressForm.registered_city.trim(),
+          registered_postcode: addressForm.registered_postcode.trim() || null,
+          registered_country: addressForm.registered_country.trim() || null,
+        })
+        .eq('id', exporter.id);
+      if (error) throw error;
+      toast({ title: 'Address saved', description: 'Your registered address has been updated and is reflected on your Company Profile.' });
+      setForm({ document_type: '', expiry_date: '', file: null, export_licence_number: '' });
+      await load();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Save failed';
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
+    } finally {
+      setSavingAddress(false);
+    }
+  };
 
   const handleUpload = async () => {
     if (!user || !exporter || !form.file || !form.document_type) return;
