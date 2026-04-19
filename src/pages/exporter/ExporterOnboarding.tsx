@@ -38,6 +38,37 @@ export default function ExporterOnboarding() {
   const [bankUploaded, setBankUploaded] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  // Per-field touched + submit-attempted tracking for inline validation
+  type FieldKey = 'company_name' | 'rc_number' | 'entity_type' | 'director_name' | 'contact_email';
+  const [touched, setTouched] = useState<Record<FieldKey, boolean>>({
+    company_name: false,
+    rc_number: false,
+    entity_type: false,
+    director_name: false,
+    contact_email: false,
+  });
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const markTouched = (k: FieldKey) => setTouched(p => ({ ...p, [k]: true }));
+
+  const fieldError = (k: FieldKey): string | null => {
+    const show = touched[k] || submitAttempted;
+    if (!show) return null;
+    switch (k) {
+      case 'company_name':
+        return form.company_name.trim() ? null : 'Company name is required';
+      case 'rc_number':
+        return form.rc_number.trim() ? null : 'RC number is required';
+      case 'entity_type':
+        return form.entity_type ? null : 'Please select an entity type';
+      case 'director_name':
+        return form.director_name.trim() ? null : 'Director name is required';
+      case 'contact_email':
+        if (!form.contact_email.trim()) return 'Contact email is required';
+        if (!isValidEmail(form.contact_email)) return 'Please enter a valid email address';
+        return null;
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
     const load = async () => {
@@ -163,8 +194,15 @@ export default function ExporterOnboarding() {
 
   const handleSubmit = async () => {
     if (!user || !exporter) return;
+    setSubmitAttempted(true);
     if (!fieldsValid) {
-      toast({ title: 'Missing details', description: 'Please complete all required company fields before submitting.', variant: 'destructive' });
+      // Mark all fields touched so inline errors render
+      setTouched({ company_name: true, rc_number: true, entity_type: true, director_name: true, contact_email: true });
+      toast({ title: 'Missing details', description: 'Please fix the highlighted fields before submitting.', variant: 'destructive' });
+      // Scroll to the first invalid field
+      const order: FieldKey[] = ['company_name', 'rc_number', 'entity_type', 'director_name', 'contact_email'];
+      const firstBad = order.find(k => !!fieldError(k) || (k === 'entity_type' ? !form.entity_type : !(form as any)[k]?.trim?.()));
+      if (firstBad) document.getElementById(firstBad)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
     if (!docsValid) {
@@ -236,30 +274,79 @@ export default function ExporterOnboarding() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="company_name">Company Name *</Label>
-              <Input id="company_name" placeholder="e.g. Adire Textiles Ltd" value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} />
+              <Input
+                id="company_name"
+                required
+                aria-invalid={!!fieldError('company_name')}
+                placeholder="e.g. Adire Textiles Ltd"
+                value={form.company_name}
+                onChange={(e) => setForm({ ...form, company_name: e.target.value })}
+                onBlur={() => markTouched('company_name')}
+                className={fieldError('company_name') ? 'border-destructive focus-visible:ring-destructive' : ''}
+              />
+              {fieldError('company_name') && <p className="text-xs text-destructive">{fieldError('company_name')}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="rc_number">RC Number *</Label>
-              <Input id="rc_number" placeholder="e.g. RC123456" value={form.rc_number} onChange={(e) => setForm({ ...form, rc_number: e.target.value })} />
+              <Input
+                id="rc_number"
+                required
+                aria-invalid={!!fieldError('rc_number')}
+                placeholder="e.g. RC123456"
+                value={form.rc_number}
+                onChange={(e) => setForm({ ...form, rc_number: e.target.value })}
+                onBlur={() => markTouched('rc_number')}
+                className={fieldError('rc_number') ? 'border-destructive focus-visible:ring-destructive' : ''}
+              />
+              {fieldError('rc_number') && <p className="text-xs text-destructive">{fieldError('rc_number')}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="entity_type">Entity Type *</Label>
-              <Select value={form.entity_type} onValueChange={(v) => setForm({ ...form, entity_type: v as EntityType })}>
-                <SelectTrigger><SelectValue placeholder="Select entity type" /></SelectTrigger>
+              <Select
+                value={form.entity_type}
+                onValueChange={(v) => { setForm({ ...form, entity_type: v as EntityType }); markTouched('entity_type'); }}
+              >
+                <SelectTrigger
+                  id="entity_type"
+                  aria-invalid={!!fieldError('entity_type')}
+                  onBlur={() => markTouched('entity_type')}
+                  className={fieldError('entity_type') ? 'border-destructive focus-visible:ring-destructive' : ''}
+                >
+                  <SelectValue placeholder="Select entity type" />
+                </SelectTrigger>
                 <SelectContent>
                   {(Object.entries(ENTITY_TYPE_LABELS) as [EntityType, string][]).map(([val, label]) => (
                     <SelectItem key={val} value={val}>{label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {fieldError('entity_type') && <p className="text-xs text-destructive">{fieldError('entity_type')}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="director_name">Director Name *</Label>
-              <Input id="director_name" placeholder="Full name of primary director" value={form.director_name} onChange={(e) => setForm({ ...form, director_name: e.target.value })} />
+              <Input
+                id="director_name"
+                required
+                aria-invalid={!!fieldError('director_name')}
+                placeholder="Full name of primary director"
+                value={form.director_name}
+                onChange={(e) => setForm({ ...form, director_name: e.target.value })}
+                onBlur={() => markTouched('director_name')}
+                className={fieldError('director_name') ? 'border-destructive focus-visible:ring-destructive' : ''}
+              />
+              {fieldError('director_name') && <p className="text-xs text-destructive">{fieldError('director_name')}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="contact_email">Contact Email *</Label>
-              <EmailInput id="contact_email" placeholder="exporter@company.ng" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} />
+              <EmailInput
+                id="contact_email"
+                required
+                placeholder="exporter@company.ng"
+                value={form.contact_email}
+                onChange={(e) => setForm({ ...form, contact_email: e.target.value })}
+                onBlur={() => markTouched('contact_email')}
+                error={fieldError('contact_email') ?? undefined}
+              />
             </div>
           </CardContent>
         </Card>
