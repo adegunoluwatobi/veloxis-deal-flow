@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import {
   AlertTriangle, CheckCircle2, FileText, ArrowRight, Clock, Upload,
   Banknote, Plus, Pencil, User, Calendar, Shield, UploadCloud, FileX, MapPin,
+  ShieldCheck, X, FolderOpen, Layers,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { computeKycStatus } from '@/lib/computeKycStatus';
@@ -23,6 +24,8 @@ interface ActionDeal {
   buyer_company_name: string | null;
   invoice_value: number | null;
   invoice_currency_v2: string | null;
+  advance_amount: number | null;
+  gbp_equivalent: number | null;
 }
 
 const ACTION_STATUSES: DealStatus[] = [
@@ -37,7 +40,7 @@ const REQUIRED_DOCS: Array<{ type: string; label: string; icon: React.ComponentT
   { type: 'cac_certificate', label: 'CAC Certificate', icon: FileText },
   { type: 'director_id', label: 'Director ID', icon: User },
   { type: 'nepc_certificate', label: 'Export Licence', icon: Shield },
-  { type: 'registered_address_proof', label: 'Registered Address', icon: MapPin },
+  { type: 'registered_address_proof', label: 'Address Proof', icon: MapPin },
 ];
 
 const PENDING_DEAL_STATUSES: DealStatus[] = [
@@ -50,6 +53,12 @@ const CLOSED_DEAL_STATUSES: DealStatus[] = [
   'closed_repaid', 'closed_partial', 'rejected', 'rejected_by_partner', 'rejected_by_veloxis',
   'declined_by_exporter', 'ipu_expired',
 ];
+const ADVANCED_DEAL_STATUSES: DealStatus[] = [
+  'funded_active', 'repayment_due', 'overdue', 'payment_received', 'in_collections',
+  'closed_repaid', 'closed_partial',
+];
+
+const DISMISS_KEY = 'veloxis_verified_banner_dismissed';
 
 function getActionMessage(status: DealStatus): { icon: React.ReactNode; message: string } {
   switch (status) {
@@ -66,6 +75,23 @@ function getActionMessage(status: DealStatus): { icon: React.ReactNode; message:
   }
 }
 
+function formatGBP(value: number) {
+  if (value >= 1_000_000) return `£${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `£${(value / 1_000).toFixed(1)}k`;
+  return `£${value.toFixed(0)}`;
+}
+
+function formatDate(d: string | null | undefined) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function fileExt(name: string | null | undefined) {
+  if (!name) return '';
+  const m = name.match(/\.([a-z0-9]+)$/i);
+  return m ? m[1].toUpperCase() : '';
+}
+
 export default function ExporterDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -75,6 +101,10 @@ export default function ExporterDashboard() {
   const [allDeals, setAllDeals] = useState<ActionDeal[]>([]);
   const [partnerName, setPartnerName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [bannerDismissed, setBannerDismissed] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem(DISMISS_KEY) === '1';
+  });
 
   const load = async () => {
     if (!user) return;
@@ -96,7 +126,7 @@ export default function ExporterDashboard() {
           .order('uploaded_at', { ascending: false }),
         supabase
           .from('deals')
-          .select('id, deal_reference, status, buyer_company_name, invoice_value, invoice_currency_v2')
+          .select('id, deal_reference, status, buyer_company_name, invoice_value, invoice_currency_v2, advance_amount, gbp_equivalent')
           .eq('exporter_id', exp.id)
           .order('created_at', { ascending: false })
           .limit(50),
@@ -152,11 +182,25 @@ export default function ExporterDashboard() {
     return d && d.document_status !== 'rejected';
   }).length;
 
-  const stats = useMemo(() => ({
-    pending: allDeals.filter((d) => PENDING_DEAL_STATUSES.includes(d.status)).length,
-    active: allDeals.filter((d) => ACTIVE_DEAL_STATUSES.includes(d.status)).length,
-    closed: allDeals.filter((d) => CLOSED_DEAL_STATUSES.includes(d.status)).length,
-  }), [allDeals]);
+  const verifiedCount = REQUIRED_DOCS.filter((r) => {
+    const d = docStatusByType.get(r.type);
+    return d?.document_status === 'verified';
+  }).length;
+
+  const stats = useMemo(() => {
+    const advancedDeals = allDeals.filter((d) => ADVANCED_DEAL_STATUSES.includes(d.status));
+    const advancedTotal = advancedDeals.reduce(
+      (sum, d) => sum + (d.gbp_equivalent ?? d.advance_amount ?? 0),
+      0,
+    );
+    return {
+      total: allDeals.length,
+      advanced: advancedTotal,
+      pending: allDeals.filter((d) => PENDING_DEAL_STATUSES.includes(d.status)).length,
+      active: allDeals.filter((d) => ACTIVE_DEAL_STATUSES.includes(d.status)).length,
+      closed: allDeals.filter((d) => CLOSED_DEAL_STATUSES.includes(d.status)).length,
+    };
+  }, [allDeals]);
 
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading…</div>;
 
@@ -174,6 +218,24 @@ export default function ExporterDashboard() {
   const initial = (exporter.company_name || '?').charAt(0).toUpperCase();
   const rcPending = !exporter.rc_number || exporter.rc_number.toLowerCase() === 'pending';
   const allDocsComplete = completedCount === REQUIRED_DOCS.length;
+  const isFullyVerified = verifiedCount === REQUIRED_DOCS.length;
+
+  const registeredAddress = [
+    exporter.registered_address_line1,
+    exporter.registered_address_line2,
+    exporter.registered_city,
+    exporter.registered_postcode,
+    exporter.registered_country,
+  ].filter(Boolean).join(', ') || '—';
+
+  const dismissBanner = () => {
+    setBannerDismissed(true);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(DISMISS_KEY, '1');
+    }
+  };
+
+  const showVerifiedBanner = isFullyVerified && !bannerDismissed;
 
   return (
     <div className="-m-6 lg:-m-8 animate-fade-in">
@@ -185,13 +247,24 @@ export default function ExporterDashboard() {
 
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex items-start gap-5">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-veloxis-teal text-3xl font-bold text-veloxis-deep shadow-lg">
-              {initial}
+            <div className="relative">
+              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-veloxis-teal text-3xl font-bold text-veloxis-deep shadow-lg">
+                {initial}
+              </div>
+              {isFullyVerified && (
+                <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-success text-white ring-2 ring-veloxis-deep">
+                  <CheckCircle2 className="h-4 w-4" />
+                </div>
+              )}
             </div>
             <div className="space-y-3">
               <h1 className="text-3xl font-bold tracking-tight">{exporter.company_name}</h1>
               <div className="flex flex-wrap items-center gap-2">
-                {rcPending ? (
+                {isFullyVerified ? (
+                  <Badge className="border-emerald-400/40 bg-emerald-400/15 text-emerald-300 hover:bg-emerald-400/20 uppercase text-[10px] tracking-wider">
+                    ✓ KYC Verified
+                  </Badge>
+                ) : rcPending ? (
                   <Badge className="border-amber-400/40 bg-amber-400/10 text-amber-300 hover:bg-amber-400/15 uppercase text-[10px] tracking-wider">
                     RC Pending
                   </Badge>
@@ -263,6 +336,30 @@ export default function ExporterDashboard() {
 
       {/* ========= BODY ========= */}
       <div className="bg-muted/30 px-6 lg:px-10 py-8 space-y-6">
+        {/* Verified Banner */}
+        {showVerifiedBanner && (
+          <div className="flex items-start gap-4 rounded-xl border-2 border-success/40 bg-success/5 p-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-success/15 text-success">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-success">Identity Verified — You're ready to submit deals</p>
+              <p className="mt-0.5 text-sm text-success/80">All 4 KYC documents have been reviewed and approved by Veloxis</p>
+            </div>
+            <Badge className="bg-success/15 text-success hover:bg-success/20 border-success/30 uppercase text-[10px] tracking-wider">
+              Active
+            </Badge>
+            <button
+              type="button"
+              onClick={dismissBanner}
+              aria-label="Dismiss"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-success/70 transition-colors hover:bg-success/10 hover:text-success"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
         {/* Action Required */}
         {actionDeals.length > 0 && (
           <div className="space-y-2">
@@ -293,7 +390,11 @@ export default function ExporterDashboard() {
         {/* ========= KYC CARD ========= */}
         <Card className={cn(
           'border-2',
-          allDocsComplete ? 'border-success/40 bg-success/5' : 'border-amber-400/50 bg-amber-50/60 dark:bg-amber-500/5'
+          isFullyVerified
+            ? 'border-success/40 bg-success/5'
+            : allDocsComplete
+              ? 'border-success/40 bg-success/5'
+              : 'border-amber-400/50 bg-amber-50/60 dark:bg-amber-500/5'
         )}>
           <CardContent className="p-6 space-y-5">
             <div className="flex items-start gap-3">
@@ -305,25 +406,40 @@ export default function ExporterDashboard() {
               </div>
               <div className="flex-1">
                 <h3 className={cn('font-semibold', allDocsComplete ? 'text-success' : 'text-amber-800 dark:text-amber-300')}>
-                  {allDocsComplete ? 'KYC Verification Complete' : 'KYC Verification Required'}
+                  {isFullyVerified
+                    ? 'KYC Verification Complete'
+                    : allDocsComplete
+                      ? 'KYC Documents Submitted'
+                      : 'KYC Verification Required'}
                 </h3>
                 <p className={cn('text-sm', allDocsComplete ? 'text-success/80' : 'text-amber-700/90 dark:text-amber-400/80')}>
-                  {allDocsComplete
-                    ? 'All required documents are uploaded.'
-                    : `Upload all ${REQUIRED_DOCS.length} documents to unlock deal submissions`}
+                  {isFullyVerified
+                    ? `All documents verified by Veloxis on ${formatDate(exporter.kyc_verified_at) || 'review date'}`
+                    : allDocsComplete
+                      ? 'All documents uploaded and pending review.'
+                      : `Upload all ${REQUIRED_DOCS.length} documents to unlock deal submissions`}
                 </p>
               </div>
+              {isFullyVerified && (
+                <Badge className="bg-success/15 text-success hover:bg-success/20 border-success/30 text-xs">
+                  {verifiedCount} / {REQUIRED_DOCS.length} Verified
+                </Badge>
+              )}
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs font-medium">
                 <span className="text-muted-foreground">Verification progress</span>
-                <span className={allDocsComplete ? 'text-success' : 'text-amber-700 dark:text-amber-400'}>
-                  {completedCount} of {REQUIRED_DOCS.length} complete
+                <span className={isFullyVerified ? 'text-success' : allDocsComplete ? 'text-success' : 'text-amber-700 dark:text-amber-400'}>
+                  {isFullyVerified ? `${verifiedCount} of ${REQUIRED_DOCS.length} verified` : `${completedCount} of ${REQUIRED_DOCS.length} complete`}
                 </span>
               </div>
               <Progress
-                value={(completedCount / REQUIRED_DOCS.length) * 100}
+                value={
+                  isFullyVerified
+                    ? 100
+                    : (completedCount / REQUIRED_DOCS.length) * 100
+                }
                 className={cn('h-1.5', allDocsComplete ? '[&>div]:bg-success' : '[&>div]:bg-amber-500')}
               />
             </div>
@@ -348,27 +464,35 @@ export default function ExporterDashboard() {
                       isMissing && 'border-amber-400/40 bg-amber-100/40 dark:bg-amber-500/10'
                     )}
                   >
-                    <div className="flex items-start gap-3">
+                    <div className="flex flex-col gap-3">
                       <div className={cn(
-                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-md',
+                        'flex h-10 w-10 items-center justify-center rounded-md',
                         isVerified && 'bg-success/15 text-success',
                         isPending && 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
                         isRejected && 'bg-destructive/15 text-destructive',
                         isMissing && 'bg-amber-400/20 text-amber-700 dark:text-amber-400'
                       )}>
-                        {isRejected ? <FileX className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                        {isRejected ? <FileX className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
                       </div>
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0">
                         <p className="text-sm font-semibold text-foreground leading-tight">{label}</p>
-                        <p className={cn(
-                          'mt-1 text-[11px] font-bold uppercase tracking-wider',
-                          isVerified && 'text-success',
-                          isPending && 'text-blue-600 dark:text-blue-400',
-                          isRejected && 'text-destructive',
-                          isMissing && 'text-amber-700 dark:text-amber-400'
-                        )}>
+                        {doc && (
+                          <p className="mt-1 text-[11px] text-muted-foreground">
+                            {formatDate(doc.uploaded_at)}{fileExt(doc.file_name) && ` · ${fileExt(doc.file_name)}`}
+                          </p>
+                        )}
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            'mt-2 text-[10px] font-bold uppercase tracking-wider border',
+                            isVerified && 'border-success/40 bg-success/10 text-success',
+                            isPending && 'border-blue-400/40 bg-blue-500/10 text-blue-600 dark:text-blue-400',
+                            isRejected && 'border-destructive/40 bg-destructive/10 text-destructive',
+                            isMissing && 'border-amber-400/40 bg-amber-400/10 text-amber-700 dark:text-amber-400'
+                          )}
+                        >
                           {isVerified ? 'Verified' : isPending ? 'Pending Review' : isRejected ? 'Rejected' : 'Missing'}
-                        </p>
+                        </Badge>
                       </div>
                     </div>
                   </div>
@@ -378,7 +502,7 @@ export default function ExporterDashboard() {
           </CardContent>
         </Card>
 
-        {/* ========= TWO COLUMN: COMPANY PROFILE + UPLOAD ========= */}
+        {/* ========= TWO COLUMN: COMPANY PROFILE + APPLICATIONS ========= */}
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Company Profile */}
           <Card>
@@ -405,115 +529,113 @@ export default function ExporterDashboard() {
                   value={rcPending ? '—' : exporter.rc_number}
                 />
                 <ProfileRow
+                  label="Registered address"
+                  value={registeredAddress}
+                />
+                <ProfileRow
                   label="KYC status"
-                  value={allDocsComplete ? kyc.label : 'Pending Documents'}
-                  valueClassName={allDocsComplete ? 'text-success font-semibold' : 'text-amber-600 dark:text-amber-400 font-semibold'}
+                  value={isFullyVerified ? '✓ Verified' : allDocsComplete ? kyc.label : 'Pending Documents'}
+                  valueClassName={isFullyVerified || allDocsComplete ? 'text-success font-semibold' : 'text-amber-600 dark:text-amber-400 font-semibold'}
                 />
                 {partnerName && <ProfileRow label="Managed by" value={partnerName} />}
                 <ProfileRow label="Email" value={exporter.contact_email || user?.email || '—'} />
                 <ProfileRow
                   label="Onboarding"
-                  value={exporter.onboarding_status === 'onboarding_approved' ? 'Approved' : 'In Progress'}
+                  value={exporter.onboarding_status === 'onboarding_approved' ? '✓ Complete' : 'In Progress'}
                   valueClassName={exporter.onboarding_status === 'onboarding_approved' ? 'text-success font-semibold' : 'text-amber-600 dark:text-amber-400 font-semibold'}
                 />
               </dl>
+
+              {/* Quick Actions */}
+              <div className="mt-6 pt-5 border-t border-border">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-3">Quick Actions</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <QuickAction
+                    icon={<Plus className="h-4 w-4" />}
+                    title="New deal"
+                    subtitle="Submit invoice"
+                    onClick={() => navigate('/exporter/deals/new')}
+                    disabled={!allDocsComplete}
+                  />
+                  <QuickAction
+                    icon={<FolderOpen className="h-4 w-4" />}
+                    title="Documents"
+                    subtitle={`${verifiedCount} verified`}
+                    onClick={() => navigate('/exporter/documents')}
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          {/* Upload Documents */}
+          {/* Applications card */}
           <Card>
             <CardContent className="p-6">
-              <div className="flex items-center gap-2 mb-5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-veloxis-teal/10 text-veloxis-teal">
-                  <UploadCloud className="h-4 w-4" />
-                </div>
-                <h3 className="font-semibold text-foreground">Upload Documents</h3>
+              {/* Stats row */}
+              <div className="grid grid-cols-4 gap-3 pb-6 mb-6 border-b border-border">
+                <Stat label="Total" value={stats.total} color="text-foreground" />
+                <Stat label="Advanced" value={stats.advanced > 0 ? formatGBP(stats.advanced) : '£0'} color="text-foreground" />
+                <Stat label="Active" value={stats.active} color="text-veloxis-teal" />
+                <Stat label="Closed" value={stats.closed} color="text-muted-foreground" />
               </div>
 
-              <Link
-                to="/exporter/documents"
-                className="block rounded-xl border-2 border-dashed border-veloxis-teal/40 bg-veloxis-teal/5 p-8 text-center transition-colors hover:border-veloxis-teal/60 hover:bg-veloxis-teal/10"
-              >
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-veloxis-teal/15 text-veloxis-teal">
-                  <UploadCloud className="h-6 w-6" />
+              {allDeals.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-veloxis-teal/10 text-veloxis-teal">
+                    <Layers className="h-6 w-6" />
+                  </div>
+                  <p className="font-semibold text-foreground">Ready to submit your first deal?</p>
+                  <p className="mt-1 text-sm text-muted-foreground max-w-xs">
+                    {allDocsComplete
+                      ? 'Your account is verified and active. Upload an invoice against a UK or EU buyer to get 80% advanced within 24 hours.'
+                      : 'Complete your KYC verification above to unlock deal submissions.'}
+                  </p>
+                  {allDocsComplete && (
+                    <Button
+                      className="mt-4 bg-veloxis-teal text-veloxis-deep hover:bg-veloxis-teal/90"
+                      onClick={() => navigate('/exporter/deals/new')}
+                    >
+                      Submit your first deal
+                    </Button>
+                  )}
                 </div>
-                <p className="font-semibold text-foreground">Drop files here or browse</p>
-                <p className="mt-1 text-xs text-muted-foreground">PDF, JPG, PNG · Max 10MB per file</p>
-                <Button variant="outline" size="sm" className="mt-4 border-veloxis-teal/40 text-veloxis-teal hover:bg-veloxis-teal/10 hover:text-veloxis-teal">
-                  Choose Files
-                </Button>
-              </Link>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-md bg-veloxis-teal/10 text-veloxis-teal">
+                        <FileText className="h-4 w-4" />
+                      </div>
+                      <h3 className="font-semibold text-foreground">Applications</h3>
+                    </div>
+                    <Button asChild size="sm" variant="ghost">
+                      <Link to="/exporter/deals">View all <ArrowRight className="ml-1 h-4 w-4" /></Link>
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {allDeals.slice(0, 5).map(deal => (
+                      <Link
+                        key={deal.id}
+                        to={`/exporter/deals/${deal.id}`}
+                        className="flex items-center justify-between rounded-md border border-border px-3 py-2.5 text-sm transition-colors hover:bg-muted/50"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-foreground truncate">
+                            {deal.deal_reference || deal.id.slice(0, 8)}
+                          </p>
+                          {deal.buyer_company_name && (
+                            <p className="text-xs text-muted-foreground truncate">{deal.buyer_company_name}</p>
+                          )}
+                        </div>
+                        <DealStatusBadge status={deal.status} portal="exporter" />
+                      </Link>
+                    ))}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
-
-        {/* ========= APPLICATIONS CARD ========= */}
-        <Card>
-          <CardContent className="p-6">
-            {/* Stats row */}
-            <div className="grid grid-cols-3 gap-4 pb-6 mb-6 border-b border-border">
-              <Stat label="Pending" value={stats.pending} color="text-amber-600 dark:text-amber-400" />
-              <Stat label="Active" value={stats.active} color="text-veloxis-teal" />
-              <Stat label="Closed" value={stats.closed} color="text-muted-foreground" />
-            </div>
-
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-veloxis-teal/10 text-veloxis-teal">
-                  <FileText className="h-4 w-4" />
-                </div>
-                <h3 className="font-semibold text-foreground">Applications</h3>
-              </div>
-              {allDeals.length > 0 && (
-                <Button asChild size="sm" variant="ghost">
-                  <Link to="/exporter/deals">View all <ArrowRight className="ml-1 h-4 w-4" /></Link>
-                </Button>
-              )}
-            </div>
-
-            {allDeals.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
-                  <FileText className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <p className="font-semibold text-foreground">No applications yet</p>
-                <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-                  {allDocsComplete
-                    ? 'Submit your first application to get started.'
-                    : 'Complete your KYC verification above to unlock deal submissions.'}
-                </p>
-                {allDocsComplete && (
-                  <Button
-                    className="mt-4 bg-veloxis-teal text-veloxis-deep hover:bg-veloxis-teal/90"
-                    onClick={() => navigate('/exporter/deals/new')}
-                  >
-                    <Plus className="mr-2 h-4 w-4" /> New Application
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {allDeals.slice(0, 5).map(deal => (
-                  <Link
-                    key={deal.id}
-                    to={`/exporter/deals/${deal.id}`}
-                    className="flex items-center justify-between rounded-md border border-border px-3 py-2.5 text-sm transition-colors hover:bg-muted/50"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-foreground truncate">
-                        {deal.deal_reference || deal.id.slice(0, 8)}
-                      </p>
-                      {deal.buyer_company_name && (
-                        <p className="text-xs text-muted-foreground truncate">{deal.buyer_company_name}</p>
-                      )}
-                    </div>
-                    <DealStatusBadge status={deal.status} portal="exporter" />
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
@@ -521,18 +643,50 @@ export default function ExporterDashboard() {
 
 function ProfileRow({ label, value, valueClassName }: { label: string; value: React.ReactNode; valueClassName?: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-border/60 pb-3 last:border-0 last:pb-0">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className={cn('font-medium text-foreground text-right truncate', valueClassName)}>{value}</dd>
+    <div className="flex items-start justify-between gap-4 border-b border-border/60 pb-3 last:border-0 last:pb-0">
+      <dt className="text-muted-foreground shrink-0">{label}</dt>
+      <dd className={cn('font-medium text-foreground text-right', valueClassName)}>{value}</dd>
     </div>
   );
 }
 
-function Stat({ label, value, color }: { label: string; value: number; color: string }) {
+function Stat({ label, value, color }: { label: string; value: number | string; color: string }) {
   return (
     <div className="text-center">
-      <p className={cn('text-3xl font-bold', color)}>{value}</p>
-      <p className="mt-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={cn('text-2xl font-bold', color)}>{value}</p>
+      <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
     </div>
+  );
+}
+
+function QuickAction({
+  icon, title, subtitle, onClick, disabled,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        'flex items-start gap-3 rounded-lg border border-border bg-card p-3 text-left transition-colors',
+        disabled
+          ? 'opacity-50 cursor-not-allowed'
+          : 'hover:border-veloxis-teal/40 hover:bg-veloxis-teal/5'
+      )}
+    >
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-veloxis-teal/10 text-veloxis-teal">
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-foreground leading-tight">{title}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground truncate">{subtitle}</p>
+      </div>
+    </button>
   );
 }
