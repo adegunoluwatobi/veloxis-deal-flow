@@ -39,11 +39,8 @@ export default function ExporterOnboarding() {
   const [uploading, setUploading] = useState(false);
 
   // Per-field touched + submit-attempted tracking for inline validation
-  type FieldKey = 'company_name' | 'rc_number' | 'entity_type' | 'director_name' | 'contact_email';
+  type FieldKey = 'director_name' | 'contact_email';
   const [touched, setTouched] = useState<Record<FieldKey, boolean>>({
-    company_name: false,
-    rc_number: false,
-    entity_type: false,
     director_name: false,
     contact_email: false,
   });
@@ -54,12 +51,6 @@ export default function ExporterOnboarding() {
     const show = touched[k] || submitAttempted;
     if (!show) return null;
     switch (k) {
-      case 'company_name':
-        return form.company_name.trim() ? null : 'Company name is required';
-      case 'rc_number':
-        return form.rc_number.trim() ? null : 'RC number is required';
-      case 'entity_type':
-        return form.entity_type ? null : 'Please select an entity type';
       case 'director_name':
         return form.director_name.trim() ? null : 'Director name is required';
       case 'contact_email':
