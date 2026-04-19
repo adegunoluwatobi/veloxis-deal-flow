@@ -43,6 +43,11 @@
 
     --radius: 0.5rem;
 
+    /* Veloxis brand */
+    --veloxis-deep: 168 65% 11%;
+    --veloxis-teal: 173 80% 40%;
+    --veloxis-teal-dark: 174 84% 32%;
+
     /* Veloxis forest-green sidebar (matches marketing site) */
     --sidebar-background: 160 70% 13%;
     --sidebar-foreground: 0 0% 100%;

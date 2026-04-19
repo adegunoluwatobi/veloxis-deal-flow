@@ -70,6 +70,9 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
           muted: "hsl(var(--sidebar-muted))",
         },
+        "veloxis-deep": "hsl(var(--veloxis-deep))",
+        "veloxis-teal": "hsl(var(--veloxis-teal))",
+        "veloxis-teal-dark": "hsl(var(--veloxis-teal-dark))",
       },
       borderRadius: {
         lg: "var(--radius)",

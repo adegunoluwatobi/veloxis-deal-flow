@@ -1,11 +1,15 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, CheckCircle2, FileText, ArrowRight, Clock, Upload, Banknote } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import {
+  AlertTriangle, CheckCircle2, FileText, ArrowRight, Clock, Upload,
+  Banknote, Plus, Pencil, User, Calendar, Shield, UploadCloud, FileX,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { computeKycStatus } from '@/lib/computeKycStatus';
 import DealStatusBadge from '@/components/DealStatusBadge';
@@ -27,6 +31,24 @@ const ACTION_STATUSES: DealStatus[] = [
   'payment_received',
 ];
 
+// Required KYC document types for exporter onboarding
+const REQUIRED_DOCS: Array<{ type: string; label: string; icon: React.ComponentType<{ className?: string }> }> = [
+  { type: 'cac_certificate', label: 'CAC Certificate', icon: FileText },
+  { type: 'director_id', label: 'Director ID', icon: User },
+  { type: 'nepc_certificate', label: 'Export Licence', icon: Shield },
+];
+
+const PENDING_DEAL_STATUSES: DealStatus[] = [
+  'draft', 'submitted', 'under_review', 'changes_requested', 'docs_requested',
+  'ready_for_final_approval', 'pending_exporter_acceptance', 'approved',
+  'ipu_sent', 'ipu_signed_awaiting_funding',
+];
+const ACTIVE_DEAL_STATUSES: DealStatus[] = ['funded_active', 'repayment_due', 'overdue', 'payment_received', 'in_collections'];
+const CLOSED_DEAL_STATUSES: DealStatus[] = [
+  'closed_repaid', 'closed_partial', 'rejected', 'rejected_by_partner', 'rejected_by_veloxis',
+  'declined_by_exporter', 'ipu_expired',
+];
+
 function getActionMessage(status: DealStatus): { icon: React.ReactNode; message: string } {
   switch (status) {
     case 'changes_requested':
@@ -44,10 +66,12 @@ function getActionMessage(status: DealStatus): { icon: React.ReactNode; message:
 
 export default function ExporterDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [exporter, setExporter] = useState<any>(null);
   const [documents, setDocuments] = useState<any[]>([]);
   const [actionDeals, setActionDeals] = useState<ActionDeal[]>([]);
-  const [recentDeals, setRecentDeals] = useState<ActionDeal[]>([]);
+  const [allDeals, setAllDeals] = useState<ActionDeal[]>([]);
+  const [partnerName, setPartnerName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -61,7 +85,7 @@ export default function ExporterDashboard() {
 
     if (exp) {
       setExporter(exp);
-      const [docsRes, dealsRes] = await Promise.all([
+      const [docsRes, dealsRes, roleRes] = await Promise.all([
         supabase
           .from('exporter_documents')
           .select('*')
@@ -73,12 +97,29 @@ export default function ExporterDashboard() {
           .select('id, deal_reference, status, buyer_company_name, invoice_value, invoice_currency_v2')
           .eq('exporter_id', exp.id)
           .order('created_at', { ascending: false })
-          .limit(20),
+          .limit(50),
+        supabase
+          .from('user_roles')
+          .select('partner_organisation_id')
+          .eq('user_id', exp.originator_id)
+          .in('role', ['partner_admin', 'partner_staff'])
+          .limit(1)
+          .maybeSingle(),
       ]);
       setDocuments(docsRes.data ?? []);
-      const allDeals = (dealsRes.data ?? []) as ActionDeal[];
-      setActionDeals(allDeals.filter(d => ACTION_STATUSES.includes(d.status)));
-      setRecentDeals(allDeals.slice(0, 5));
+      const deals = (dealsRes.data ?? []) as ActionDeal[];
+      setAllDeals(deals);
+      setActionDeals(deals.filter(d => ACTION_STATUSES.includes(d.status)));
+
+      const partnerOrgId = (roleRes.data as any)?.partner_organisation_id;
+      if (partnerOrgId) {
+        const { data: org } = await supabase
+          .from('partner_organisations')
+          .select('name')
+          .eq('id', partnerOrgId)
+          .maybeSingle();
+        setPartnerName(org?.name ?? null);
+      }
     }
     setLoading(false);
   };
@@ -89,13 +130,31 @@ export default function ExporterDashboard() {
 
     const channel = supabase
       .channel('exporter-dashboard-deals')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'deals' }, () => {
-        load();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'deals' }, () => load())
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
   }, [user]);
+
+  const docStatusByType = useMemo(() => {
+    const map = new Map<string, any>();
+    documents.forEach((d) => {
+      // Keep most recent (first due to order)
+      if (!map.has(d.document_type)) map.set(d.document_type, d);
+    });
+    return map;
+  }, [documents]);
+
+  const completedCount = REQUIRED_DOCS.filter((r) => {
+    const d = docStatusByType.get(r.type);
+    return d && d.document_status !== 'rejected';
+  }).length;
+
+  const stats = useMemo(() => ({
+    pending: allDeals.filter((d) => PENDING_DEAL_STATUSES.includes(d.status)).length,
+    active: allDeals.filter((d) => ACTIVE_DEAL_STATUSES.includes(d.status)).length,
+    closed: allDeals.filter((d) => CLOSED_DEAL_STATUSES.includes(d.status)).length,
+  }), [allDeals]);
 
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading…</div>;
 
@@ -109,122 +168,361 @@ export default function ExporterDashboard() {
     );
   }
 
-  const DOC_TYPE_LABELS: Record<string, string> = {
-    cac_certificate: 'CAC Certificate',
-    director_id: 'Director ID',
-    nepc_certificate: 'Export Licence',
-    other: 'Other',
-  };
-
   const kyc = computeKycStatus(documents);
+  const initial = (exporter.company_name || '?').charAt(0).toUpperCase();
+  const rcPending = !exporter.rc_number || exporter.rc_number.toLowerCase() === 'pending';
+  const allDocsComplete = completedCount === REQUIRED_DOCS.length;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{exporter.company_name}</h1>
-        <p className="text-sm text-muted-foreground">RC {exporter.rc_number} · {exporter.director_name}</p>
-      </div>
+    <div className="-m-6 lg:-m-8 animate-fade-in">
+      {/* ========= HERO HEADER ========= */}
+      <header className="bg-veloxis-deep text-white px-6 lg:px-10 pt-8 pb-0 relative overflow-hidden">
+        {/* decorative blobs */}
+        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-veloxis-teal/10 blur-3xl" />
+        <div className="pointer-events-none absolute right-40 top-20 h-40 w-40 rounded-full bg-veloxis-teal/5 blur-2xl" />
 
-      {/* Action Required Cards */}
-      {actionDeals.length > 0 && (
-        <div className="space-y-2">
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Action Required</h2>
-          {actionDeals.map(deal => {
-            const { icon, message } = getActionMessage(deal.status);
-            return (
-              <Link key={deal.id} to={`/exporter/deals/${deal.id}`}>
-                <Card className="border-warning/50 hover:bg-muted/50 transition-colors cursor-pointer">
-                  <CardContent className="py-3 flex items-center gap-3">
-                    {icon}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {deal.deal_reference || deal.id.slice(0, 8)} — {deal.buyer_company_name || 'Unknown Buyer'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{message}</p>
-                    </div>
-                    <DealStatusBadge status={deal.status} portal="exporter" />
-                    <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
-      )}
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex items-start gap-5">
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-veloxis-teal text-3xl font-bold text-veloxis-deep shadow-lg">
+              {initial}
+            </div>
+            <div className="space-y-3">
+              <h1 className="text-3xl font-bold tracking-tight">{exporter.company_name}</h1>
+              <div className="flex flex-wrap items-center gap-2">
+                {rcPending ? (
+                  <Badge className="border-amber-400/40 bg-amber-400/10 text-amber-300 hover:bg-amber-400/15 uppercase text-[10px] tracking-wider">
+                    RC Pending
+                  </Badge>
+                ) : (
+                  <Badge className="border-emerald-400/30 bg-emerald-400/10 text-emerald-300 hover:bg-emerald-400/15 uppercase text-[10px] tracking-wider">
+                    RC {exporter.rc_number}
+                  </Badge>
+                )}
+                <Badge className="border-veloxis-teal/40 bg-veloxis-teal/10 text-veloxis-teal hover:bg-veloxis-teal/15 uppercase text-[10px] tracking-wider">
+                  Exporter
+                </Badge>
+                {partnerName && (
+                  <Badge variant="outline" className="border-white/20 bg-white/5 text-white/80 hover:bg-white/10 uppercase text-[10px] tracking-wider">
+                    Managed by {partnerName}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
 
-      {/* KYC Banner — derived from documents */}
-      <div className={cn('rounded-lg border p-4', kyc.borderColor)}>
-        <div className="flex items-center gap-2">
-          {kyc.status === 'verified' ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
-          <span className="font-semibold">KYC Status: {kyc.label}</span>
-        </div>
-        <p className="mt-1 text-sm">{kyc.description}</p>
-      </div>
-
-      {/* Recent Deals */}
-      {recentDeals.length > 0 && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Recent Applications</CardTitle>
-            <Button asChild size="sm" variant="ghost">
-              <Link to="/exporter/deals">View all <ArrowRight className="ml-1 h-4 w-4" /></Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              variant="outline"
+              className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+              onClick={() => navigate('/exporter/account/profile')}
+            >
+              <Pencil className="mr-2 h-4 w-4" /> Edit Profile
             </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-1.5">
-              {recentDeals.map(deal => (
-                <Link
-                  key={deal.id}
-                  to={`/exporter/deals/${deal.id}`}
-                  className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
-                >
-                  <span className="font-medium text-foreground">{deal.deal_reference || deal.id.slice(0, 8)}</span>
-                  <DealStatusBadge status={deal.status} portal="exporter" />
+            <Button
+              className="bg-veloxis-teal text-veloxis-deep hover:bg-veloxis-teal/90"
+              onClick={() => navigate('/exporter/deals/new')}
+              disabled={!allDocsComplete}
+            >
+              <Plus className="mr-2 h-4 w-4" /> New Application
+            </Button>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <nav className="relative mt-8 flex gap-8 border-b border-white/10">
+          {[
+            { label: 'Overview', href: '/exporter', active: true },
+            { label: 'Applications', href: '/exporter/deals' },
+            { label: 'Documents', href: '/exporter/documents' },
+          ].map((t) => (
+            <Link
+              key={t.label}
+              to={t.href}
+              className={cn(
+                'relative pb-3 text-sm font-medium transition-colors',
+                t.active ? 'text-white' : 'text-white/60 hover:text-white/90'
+              )}
+            >
+              {t.label}
+              {t.active && <span className="absolute -bottom-px left-0 right-0 h-0.5 bg-veloxis-teal" />}
+            </Link>
+          ))}
+        </nav>
+      </header>
+
+      {/* ========= BODY ========= */}
+      <div className="bg-muted/30 px-6 lg:px-10 py-8 space-y-6">
+        {/* Action Required */}
+        {actionDeals.length > 0 && (
+          <div className="space-y-2">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Action Required</h2>
+            {actionDeals.map(deal => {
+              const { icon, message } = getActionMessage(deal.status);
+              return (
+                <Link key={deal.id} to={`/exporter/deals/${deal.id}`}>
+                  <Card className="border-warning/50 hover:bg-muted/50 transition-colors cursor-pointer">
+                    <CardContent className="py-3 flex items-center gap-3">
+                      {icon}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {deal.deal_reference || deal.id.slice(0, 8)} — {deal.buyer_company_name || 'Unknown Buyer'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{message}</p>
+                      </div>
+                      <DealStatusBadge status={deal.status} portal="exporter" />
+                      <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                    </CardContent>
+                  </Card>
                 </Link>
-              ))}
+              );
+            })}
+          </div>
+        )}
+
+        {/* ========= KYC CARD ========= */}
+        <Card className={cn(
+          'border-2',
+          allDocsComplete ? 'border-success/40 bg-success/5' : 'border-amber-400/50 bg-amber-50/60 dark:bg-amber-500/5'
+        )}>
+          <CardContent className="p-6 space-y-5">
+            <div className="flex items-start gap-3">
+              <div className={cn(
+                'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
+                allDocsComplete ? 'bg-success/15 text-success' : 'bg-amber-400/20 text-amber-700 dark:text-amber-400'
+              )}>
+                {allDocsComplete ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+              </div>
+              <div className="flex-1">
+                <h3 className={cn('font-semibold', allDocsComplete ? 'text-success' : 'text-amber-800 dark:text-amber-300')}>
+                  {allDocsComplete ? 'KYC Verification Complete' : 'KYC Verification Required'}
+                </h3>
+                <p className={cn('text-sm', allDocsComplete ? 'text-success/80' : 'text-amber-700/90 dark:text-amber-400/80')}>
+                  {allDocsComplete
+                    ? 'All required documents are uploaded.'
+                    : `Upload all ${REQUIRED_DOCS.length} documents to unlock deal submissions`}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-medium">
+                <span className="text-muted-foreground">Verification progress</span>
+                <span className={allDocsComplete ? 'text-success' : 'text-amber-700 dark:text-amber-400'}>
+                  {completedCount} of {REQUIRED_DOCS.length} complete
+                </span>
+              </div>
+              <Progress
+                value={(completedCount / REQUIRED_DOCS.length) * 100}
+                className={cn('h-1.5', allDocsComplete ? '[&>div]:bg-success' : '[&>div]:bg-amber-500')}
+              />
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              {REQUIRED_DOCS.map(({ type, label, icon: Icon }) => {
+                const doc = docStatusByType.get(type);
+                const status = doc?.document_status;
+                const isVerified = status === 'verified';
+                const isPending = status === 'pending_review';
+                const isRejected = status === 'rejected';
+                const isMissing = !doc;
+
+                return (
+                  <div
+                    key={type}
+                    className={cn(
+                      'rounded-lg border p-4 transition-colors',
+                      isVerified && 'border-success/40 bg-success/5',
+                      isPending && 'border-blue-400/40 bg-blue-50/60 dark:bg-blue-500/5',
+                      isRejected && 'border-destructive/40 bg-destructive/5',
+                      isMissing && 'border-amber-400/40 bg-amber-100/40 dark:bg-amber-500/10'
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={cn(
+                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-md',
+                        isVerified && 'bg-success/15 text-success',
+                        isPending && 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
+                        isRejected && 'bg-destructive/15 text-destructive',
+                        isMissing && 'bg-amber-400/20 text-amber-700 dark:text-amber-400'
+                      )}>
+                        {isRejected ? <FileX className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-foreground leading-tight">{label}</p>
+                        <p className={cn(
+                          'mt-1 text-[11px] font-bold uppercase tracking-wider',
+                          isVerified && 'text-success',
+                          isPending && 'text-blue-600 dark:text-blue-400',
+                          isRejected && 'text-destructive',
+                          isMissing && 'text-amber-700 dark:text-amber-400'
+                        )}>
+                          {isVerified ? 'Verified' : isPending ? 'Pending Review' : isRejected ? 'Rejected' : 'Missing'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
-      )}
 
-      {/* Documents Summary */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>My Documents</CardTitle>
-            <CardDescription>Upload and track your KYC documents</CardDescription>
-          </div>
-          <Button asChild size="sm">
-            <Link to="/exporter/documents">Upload Documents <ArrowRight className="ml-1 h-4 w-4" /></Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {documents.length === 0 ? (
-            <p className="py-4 text-center text-muted-foreground">No documents uploaded yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {documents.map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between rounded-lg border border-border p-3">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">{DOC_TYPE_LABELS[doc.document_type] ?? doc.document_type}</p>
-                      <p className="text-xs text-muted-foreground">{doc.file_name}</p>
-                    </div>
+        {/* ========= TWO COLUMN: COMPANY PROFILE + UPLOAD ========= */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Company Profile */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-veloxis-teal/10 text-veloxis-teal">
+                    <User className="h-4 w-4" />
                   </div>
-                  <Badge variant="secondary" className={cn('text-xs',
-                    doc.document_status === 'verified' ? 'bg-success/10 text-success' :
-                    doc.document_status === 'rejected' ? 'bg-destructive/10 text-destructive' :
-                    'bg-warning/10 text-warning'
-                  )}>
-                    {doc.document_status === 'pending_review' ? 'Pending Review' : doc.document_status === 'verified' ? 'Verified' : 'Rejected'}
-                  </Badge>
+                  <h3 className="font-semibold text-foreground">Company Profile</h3>
                 </div>
-              ))}
+                <Link
+                  to="/exporter/account/profile"
+                  className="text-sm font-medium text-veloxis-teal hover:underline inline-flex items-center gap-1"
+                >
+                  Edit <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+
+              <dl className="space-y-3 text-sm">
+                <ProfileRow label="Company name" value={exporter.company_name} />
+                <ProfileRow
+                  label="RC number"
+                  value={rcPending ? 'Pending' : exporter.rc_number}
+                  valueClassName={rcPending ? 'text-amber-600 dark:text-amber-400 font-semibold' : undefined}
+                />
+                <ProfileRow
+                  label="KYC status"
+                  value={allDocsComplete ? kyc.label : 'Pending Documents'}
+                  valueClassName={allDocsComplete ? 'text-success font-semibold' : 'text-amber-600 dark:text-amber-400 font-semibold'}
+                />
+                {partnerName && <ProfileRow label="Managed by" value={partnerName} />}
+                <ProfileRow label="Email" value={exporter.contact_email || user?.email || '—'} />
+                <ProfileRow
+                  label="Onboarding"
+                  value={exporter.onboarding_status === 'onboarding_approved' ? 'Approved' : 'In Progress'}
+                  valueClassName={exporter.onboarding_status === 'onboarding_approved' ? 'text-success font-semibold' : 'text-amber-600 dark:text-amber-400 font-semibold'}
+                />
+              </dl>
+            </CardContent>
+          </Card>
+
+          {/* Upload Documents */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-veloxis-teal/10 text-veloxis-teal">
+                  <UploadCloud className="h-4 w-4" />
+                </div>
+                <h3 className="font-semibold text-foreground">Upload Documents</h3>
+              </div>
+
+              <Link
+                to="/exporter/documents"
+                className="block rounded-xl border-2 border-dashed border-veloxis-teal/40 bg-veloxis-teal/5 p-8 text-center transition-colors hover:border-veloxis-teal/60 hover:bg-veloxis-teal/10"
+              >
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-veloxis-teal/15 text-veloxis-teal">
+                  <UploadCloud className="h-6 w-6" />
+                </div>
+                <p className="font-semibold text-foreground">Drop files here or browse</p>
+                <p className="mt-1 text-xs text-muted-foreground">PDF, JPG, PNG · Max 10MB per file</p>
+                <Button variant="outline" size="sm" className="mt-4 border-veloxis-teal/40 text-veloxis-teal hover:bg-veloxis-teal/10 hover:text-veloxis-teal">
+                  Choose Files
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* ========= APPLICATIONS CARD ========= */}
+        <Card>
+          <CardContent className="p-6">
+            {/* Stats row */}
+            <div className="grid grid-cols-3 gap-4 pb-6 mb-6 border-b border-border">
+              <Stat label="Pending" value={stats.pending} color="text-amber-600 dark:text-amber-400" />
+              <Stat label="Active" value={stats.active} color="text-veloxis-teal" />
+              <Stat label="Closed" value={stats.closed} color="text-muted-foreground" />
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-veloxis-teal/10 text-veloxis-teal">
+                  <FileText className="h-4 w-4" />
+                </div>
+                <h3 className="font-semibold text-foreground">Applications</h3>
+              </div>
+              {allDeals.length > 0 && (
+                <Button asChild size="sm" variant="ghost">
+                  <Link to="/exporter/deals">View all <ArrowRight className="ml-1 h-4 w-4" /></Link>
+                </Button>
+              )}
+            </div>
+
+            {allDeals.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+                  <FileText className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <p className="font-semibold text-foreground">No applications yet</p>
+                <p className="mt-1 text-sm text-muted-foreground max-w-xs">
+                  {allDocsComplete
+                    ? 'Submit your first application to get started.'
+                    : 'Complete your KYC verification above to unlock deal submissions.'}
+                </p>
+                {allDocsComplete && (
+                  <Button
+                    className="mt-4 bg-veloxis-teal text-veloxis-deep hover:bg-veloxis-teal/90"
+                    onClick={() => navigate('/exporter/deals/new')}
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> New Application
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {allDeals.slice(0, 5).map(deal => (
+                  <Link
+                    key={deal.id}
+                    to={`/exporter/deals/${deal.id}`}
+                    className="flex items-center justify-between rounded-md border border-border px-3 py-2.5 text-sm transition-colors hover:bg-muted/50"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-foreground truncate">
+                        {deal.deal_reference || deal.id.slice(0, 8)}
+                      </p>
+                      {deal.buyer_company_name && (
+                        <p className="text-xs text-muted-foreground truncate">{deal.buyer_company_name}</p>
+                      )}
+                    </div>
+                    <DealStatusBadge status={deal.status} portal="exporter" />
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function ProfileRow({ label, value, valueClassName }: { label: string; value: React.ReactNode; valueClassName?: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-border/60 pb-3 last:border-0 last:pb-0">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className={cn('font-medium text-foreground text-right truncate', valueClassName)}>{value}</dd>
+    </div>
+  );
+}
+
+function Stat({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div className="text-center">
+      <p className={cn('text-3xl font-bold', color)}>{value}</p>
+      <p className="mt-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
     </div>
   );
 }
