@@ -100,7 +100,14 @@ export default function ExporterCompanyProfile() {
   useEffect(() => {
     if (exporter) {
       const init: Partial<ExporterRow> = {};
-      FIELDS.forEach((f) => { (init as any)[f] = (exporter as any)[f] ?? ''; });
+      FIELDS.forEach((f) => {
+        let val = (exporter as any)[f] ?? '';
+        // Strip legacy "PENDING" placeholder so the field shows empty
+        if (f === 'rc_number' && typeof val === 'string' && val.trim().toUpperCase() === 'PENDING') {
+          val = '';
+        }
+        (init as any)[f] = val;
+      });
       setForm(init);
     }
   }, [exporter]);
@@ -110,41 +117,43 @@ export default function ExporterCompanyProfile() {
   const handleSubmit = async () => {
     if (!user?.id || !exporter) return;
     if (!form.company_name?.toString().trim()) { toast.error('Company name is required'); return; }
-    if (!form.rc_number?.toString().trim()) { toast.error('Company registration number is required'); return; }
     if (!form.director_name?.toString().trim()) { toast.error('Director name is required'); return; }
 
-    // Build proposed_changes diff
-    const proposed: Record<string, unknown> = {};
-    const snapshot: Record<string, unknown> = {};
-    FIELDS.forEach((f) => {
-      const newVal = (form as any)[f];
-      const oldVal = (exporter as any)[f];
-      const cleanNew = typeof newVal === 'string' ? newVal.trim() || null : newVal;
-      const cleanOld = oldVal ?? null;
-      if (cleanNew !== cleanOld) {
-        proposed[f as string] = cleanNew;
-        snapshot[f as string] = cleanOld;
-      }
-    });
+    // Build payload directly for the exporters table
+    const cleanString = (v: unknown) => {
+      if (typeof v !== 'string') return v ?? null;
+      const t = v.trim();
+      return t === '' ? null : t;
+    };
 
-    if (Object.keys(proposed).length === 0) {
-      toast.info('No changes to submit');
-      return;
-    }
+    const payload = {
+      company_name: cleanString(form.company_name) ?? exporter.company_name,
+      rc_number: cleanString(form.rc_number) ?? '',
+      director_name: cleanString(form.director_name) ?? exporter.director_name,
+      vat_number: cleanString(form.vat_number),
+      primary_commodity: cleanString(form.primary_commodity),
+      registered_address_line1: cleanString(form.registered_address_line1),
+      registered_address_line2: cleanString(form.registered_address_line2),
+      registered_city: cleanString(form.registered_city),
+      registered_postcode: cleanString(form.registered_postcode),
+      registered_country: cleanString(form.registered_country),
+      trading_address_same_as_registered: !!form.trading_address_same_as_registered,
+      trading_address_line1: cleanString(form.trading_address_line1),
+      trading_address_line2: cleanString(form.trading_address_line2),
+      trading_city: cleanString(form.trading_city),
+      trading_postcode: cleanString(form.trading_postcode),
+      trading_country: cleanString(form.trading_country),
+    };
 
     setSubmitting(true);
-    const { error } = await supabase.from('kyc_profile_change_requests').insert({
-      exporter_id: exporter.id,
-      requested_by: user.id,
-      current_snapshot: snapshot as any,
-      proposed_changes: proposed as any,
-      status: 'pending',
-    });
+    const { error } = await supabase
+      .from('exporters')
+      .update(payload as any)
+      .eq('id', exporter.id);
     setSubmitting(false);
     if (error) { toast.error(error.message); return; }
-    toast.success('Changes submitted for partner review.');
-    queryClient.invalidateQueries({ queryKey: ['exporter_change_request_pending', exporter.id] });
-    queryClient.invalidateQueries({ queryKey: ['exporter_change_history', exporter.id] });
+    toast.success('Company profile updated.');
+    queryClient.invalidateQueries({ queryKey: ['exporter_self', user.id] });
   };
 
   if (isLoading) return <Skeleton className="h-96" />;
@@ -190,7 +199,12 @@ export default function ExporterCompanyProfile() {
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Company name *" value={form.company_name as string} onChange={(v) => update('company_name', v)} />
-            <Field label="Company registration number *" value={form.rc_number as string} onChange={(v) => update('rc_number', v)} />
+            <Field
+              label="Company registration number"
+              value={form.rc_number as string}
+              onChange={(v) => update('rc_number', v)}
+              placeholder="e.g. RC-123456"
+            />
             <Field label="Director name(s) *" value={form.director_name as string} onChange={(v) => update('director_name', v)} />
             <Field label="VAT number" value={form.vat_number as string} onChange={(v) => update('vat_number', v)} />
             <Field label="Primary commodity / trade type" value={form.primary_commodity as string} onChange={(v) => update('primary_commodity', v)} />
@@ -244,7 +258,7 @@ export default function ExporterCompanyProfile() {
           className="hover:opacity-90"
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-          Submit Changes for Review
+          Save Changes
         </Button>
       </div>
 
@@ -287,11 +301,11 @@ export default function ExporterCompanyProfile() {
   );
 }
 
-function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <Input value={value ?? ''} onChange={(e) => onChange(e.target.value)} />
+      <Input value={value ?? ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
     </div>
   );
 }
