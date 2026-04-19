@@ -40,8 +40,10 @@ const REQUIRED_DOCS: Array<{ type: string; label: string; icon: React.ComponentT
   { type: 'cac_certificate', label: 'CAC Certificate', icon: FileText },
   { type: 'director_id', label: 'Director ID', icon: User },
   { type: 'nepc_certificate', label: 'Export Licence', icon: Shield },
-  { type: 'registered_address_proof', label: 'Address Proof', icon: MapPin },
 ];
+
+// 4th KYC item — captured as structured address fields on the exporter row, not a document upload
+const ADDRESS_KYC_KEY = '__registered_address__';
 
 const PENDING_DEAL_STATUSES: DealStatus[] = [
   'draft', 'submitted', 'under_review', 'changes_requested', 'docs_requested',
