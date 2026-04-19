@@ -695,8 +695,25 @@ export default function ExporterDealNew() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Payment Due Date *</Label>
-              <Input type="date" value={form.payment_due_date} onChange={e => updateField('payment_due_date', e.target.value)} />
+              <Label htmlFor="payment_due_date">Payment Due Date *</Label>
+              <Input
+                id="payment_due_date"
+                type="date"
+                value={form.payment_due_date}
+                min={form.invoice_date || undefined}
+                onChange={e => updateField('payment_due_date', e.target.value)}
+                onBlur={() => {
+                  if (form.invoice_date && form.payment_due_date && form.payment_due_date < form.invoice_date) {
+                    setFieldErrors(p => ({ ...p, payment_due_date: 'Payment date cannot be before the invoice date' }));
+                  }
+                }}
+              />
+              {(fieldErrors.payment_due_date || paymentBeforeInvoice) && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  {fieldErrors.payment_due_date || 'Payment date cannot be before the invoice date'}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Upload Invoice File * (PDF or image)</Label>
