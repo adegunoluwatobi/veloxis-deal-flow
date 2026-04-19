@@ -1143,11 +1143,24 @@ export type Database = {
           kyc_verified_by: string | null
           onboarding_status: Database["public"]["Enums"]["onboarding_status"]
           originator_id: string
+          primary_commodity: string | null
           rc_number: string
+          registered_address_line1: string | null
+          registered_address_line2: string | null
+          registered_city: string | null
+          registered_country: string | null
+          registered_postcode: string | null
           sanctions_screening_status: Database["public"]["Enums"]["sanctions_screening_status"]
           source_of_funds_statement: string | null
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
+          trading_address_line1: string | null
+          trading_address_line2: string | null
+          trading_address_same_as_registered: boolean
+          trading_city: string | null
+          trading_country: string | null
+          trading_postcode: string | null
           updated_at: string
+          vat_number: string | null
         }
         Insert: {
           company_name: string
@@ -1170,11 +1183,24 @@ export type Database = {
           kyc_verified_by?: string | null
           onboarding_status?: Database["public"]["Enums"]["onboarding_status"]
           originator_id: string
+          primary_commodity?: string | null
           rc_number: string
+          registered_address_line1?: string | null
+          registered_address_line2?: string | null
+          registered_city?: string | null
+          registered_country?: string | null
+          registered_postcode?: string | null
           sanctions_screening_status?: Database["public"]["Enums"]["sanctions_screening_status"]
           source_of_funds_statement?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+          trading_address_line1?: string | null
+          trading_address_line2?: string | null
+          trading_address_same_as_registered?: boolean
+          trading_city?: string | null
+          trading_country?: string | null
+          trading_postcode?: string | null
           updated_at?: string
+          vat_number?: string | null
         }
         Update: {
           company_name?: string
@@ -1197,11 +1223,24 @@ export type Database = {
           kyc_verified_by?: string | null
           onboarding_status?: Database["public"]["Enums"]["onboarding_status"]
           originator_id?: string
+          primary_commodity?: string | null
           rc_number?: string
+          registered_address_line1?: string | null
+          registered_address_line2?: string | null
+          registered_city?: string | null
+          registered_country?: string | null
+          registered_postcode?: string | null
           sanctions_screening_status?: Database["public"]["Enums"]["sanctions_screening_status"]
           source_of_funds_statement?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+          trading_address_line1?: string | null
+          trading_address_line2?: string | null
+          trading_address_same_as_registered?: boolean
+          trading_city?: string | null
+          trading_country?: string | null
+          trading_postcode?: string | null
           updated_at?: string
+          vat_number?: string | null
         }
         Relationships: [
           {
@@ -1312,6 +1351,56 @@ export type Database = {
           },
         ]
       }
+      kyc_profile_change_requests: {
+        Row: {
+          created_at: string
+          current_snapshot: Json
+          exporter_id: string
+          id: string
+          proposed_changes: Json
+          requested_by: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_snapshot?: Json
+          exporter_id: string
+          id?: string
+          proposed_changes?: Json
+          requested_by: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_snapshot?: Json
+          exporter_id?: string
+          id?: string
+          proposed_changes?: Json
+          requested_by?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kyc_profile_change_requests_exporter_id_fkey"
+            columns: ["exporter_id"]
+            isOneToOne: false
+            referencedRelation: "exporters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_applications: {
         Row: {
           admin_notes: string | null
@@ -1372,6 +1461,15 @@ export type Database = {
           is_active: boolean
           name: string
           notes: string | null
+          operating_countries: string[] | null
+          primary_contact_email: string | null
+          primary_contact_name: string | null
+          primary_contact_phone: string | null
+          registered_address_line1: string | null
+          registered_address_line2: string | null
+          registered_city: string | null
+          registered_country: string | null
+          registered_postcode: string | null
           suspended_at: string | null
           suspended_by: string | null
           suspension_reason: string | null
@@ -1385,6 +1483,15 @@ export type Database = {
           is_active?: boolean
           name: string
           notes?: string | null
+          operating_countries?: string[] | null
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          registered_address_line1?: string | null
+          registered_address_line2?: string | null
+          registered_city?: string | null
+          registered_country?: string | null
+          registered_postcode?: string | null
           suspended_at?: string | null
           suspended_by?: string | null
           suspension_reason?: string | null
@@ -1398,6 +1505,15 @@ export type Database = {
           is_active?: boolean
           name?: string
           notes?: string | null
+          operating_countries?: string[] | null
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          registered_address_line1?: string | null
+          registered_address_line2?: string | null
+          registered_city?: string | null
+          registered_country?: string | null
+          registered_postcode?: string | null
           suspended_at?: string | null
           suspended_by?: string | null
           suspension_reason?: string | null
@@ -1624,6 +1740,7 @@ export type Database = {
           id: string
           is_active: boolean
           organisation: string | null
+          phone: string | null
           updated_at: string
         }
         Insert: {
@@ -1633,6 +1750,7 @@ export type Database = {
           id: string
           is_active?: boolean
           organisation?: string | null
+          phone?: string | null
           updated_at?: string
         }
         Update: {
@@ -1642,6 +1760,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           organisation?: string | null
+          phone?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1813,6 +1932,19 @@ export type Database = {
         | "payment_advice_submitted"
         | "ipu_verified"
         | "exporter_receipt_confirmed"
+        | "profile_updated"
+        | "email_change_requested"
+        | "password_changed"
+        | "force_password_reset"
+        | "user_suspended"
+        | "user_reactivated"
+        | "user_role_changed"
+        | "team_member_invited"
+        | "team_member_removed"
+        | "org_profile_updated"
+        | "kyc_change_requested"
+        | "kyc_change_approved"
+        | "kyc_change_rejected"
       buyer_credit_check_status: "pending" | "pass" | "refer" | "fail"
       change_request_status: "pending" | "resolved" | "cancelled"
       commodity_type:
@@ -2076,6 +2208,19 @@ export const Constants = {
         "payment_advice_submitted",
         "ipu_verified",
         "exporter_receipt_confirmed",
+        "profile_updated",
+        "email_change_requested",
+        "password_changed",
+        "force_password_reset",
+        "user_suspended",
+        "user_reactivated",
+        "user_role_changed",
+        "team_member_invited",
+        "team_member_removed",
+        "org_profile_updated",
+        "kyc_change_requested",
+        "kyc_change_approved",
+        "kyc_change_rejected",
       ],
       buyer_credit_check_status: ["pending", "pass", "refer", "fail"],
       change_request_status: ["pending", "resolved", "cancelled"],
