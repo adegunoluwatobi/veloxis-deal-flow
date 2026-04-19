@@ -194,8 +194,15 @@ export default function ExporterOnboarding() {
 
   const handleSubmit = async () => {
     if (!user || !exporter) return;
+    setSubmitAttempted(true);
     if (!fieldsValid) {
-      toast({ title: 'Missing details', description: 'Please complete all required company fields before submitting.', variant: 'destructive' });
+      // Mark all fields touched so inline errors render
+      setTouched({ company_name: true, rc_number: true, entity_type: true, director_name: true, contact_email: true });
+      toast({ title: 'Missing details', description: 'Please fix the highlighted fields before submitting.', variant: 'destructive' });
+      // Scroll to the first invalid field
+      const order: FieldKey[] = ['company_name', 'rc_number', 'entity_type', 'director_name', 'contact_email'];
+      const firstBad = order.find(k => !!fieldError(k) || (k === 'entity_type' ? !form.entity_type : !(form as any)[k]?.trim?.()));
+      if (firstBad) document.getElementById(firstBad)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
     if (!docsValid) {
