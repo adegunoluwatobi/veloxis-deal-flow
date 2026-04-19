@@ -503,7 +503,7 @@ export default function ExporterDashboard() {
                         </Badge>
                       </div>
                     </div>
-                  </div>
+                  </Wrapper>
                 );
               })}
             </div>
