@@ -17,9 +17,29 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [resetMessage, setResetMessage] = useState<{ type: 'info' | 'error' | 'success'; text: string } | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setResetMessage({ type: 'error', text: 'Please enter your email address above first.' });
+      return;
+    }
+    setResetLoading(true);
+    setResetMessage(null);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/set-password`,
+    });
+    setResetLoading(false);
+    if (error) {
+      setResetMessage({ type: 'error', text: error.message });
+      return;
+    }
+    setResetMessage({ type: 'success', text: 'A password reset link has been sent to your email address.' });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,6 +148,32 @@ export default function Login() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              <div className="flex justify-end pt-1">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={resetLoading}
+                  className="text-xs font-medium hover:underline disabled:opacity-60"
+                  style={{ color: '#0BA4A4' }}
+                >
+                  {resetLoading ? 'Sending…' : 'Forgot password?'}
+                </button>
+              </div>
+              {resetMessage && (
+                <p
+                  className="text-xs mt-1"
+                  style={{
+                    color:
+                      resetMessage.type === 'success'
+                        ? '#5FFFD7'
+                        : resetMessage.type === 'error'
+                        ? '#fca5a5'
+                        : '#ffffffb3',
+                  }}
+                >
+                  {resetMessage.text}
+                </p>
+              )}
             </div>
             <Button
               type="submit"
