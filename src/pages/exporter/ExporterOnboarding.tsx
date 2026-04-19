@@ -73,7 +73,7 @@ export default function ExporterOnboarding() {
         setExporter(data);
         setForm({
           company_name: data.company_name || '',
-          rc_number: data.rc_number || '',
+          rc_number: data.rc_number && data.rc_number !== 'PENDING' ? data.rc_number : '',
           entity_type: data.entity_type || '',
           director_name: data.director_name || '',
           contact_email: data.contact_email || user.email || '',
