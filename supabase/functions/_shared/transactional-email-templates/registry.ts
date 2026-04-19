@@ -38,6 +38,13 @@ import { template as paymentReceivedToPartner } from './payment-received-to-part
 import { template as dealClosedToExporter } from './deal-closed-to-exporter.tsx'
 import { template as dealClosedToPartner } from './deal-closed-to-partner.tsx'
 
+// Stage 3 — Scheduled reminders (cron-driven, dedup via idempotencyKey).
+import { template as documentExpiry30 } from './document-expiry-30.tsx'
+import { template as documentExpiry7 } from './document-expiry-7.tsx'
+import { template as ipuPendingReminder } from './ipu-pending-reminder.tsx'
+import { template as maturityReminder7 } from './maturity-reminder-7.tsx'
+import { template as maturityReminder1 } from './maturity-reminder-1.tsx'
+
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'exporter-invitation': exporterInvitation,
   'exporter-accepted-invite': exporterAcceptedInvite,
@@ -61,4 +68,9 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'payment-received-to-partner': paymentReceivedToPartner,
   'deal-closed-to-exporter': dealClosedToExporter,
   'deal-closed-to-partner': dealClosedToPartner,
+  'document-expiry-30': documentExpiry30,
+  'document-expiry-7': documentExpiry7,
+  'ipu-pending-reminder': ipuPendingReminder,
+  'maturity-reminder-7': maturityReminder7,
+  'maturity-reminder-1': maturityReminder1,
 }
