@@ -895,7 +895,7 @@ export default function ExporterDealNew() {
               ) : (
                 <p className="text-sm text-destructive flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4" />
-                  No NEPC certificate on file. Please upload it in your Documents section first.
+                  No Export Licence on file. Please upload it in your Documents section first.
                 </p>
               )}
             </div>
