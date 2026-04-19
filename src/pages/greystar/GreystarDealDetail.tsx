@@ -21,6 +21,7 @@ import DealLifecycleBanner from '@/components/DealLifecycleBanner';
 import type { DealStatus } from '@/types';
 import { CURRENCY_SYMBOLS, type InvoiceCurrency } from '@/types';
 import SettlementSummaryBanner from '@/components/SettlementSummaryBanner';
+import BuyerVerificationCard from '@/components/BuyerVerificationCard';
 
 export default function GreystarDealDetail() {
   const { id } = useParams<{ id: string }>();
@@ -440,12 +441,32 @@ export default function GreystarDealDetail() {
       {/* Buyer Details */}
       <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><Building2 className="h-4 w-4" />Buyer Details</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
-          <Field label="Company Name" value={deal.buyer_company_name} />
-          <Field label="Country" value={deal.buyer_country} />
-          <Field label="Contact Name" value={deal.buyer_contact_name} />
-          <Field label="Contact Email" value={deal.buyer_contact_email} />
-          <Field label="Contact Phone" value={deal.buyer_contact_phone} />
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Company Name" value={deal.buyer_company_name} />
+            <Field label="Country" value={deal.buyer_country} />
+            <Field label="Contact Name" value={deal.buyer_contact_name} />
+            <Field label="Contact Email" value={deal.buyer_contact_email} />
+            <Field label="Contact Phone" value={deal.buyer_contact_phone} />
+          </div>
+          <BuyerVerificationCard
+            dealId={deal.id}
+            buyerCompanyName={deal.buyer_company_name}
+            buyerCountry={deal.buyer_country}
+            buyer_ch_verified={deal.buyer_ch_verified}
+            buyer_ch_verified_at={deal.buyer_ch_verified_at}
+            buyer_ch_verified_by={deal.buyer_ch_verified_by}
+            buyer_ch_verified_by_role={deal.buyer_ch_verified_by_role}
+            buyer_ch_company_number={deal.buyer_ch_company_number}
+            buyer_ch_company_status={deal.buyer_ch_company_status}
+            buyer_ch_company_name={deal.buyer_ch_company_name}
+            buyer_ch_registered_address={deal.buyer_ch_registered_address}
+            buyer_ch_sic_codes={deal.buyer_ch_sic_codes}
+            buyer_ch_search_term={deal.buyer_ch_search_term}
+            buyer_ch_found={deal.buyer_ch_found}
+            canVerify
+            onVerified={loadDeal}
+          />
         </CardContent>
       </Card>
 
