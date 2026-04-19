@@ -19,7 +19,7 @@ export interface ComputedKyc {
   icon: 'success' | 'warning' | 'destructive' | 'muted';
 }
 
-const MANDATORY: ExporterDocumentType[] = ['cac_certificate', 'director_id', 'nepc_certificate'];
+const MANDATORY: ExporterDocumentType[] = ['cac_certificate', 'director_id', 'nepc_certificate', 'registered_address_proof'];
 
 export function groupDocumentsByExporter<T extends { exporter_id?: string | null }>(docs: T[]) {
   const grouped = new Map<string, T[]>();
@@ -109,7 +109,7 @@ export function computeKycStatus(activeDocs: KycDocumentLike[], pendingRequestCo
       status: 'pending_documents',
       label: 'Pending Documents',
       badgeLabel: 'Pending Documents',
-      description: 'Please upload your CAC Certificate, Director ID, and Export Licence.',
+      description: 'Please upload your CAC Certificate, Director ID, Export Licence, and Registered Address Proof.',
       color: 'bg-muted text-muted-foreground',
       borderColor: 'border-muted bg-muted/30',
       icon: 'muted',
@@ -132,7 +132,7 @@ export function computeKycStatus(activeDocs: KycDocumentLike[], pendingRequestCo
     status: 'pending_documents',
     label: 'Pending Documents',
     badgeLabel: 'Pending Documents',
-    description: 'Please upload your CAC Certificate, Director ID, and Export Licence.',
+    description: 'Please upload your CAC Certificate, Director ID, Export Licence, and Registered Address Proof.',
     color: 'bg-muted text-muted-foreground',
     borderColor: 'border-muted bg-muted/30',
     icon: 'muted',
