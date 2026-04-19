@@ -245,8 +245,6 @@ export default function ExporterDashboard() {
         <nav className="relative mt-8 flex gap-8 border-b border-white/10">
           {[
             { label: 'Overview', href: '/exporter', active: true },
-            { label: 'Applications', href: '/exporter/deals' },
-            { label: 'Documents', href: '/exporter/documents' },
           ].map((t) => (
             <Link
               key={t.label}
