@@ -116,7 +116,7 @@ export default function GreystarDashboard() {
           <h1 className="text-2xl font-bold text-foreground">Greystar Intake</h1>
           <p className="text-sm text-muted-foreground">Exporter onboarding and document review</p>
         </div>
-        <Button asChild>
+        <Button asChild style={{ backgroundColor: '#0BA4A4', color: '#ffffff' }} className="hover:opacity-90">
           <Link to="/greystar/exporters/new"><Plus className="mr-2 h-4 w-4" />New Exporter</Link>
         </Button>
       </div>

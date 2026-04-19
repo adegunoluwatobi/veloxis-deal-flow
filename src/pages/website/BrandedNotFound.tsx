@@ -61,7 +61,7 @@ export default function BrandedNotFound() {
               to="/"
               className="inline-flex items-center justify-center gap-1.5 gradient-veloxis-btn text-white font-semibold text-[15px] px-7 py-[14px] rounded-[14px] transition-all duration-200 glow-mint-hover"
             >
-              Back to home <ArrowRight className="w-4 h-4" />
+              Go home <ArrowRight className="w-4 h-4" />
             </Link>
             <a
               href="mailto:hello@veloxis.co.uk"

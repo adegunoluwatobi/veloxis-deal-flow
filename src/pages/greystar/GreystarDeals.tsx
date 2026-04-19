@@ -52,9 +52,12 @@ export default function GreystarDeals() {
     return map[c ?? ''] ?? '';
   };
 
+  const closedCount = deals.filter(d => d.status === 'closed_repaid' || d.status === 'closed_partial').length;
+
   const filtered = deals.filter(d => {
     if (tab === 'all') return true;
     if (tab === 'rejected') return d.status === 'rejected_by_partner' || d.status === 'rejected_by_veloxis' || d.status === 'rejected';
+    if (tab === 'closed') return d.status === 'closed_repaid' || d.status === 'closed_partial';
     return d.status === tab;
   });
 
@@ -68,7 +71,14 @@ export default function GreystarDeals() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           {TABS.map(t => (
-            <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>
+            <TabsTrigger key={t.value} value={t.value} className="gap-2">
+              {t.label}
+              {t.value === 'closed' && (
+                <span className="ml-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  {closedCount}
+                </span>
+              )}
+            </TabsTrigger>
           ))}
         </TabsList>
       </Tabs>
