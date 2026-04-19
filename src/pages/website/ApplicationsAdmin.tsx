@@ -132,25 +132,33 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
   const activePartnersForCountry = (country: string) =>
     partnerOrgs.filter(p => (p.country ?? "").toLowerCase() === (country ?? "").toLowerCase());
 
-  // Core flow: assign a partner → status=assigned, create exporter profile, remove from list
-  const assignPartner = async (app: ExporterApp, partnerOrgId: string) => {
+  // Step 1: dropdown change → open confirmation modal (no DB write yet)
+  const requestAssignPartner = (app: ExporterApp, partnerOrgId: string) => {
     if (!partnerOrgId) {
-      // Cleared selection → revert to routed
-      await moveToRouted(app.id);
+      // Cleared selection → revert to routed (no confirmation needed)
+      moveToRouted(app.id);
       return;
     }
     const partner = partnerOrgs.find(p => p.id === partnerOrgId);
     if (!partner) return;
+    setPendingAssign({ app, partner });
+  };
+
+  // Step 2: user clicks "Confirm Assignment" in modal → perform the write
+  const confirmAssignPartner = async () => {
+    if (!pendingAssign) return;
+    const { app, partner } = pendingAssign;
+    setPendingAssign(null);
     setBusyId(app.id);
     try {
       // 1) Find the default originator user for this partner organisation
       const { data: originatorId, error: rpcErr } = await supabase.rpc(
         "default_originator_for_partner_org" as any,
-        { p_org_id: partnerOrgId } as any,
+        { p_org_id: partner.id } as any,
       );
       if (rpcErr) throw rpcErr;
       if (!originatorId) {
-        alert(`${partner.name} has no partner_admin user configured. Add a partner admin before assigning exporters to this organisation.`);
+        toast.error(`${partner.name} has no partner_admin user configured. Add a partner admin before assigning exporters to this organisation.`);
         setBusyId(null);
         return;
       }
@@ -186,8 +194,9 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
 
       // 4) Remove from local list (it's no longer in Routed/Expansion)
       setExporterApps(p => p.filter(a => a.id !== app.id));
+      toast.success(`✓ ${app.company_name} successfully assigned to ${partner.name}`);
     } catch (e: any) {
-      alert(`Assignment failed: ${e?.message ?? "unknown error"}`);
+      toast.error(`Assignment failed: ${e?.message ?? "unknown error"}`);
     } finally {
       setBusyId(null);
     }
