@@ -157,10 +157,24 @@ export default function ExporterOnboarding() {
     return null;
   }
 
-  const isValid = form.company_name.trim() && form.rc_number.trim() && form.entity_type && form.director_name.trim() && form.contact_email.trim() && isValidEmail(form.contact_email);
+  const fieldsValid = form.company_name.trim() && form.rc_number.trim() && form.entity_type && form.director_name.trim() && form.contact_email.trim() && isValidEmail(form.contact_email);
+  const docsValid = sofUploaded && bankUploaded;
+  const isValid = fieldsValid && docsValid;
 
   const handleSubmit = async () => {
-    if (!user || !exporter || !isValid) return;
+    if (!user || !exporter) return;
+    if (!fieldsValid) {
+      toast({ title: 'Missing details', description: 'Please complete all required company fields before submitting.', variant: 'destructive' });
+      return;
+    }
+    if (!docsValid) {
+      toast({
+        title: 'Required documents missing',
+        description: `Please upload ${!sofUploaded ? 'Source of Funds statement' : ''}${!sofUploaded && !bankUploaded ? ' and ' : ''}${!bankUploaded ? '6 months bank statements' : ''} before submitting.`,
+        variant: 'destructive',
+      });
+      return;
+    }
     setSubmitting(true);
     try {
       const { error } = await supabase
@@ -259,12 +273,12 @@ export default function ExporterOnboarding() {
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-4 w-4" /> Compliance & Due Diligence
             </CardTitle>
-            <CardDescription>Upload required compliance documents</CardDescription>
+            <CardDescription>All documents below are required</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             {/* Source of Funds */}
             <div className="space-y-2">
-              <Label>Source of Funds / Source of Wealth Statement</Label>
+              <Label>Source of Funds / Source of Wealth Statement *</Label>
               <Textarea
                 placeholder="Describe your primary business revenue sources…"
                 value={form.source_of_funds_statement}
@@ -289,7 +303,7 @@ export default function ExporterOnboarding() {
 
             {/* Bank Statements */}
             <div className="space-y-2">
-              <Label>6 Months Bank Statements</Label>
+              <Label>6 Months Bank Statements *</Label>
               <p className="text-xs text-muted-foreground">Upload PDF bank statements (multiple files accepted).</p>
               {bankUploaded ? (
                 <div className="flex items-center gap-1 text-xs text-success">
@@ -313,7 +327,12 @@ export default function ExporterOnboarding() {
           </CardContent>
         </Card>
 
-        <Button onClick={handleSubmit} disabled={!isValid || submitting} className="w-full">
+        {!docsValid && (
+          <p className="text-center text-xs text-destructive">
+            Please upload all required documents marked with * before submitting.
+          </p>
+        )}
+        <Button onClick={handleSubmit} disabled={submitting} className="w-full">
           {submitting ? 'Submitting…' : 'Submit Onboarding'}
         </Button>
 
