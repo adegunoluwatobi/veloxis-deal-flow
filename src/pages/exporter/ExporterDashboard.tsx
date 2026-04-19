@@ -425,12 +425,12 @@ export default function ExporterDashboard() {
                     ? `All documents verified by Veloxis on ${formatDate(exporter.kyc_verified_at) || 'review date'}`
                     : allDocsComplete
                       ? 'All documents uploaded and pending review.'
-                      : `Upload all ${REQUIRED_DOCS.length} documents to unlock deal submissions`}
+                      : `Complete all ${totalRequiredCount} items to unlock deal submissions`}
                 </p>
               </div>
               {isFullyVerified && (
                 <Badge className="bg-success/15 text-success hover:bg-success/20 border-success/30 text-xs">
-                  {verifiedCount} / {REQUIRED_DOCS.length} Verified
+                  {verifiedCount} / {totalRequiredCount} Verified
                 </Badge>
               )}
             </div>
@@ -439,14 +439,14 @@ export default function ExporterDashboard() {
               <div className="flex items-center justify-between text-xs font-medium">
                 <span className="text-muted-foreground">Verification progress</span>
                 <span className={isFullyVerified ? 'text-success' : allDocsComplete ? 'text-success' : 'text-amber-700 dark:text-amber-400'}>
-                  {isFullyVerified ? `${verifiedCount} of ${REQUIRED_DOCS.length} verified` : `${completedCount} of ${REQUIRED_DOCS.length} complete`}
+                  {isFullyVerified ? `${verifiedCount} of ${totalRequiredCount} verified` : `${completedCount} of ${totalRequiredCount} complete`}
                 </span>
               </div>
               <Progress
                 value={
                   isFullyVerified
                     ? 100
-                    : (completedCount / REQUIRED_DOCS.length) * 100
+                    : (completedCount / totalRequiredCount) * 100
                 }
                 className={cn('h-1.5', allDocsComplete ? '[&>div]:bg-success' : '[&>div]:bg-amber-500')}
               />
