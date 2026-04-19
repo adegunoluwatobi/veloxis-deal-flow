@@ -258,6 +258,48 @@ Deno.serve(async (req) => {
     }
   }
 
+  // -------- 4) Safety-net: auto-invite exporters that were never invited --------
+  // RULE: every exporter MUST receive an invitation. If a row was created
+  // (via admin tooling, migration, or a UI flow that skipped the invite), this
+  // job picks it up the next day and fires invite-exporter. Idempotent: once
+  // invite_sent_at is set the row is no longer matched.
+  {
+    const { data: missing, error } = await supabase
+      .from('exporters')
+      .select('id, contact_email, director_name, company_name')
+      .is('invite_sent_at', null)
+      .is('exporter_user_id', null)
+      .not('contact_email', 'is', null);
+
+    if (error) {
+      console.error('missing-invite query error', error.message);
+    } else {
+      for (const exp of (missing ?? []) as any[]) {
+        const email = (exp.contact_email as string | null)?.trim();
+        if (!email) continue;
+        try {
+          const { error: invErr } = await supabase.functions.invoke('invite-exporter', {
+            body: {
+              email,
+              full_name: exp.director_name ?? '',
+              organisation: exp.company_name ?? '',
+              exporter_id: exp.id,
+            },
+          });
+          if (invErr) {
+            console.error(`auto-invite failed for ${email}:`, invErr.message);
+            stats.failed++;
+          } else {
+            stats.missingInvitesFixed++;
+          }
+        } catch (e) {
+          console.error(`auto-invite threw for ${email}:`, (e as Error).message);
+          stats.failed++;
+        }
+      }
+    }
+  }
+
   return new Response(
     JSON.stringify({ ok: true, today, stats }),
     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
