@@ -80,8 +80,8 @@ export default function PartnerTeamMembers() {
     const ok = await confirm({
       title: 'Remove team member',
       description: `Remove ${member.full_name || member.email} from your team? They will immediately lose access to the partner shell.`,
-      confirmText: 'Remove',
-      variant: 'destructive',
+      confirmLabel: 'Remove',
+      variant: 'warning',
     });
     if (!ok) return;
     const { data, error } = await supabase.functions.invoke('admin-user-mgmt', {

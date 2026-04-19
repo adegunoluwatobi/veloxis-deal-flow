@@ -180,7 +180,8 @@ function UserDetailSheet({ user, currentUserId, onClose, onChanged, confirm }: a
     const ok = await confirm({
       title: 'Force password reset',
       description: `Send a password reset email to ${user.email}? They will be required to set a new password.`,
-      confirmText: 'Send Reset Email',
+      confirmLabel: 'Send Reset Email',
+      variant: 'info',
     });
     if (!ok) return;
     const { data, error } = await supabase.functions.invoke('admin-user-mgmt', {
@@ -194,8 +195,8 @@ function UserDetailSheet({ user, currentUserId, onClose, onChanged, confirm }: a
     const ok = await confirm({
       title: 'Suspend account',
       description: `Suspend ${user.full_name || user.email}'s account? They will immediately lose access to the platform.`,
-      confirmText: 'Suspend',
-      variant: 'destructive',
+      confirmLabel: 'Suspend',
+      variant: 'warning',
     });
     if (!ok) return;
     const { data, error } = await supabase.functions.invoke('admin-user-mgmt', {
@@ -211,7 +212,8 @@ function UserDetailSheet({ user, currentUserId, onClose, onChanged, confirm }: a
     const ok = await confirm({
       title: 'Reactivate account',
       description: `Restore access for ${user.full_name || user.email}?`,
-      confirmText: 'Reactivate',
+      confirmLabel: 'Reactivate',
+      variant: 'success',
     });
     if (!ok) return;
     const { data, error } = await supabase.functions.invoke('admin-user-mgmt', {
