@@ -422,6 +422,26 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
           )}
         </>
       )}
+      <AlertDialog open={!!pendingAssign} onOpenChange={(open) => { if (!open) setPendingAssign(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Partner Assignment</AlertDialogTitle>
+            <AlertDialogDescription>
+              You are about to assign <span className="font-semibold text-foreground">{pendingAssign?.app.company_name}</span> to <span className="font-semibold text-foreground">{pendingAssign?.partner.name}</span>. This will activate the exporter's profile and move this application out of the pipeline. Are you sure?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmAssignPartner}
+              style={{ backgroundColor: "#0BA4A4", color: "white" }}
+              className="hover:opacity-90"
+            >
+              Confirm Assignment
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 
