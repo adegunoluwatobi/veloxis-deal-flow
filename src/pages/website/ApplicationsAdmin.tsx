@@ -355,6 +355,42 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
         .from("exporter_applications" as any)
         .update({ status: "rejected", admin_notes: reason } as any)
         .eq("id", a.id);
+      // Email #9 — Veloxis rejects exporter (→ exporter + partner)
+      try {
+        if (a.exporter_id) {
+          const { data: exp } = await supabase
+            .from('exporters')
+            .select('id, company_name, contact_email, director_name, originator_id')
+            .eq('id', a.exporter_id).maybeSingle();
+          if (exp?.contact_email) {
+            void sendOnboardingEmail({
+              templateName: 'veloxis-rejects-exporter-to-exporter',
+              recipientEmail: exp.contact_email,
+              idempotencyKey: `veloxis-reject-exporter-${exp.id}`,
+              templateData: { exporterContactName: exp.director_name || '', rejectionReason: reason },
+            });
+          }
+          if (exp?.originator_id) {
+            const { data: roleRow } = await supabase
+              .from('user_roles').select('partner_organisation_id')
+              .eq('user_id', exp.originator_id).in('role', ['partner_admin', 'partner_staff']).maybeSingle();
+            const recipient = await resolvePartnerAdminRecipient(roleRow?.partner_organisation_id ?? null);
+            if (recipient?.email) {
+              void sendOnboardingEmail({
+                templateName: 'veloxis-rejects-exporter-to-partner',
+                recipientEmail: recipient.email,
+                idempotencyKey: `veloxis-reject-partner-${exp.id}`,
+                templateData: {
+                  partnerAdminName: recipient.fullName,
+                  exporterCompanyName: exp.company_name,
+                  rejectionReason: reason,
+                  applicationUrl: appUrl(`/greystar/exporters/${exp.id}`),
+                },
+              });
+            }
+          }
+        }
+      } catch (e) { console.warn('veloxis-rejects emails failed', e); }
       toast.success(`Application rejected`);
       await loadData();
     } catch (e: any) {
