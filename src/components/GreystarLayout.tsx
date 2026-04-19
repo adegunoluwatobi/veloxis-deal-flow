@@ -53,7 +53,7 @@ export default function GreystarLayout({ children }: { children: React.ReactNode
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <Link to="/" className="flex h-16 items-center border-b border-sidebar-border px-5">
+        <Link to="/greystar" className="flex h-16 items-center border-b border-sidebar-border px-5">
           <img src={veloxisLogoWhite} alt="Veloxis" className="h-7 w-auto" />
           <button className="ml-auto lg:hidden" onClick={(e) => { e.preventDefault(); setSidebarOpen(false); }}>
             <X className="h-5 w-5" />

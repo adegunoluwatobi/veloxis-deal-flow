@@ -76,7 +76,7 @@ export default function ExporterPortalLayout({ children }: { children: React.Rea
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <Link to="/" className="flex h-16 items-center border-b border-[hsl(220,20%,25%)] px-5">
+        <Link to="/exporter" className="flex h-16 items-center border-b border-[hsl(220,20%,25%)] px-5">
           <img src={veloxisLogoWhite} alt="Veloxis" className="h-7 w-auto" />
           <button className="ml-auto lg:hidden" onClick={(e) => { e.preventDefault(); setSidebarOpen(false); }}>
             <X className="h-5 w-5" />
