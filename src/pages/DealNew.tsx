@@ -134,7 +134,7 @@ export default function DealNew() {
     setLoading(true);
 
     try {
-      // Check NEPC not expired
+      // Check Export Licence not expired
       const { data: nepcDocs } = await supabase.from('exporter_documents')
         .select('expiry_status')
         .eq('exporter_id', selectedExporterId)
@@ -144,12 +144,12 @@ export default function DealNew() {
         .limit(1);
 
       if (!nepcDocs || nepcDocs.length === 0) {
-        toast({ title: 'Cannot submit', description: 'Exporter has no verified NEPC certificate.', variant: 'destructive' });
+        toast({ title: 'Cannot submit', description: 'Exporter has no verified Export Licence.', variant: 'destructive' });
         setLoading(false);
         return;
       }
       if (nepcDocs[0].expiry_status === 'expired') {
-        toast({ title: 'Cannot submit', description: 'NEPC certificate has expired. Request replacement from exporter.', variant: 'destructive' });
+        toast({ title: 'Cannot submit', description: 'Export Licence has expired. Request replacement from exporter.', variant: 'destructive' });
         setLoading(false);
         return;
       }

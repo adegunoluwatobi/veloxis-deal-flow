@@ -168,7 +168,7 @@ export default function ExporterDocuments() {
                   <Input
                     value={form.export_licence_number}
                     onChange={(e) => setForm({ ...form, export_licence_number: e.target.value })}
-                    placeholder="Enter your NEPC export licence number"
+                    placeholder="Enter your export licence number"
                   />
                   <p className="text-xs text-muted-foreground">This will be saved to your company profile and pre-filled on future deals.</p>
                 </div>
