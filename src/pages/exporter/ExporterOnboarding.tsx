@@ -38,6 +38,37 @@ export default function ExporterOnboarding() {
   const [bankUploaded, setBankUploaded] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  // Per-field touched + submit-attempted tracking for inline validation
+  type FieldKey = 'company_name' | 'rc_number' | 'entity_type' | 'director_name' | 'contact_email';
+  const [touched, setTouched] = useState<Record<FieldKey, boolean>>({
+    company_name: false,
+    rc_number: false,
+    entity_type: false,
+    director_name: false,
+    contact_email: false,
+  });
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const markTouched = (k: FieldKey) => setTouched(p => ({ ...p, [k]: true }));
+
+  const fieldError = (k: FieldKey): string | null => {
+    const show = touched[k] || submitAttempted;
+    if (!show) return null;
+    switch (k) {
+      case 'company_name':
+        return form.company_name.trim() ? null : 'Company name is required';
+      case 'rc_number':
+        return form.rc_number.trim() ? null : 'RC number is required';
+      case 'entity_type':
+        return form.entity_type ? null : 'Please select an entity type';
+      case 'director_name':
+        return form.director_name.trim() ? null : 'Director name is required';
+      case 'contact_email':
+        if (!form.contact_email.trim()) return 'Contact email is required';
+        if (!isValidEmail(form.contact_email)) return 'Please enter a valid email address';
+        return null;
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
     const load = async () => {
