@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard, FileText, LogOut, Briefcase,
-  Menu, X, ChevronRight, Loader2,
+  Menu, X, ChevronRight, Loader2, Building2, UserCog,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import veloxisLogoWhite from '@/assets/veloxis-logo-white.png';
@@ -15,6 +15,8 @@ const NAV_ITEMS = [
   { label: 'My Profile', href: '/exporter', icon: LayoutDashboard },
   { label: 'Applications', href: '/exporter/deals', icon: Briefcase },
   { label: 'Documents', href: '/exporter/documents', icon: FileText },
+  { label: 'Company Profile', href: '/exporter/account/profile', icon: Building2 },
+  { label: 'Account', href: '/exporter/account/settings', icon: UserCog },
 ];
 
 export default function ExporterPortalLayout({ children }: { children: React.ReactNode }) {

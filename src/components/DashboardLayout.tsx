@@ -28,7 +28,8 @@ const ADMIN_NAV: NavItem[] = [
   { label: 'Capital Pool', href: '/admin/capital', icon: Banknote, roles: ['super_admin', 'deal_manager'] },
   { label: 'Partners', href: '/admin/partners', icon: Building2, roles: ['super_admin'] },
   { label: 'Pricing', href: '/admin/pricing', icon: Banknote, roles: ['super_admin'] },
-  { label: 'User Management', href: '/admin/users', icon: Settings, roles: ['super_admin'] },
+  { label: 'User Management', href: '/admin/users', icon: Users, roles: ['super_admin'] },
+  { label: 'Account', href: '/admin/account', icon: Settings, roles: ['super_admin', 'deal_manager'] },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
