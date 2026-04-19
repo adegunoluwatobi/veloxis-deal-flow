@@ -52,9 +52,12 @@ export default function GreystarDeals() {
     return map[c ?? ''] ?? '';
   };
 
+  const closedCount = deals.filter(d => d.status === 'closed_repaid' || d.status === 'closed_partial').length;
+
   const filtered = deals.filter(d => {
     if (tab === 'all') return true;
     if (tab === 'rejected') return d.status === 'rejected_by_partner' || d.status === 'rejected_by_veloxis' || d.status === 'rejected';
+    if (tab === 'closed') return d.status === 'closed_repaid' || d.status === 'closed_partial';
     return d.status === tab;
   });
 
