@@ -179,7 +179,7 @@ export default function ExporterOnboarding() {
     return null;
   }
 
-  const fieldsValid = form.company_name.trim() && form.rc_number.trim() && form.entity_type && form.director_name.trim() && form.contact_email.trim() && isValidEmail(form.contact_email);
+  const fieldsValid = form.director_name.trim() && form.contact_email.trim() && isValidEmail(form.contact_email);
   const docsValid = sofUploaded && bankUploaded;
   const isValid = fieldsValid && docsValid;
 
@@ -187,12 +187,10 @@ export default function ExporterOnboarding() {
     if (!user || !exporter) return;
     setSubmitAttempted(true);
     if (!fieldsValid) {
-      // Mark all fields touched so inline errors render
-      setTouched({ company_name: true, rc_number: true, entity_type: true, director_name: true, contact_email: true });
+      setTouched({ director_name: true, contact_email: true });
       toast({ title: 'Missing details', description: 'Please fix the highlighted fields before submitting.', variant: 'destructive' });
-      // Scroll to the first invalid field
-      const order: FieldKey[] = ['company_name', 'rc_number', 'entity_type', 'director_name', 'contact_email'];
-      const firstBad = order.find(k => !!fieldError(k) || (k === 'entity_type' ? !form.entity_type : !(form as any)[k]?.trim?.()));
+      const order: FieldKey[] = ['director_name', 'contact_email'];
+      const firstBad = order.find(k => !!fieldError(k) || !(form as any)[k]?.trim?.());
       if (firstBad) document.getElementById(firstBad)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
