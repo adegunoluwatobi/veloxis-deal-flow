@@ -174,17 +174,10 @@ export default function ExporterCompanyProfile() {
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><Building2 className="h-6 w-6" /> Company Profile</h1>
-          <p className="text-sm text-muted-foreground">Edit your KYC company details. Changes require partner approval.</p>
+          <p className="text-sm text-muted-foreground">Edit your KYC company details. Changes save directly to your profile.</p>
         </div>
         <Badge variant={statusVariant as any}>Profile status: {statusLabel}</Badge>
       </div>
-
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          Changes to your company profile will be reviewed by your assigned partner before taking effect.
-        </AlertDescription>
-      </Alert>
 
       {pendingRequest && (
         <Alert className="border-warning/40 bg-warning/5">
