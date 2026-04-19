@@ -111,7 +111,7 @@ export default function GreystarExportersList() {
           <h1 className="text-2xl font-bold text-foreground">Exporters</h1>
           <p className="text-sm text-muted-foreground">Exporter profiles managed by your organisation</p>
         </div>
-        <Button asChild>
+        <Button asChild style={{ backgroundColor: '#0BA4A4', color: '#ffffff' }} className="hover:opacity-90">
           <Link to="/greystar/exporters/new"><Plus className="mr-2 h-4 w-4" />New Exporter</Link>
         </Button>
       </div>
