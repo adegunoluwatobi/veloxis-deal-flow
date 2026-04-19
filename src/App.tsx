@@ -54,6 +54,7 @@ import VeloxisHome from "@/pages/website/VeloxisHome";
 import ExporterApply from "@/pages/website/ExporterApply";
 import PartnerApply from "@/pages/website/PartnerApply";
 import ApplicationsAdmin from "@/pages/website/ApplicationsAdmin";
+import Unsubscribe from "@/pages/website/Unsubscribe";
 
 // Account pages
 import AccountSettings from "@/pages/account/AccountSettings";
@@ -181,6 +182,9 @@ const App = () => (
             <Route path="/terms" element={<LegalPage slug="terms" />} />
             <Route path="/disclosure" element={<LegalPage slug="disclosure" />} />
             <Route path="/cookies" element={<LegalPage slug="cookies" />} />
+
+            {/* Email unsubscribe */}
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
 
             <Route path="*" element={<BrandedNotFound />} />
           </Routes>
