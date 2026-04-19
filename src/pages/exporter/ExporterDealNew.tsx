@@ -15,9 +15,11 @@ import { CurrencyInput, stripCommas } from '@/components/ui/currency-input';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { EmailInput, isValidEmail } from '@/components/ui/email-input';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Upload, Loader2, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Upload, Loader2, ShieldCheck, Info, Lock } from 'lucide-react';
 import { BUYER_COUNTRY_WHITELIST } from '@/types';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { isValidSwift, normaliseSwift, isValidIban, stripIban, formatIbanForDisplay } from '@/lib/bankingValidation';
 
 const STEPS = ['Bank Account', 'Invoice Details', 'Buyer Details', 'Export Details', 'Transaction Documents', 'Fee Calculator', 'Review & Submit'];
 const INCOTERMS = ['EXW', 'FOB', 'CIF', 'DAP', 'DDP', 'Other'] as const;
@@ -36,6 +38,7 @@ interface ExporterProfile {
   id: string;
   company_name: string;
   originator_id: string;
+  export_licence_number: string | null;
 }
 
 interface ExportLicenceDoc {
@@ -71,6 +74,14 @@ export default function ExporterDealNew() {
     bank_account_number: '',
     bank_sort_code_iban: '',
     bank_country: '',
+    // Beneficiary bank (Payment & Banking Details)
+    beneficiary_bank_name: '',
+    beneficiary_swift_bic: '',
+    beneficiary_iban: '',
+    beneficiary_bank_address: '',
+    // Correspondent (intermediary) bank
+    correspondent_bank_name: '',
+    correspondent_swift_bic: '',
     invoice_number: '',
     invoice_date: '',
     invoice_amount: '',
@@ -99,11 +110,15 @@ export default function ExporterDealNew() {
     const load = async () => {
       const { data: exp } = await supabase
         .from('exporters')
-        .select('id, company_name, originator_id')
+        .select('id, company_name, originator_id, export_licence_number')
         .eq('exporter_user_id', user.id)
         .maybeSingle();
       if (exp) {
-        setExporter(exp);
+        setExporter(exp as ExporterProfile);
+        // Pre-populate export licence number from KYC profile
+        if (exp.export_licence_number) {
+          setForm(f => ({ ...f, export_licence_number: exp.export_licence_number ?? '' }));
+        }
         const { data: banks } = await supabase
           .from('exporter_bank_accounts')
           .select('*')
@@ -126,6 +141,12 @@ export default function ExporterDealNew() {
               bank_account_number: deal.bank_account_number ?? '',
               bank_sort_code_iban: deal.bank_sort_code_iban ?? '',
               bank_country: deal.bank_country ?? '',
+              beneficiary_bank_name: (deal as any).beneficiary_bank_name ?? '',
+              beneficiary_swift_bic: (deal as any).beneficiary_swift_bic ?? '',
+              beneficiary_iban: (deal as any).beneficiary_iban ?? '',
+              beneficiary_bank_address: (deal as any).beneficiary_bank_address ?? '',
+              correspondent_bank_name: (deal as any).correspondent_bank_name ?? '',
+              correspondent_swift_bic: (deal as any).correspondent_swift_bic ?? '',
               invoice_number: deal.invoice_number ?? '',
               invoice_date: deal.invoice_date ?? '',
               invoice_amount: deal.invoice_value ? deal.invoice_value.toLocaleString('en-GB') : '',
@@ -139,7 +160,8 @@ export default function ExporterDealNew() {
               buyer_contact_phone: deal.buyer_contact_phone ?? '',
               goods_description: deal.goods_description ?? '',
               export_destination: deal.export_destination ?? '',
-              export_licence_number: deal.export_licence_number ?? '',
+              // Prefer deal value if present, else KYC profile value (already set above)
+              export_licence_number: deal.export_licence_number ?? exp.export_licence_number ?? '',
               hs_code: deal.hs_code ?? '',
               incoterms: deal.incoterms ?? '',
             }));
@@ -215,12 +237,53 @@ export default function ExporterDealNew() {
   const requiredDocsUploaded = REQUIRED_TRADE_DOCS.filter(t => tradePackFiles[t]).length;
   const recommendedDocsUploaded = RECOMMENDED_TRADE_DOCS.filter(t => tradePackFiles[t]).length;
 
+  // Date validation: payment date cannot be before invoice date
+  const paymentBeforeInvoice =
+    !!form.invoice_date && !!form.payment_due_date && form.payment_due_date < form.invoice_date;
+
+  // If invoice date moves past current payment date, clear payment date and surface error
+  useEffect(() => {
+    if (form.invoice_date && form.payment_due_date && form.payment_due_date < form.invoice_date) {
+      setForm(f => ({ ...f, payment_due_date: '' }));
+      setFieldErrors(prev => ({
+        ...prev,
+        payment_due_date: 'Payment date cannot be before the invoice date',
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.invoice_date]);
+
+  const correspondentSwiftValid =
+    !form.correspondent_swift_bic || isValidSwift(form.correspondent_swift_bic);
+
   const canProceed = (s: number) => {
     switch (s) {
-      case 0: return form.bank_name && form.bank_account_name && form.bank_account_number && form.bank_sort_code_iban && form.bank_country;
-      case 1: return form.invoice_number && form.invoice_date && form.invoice_amount && form.invoice_currency && form.payment_due_date && (form.invoice_file || existingInvoicePath);
+      case 0:
+        return Boolean(
+          form.bank_name &&
+          form.bank_account_name &&
+          form.bank_account_number &&
+          form.bank_sort_code_iban &&
+          form.bank_country &&
+          form.beneficiary_bank_name &&
+          form.beneficiary_swift_bic &&
+          isValidSwift(form.beneficiary_swift_bic) &&
+          form.beneficiary_iban &&
+          isValidIban(form.beneficiary_iban) &&
+          correspondentSwiftValid
+        );
+      case 1:
+        return Boolean(
+          form.invoice_number &&
+          form.invoice_date &&
+          form.invoice_amount &&
+          form.invoice_currency &&
+          form.payment_due_date &&
+          !paymentBeforeInvoice &&
+          (form.invoice_file || existingInvoicePath)
+        );
       case 2: return form.buyer_company_name && form.buyer_country && form.buyer_contact_name && form.buyer_contact_email && isValidEmail(form.buyer_contact_email) && form.buyer_contact_phone;
-      case 3: return form.goods_description && form.export_destination && form.export_licence_number && form.hs_code && form.incoterms;
+      case 3: return form.goods_description && form.export_destination && form.export_licence_number;
       case 4: return requiredDocsUploaded === REQUIRED_TRADE_DOCS.length;
       case 5: return terms >= minTerms && terms <= maxTerms && feeAccepted && (terms <= 60 || extendedTermsConfirmed);
       default: return true;
@@ -232,6 +295,26 @@ export default function ExporterDealNew() {
     if (!asDraft && !isValidEmail(form.buyer_contact_email)) {
       setFieldErrors(prev => ({ ...prev, buyer_contact_email: 'Please enter a valid email address' }));
       setStep(2);
+      return;
+    }
+    if (!asDraft && paymentBeforeInvoice) {
+      setFieldErrors(prev => ({ ...prev, payment_due_date: 'Payment date cannot be before the invoice date' }));
+      setStep(1);
+      return;
+    }
+    if (!asDraft && form.beneficiary_swift_bic && !isValidSwift(form.beneficiary_swift_bic)) {
+      setFieldErrors(prev => ({ ...prev, beneficiary_swift_bic: 'Please enter a valid SWIFT/BIC code (8 or 11 characters)' }));
+      setStep(0);
+      return;
+    }
+    if (!asDraft && form.beneficiary_iban && !isValidIban(form.beneficiary_iban)) {
+      setFieldErrors(prev => ({ ...prev, beneficiary_iban: 'Please enter a valid IBAN number' }));
+      setStep(0);
+      return;
+    }
+    if (!asDraft && form.correspondent_swift_bic && !isValidSwift(form.correspondent_swift_bic)) {
+      setFieldErrors(prev => ({ ...prev, correspondent_swift_bic: 'Please enter a valid SWIFT/BIC code (8 or 11 characters)' }));
+      setStep(0);
       return;
     }
     if (!asDraft && !form.domiciliary_account_confirmed) {
@@ -271,6 +354,12 @@ export default function ExporterDealNew() {
         bank_sort_code_iban: form.bank_sort_code_iban,
         bank_country: form.bank_country,
         bank_name_match: bankNameMatch,
+        beneficiary_bank_name: form.beneficiary_bank_name || null,
+        beneficiary_swift_bic: form.beneficiary_swift_bic ? normaliseSwift(form.beneficiary_swift_bic) : null,
+        beneficiary_iban: form.beneficiary_iban ? stripIban(form.beneficiary_iban) : null,
+        beneficiary_bank_address: form.beneficiary_bank_address || null,
+        correspondent_bank_name: form.correspondent_bank_name || null,
+        correspondent_swift_bic: form.correspondent_swift_bic ? normaliseSwift(form.correspondent_swift_bic) : null,
         invoice_number: form.invoice_number,
         invoice_date: form.invoice_date,
         invoice_value: parseFloat(stripCommas(form.invoice_amount)),
@@ -448,6 +537,123 @@ export default function ExporterDealNew() {
               <Checkbox id="save-bank" checked={saveBankDetails} onCheckedChange={(v) => setSaveBankDetails(v === true)} />
               <label htmlFor="save-bank" className="text-sm text-muted-foreground">Save bank details for future applications</label>
             </div>
+
+            {/* Payment & Banking Details — Beneficiary + Correspondent */}
+            <div className="pt-6 border-t border-border space-y-4">
+              <div>
+                <h3 className="text-base font-semibold text-foreground">Payment & Banking Details</h3>
+                <p className="text-xs text-muted-foreground mt-1">SWIFT/IBAN routing details required for international settlement.</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="beneficiary_bank_name">Beneficiary Bank Name *</Label>
+                <Input
+                  id="beneficiary_bank_name"
+                  value={form.beneficiary_bank_name}
+                  onChange={e => updateField('beneficiary_bank_name', e.target.value)}
+                  placeholder="e.g. Standard Chartered Bank"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="beneficiary_swift_bic">Beneficiary Bank SWIFT/BIC Code *</Label>
+                <Input
+                  id="beneficiary_swift_bic"
+                  value={form.beneficiary_swift_bic}
+                  onChange={e => updateField('beneficiary_swift_bic', normaliseSwift(e.target.value))}
+                  onBlur={() => {
+                    if (form.beneficiary_swift_bic && !isValidSwift(form.beneficiary_swift_bic)) {
+                      setFieldErrors(p => ({ ...p, beneficiary_swift_bic: 'Please enter a valid SWIFT/BIC code (8 or 11 characters)' }));
+                    }
+                  }}
+                  placeholder="e.g. SCBLGB2L"
+                  maxLength={11}
+                />
+                {fieldErrors.beneficiary_swift_bic && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />{fieldErrors.beneficiary_swift_bic}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="beneficiary_iban">Beneficiary IBAN Number *</Label>
+                <Input
+                  id="beneficiary_iban"
+                  value={formatIbanForDisplay(form.beneficiary_iban)}
+                  onChange={e => updateField('beneficiary_iban', stripIban(e.target.value))}
+                  onBlur={() => {
+                    if (form.beneficiary_iban && !isValidIban(form.beneficiary_iban)) {
+                      setFieldErrors(p => ({ ...p, beneficiary_iban: 'Please enter a valid IBAN number' }));
+                    }
+                  }}
+                  placeholder="e.g. GB29 NWBK 6016 1331 9268 19"
+                />
+                {fieldErrors.beneficiary_iban && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />{fieldErrors.beneficiary_iban}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="beneficiary_bank_address">Beneficiary Bank Address</Label>
+                <Textarea
+                  id="beneficiary_bank_address"
+                  value={form.beneficiary_bank_address}
+                  onChange={e => updateField('beneficiary_bank_address', e.target.value)}
+                  placeholder="Bank's registered address (optional)"
+                  rows={2}
+                />
+              </div>
+
+              <div className="pt-4 border-t border-border space-y-4">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-foreground">Correspondent Bank Details</h4>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button type="button" className="text-muted-foreground hover:text-foreground" aria-label="What is a correspondent bank?">
+                        <Info className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      A correspondent bank is an intermediary bank used when the beneficiary bank does not have a direct relationship with the sending bank. Not always required.
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <p className="text-xs text-muted-foreground">Optional — only required for some international transfers.</p>
+
+                <div className="space-y-2">
+                  <Label htmlFor="correspondent_bank_name">Correspondent Bank Name</Label>
+                  <Input
+                    id="correspondent_bank_name"
+                    value={form.correspondent_bank_name}
+                    onChange={e => updateField('correspondent_bank_name', e.target.value)}
+                    placeholder="Optional"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="correspondent_swift_bic">Correspondent Bank SWIFT/BIC Code</Label>
+                  <Input
+                    id="correspondent_swift_bic"
+                    value={form.correspondent_swift_bic}
+                    onChange={e => updateField('correspondent_swift_bic', normaliseSwift(e.target.value))}
+                    onBlur={() => {
+                      if (form.correspondent_swift_bic && !isValidSwift(form.correspondent_swift_bic)) {
+                        setFieldErrors(p => ({ ...p, correspondent_swift_bic: 'Please enter a valid SWIFT/BIC code (8 or 11 characters)' }));
+                      }
+                    }}
+                    placeholder="Optional"
+                    maxLength={11}
+                  />
+                  {fieldErrors.correspondent_swift_bic && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" />{fieldErrors.correspondent_swift_bic}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -489,8 +695,25 @@ export default function ExporterDealNew() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Payment Due Date *</Label>
-              <Input type="date" value={form.payment_due_date} onChange={e => updateField('payment_due_date', e.target.value)} />
+              <Label htmlFor="payment_due_date">Payment Due Date *</Label>
+              <Input
+                id="payment_due_date"
+                type="date"
+                value={form.payment_due_date}
+                min={form.invoice_date || undefined}
+                onChange={e => updateField('payment_due_date', e.target.value)}
+                onBlur={() => {
+                  if (form.invoice_date && form.payment_due_date && form.payment_due_date < form.invoice_date) {
+                    setFieldErrors(p => ({ ...p, payment_due_date: 'Payment date cannot be before the invoice date' }));
+                  }
+                }}
+              />
+              {(fieldErrors.payment_due_date || paymentBeforeInvoice) && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  {fieldErrors.payment_due_date || 'Payment date cannot be before the invoice date'}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Upload Invoice File * (PDF or image)</Label>
@@ -588,21 +811,46 @@ export default function ExporterDealNew() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Export Licence Number *</Label>
-              <Input value={form.export_licence_number} onChange={e => updateField('export_licence_number', e.target.value)} />
+              <Label htmlFor="export_licence_number">Export Licence Number *</Label>
+              {exporter.export_licence_number ? (
+                <>
+                  <div className="relative">
+                    <Input
+                      id="export_licence_number"
+                      value={form.export_licence_number}
+                      readOnly
+                      disabled
+                      className="pr-9 bg-muted/50"
+                    />
+                    <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    This is the export licence number from your onboarding profile. To update it, contact support@veloxis.co.uk.
+                  </p>
+                </>
+              ) : (
+                <Input
+                  id="export_licence_number"
+                  value={form.export_licence_number}
+                  onChange={e => updateField('export_licence_number', e.target.value)}
+                  placeholder="Enter your export licence number"
+                />
+              )}
             </div>
             <div className="space-y-2">
-              <Label>HS Code *</Label>
-              <Input value={form.hs_code} onChange={e => updateField('hs_code', e.target.value)} placeholder="e.g. 2601.11" />
+              <Label htmlFor="hs_code">HS Code</Label>
+              <Input id="hs_code" value={form.hs_code} onChange={e => updateField('hs_code', e.target.value)} placeholder="e.g. 1006.30" />
+              <p className="text-xs text-muted-foreground">Optional — Harmonised System commodity code (e.g. 1006.30 for milled rice)</p>
             </div>
             <div className="space-y-2">
-              <Label>Incoterms *</Label>
+              <Label htmlFor="incoterms">Incoterms</Label>
               <Select value={form.incoterms} onValueChange={v => updateField('incoterms', v)}>
-                <SelectTrigger><SelectValue placeholder="Select incoterms" /></SelectTrigger>
+                <SelectTrigger id="incoterms"><SelectValue placeholder="Select incoterms" /></SelectTrigger>
                 <SelectContent>
                   {INCOTERMS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">Optional — delivery terms agreed with the buyer (e.g. FOB, CIF, DDP)</p>
             </div>
 
             <div className="rounded-lg border border-border bg-muted/30 p-4">

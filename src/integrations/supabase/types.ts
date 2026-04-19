@@ -301,6 +301,10 @@ export type Database = {
           bank_name: string | null
           bank_name_match: boolean | null
           bank_sort_code_iban: string | null
+          beneficiary_bank_address: string | null
+          beneficiary_bank_name: string | null
+          beneficiary_iban: string | null
+          beneficiary_swift_bic: string | null
           buyer_company_name: string | null
           buyer_contact_email: string | null
           buyer_contact_name: string | null
@@ -313,6 +317,8 @@ export type Database = {
           buyer_underwriter_notes: string | null
           cbn_repatriation_deadline: string | null
           commodity_type: Database["public"]["Enums"]["commodity_type"] | null
+          correspondent_bank_name: string | null
+          correspondent_swift_bic: string | null
           created_at: string
           deal_reference: string | null
           demurrage_amount: number
@@ -413,6 +419,10 @@ export type Database = {
           bank_name?: string | null
           bank_name_match?: boolean | null
           bank_sort_code_iban?: string | null
+          beneficiary_bank_address?: string | null
+          beneficiary_bank_name?: string | null
+          beneficiary_iban?: string | null
+          beneficiary_swift_bic?: string | null
           buyer_company_name?: string | null
           buyer_contact_email?: string | null
           buyer_contact_name?: string | null
@@ -425,6 +435,8 @@ export type Database = {
           buyer_underwriter_notes?: string | null
           cbn_repatriation_deadline?: string | null
           commodity_type?: Database["public"]["Enums"]["commodity_type"] | null
+          correspondent_bank_name?: string | null
+          correspondent_swift_bic?: string | null
           created_at?: string
           deal_reference?: string | null
           demurrage_amount?: number
@@ -525,6 +537,10 @@ export type Database = {
           bank_name?: string | null
           bank_name_match?: boolean | null
           bank_sort_code_iban?: string | null
+          beneficiary_bank_address?: string | null
+          beneficiary_bank_name?: string | null
+          beneficiary_iban?: string | null
+          beneficiary_swift_bic?: string | null
           buyer_company_name?: string | null
           buyer_contact_email?: string | null
           buyer_contact_name?: string | null
@@ -537,6 +553,8 @@ export type Database = {
           buyer_underwriter_notes?: string | null
           cbn_repatriation_deadline?: string | null
           commodity_type?: Database["public"]["Enums"]["commodity_type"] | null
+          correspondent_bank_name?: string | null
+          correspondent_swift_bic?: string | null
           created_at?: string
           deal_reference?: string | null
           demurrage_amount?: number
@@ -1134,6 +1152,7 @@ export type Database = {
           edd_required: boolean
           entity_type: Database["public"]["Enums"]["entity_type"]
           expansion_override: boolean
+          export_licence_number: string | null
           exporter_user_id: string | null
           forwarded_to_veloxis_at: string | null
           forwarded_to_veloxis_by: string | null
@@ -1182,6 +1201,7 @@ export type Database = {
           edd_required?: boolean
           entity_type: Database["public"]["Enums"]["entity_type"]
           expansion_override?: boolean
+          export_licence_number?: string | null
           exporter_user_id?: string | null
           forwarded_to_veloxis_at?: string | null
           forwarded_to_veloxis_by?: string | null
@@ -1230,6 +1250,7 @@ export type Database = {
           edd_required?: boolean
           entity_type?: Database["public"]["Enums"]["entity_type"]
           expansion_override?: boolean
+          export_licence_number?: string | null
           exporter_user_id?: string | null
           forwarded_to_veloxis_at?: string | null
           forwarded_to_veloxis_by?: string | null

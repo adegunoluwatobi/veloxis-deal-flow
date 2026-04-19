@@ -417,6 +417,12 @@ export default function GreystarDealDetail() {
           <Field label="Account Number" value={deal.bank_account_number} />
           <Field label="Sort Code / IBAN" value={deal.bank_sort_code_iban} />
           <Field label="Bank Country" value={deal.bank_country} />
+          <Field label="Beneficiary Bank Name" value={(deal as any).beneficiary_bank_name} />
+          <Field label="Beneficiary SWIFT/BIC" value={(deal as any).beneficiary_swift_bic} />
+          <Field label="Beneficiary IBAN" value={(deal as any).beneficiary_iban} />
+          <Field label="Beneficiary Bank Address" value={(deal as any).beneficiary_bank_address} />
+          <Field label="Correspondent Bank Name" value={(deal as any).correspondent_bank_name} />
+          <Field label="Correspondent SWIFT/BIC" value={(deal as any).correspondent_swift_bic} />
         </CardContent>
       </Card>
 
