@@ -63,22 +63,9 @@ import PartnerOrgProfile from "@/pages/account/PartnerOrgProfile";
 import PartnerTeamMembers from "@/pages/account/PartnerTeamMembers";
 import AdminUserDirectory from "@/pages/account/AdminUserDirectory";
 import NotificationsPage from "@/pages/NotificationsPage";
+import NotificationsRoleShell from "@/components/NotificationsRoleShell";
 
 const queryClient = new QueryClient();
-
-function NotificationsRoute() {
-  return (
-    <ProtectedRoute>
-      <NotificationsLayoutSwitch />
-    </ProtectedRoute>
-  );
-}
-
-function NotificationsLayoutSwitch() {
-  // Render inside the appropriate shell based on the user's role.
-  const RoleShell = require('@/components/NotificationsRoleShell').default;
-  return <RoleShell><NotificationsPage /></RoleShell>;
-}
 
 function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   return (
