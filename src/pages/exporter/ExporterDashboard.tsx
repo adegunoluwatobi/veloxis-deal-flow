@@ -13,6 +13,7 @@ import {
 import { cn } from '@/lib/utils';
 import { computeKycStatus } from '@/lib/computeKycStatus';
 import DealStatusBadge from '@/components/DealStatusBadge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { DealStatus } from '@/types';
 
 interface ActionDeal {
@@ -218,13 +219,24 @@ export default function ExporterDashboard() {
             >
               <Pencil className="mr-2 h-4 w-4" /> Edit Profile
             </Button>
-            <Button
-              className="bg-veloxis-teal text-veloxis-deep hover:bg-veloxis-teal/90"
-              onClick={() => navigate('/exporter/deals/new')}
-              disabled={!allDocsComplete}
-            >
-              <Plus className="mr-2 h-4 w-4" /> New Application
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className={!allDocsComplete ? 'cursor-not-allowed' : undefined}>
+                  <Button
+                    className="bg-veloxis-teal text-veloxis-deep hover:bg-veloxis-teal/90 disabled:pointer-events-none disabled:opacity-60"
+                    onClick={() => navigate('/exporter/deals/new')}
+                    disabled={!allDocsComplete}
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> New Application
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {!allDocsComplete && (
+                <TooltipContent side="bottom" className="max-w-xs">
+                  Upload all 3 KYC documents (CAC Certificate, Director ID, Export Licence) to enable new applications.
+                </TooltipContent>
+              )}
+            </Tooltip>
           </div>
         </div>
 
