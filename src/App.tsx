@@ -28,6 +28,7 @@ import PartnersPage from "@/pages/PartnersPage";
 import PartnerDetail from "@/pages/PartnerDetail";
 import BrandedNotFound from "@/pages/website/BrandedNotFound";
 import LegalPage from "@/pages/website/LegalPage";
+import { Navigate } from "react-router-dom";
 
 // Greystar pages
 import GreystarDashboard from "@/pages/greystar/GreystarDashboard";
@@ -129,7 +130,8 @@ const App = () => (
             <Route path="/greystar/deals/:id" element={<GreystarRoute><GreystarDealDetail /></GreystarRoute>} />
             <Route path="/greystar/review" element={<GreystarRoute><GreystarReviewQueue /></GreystarRoute>} />
             <Route path="/greystar/settings" element={<GreystarRoute><GreystarSettings /></GreystarRoute>} />
-            <Route path="/greystar/pipeline" element={<GreystarRoute><ApplicationsAdmin embedded /></GreystarRoute>} />
+            {/* Registration Pipeline is admin-only — partners are redirected to their Applications view */}
+            <Route path="/greystar/pipeline" element={<Navigate to="/greystar/deals" replace />} />
 
             {/* Exporter portal routes (require approved onboarding) */}
             <Route path="/exporter" element={<ExporterRoute><ExporterDashboardPage /></ExporterRoute>} />

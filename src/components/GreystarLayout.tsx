@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard, Users, FileText, LogOut, Briefcase,
-  Menu, X, ChevronRight, Inbox,
+  Menu, X, ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import veloxisLogoWhite from '@/assets/veloxis-logo-white.png';
@@ -21,7 +21,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Exporters', href: '/greystar/exporters', icon: Users },
   { label: 'Applications', href: '/greystar/deals', icon: Briefcase },
   { label: 'Review Queue', href: '/greystar/review', icon: FileText },
-  { label: 'Registration Pipeline', href: '/greystar/pipeline', icon: Inbox },
 ];
 
 export default function GreystarLayout({ children }: { children: React.ReactNode }) {
