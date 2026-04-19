@@ -19,7 +19,10 @@ export interface ComputedKyc {
   icon: 'success' | 'warning' | 'destructive' | 'muted';
 }
 
-const MANDATORY: ExporterDocumentType[] = ['cac_certificate', 'director_id', 'nepc_certificate', 'registered_address_proof'];
+// Registered Address is captured as structured fields on the exporters row, not a document upload.
+// Pass `addressComplete = false` to signal that the exporter has not filled in their address yet.
+const MANDATORY: ExporterDocumentType[] = ['cac_certificate', 'director_id', 'nepc_certificate'];
+const ADDRESS_LABEL = 'Registered Address';
 
 export function groupDocumentsByExporter<T extends { exporter_id?: string | null }>(docs: T[]) {
   const grouped = new Map<string, T[]>();
@@ -38,7 +41,11 @@ export function groupDocumentsByExporter<T extends { exporter_id?: string | null
  * Derive KYC status live from the active (non-superseded) documents list.
  * Priority: outstanding requests > rejected > expired > pending_review > pending upload > verified
  */
-export function computeKycStatus(activeDocs: KycDocumentLike[], pendingRequestCount = 0): ComputedKyc {
+export function computeKycStatus(
+  activeDocs: KycDocumentLike[],
+  pendingRequestCount = 0,
+  addressComplete = true,
+): ComputedKyc {
   if (pendingRequestCount > 0) {
     return {
       status: 'rejected',
