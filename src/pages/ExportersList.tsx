@@ -18,6 +18,7 @@ interface ExporterRow {
   entity_type: EntityType;
   director_name: string;
   kyc_status: KycStatus;
+  kyc_verified_at?: string | null;
   created_at: string;
   country?: string | null;
   is_active?: boolean;
@@ -56,7 +57,7 @@ export default function ExportersList() {
         // (i.e. assigned to a partner). Excludes anything still in Routed/Expansion queue.
         const { data: exps } = await supabase
           .from('exporters')
-          .select('id, company_name, rc_number, entity_type, director_name, kyc_status, created_at, country, is_active, originator_id')
+          .select('id, company_name, rc_number, entity_type, director_name, kyc_status, kyc_verified_at, created_at, country, is_active, originator_id')
           .order('created_at', { ascending: false });
 
         const exporterList = (exps as ExporterRow[]) ?? [];
@@ -252,7 +253,7 @@ export default function ExportersList() {
               </div>
               {(() => {
                 const docs = exporterDocs.filter(d => d.exporter_id === exp.id);
-                const kyc = computeKycStatus(docs);
+                const kyc = computeKycStatus(docs, 0, true, exp.kyc_verified_at ?? null);
                 return (
                   <Badge variant="secondary" className={cn('font-medium', kyc.color)}>
                     {kyc.label}
