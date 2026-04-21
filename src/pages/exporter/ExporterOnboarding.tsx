@@ -357,11 +357,15 @@ export default function ExporterOnboarding() {
                 error={fieldError('contact_email') ?? undefined}
               />
             </div>
+
+            {/* UBO Declaration — sits under Directors */}
+            {exporter && (
+              <div className="pt-2">
+                <UboDeclarationForm exporterId={exporter.id} />
+              </div>
+            )}
           </CardContent>
         </Card>
-
-        {/* UBO Declaration */}
-        {exporter && <UboDeclarationForm exporterId={exporter.id} />}
 
         {/* Compliance & Due Diligence */}
         <Card>
