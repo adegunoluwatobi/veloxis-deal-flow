@@ -13,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { Loader2, Building2, History } from 'lucide-react';
+import { Loader2, Building2, History, Lock } from 'lucide-react';
 import { CountrySelect } from '@/components/ui/country-select';
 
 const TEAL = '#0BA4A4';
@@ -220,10 +220,28 @@ export default function ExporterCompanyProfile() {
 
       <Card ref={addressRef} className={searchParams.get('section') === 'address' ? 'ring-2 ring-veloxis-teal/40 scroll-mt-24' : 'scroll-mt-24'}>
         <CardHeader>
-          <CardTitle>Registered Address</CardTitle>
-          <CardDescription>Complete these fields to satisfy the Registered Address KYC requirement.</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            Registered Address
+            {!!exporter?.registered_address_line1 && <Lock className="h-4 w-4 text-muted-foreground" />}
+          </CardTitle>
+          <CardDescription>
+            {exporter?.registered_address_line1
+              ? 'Your registered address is locked. To change it, submit a change request and your partner will review.'
+              : 'Complete these fields to satisfy the Registered Address KYC requirement. Once saved, this address will be locked.'}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {exporter?.registered_address_line1 ? (
+            <dl className="grid gap-3 text-sm md:grid-cols-2">
+              <div><dt className="text-muted-foreground">Address line 1</dt><dd className="font-medium">{exporter.registered_address_line1}</dd></div>
+              {exporter.registered_address_line2 && (
+                <div><dt className="text-muted-foreground">Address line 2</dt><dd className="font-medium">{exporter.registered_address_line2}</dd></div>
+              )}
+              <div><dt className="text-muted-foreground">City</dt><dd className="font-medium">{exporter.registered_city || '—'}</dd></div>
+              <div><dt className="text-muted-foreground">Postcode</dt><dd className="font-medium">{exporter.registered_postcode || '—'}</dd></div>
+              <div className="md:col-span-2"><dt className="text-muted-foreground">Country</dt><dd className="font-medium">{exporter.registered_country || '—'}</dd></div>
+            </dl>
+          ) : (
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Address line 1" value={form.registered_address_line1 as string} onChange={(v) => update('registered_address_line1', v)} />
             <Field label="Address line 2" value={form.registered_address_line2 as string} onChange={(v) => update('registered_address_line2', v)} />
@@ -234,6 +252,7 @@ export default function ExporterCompanyProfile() {
               <CountrySelect value={(form.registered_country as string) ?? ''} onChange={(v) => update('registered_country', v)} />
             </div>
           </div>
+          )}
         </CardContent>
       </Card>
 
