@@ -222,7 +222,7 @@ export default function ExporterDashboard() {
   const completedCount = docCompletedCount + (addressComplete ? 1 : 0);
   const verifiedCount = docVerifiedCount + (addressComplete ? 1 : 0);
 
-  const kyc = computeKycStatus(documents, 0, addressComplete);
+  const kyc = computeKycStatus(documents, 0, addressComplete, exporter.kyc_verified_at ?? null);
   const initial = (exporter.company_name || '?').charAt(0).toUpperCase();
   const rcPending = !exporter.rc_number || exporter.rc_number.toLowerCase() === 'pending';
   const allDocsComplete = completedCount === totalRequiredCount;

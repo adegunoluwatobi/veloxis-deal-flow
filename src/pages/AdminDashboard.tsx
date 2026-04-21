@@ -51,12 +51,12 @@ export default function AdminDashboard() {
         .select('id, status, invoice_number, invoice_value, invoice_currency_v2, gbp_equivalent, buyer_company_name, created_at')
         .order('created_at', { ascending: false }).limit(100),
       supabase.from('exporters')
-        .select('id, company_name')
+        .select('id, company_name, kyc_verified_at')
         .order('created_at', { ascending: false }),
       supabase.from('system_config').select('key, value'),
     ]);
 
-    const exporters = (exportersRes.data as ExporterRow[]) ?? [];
+    const exporters = (exportersRes.data as (ExporterRow & { kyc_verified_at?: string | null })[]) ?? [];
     const exporterIds = exporters.map(e => e.id);
 
     let docs: ExporterDocRow[] = [];
@@ -72,7 +72,7 @@ export default function AdminDashboard() {
     const docsByExporter = groupDocumentsByExporter(docs);
     const withKyc = exporters.map(exp => ({
       ...exp,
-      kyc: computeKycStatus(docsByExporter.get(exp.id) ?? []),
+      kyc: computeKycStatus(docsByExporter.get(exp.id) ?? [], 0, true, exp.kyc_verified_at ?? null),
     }));
 
     setDeals((dealsRes.data as DealRow[]) ?? []);
