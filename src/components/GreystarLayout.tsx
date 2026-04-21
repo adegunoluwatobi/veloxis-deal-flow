@@ -21,7 +21,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/greystar', icon: LayoutDashboard },
   { label: 'Exporters', href: '/greystar/exporters', icon: Users },
   { label: 'Applications', href: '/greystar/deals', icon: Briefcase },
-  { label: 'Review Queue', href: '/greystar/review', icon: FileText },
+  { label: 'Requests', href: '/greystar/review', icon: FileText },
 ];
 
 export default function GreystarLayout({ children }: { children: React.ReactNode }) {

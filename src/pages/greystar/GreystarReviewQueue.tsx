@@ -2,229 +2,295 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle2, XCircle, FileText, Clock, UserCheck } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { CheckCircle2, XCircle, FileText, UserCheck, Inbox, Loader2 } from 'lucide-react';
 
-const DOC_TYPE_LABELS: Record<string, string> = {
-  cac_certificate: 'CAC Certificate',
-  director_id: 'Director ID',
-  nepc_certificate: 'Export Licence',
-  other: 'Other',
-};
+interface AppChangeRow {
+  id: string;
+  deal_id: string;
+  status: string;
+  created_at: string;
+  fields_flagged: any;
+  deals: {
+    id: string;
+    deal_reference: string | null;
+    invoice_number: string | null;
+    exporter_id: string;
+    exporters: { company_name: string } | null;
+  } | null;
+}
+
+interface ProfileChangeRow {
+  id: string;
+  exporter_id: string;
+  status: string;
+  created_at: string;
+  proposed_changes: Record<string, unknown>;
+  exporters: { company_name: string } | null;
+}
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
 export default function GreystarReviewQueue() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [docs, setDocs] = useState<any[]>([]);
-  const [pendingExporters, setPendingExporters] = useState<any[]>([]);
+  const [appReqs, setAppReqs] = useState<AppChangeRow[]>([]);
+  const [profileReqs, setProfileReqs] = useState<ProfileChangeRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actingId, setActingId] = useState<string | null>(null);
 
   const load = async () => {
-    const [docsRes, exportersRes] = await Promise.all([
+    setLoading(true);
+    const [appRes, profRes] = await Promise.all([
       supabase
-        .from('exporter_documents')
-        .select('*, exporters!exporter_documents_exporter_id_fkey(company_name, id)')
-        .eq('document_status', 'pending_review')
-        .eq('is_superseded', false)
-        .order('uploaded_at', { ascending: true }),
+        .from('deal_change_requests')
+        .select('id, deal_id, status, created_at, fields_flagged, deals!inner(id, deal_reference, invoice_number, exporter_id, exporters!inner(company_name))')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true }),
       supabase
-        .from('exporters')
-        .select('id, company_name, contact_email, director_name, onboarding_status, updated_at')
-        .eq('onboarding_status', 'onboarding_submitted')
-        .order('updated_at', { ascending: true }),
+        .from('kyc_profile_change_requests')
+        .select('id, exporter_id, status, created_at, proposed_changes, exporters!inner(company_name)')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true }),
     ]);
-    setDocs(docsRes.data ?? []);
-    setPendingExporters(exportersRes.data ?? []);
+    setAppReqs((appRes.data as any[] | null) ?? []);
+    setProfileReqs((profRes.data as any[] | null) ?? []);
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
 
-  const handleVerify = async (doc: any) => {
+  const handleResolveAppReq = async (req: AppChangeRow) => {
     if (!user) return;
-    await supabase.from('exporter_documents').update({
-      document_status: 'verified',
-      verified_by: user.id,
-      verified_at: new Date().toISOString(),
-    }).eq('id', doc.id);
-    await supabase.rpc('insert_audit_log', {
-      p_exporter_id: doc.exporter_id,
-      p_user_id: user.id,
-      p_user_role: 'partner_staff' as any,
-      p_action_type: 'exporter_document_verified' as any,
-      p_metadata: { document_id: doc.id, document_type: doc.document_type },
-    });
-    toast({ title: 'Document verified' });
+    setActingId(req.id);
+    const { error } = await supabase
+      .from('deal_change_requests')
+      .update({ status: 'resolved' as any, resolved_at: new Date().toISOString() })
+      .eq('id', req.id);
+    setActingId(null);
+    if (error) {
+      toast({ title: 'Failed', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Marked resolved' });
     load();
   };
 
-  const handleReject = async (doc: any) => {
+  const handleCancelAppReq = async (req: AppChangeRow) => {
     if (!user) return;
-    await supabase.from('exporter_documents').update({ document_status: 'rejected' }).eq('id', doc.id);
-    await supabase.rpc('insert_audit_log', {
-      p_exporter_id: doc.exporter_id,
-      p_user_id: user.id,
-      p_user_role: 'partner_staff' as any,
-      p_action_type: 'kyc_rejected' as any,
-      p_metadata: { document_id: doc.id, document_type: doc.document_type },
-    });
-    toast({ title: 'Document rejected' });
+    setActingId(req.id);
+    const { error } = await supabase
+      .from('deal_change_requests')
+      .update({ status: 'cancelled' as any, resolved_at: new Date().toISOString() })
+      .eq('id', req.id);
+    setActingId(null);
+    if (error) {
+      toast({ title: 'Failed', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Request cancelled' });
     load();
   };
 
-  const handleApproveOnboarding = async (exporterId: string) => {
-    if (!user) return;
-    await supabase.from('exporters').update({ onboarding_status: 'onboarding_approved' as any }).eq('id', exporterId);
-    await supabase.rpc('insert_audit_log', {
-      p_exporter_id: exporterId,
-      p_user_id: user.id,
-      p_user_role: 'partner_staff' as any,
-      p_action_type: 'onboarding_approved' as any,
-      p_metadata: {},
+  const handleProfileDecision = async (req: ProfileChangeRow, decision: 'approved' | 'rejected') => {
+    setActingId(req.id);
+    const { data, error } = await supabase.functions.invoke('kyc-change-review', {
+      body: { request_id: req.id, decision },
     });
-    toast({ title: 'Onboarding approved', description: 'Exporter now has full platform access.' });
+    setActingId(null);
+    if (error || (data as any)?.error) {
+      toast({
+        title: 'Failed',
+        description: (data as any)?.error ?? error?.message ?? 'Could not process decision',
+        variant: 'destructive',
+      });
+      return;
+    }
+    toast({ title: decision === 'approved' ? 'Profile change approved' : 'Profile change rejected' });
     load();
   };
 
-  const handleRejectOnboarding = async (exporterId: string) => {
-    if (!user) return;
-    await supabase.from('exporters').update({ onboarding_status: 'onboarding_rejected' as any }).eq('id', exporterId);
-    await supabase.rpc('insert_audit_log', {
-      p_exporter_id: exporterId,
-      p_user_id: user.id,
-      p_user_role: 'partner_staff' as any,
-      p_action_type: 'onboarding_rejected' as any,
-      p_metadata: {},
-    });
-    toast({ title: 'Onboarding rejected', description: 'Exporter can revise and resubmit.' });
-    load();
-  };
-
-  const totalPending = docs.length + pendingExporters.length;
+  const total = appReqs.length + profileReqs.length;
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Review Queue</h1>
-        <p className="text-sm text-muted-foreground">Onboarding approvals and documents pending review</p>
+        <h1 className="text-2xl font-bold text-foreground">Requests</h1>
+        <p className="text-sm text-muted-foreground">
+          Pending change requests for applications and exporter profiles assigned to your organisation.
+        </p>
       </div>
 
       {loading ? (
-        <p className="py-10 text-center text-muted-foreground">Loading…</p>
-      ) : totalPending === 0 ? (
+        <Card>
+          <CardContent className="flex items-center justify-center py-10 text-muted-foreground">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading…
+          </CardContent>
+        </Card>
+      ) : total === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-muted-foreground">
-            <FileText className="mx-auto mb-3 h-8 w-8 text-muted-foreground/50" />
-            Nothing pending review.
+            <Inbox className="mx-auto mb-3 h-8 w-8 text-muted-foreground/50" />
+            No pending requests.
           </CardContent>
         </Card>
       ) : (
-        <Tabs defaultValue={pendingExporters.length > 0 ? 'onboarding' : 'documents'}>
-          <TabsList>
-            <TabsTrigger value="onboarding" className="gap-2">
-              <UserCheck className="h-4 w-4" />
-              Onboarding ({pendingExporters.length})
-            </TabsTrigger>
-            <TabsTrigger value="documents" className="gap-2">
-              <FileText className="h-4 w-4" />
-              Documents ({docs.length})
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="onboarding" className="mt-4">
-            {pendingExporters.length === 0 ? (
-              <Card><CardContent className="py-8 text-center text-muted-foreground">No onboarding submissions pending.</CardContent></Card>
-            ) : (
-              <div className="space-y-3">
-                {pendingExporters.map((exp) => (
-                  <Card key={exp.id}>
-                    <CardContent className="flex items-center justify-between py-4">
-                      <div className="flex items-center gap-3">
-                        <Clock className="h-5 w-5 text-warning" />
-                        <div>
-                          <Link to={`/greystar/exporters/${exp.id}`} className="font-semibold text-foreground hover:underline">
-                            {exp.company_name}
-                          </Link>
-                          <p className="text-xs text-muted-foreground">
-                            {exp.director_name} · {exp.contact_email ?? 'No email'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="text-destructive" onClick={() => handleRejectOnboarding(exp.id)}>
-                          <XCircle className="mr-1 h-3.5 w-3.5" /> Reject
-                        </Button>
-                        <Button size="sm" onClick={() => handleApproveOnboarding(exp.id)}>
-                          <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Approve
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="documents" className="mt-4">
-            {docs.length === 0 ? (
-              <Card><CardContent className="py-8 text-center text-muted-foreground">No documents pending review.</CardContent></Card>
-            ) : (
-              <Card>
-                <CardHeader><CardTitle>Pending Documents ({docs.length})</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b text-left text-muted-foreground">
-                          <th className="pb-2 font-medium">Exporter</th>
-                          <th className="pb-2 font-medium">Type</th>
-                          <th className="pb-2 font-medium">File</th>
-                          <th className="pb-2 font-medium">Uploaded By</th>
-                          <th className="pb-2 font-medium">Uploaded</th>
-                          <th className="pb-2 font-medium">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {docs.map((doc) => (
-                          <tr key={doc.id}>
+        <>
+          {/* Application Change Requests */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <FileText className="h-4 w-4" />
+                Application Change Requests
+                <Badge variant="secondary" className="ml-1">{appReqs.length}</Badge>
+              </CardTitle>
+              <CardDescription>
+                Field-level change requests sent to exporters on their applications.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {appReqs.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">No pending application change requests.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-xs font-medium text-muted-foreground">
+                        <th className="pb-2">Exporter</th>
+                        <th className="pb-2">Application</th>
+                        <th className="pb-2">Type</th>
+                        <th className="pb-2">Submitted</th>
+                        <th className="pb-2">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {appReqs.map((req) => {
+                        const ref = req.deals?.deal_reference ?? req.deals?.invoice_number ?? req.deal_id.slice(0, 8);
+                        const fieldsCount = Array.isArray(req.fields_flagged) ? req.fields_flagged.length : 0;
+                        return (
+                          <tr key={req.id}>
+                            <td className="py-3 font-medium text-foreground">
+                              {req.deals?.exporters?.company_name ?? 'Unknown'}
+                            </td>
                             <td className="py-3">
-                              <Link to={`/greystar/exporters/${doc.exporter_id}`} className="text-primary underline">
-                                {(doc.exporters as any)?.company_name ?? 'Unknown'}
+                              <Link to={`/greystar/deals/${req.deal_id}`} className="text-primary underline">
+                                {ref}
                               </Link>
                             </td>
-                            <td className="py-3">{DOC_TYPE_LABELS[doc.document_type] ?? doc.document_type}</td>
-                            <td className="py-3 max-w-[200px] truncate">{doc.file_name}</td>
-                            <td className="py-3">
-                              <Badge variant="outline" className="text-xs">
-                                {doc.uploaded_by_role === 'partner_staff' ? 'Partner' : doc.uploaded_by_role === 'exporter' ? 'Exporter' : 'Token'}
-                              </Badge>
+                            <td className="py-3 text-muted-foreground">
+                              Application change ({fieldsCount} field{fieldsCount === 1 ? '' : 's'})
                             </td>
-                            <td className="py-3 text-muted-foreground">{new Date(doc.uploaded_at).toLocaleDateString()}</td>
+                            <td className="py-3 text-muted-foreground">{formatDate(req.created_at)}</td>
                             <td className="py-3">
                               <div className="flex gap-1">
-                                <Button size="sm" variant="ghost" className="h-7 text-xs text-success" onClick={() => handleVerify(doc)}>
-                                  <CheckCircle2 className="mr-1 h-3 w-3" /> Verify
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-xs text-success"
+                                  disabled={actingId === req.id}
+                                  onClick={() => handleResolveAppReq(req)}
+                                >
+                                  <CheckCircle2 className="mr-1 h-3 w-3" /> Mark resolved
                                 </Button>
-                                <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive" onClick={() => handleReject(doc)}>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-xs text-destructive"
+                                  disabled={actingId === req.id}
+                                  onClick={() => handleCancelAppReq(req)}
+                                >
+                                  <XCircle className="mr-1 h-3 w-3" /> Cancel
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Profile Change Requests */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <UserCheck className="h-4 w-4" />
+                Profile Change Requests
+                <Badge variant="secondary" className="ml-1">{profileReqs.length}</Badge>
+              </CardTitle>
+              <CardDescription>
+                Exporter-submitted updates to their company profile awaiting your approval.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {profileReqs.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">No pending profile change requests.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-xs font-medium text-muted-foreground">
+                        <th className="pb-2">Exporter</th>
+                        <th className="pb-2">Type</th>
+                        <th className="pb-2">Fields</th>
+                        <th className="pb-2">Submitted</th>
+                        <th className="pb-2">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {profileReqs.map((req) => {
+                        const fieldKeys = Object.keys(req.proposed_changes ?? {});
+                        return (
+                          <tr key={req.id}>
+                            <td className="py-3 font-medium text-foreground">
+                              <Link to={`/greystar/exporters/${req.exporter_id}`} className="text-primary underline">
+                                {req.exporters?.company_name ?? 'Unknown'}
+                              </Link>
+                            </td>
+                            <td className="py-3 text-muted-foreground">Company profile update</td>
+                            <td className="py-3 text-muted-foreground max-w-[260px] truncate">
+                              {fieldKeys.length === 0 ? '—' : fieldKeys.join(', ')}
+                            </td>
+                            <td className="py-3 text-muted-foreground">{formatDate(req.created_at)}</td>
+                            <td className="py-3">
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-xs text-success"
+                                  disabled={actingId === req.id}
+                                  onClick={() => handleProfileDecision(req, 'approved')}
+                                >
+                                  <CheckCircle2 className="mr-1 h-3 w-3" /> Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-xs text-destructive"
+                                  disabled={actingId === req.id}
+                                  onClick={() => handleProfileDecision(req, 'rejected')}
+                                >
                                   <XCircle className="mr-1 h-3 w-3" /> Reject
                                 </Button>
                               </div>
                             </td>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );
