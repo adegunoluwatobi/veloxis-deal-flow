@@ -203,7 +203,45 @@ export default function GreystarExporterDetail() {
   if (!exporter) return <div className="py-20 text-center text-muted-foreground">Exporter not found.</div>;
 
   const enabledOptions = docTypeOptions.filter((o) => !o.disabled);
-  const kycResult = computeKycStatus(activeDocs);
+  const addressComplete = !!(exporter.registered_address_line1 && exporter.registered_city);
+  const kycResult = computeKycStatus(activeDocs, 0, addressComplete, exporter.kyc_verified_at ?? null);
+  const canApproveKyc = (role === 'super_admin' || role === 'deal_manager') && kycResult.status === 'awaiting_admin_approval';
+
+  const handleApproveKyc = async () => {
+    if (!user || !id) return;
+    const { error } = await supabase
+      .from('exporters')
+      .update({
+        kyc_status: 'verified' as any,
+        kyc_verified_at: new Date().toISOString(),
+        kyc_verified_by: user.id,
+      } as any)
+      .eq('id', id);
+    if (error) { toast({ title: 'Failed', description: error.message, variant: 'destructive' }); return; }
+    await supabase.rpc('insert_audit_log', {
+      p_exporter_id: id, p_user_id: user.id, p_user_role: role as any,
+      p_action_type: 'kyc_verified' as any, p_metadata: { manual_admin_approval: true },
+    });
+    toast({ title: 'KYC approved', description: 'Exporter is now fully verified.' });
+    load();
+  };
+
+  const handleRejectKyc = async () => {
+    if (!user || !id) return;
+    const reason = window.prompt('Reason for rejecting KYC?');
+    if (!reason) return;
+    const { error } = await supabase
+      .from('exporters')
+      .update({ kyc_status: 'rejected' as any } as any)
+      .eq('id', id);
+    if (error) { toast({ title: 'Failed', description: error.message, variant: 'destructive' }); return; }
+    await supabase.rpc('insert_audit_log', {
+      p_exporter_id: id, p_user_id: user.id, p_user_role: role as any,
+      p_action_type: 'kyc_rejected' as any, p_metadata: { reason },
+    });
+    toast({ title: 'KYC rejected' });
+    load();
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -222,11 +260,25 @@ export default function GreystarExporterDetail() {
       {(() => {
         return (
           <div className={cn('rounded-lg border p-4', kycResult.borderColor)}>
-            <div className="flex items-center gap-2">
-              {kycResult.status === 'verified' ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
-              <span className="font-semibold">KYC Status: {kycResult.label}</span>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  {kycResult.status === 'verified' ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+                  <span className="font-semibold">KYC Status: {kycResult.label}</span>
+                </div>
+                <p className="mt-1 text-sm">{kycResult.description}</p>
+              </div>
+              {canApproveKyc && (
+                <div className="flex shrink-0 gap-2">
+                  <Button size="sm" variant="outline" className="text-destructive" onClick={handleRejectKyc}>
+                    <XCircle className="mr-1 h-3.5 w-3.5" /> Reject KYC
+                  </Button>
+                  <Button size="sm" onClick={handleApproveKyc}>
+                    <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Approve KYC
+                  </Button>
+                </div>
+              )}
             </div>
-            <p className="mt-1 text-sm">{kycResult.description}</p>
           </div>
         );
       })()}
