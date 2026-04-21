@@ -49,10 +49,10 @@ export default function GreystarDashboard() {
 
     const { data: exporterData } = await supabase
       .from('exporters')
-      .select('id, company_name, rc_number, created_at, contact_email')
+      .select('id, company_name, rc_number, created_at, contact_email, kyc_verified_at')
       .order('created_at', { ascending: false });
 
-    const exporters = (exporterData as ExporterRow[]) ?? [];
+    const exporters = (exporterData as (ExporterRow & { kyc_verified_at?: string | null })[]) ?? [];
     const exporterIds = exporters.map((exporter) => exporter.id);
 
     let documents: ExporterDocumentRow[] = [];
@@ -70,7 +70,7 @@ export default function GreystarDashboard() {
     const docsByExporter = groupDocumentsByExporter(documents);
     const exportersWithKyc = exporters.map((exporter) => ({
       ...exporter,
-      kyc: computeKycStatus(docsByExporter.get(exporter.id) ?? []),
+      kyc: computeKycStatus(docsByExporter.get(exporter.id) ?? [], 0, true, exporter.kyc_verified_at ?? null),
     }));
 
     setRecentExporters(exportersWithKyc.slice(0, 10));

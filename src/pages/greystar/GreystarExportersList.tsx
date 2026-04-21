@@ -34,6 +34,7 @@ interface ExporterRow {
   onboarding_status: OnboardingStatus;
   invite_sent_at: string | null;
   invite_accepted_at: string | null;
+  kyc_verified_at: string | null;
 }
 
 interface ExporterDocumentRow extends KycDocumentLike {
@@ -68,7 +69,7 @@ export default function GreystarExportersList() {
 
       const { data: exporterData } = await supabase
         .from('exporters')
-        .select('id, company_name, rc_number, entity_type, director_name, contact_email, created_at, forwarded_to_veloxis_at, onboarding_status, invite_sent_at, invite_accepted_at')
+        .select('id, company_name, rc_number, entity_type, director_name, contact_email, created_at, forwarded_to_veloxis_at, onboarding_status, invite_sent_at, invite_accepted_at, kyc_verified_at')
         .order('created_at', { ascending: false });
 
       const exportersList = (exporterData as ExporterRow[]) ?? [];
@@ -130,7 +131,7 @@ export default function GreystarExportersList() {
         <div className="space-y-3">
           {filtered.map((exporter) => {
             const statusMeta = EXPORTER_STATUS_META[getDisplayStatus(exporter)];
-            const kyc = computeKycStatus(docsByExporter.get(exporter.id) ?? []);
+            const kyc = computeKycStatus(docsByExporter.get(exporter.id) ?? [], 0, true, exporter.kyc_verified_at ?? null);
 
             return (
               <Link

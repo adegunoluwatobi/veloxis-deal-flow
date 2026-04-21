@@ -7,7 +7,13 @@ export interface KycDocumentLike {
   expiry_status?: string | null;
 }
 
-export type ComputedKycStatus = 'verified' | 'rejected' | 'expired' | 'under_review' | 'pending_documents';
+export type ComputedKycStatus =
+  | 'verified'
+  | 'rejected'
+  | 'expired'
+  | 'awaiting_admin_approval'
+  | 'under_review'
+  | 'pending_documents';
 
 export interface ComputedKyc {
   status: ComputedKycStatus;
@@ -39,12 +45,21 @@ export function groupDocumentsByExporter<T extends { exporter_id?: string | null
 
 /**
  * Derive KYC status live from the active (non-superseded) documents list.
- * Priority: outstanding requests > rejected > expired > pending_review > pending upload > verified
+ *
+ * Approval gate (Prompt 4): an exporter is only "verified" once a Super Admin or
+ * Deal Manager has explicitly approved the file (we read this from the exporter
+ * row's `kyc_verified_at`). When all documents are uploaded + verified at the
+ * document level but no admin sign-off is recorded, status is
+ * `awaiting_admin_approval` ("Pending KYC Approval").
+ *
+ * Priority: outstanding requests > rejected > expired > pending_review > pending upload >
+ *           awaiting admin approval > verified
  */
 export function computeKycStatus(
   activeDocs: KycDocumentLike[],
   pendingRequestCount = 0,
   addressComplete = true,
+  adminApprovedAt: string | null = null,
 ): ComputedKyc {
   if (pendingRequestCount > 0) {
     return {
@@ -127,12 +142,25 @@ export function computeKycStatus(
     };
   }
 
+  // All documents verified at the doc level + address complete.
+  // The final 'Complete' status requires an explicit admin approval.
   if (verified.length === MANDATORY.length && addressComplete) {
+    if (!adminApprovedAt) {
+      return {
+        status: 'awaiting_admin_approval',
+        label: 'Pending KYC Approval',
+        badgeLabel: 'Pending KYC Approval',
+        description: 'Your documents are verified and awaiting final sign-off by Veloxis.',
+        color: 'bg-primary/10 text-primary',
+        borderColor: 'border-primary/30 bg-primary/5',
+        icon: 'warning',
+      };
+    }
     return {
       status: 'verified',
       label: 'Complete',
       badgeLabel: 'KYC Complete',
-      description: 'All mandatory documents verified.',
+      description: 'All mandatory documents verified and approved by Veloxis.',
       color: 'bg-success/10 text-success',
       borderColor: 'border-success/30 bg-success/5',
       icon: 'success',

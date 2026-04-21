@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, AlertTriangle, Download } from 'lucide-react';
+import { Upload, AlertTriangle, Download, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ExporterDocumentType } from '@/types';
 import { DOC_TYPE_LABELS, buildDocTypeOptions } from '@/lib/docTypeOptions';
@@ -247,6 +247,32 @@ export default function ExporterDocuments() {
               </div>
 
               {isAddressType ? (
+                addressComplete ? (
+                  <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
+                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                      <Lock className="h-4 w-4" /> Registered address is locked
+                    </div>
+                    <dl className="grid gap-2 text-sm md:grid-cols-2">
+                      <div><dt className="text-muted-foreground">Address line 1</dt><dd className="font-medium">{exporter.registered_address_line1}</dd></div>
+                      {exporter.registered_address_line2 && (
+                        <div><dt className="text-muted-foreground">Address line 2</dt><dd className="font-medium">{exporter.registered_address_line2}</dd></div>
+                      )}
+                      <div><dt className="text-muted-foreground">City</dt><dd className="font-medium">{exporter.registered_city}</dd></div>
+                      <div><dt className="text-muted-foreground">Postcode</dt><dd className="font-medium">{exporter.registered_postcode || '—'}</dd></div>
+                      <div className="md:col-span-2"><dt className="text-muted-foreground">Country</dt><dd className="font-medium">{exporter.registered_country || '—'}</dd></div>
+                    </dl>
+                    <p className="text-xs text-muted-foreground">
+                      Once saved, your registered address can only be changed via a profile change request reviewed by your partner.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate('/exporter/account/profile?section=address')}
+                    >
+                      Request a change
+                    </Button>
+                  </div>
+                ) : (
                 <>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2 md:col-span-2">
@@ -287,13 +313,17 @@ export default function ExporterDocuments() {
                       />
                     </div>
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Heads up: once you save your address it will be locked. To change it later, you'll need to submit a change request.
+                  </p>
                   <Button
                     onClick={handleSaveAddress}
                     disabled={savingAddress || !addressForm.registered_address_line1.trim() || !addressForm.registered_city.trim()}
                   >
-                    {savingAddress ? 'Saving…' : addressComplete ? 'Update Address' : 'Save Address'}
+                    {savingAddress ? 'Saving…' : 'Save Address'}
                   </Button>
                 </>
+                )
               ) : (
                 <>
                   {form.document_type === 'nepc_certificate' && (

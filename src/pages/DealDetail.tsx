@@ -168,7 +168,10 @@ export default function DealDetail() {
   const isDM = role === 'deal_manager' || role === 'super_admin';
   const isSuperAdmin = role === 'super_admin';
   const currency = deal?.invoice_currency_v2 ?? 'GBP';
-  const computedKyc = useMemo(() => computeKycStatus(exporterDocs), [exporterDocs]);
+  const computedKyc = useMemo(
+    () => computeKycStatus(exporterDocs, 0, true, (exporter as any)?.kyc_verified_at ?? null),
+    [exporterDocs, exporter]
+  );
   const sym = CURRENCY_SYMBOLS[currency] ?? '£';
 
   const load = useCallback(async () => {
