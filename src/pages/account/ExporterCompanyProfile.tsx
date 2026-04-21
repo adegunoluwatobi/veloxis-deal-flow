@@ -139,17 +139,15 @@ export default function ExporterCompanyProfile() {
       return t === '' ? null : t;
     };
 
-    const payload = {
+    // Address fields are locked once saved — we never include them in a normal profile save.
+    // Changes to address must go through kyc_profile_change_requests.
+    const addressLocked = !!exporter.registered_address_line1;
+    const payload: Record<string, unknown> = {
       company_name: cleanString(form.company_name) ?? exporter.company_name,
       rc_number: cleanString(form.rc_number) ?? '',
       director_name: cleanString(form.director_name) ?? exporter.director_name,
       vat_number: cleanString(form.vat_number),
       primary_commodity: cleanString(form.primary_commodity),
-      registered_address_line1: cleanString(form.registered_address_line1),
-      registered_address_line2: cleanString(form.registered_address_line2),
-      registered_city: cleanString(form.registered_city),
-      registered_postcode: cleanString(form.registered_postcode),
-      registered_country: cleanString(form.registered_country),
       trading_address_same_as_registered: !!form.trading_address_same_as_registered,
       trading_address_line1: cleanString(form.trading_address_line1),
       trading_address_line2: cleanString(form.trading_address_line2),
@@ -157,6 +155,13 @@ export default function ExporterCompanyProfile() {
       trading_postcode: cleanString(form.trading_postcode),
       trading_country: cleanString(form.trading_country),
     };
+    if (!addressLocked) {
+      payload.registered_address_line1 = cleanString(form.registered_address_line1);
+      payload.registered_address_line2 = cleanString(form.registered_address_line2);
+      payload.registered_city = cleanString(form.registered_city);
+      payload.registered_postcode = cleanString(form.registered_postcode);
+      payload.registered_country = cleanString(form.registered_country);
+    }
 
     setSubmitting(true);
     const { error } = await supabase
