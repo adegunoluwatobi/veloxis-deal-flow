@@ -66,8 +66,8 @@ export default function PartnerOrgProfile() {
 
   const handleSave = async () => {
     if (!orgId) return;
-    if (role !== 'partner_admin') {
-      toast.error('Only Partner Admins can edit organisation details');
+    if (role !== 'super_admin') {
+      toast.error('Only Veloxis Super Admins can edit organisation details. Contact Veloxis to request changes.');
       return;
     }
     if (!form.name?.trim()) { toast.error('Organisation name is required'); return; }
@@ -94,19 +94,23 @@ export default function PartnerOrgProfile() {
   if (isLoading) return <Skeleton className="h-96" />;
   if (!org) return <p className="text-muted-foreground">No organisation found for your account.</p>;
 
-  const readOnly = role !== 'partner_admin';
+  const readOnly = role !== 'super_admin';
 
   return (
     <div className="space-y-6 max-w-4xl">
       <Helmet><title>Organisation Profile · Veloxis</title></Helmet>
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2"><Building2 className="h-6 w-6" /> Organisation Profile</h1>
-        <p className="text-sm text-muted-foreground">{readOnly ? 'View your organisation details.' : 'Update your organisation contact details.'}</p>
+        <p className="text-sm text-muted-foreground">{readOnly ? 'View your organisation details. Contact Veloxis to request changes.' : 'Update organisation contact details.'}</p>
       </div>
 
       <Alert>
         <Info className="h-4 w-4" />
-        <AlertDescription>Organisation details are visible to Veloxis administrators.</AlertDescription>
+        <AlertDescription>
+          {readOnly
+            ? 'Organisation details are managed by Veloxis. To request a change, please contact your Veloxis account manager.'
+            : 'Organisation details are visible to Veloxis administrators.'}
+        </AlertDescription>
       </Alert>
 
       <Card>

@@ -13,14 +13,14 @@ export type PipelineStatus =
   | 'expansion';
 
 export const PIPELINE_STATUS_LABELS: Record<PipelineStatus, string> = {
-  invited: 'Invited',
-  onboarding_started: 'Onboarding Started',
-  pending_documents: 'Pending Documents',
-  under_review: 'Under Review',
-  pending_veloxis: 'Pending Veloxis',
-  routed: 'Routed',
-  approved: 'Approved',
-  rejected: 'Rejected',
+  invited: 'Registered',
+  onboarding_started: 'KYC In Progress',
+  pending_documents: 'KYC In Progress',
+  under_review: 'Submitted',
+  pending_veloxis: 'Referred to Veloxis',
+  routed: 'Referred to Veloxis',
+  approved: 'Verified & Active',
+  rejected: 'Not Approved',
   expansion: 'Expansion',
 };
 

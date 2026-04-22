@@ -36,7 +36,7 @@ function buildNavGroups(role: string | null): NavGroup[] {
       section: 'Finance',
       items: [
         { label: 'Applications', href: '/greystar/deals', icon: FileText },
-        { label: 'Change Requests', href: '/greystar/review', icon: GitPullRequestArrow },
+        { label: 'Requests', href: '/greystar/review', icon: GitPullRequestArrow },
       ],
     },
     {
@@ -59,7 +59,7 @@ const PAGE_TITLES: Array<{ match: RegExp; title: string }> = [
   { match: /^\/greystar\/exporters$/, title: 'Exporters' },
   { match: /^\/greystar\/deals\/[^/]+/, title: 'Application Detail' },
   { match: /^\/greystar\/deals$/, title: 'Applications' },
-  { match: /^\/greystar\/review/, title: 'Change Requests' },
+  { match: /^\/greystar\/review/, title: 'Requests' },
   { match: /^\/greystar\/account\/organisation/, title: 'Organisation' },
   { match: /^\/greystar\/account\/team/, title: 'Team Members' },
   { match: /^\/greystar\/account/, title: 'Account' },
