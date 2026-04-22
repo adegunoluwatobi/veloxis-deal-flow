@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { computeKycStatus, groupDocumentsByExporter, type KycDocumentLike } from '@/lib/computeKycStatus';
 import {
   LayoutDashboard, TrendingUp, AlertTriangle, ArrowRight, Banknote,
-  Users, FileText,
+  Users, FileText, ShieldCheck,
 } from 'lucide-react';
 import { type DealStatus } from '@/types';
 
@@ -127,6 +127,7 @@ export default function AdminDashboard() {
   const docsRequested = deals.filter(d => d.status === 'docs_requested').length;
   const verifiedExporters = exportersWithKyc.filter(e => e.kyc.status === 'verified').length;
   const pendingKyc = exportersWithKyc.filter(e => e.kyc.status !== 'verified').length;
+  const awaitingApproval = exportersWithKyc.filter(e => e.kyc.status === 'awaiting_admin_approval');
 
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading…</div>;
 
