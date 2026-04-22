@@ -181,24 +181,28 @@ export default function ExportersList() {
                 </tr>
               </thead>
               <tbody>
-                {filteredAdmin.map(exp => (
-                  <tr key={exp.id} className="border-t border-border hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3">
-                      <Link to={`/exporters/${exp.id}`} className="font-medium text-foreground hover:underline">
-                        {exp.company_name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">{exp.country ?? '—'}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{exp.commodity}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{exp.partner_name}</td>
-                    <td className="px-4 py-3">
-                      <Badge variant="secondary" className={cn('font-medium', exp.is_active ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground')}>
-                        {exp.is_active ? 'Active' : 'Suspended'}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground tabular-nums">{exp.deal_count}</td>
-                  </tr>
-                ))}
+                {filteredAdmin.map(exp => {
+                  const docs = exporterDocs.filter(d => d.exporter_id === exp.id);
+                  const kyc = computeKycStatus(docs, 0, true, exp.kyc_verified_at ?? null);
+                  return (
+                    <tr key={exp.id} className="border-t border-border hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3">
+                        <Link to={`/exporters/${exp.id}`} className="font-medium text-foreground hover:underline">
+                          {exp.company_name}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{exp.country ?? '—'}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{exp.commodity}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{exp.partner_name}</td>
+                      <td className="px-4 py-3">
+                        <Badge variant="secondary" className={cn('font-medium', kyc.color)}>
+                          {kyc.badgeLabel}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground tabular-nums">{exp.deal_count}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
