@@ -175,7 +175,7 @@ export default function ExportersList() {
             <table className="w-full text-left text-sm">
               <thead className="bg-muted/40">
                 <tr>
-                  {['Company', 'Country', 'Commodity', 'Assigned Partner', 'Status', 'Deals'].map(h => (
+                  {['Company', 'Country', 'Commodity', 'Assigned Partner', 'KYC Status', 'Deals'].map(h => (
                     <th key={h} className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{h}</th>
                   ))}
                 </tr>
