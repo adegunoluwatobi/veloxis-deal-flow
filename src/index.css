@@ -48,16 +48,16 @@
     --veloxis-teal: 173 80% 40%;
     --veloxis-teal-dark: 174 84% 32%;
 
-    /* Veloxis forest-green sidebar (matches marketing site) */
-    --sidebar-background: 160 70% 13%;
+    /* Veloxis forest-green sidebar (matches partner shell redesign) */
+    --sidebar-background: 142 51% 8%;        /* #0A1F12 */
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 168 76% 42%;
+    --sidebar-primary: 142 71% 45%;          /* #16A34A */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 60% 20%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 160 40% 22%;
-    --sidebar-ring: 168 76% 42%;
-    --sidebar-muted: 160 20% 65%;
+    --sidebar-accent: 142 71% 45% / 0.14;    /* active row bg tint */
+    --sidebar-accent-foreground: 142 76% 64%; /* #4ADE80 active text */
+    --sidebar-border: 0 0% 100% / 0.07;
+    --sidebar-ring: 142 71% 45%;
+    --sidebar-muted: 0 0% 100% / 0.55;
   }
 
   .dark {

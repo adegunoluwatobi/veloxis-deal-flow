@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { computeKycStatus, groupDocumentsByExporter, type KycDocumentLike } from '@/lib/computeKycStatus';
 import {
   LayoutDashboard, TrendingUp, AlertTriangle, ArrowRight, Banknote,
-  Users, FileText,
+  Users, FileText, ShieldCheck,
 } from 'lucide-react';
 import { type DealStatus } from '@/types';
 
@@ -127,6 +127,7 @@ export default function AdminDashboard() {
   const docsRequested = deals.filter(d => d.status === 'docs_requested').length;
   const verifiedExporters = exportersWithKyc.filter(e => e.kyc.status === 'verified').length;
   const pendingKyc = exportersWithKyc.filter(e => e.kyc.status !== 'verified').length;
+  const awaitingApproval = exportersWithKyc.filter(e => e.kyc.status === 'awaiting_admin_approval');
 
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading…</div>;
 
@@ -243,6 +244,49 @@ export default function AdminDashboard() {
           Pool utilization is above 90%. New application approvals may be blocked.
         </div>
       )}
+
+      {/* KYC Approval Queue — exporters fully uploaded but awaiting admin sign-off */}
+      <Card className="border-primary/30">
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            <CardTitle className="text-base">KYC Approval Queue</CardTitle>
+            {awaitingApproval.length > 0 && (
+              <Badge variant="secondary" className="bg-primary/10 text-primary">
+                {awaitingApproval.length} awaiting
+              </Badge>
+            )}
+          </div>
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/exporters">View all exporters <ArrowRight className="ml-1 h-4 w-4" /></Link>
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {awaitingApproval.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              No exporters awaiting KYC approval. You're all caught up.
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              {awaitingApproval.map(exp => (
+                <Link
+                  key={exp.id}
+                  to={`/greystar/exporters/${exp.id}`}
+                  className="flex items-center justify-between rounded-md border border-border px-3 py-2.5 text-sm transition-colors hover:bg-muted/50"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium text-foreground">{exp.company_name}</span>
+                    <Badge variant="secondary" className={cn('text-xs', exp.kyc.color)}>
+                      {exp.kyc.badgeLabel}
+                    </Badge>
+                  </div>
+                  <span className="text-xs font-medium text-primary">Review →</span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Recent Deals */}
