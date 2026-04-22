@@ -64,7 +64,7 @@ export default function ExportersList() {
         const ids = exporterList.map(e => e.id);
         const originatorIds = [...new Set(exporterList.map(e => e.originator_id).filter(Boolean) as string[])];
 
-        const [rolesRes, appsRes, dealsRes] = await Promise.all([
+        const [rolesRes, appsRes, dealsRes, docsRes] = await Promise.all([
           originatorIds.length > 0
             ? supabase.from('user_roles')
                 .select('user_id, partner_organisation_id, role, partner_organisations(name)')
@@ -81,7 +81,15 @@ export default function ExportersList() {
                 .select('exporter_id')
                 .in('exporter_id', ids)
             : Promise.resolve({ data: [] as any[] }),
+          ids.length > 0
+            ? supabase.from('exporter_documents')
+                .select('exporter_id, document_type, document_status, expiry_status, is_superseded')
+                .in('exporter_id', ids)
+                .eq('is_superseded', false)
+            : Promise.resolve({ data: [] as any[] }),
         ]);
+
+        setExporterDocs(((docsRes as any).data as ExporterDocRow[]) ?? []);
 
         const partnerByOriginator = new Map<string, string>();
         ((rolesRes as any).data ?? []).forEach((r: any) => {
