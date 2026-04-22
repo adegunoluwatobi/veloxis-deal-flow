@@ -1579,13 +1579,138 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_document_requests: {
+        Row: {
+          created_at: string
+          description: string | null
+          document_title: string
+          fulfilled_at: string | null
+          id: string
+          partner_organisation_id: string
+          requested_by: string
+          status: string
+          updated_at: string
+          uploaded_doc_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          document_title: string
+          fulfilled_at?: string | null
+          id?: string
+          partner_organisation_id: string
+          requested_by: string
+          status?: string
+          updated_at?: string
+          uploaded_doc_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          document_title?: string
+          fulfilled_at?: string | null
+          id?: string
+          partner_organisation_id?: string
+          requested_by?: string
+          status?: string
+          updated_at?: string
+          uploaded_doc_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_document_requests_partner_organisation_id_fkey"
+            columns: ["partner_organisation_id"]
+            isOneToOne: false
+            referencedRelation: "partner_organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_document_requests_uploaded_doc_id_fkey"
+            columns: ["uploaded_doc_id"]
+            isOneToOne: false
+            referencedRelation: "partner_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_documents: {
+        Row: {
+          document_request_id: string | null
+          document_status: string
+          document_type: Database["public"]["Enums"]["partner_document_type"]
+          file_name: string
+          file_path: string
+          file_size_bytes: number | null
+          id: string
+          is_superseded: boolean
+          mime_type: string | null
+          notes: string | null
+          partner_organisation_id: string
+          uploaded_at: string
+          uploaded_by: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          document_request_id?: string | null
+          document_status?: string
+          document_type: Database["public"]["Enums"]["partner_document_type"]
+          file_name: string
+          file_path: string
+          file_size_bytes?: number | null
+          id?: string
+          is_superseded?: boolean
+          mime_type?: string | null
+          notes?: string | null
+          partner_organisation_id: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          document_request_id?: string | null
+          document_status?: string
+          document_type?: Database["public"]["Enums"]["partner_document_type"]
+          file_name?: string
+          file_path?: string
+          file_size_bytes?: number | null
+          id?: string
+          is_superseded?: boolean
+          mime_type?: string | null
+          notes?: string | null
+          partner_organisation_id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_documents_partner_organisation_id_fkey"
+            columns: ["partner_organisation_id"]
+            isOneToOne: false
+            referencedRelation: "partner_organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_organisations: {
         Row: {
           admin_email: string | null
+          company_registration_number: string | null
           country: string | null
+          country_of_incorporation: string | null
           created_at: string
           id: string
           is_active: boolean
+          kyb_rejected_at: string | null
+          kyb_rejected_by: string | null
+          kyb_rejection_reason: string | null
+          kyb_status: Database["public"]["Enums"]["partner_kyb_status"]
+          kyb_submitted_at: string | null
+          kyb_verified_at: string | null
+          kyb_verified_by: string | null
           name: string
           notes: string | null
           operating_countries: string[] | null
@@ -1604,10 +1729,19 @@ export type Database = {
         }
         Insert: {
           admin_email?: string | null
+          company_registration_number?: string | null
           country?: string | null
+          country_of_incorporation?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
+          kyb_rejected_at?: string | null
+          kyb_rejected_by?: string | null
+          kyb_rejection_reason?: string | null
+          kyb_status?: Database["public"]["Enums"]["partner_kyb_status"]
+          kyb_submitted_at?: string | null
+          kyb_verified_at?: string | null
+          kyb_verified_by?: string | null
           name: string
           notes?: string | null
           operating_countries?: string[] | null
@@ -1626,10 +1760,19 @@ export type Database = {
         }
         Update: {
           admin_email?: string | null
+          company_registration_number?: string | null
           country?: string | null
+          country_of_incorporation?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
+          kyb_rejected_at?: string | null
+          kyb_rejected_by?: string | null
+          kyb_rejection_reason?: string | null
+          kyb_status?: Database["public"]["Enums"]["partner_kyb_status"]
+          kyb_submitted_at?: string | null
+          kyb_verified_at?: string | null
+          kyb_verified_by?: string | null
           name?: string
           notes?: string | null
           operating_countries?: string[] | null
@@ -2096,6 +2239,11 @@ export type Database = {
         | "kyc_change_rejected"
         | "buyer_ch_verified"
         | "buyer_ch_not_found"
+        | "partner_kyb_submitted"
+        | "partner_kyb_approved"
+        | "partner_kyb_rejected"
+        | "partner_kyb_doc_requested"
+        | "partner_kyb_doc_uploaded"
       buyer_credit_check_status: "pending" | "pass" | "refer" | "fail"
       change_request_status: "pending" | "resolved" | "cancelled"
       commodity_type:
@@ -2177,6 +2325,17 @@ export type Database = {
         | "onboarding_submitted"
         | "onboarding_approved"
         | "onboarding_rejected"
+      partner_document_type:
+        | "certificate_of_incorporation"
+        | "proof_of_registered_address"
+        | "director_id"
+        | "additional"
+      partner_kyb_status:
+        | "not_started"
+        | "submitted"
+        | "verified"
+        | "rejected"
+        | "additional_docs_requested"
       pipeline_status:
         | "invited"
         | "onboarding_started"
@@ -2385,6 +2544,11 @@ export const Constants = {
         "kyc_change_rejected",
         "buyer_ch_verified",
         "buyer_ch_not_found",
+        "partner_kyb_submitted",
+        "partner_kyb_approved",
+        "partner_kyb_rejected",
+        "partner_kyb_doc_requested",
+        "partner_kyb_doc_uploaded",
       ],
       buyer_credit_check_status: ["pending", "pass", "refer", "fail"],
       change_request_status: ["pending", "resolved", "cancelled"],
@@ -2474,6 +2638,19 @@ export const Constants = {
         "onboarding_submitted",
         "onboarding_approved",
         "onboarding_rejected",
+      ],
+      partner_document_type: [
+        "certificate_of_incorporation",
+        "proof_of_registered_address",
+        "director_id",
+        "additional",
+      ],
+      partner_kyb_status: [
+        "not_started",
+        "submitted",
+        "verified",
+        "rejected",
+        "additional_docs_requested",
       ],
       pipeline_status: [
         "invited",
