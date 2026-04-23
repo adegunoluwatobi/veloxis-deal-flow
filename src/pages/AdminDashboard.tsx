@@ -257,9 +257,14 @@ export default function AdminDashboard() {
               </Badge>
             )}
           </div>
-          <Button asChild variant="ghost" size="sm">
-            <Link to="/exporters">View all exporters <ArrowRight className="ml-1 h-4 w-4" /></Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/admin/partner-kyb">Partner KYB queue <ArrowRight className="ml-1 h-4 w-4" /></Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/exporters">View all exporters <ArrowRight className="ml-1 h-4 w-4" /></Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {awaitingApproval.length === 0 ? (
