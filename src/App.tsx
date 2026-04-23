@@ -26,6 +26,8 @@ import PricingSettings from "@/pages/PricingSettings";
 import CapitalPool from "@/pages/CapitalPool";
 import PartnersPage from "@/pages/PartnersPage";
 import PartnerDetail from "@/pages/PartnerDetail";
+import PartnerKyb from "@/pages/PartnerKyb";
+import AdminPartnerKybQueue from "@/pages/AdminPartnerKybQueue";
 import BrandedNotFound from "@/pages/website/BrandedNotFound";
 import LegalPage from "@/pages/website/LegalPage";
 import { Navigate } from "react-router-dom";
