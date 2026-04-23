@@ -44,6 +44,11 @@ interface FormData {
   full_name: string; company_name: string; countries_covered: string[];
   partner_type: string; sectors: string[]; network_size: string;
   email: string; phone_iso: string; phone: string; description: string; website: string;
+  company_registration_number: string;
+  country_of_incorporation: string;
+  registered_address_line1: string;
+  registered_city: string;
+  registered_country: string;
 }
 
 export default function PartnerApply() {
@@ -51,6 +56,8 @@ export default function PartnerApply() {
     full_name: "", company_name: "", countries_covered: [], partner_type: "",
     sectors: [], network_size: "", email: "", phone_iso: "NG", phone: "",
     description: "", website: "",
+    company_registration_number: "", country_of_incorporation: "",
+    registered_address_line1: "", registered_city: "", registered_country: "",
   });
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);

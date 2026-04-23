@@ -170,6 +170,14 @@ const App = () => (
             <Route path="/admin/capital" element={<AdminLayout><CapitalPool /></AdminLayout>} />
             <Route path="/admin/partners" element={<AdminLayout><PartnersPage /></AdminLayout>} />
             <Route path="/admin/partners/:id" element={<AdminLayout><PartnerDetail /></AdminLayout>} />
+            <Route path="/admin/partner-kyb" element={<AdminLayout><AdminPartnerKybQueue /></AdminLayout>} />
+
+            {/* Partner KYB onboarding gate (no GreystarLayout — full-screen form) */}
+            <Route path="/partner-kyb" element={
+              <ProtectedRoute allowedRoles={['partner_admin', 'partner_staff']}>
+                <PartnerKyb />
+              </ProtectedRoute>
+            } />
 
             {/* Originator routes */}
             <Route path="/dashboard" element={<AuthenticatedLayout><Dashboard /></AuthenticatedLayout>} />
