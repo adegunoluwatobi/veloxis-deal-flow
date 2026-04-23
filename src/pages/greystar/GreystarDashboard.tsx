@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Plus, ArrowRight, FileText, CheckCircle2, Clock, Inbox } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { computeKycStatus, groupDocumentsByExporter, type KycDocumentLike } from '@/lib/computeKycStatus';
+import PartnerKybStatusBadge from '@/components/PartnerKybStatusBadge';
 
 interface ExporterRow {
   id: string;
@@ -112,8 +113,11 @@ export default function GreystarDashboard() {
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Greystar Intake</h1>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-foreground">Greystar Intake</h1>
+            <PartnerKybStatusBadge />
+          </div>
           <p className="text-sm text-muted-foreground">Exporter onboarding and document review</p>
         </div>
         <Button asChild style={{ backgroundColor: '#0BA4A4', color: '#ffffff' }} className="hover:opacity-90">

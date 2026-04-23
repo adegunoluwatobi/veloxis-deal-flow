@@ -12,7 +12,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CountrySelect } from '@/components/ui/country-select';
-import { Loader2, ShieldCheck, FileUp, AlertCircle, CheckCircle2, LogOut } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Loader2, ShieldCheck, FileUp, AlertCircle, CheckCircle2, LogOut, RefreshCw, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { sanitiseFilename } from '@/lib/sanitiseFilename';
 
@@ -24,12 +25,28 @@ const REQUIRED_DOCS: { type: KybDocType; label: string; helper: string }[] = [
   { type: 'director_id', label: 'Director ID', helper: 'Government-issued photo ID for an authorised director' },
 ];
 
+type UploadState = {
+  status: 'idle' | 'uploading' | 'saving' | 'success' | 'error';
+  progress: number; // 0-100
+  fileName?: string;
+  errorMessage?: string;
+  lastFile?: File;
+  attempts: number;
+};
+
+const MAX_FILE_BYTES = 15 * 1024 * 1024; // 15 MB
+const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png'];
+
 export default function PartnerKyb() {
   const { user, role, signOut } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
-  const [uploadingDoc, setUploadingDoc] = useState<KybDocType | null>(null);
+  const [uploadStates, setUploadStates] = useState<Record<KybDocType, UploadState>>({
+    certificate_of_incorporation: { status: 'idle', progress: 0, attempts: 0 },
+    proof_of_registered_address: { status: 'idle', progress: 0, attempts: 0 },
+    director_id: { status: 'idle', progress: 0, attempts: 0 },
+  });
   const [form, setForm] = useState({
     company_registration_number: '',
     country_of_incorporation: '',
@@ -152,14 +169,67 @@ export default function PartnerKyb() {
 
   const update = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
+  const setUploadState = (docType: KybDocType, partial: Partial<UploadState>) => {
+    setUploadStates((prev) => ({ ...prev, [docType]: { ...prev[docType], ...partial } }));
+  };
+
+  const validateFile = (file: File): string | null => {
+    if (!ALLOWED_MIME.includes(file.type) && !/\.(pdf|jpe?g|png)$/i.test(file.name)) {
+      return 'Unsupported file type. Upload PDF, JPG, or PNG.';
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      return `File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 15 MB.`;
+    }
+    if (file.size === 0) {
+      return 'File appears to be empty.';
+    }
+    return null;
+  };
+
   const handleUpload = async (file: File, docType: KybDocType) => {
     if (!orgId || !user?.id) return;
-    setUploadingDoc(docType);
+
+    const validationError = validateFile(file);
+    if (validationError) {
+      setUploadState(docType, {
+        status: 'error',
+        progress: 0,
+        fileName: file.name,
+        errorMessage: validationError,
+        lastFile: file,
+        attempts: (uploadStates[docType]?.attempts ?? 0) + 1,
+      });
+      toast.error(validationError);
+      return;
+    }
+
+    const attempts = (uploadStates[docType]?.attempts ?? 0) + 1;
+    setUploadState(docType, {
+      status: 'uploading',
+      progress: 8,
+      fileName: file.name,
+      errorMessage: undefined,
+      lastFile: file,
+      attempts,
+    });
+
+    // Simulated indeterminate progress while the network call is in flight.
+    let progress = 8;
+    const ticker = window.setInterval(() => {
+      progress = Math.min(progress + 7, 85);
+      setUploadState(docType, { progress });
+    }, 250);
+
     try {
       const cleanName = sanitiseFilename(file.name);
       const path = `partner-kyb/${orgId}/${docType}/${Date.now()}-${cleanName}`;
-      const { error: uploadErr } = await supabase.storage.from('veloxis-documents').upload(path, file, { upsert: false });
+      const { error: uploadErr } = await supabase.storage
+        .from('veloxis-documents')
+        .upload(path, file, { upsert: false });
       if (uploadErr) throw uploadErr;
+
+      window.clearInterval(ticker);
+      setUploadState(docType, { status: 'saving', progress: 92 });
 
       const { error: insertErr } = await supabase.from('partner_documents').insert({
         partner_organisation_id: orgId,
@@ -179,13 +249,34 @@ export default function PartnerKyb() {
         p_metadata: { partner_organisation_id: orgId, document_type: docType, file_name: file.name },
       });
 
+      setUploadState(docType, {
+        status: 'success',
+        progress: 100,
+        errorMessage: undefined,
+        lastFile: undefined,
+      });
       toast.success(`${file.name} uploaded.`);
       refetchDocs();
     } catch (err: any) {
-      toast.error(err.message ?? 'Upload failed');
-    } finally {
-      setUploadingDoc(null);
+      window.clearInterval(ticker);
+      const msg = err?.message ?? 'Upload failed. Check your connection and try again.';
+      setUploadState(docType, {
+        status: 'error',
+        progress: 0,
+        errorMessage: msg,
+        lastFile: file,
+      });
+      toast.error(msg);
     }
+  };
+
+  const handleRetry = (docType: KybDocType) => {
+    const state = uploadStates[docType];
+    if (state?.lastFile) handleUpload(state.lastFile, docType);
+  };
+
+  const dismissUploadError = (docType: KybDocType) => {
+    setUploadState(docType, { status: 'idle', progress: 0, errorMessage: undefined, lastFile: undefined });
   };
 
   const requiredDocsUploaded = REQUIRED_DOCS.every((d) => docsByType.has(d.type));
@@ -364,45 +455,103 @@ export default function PartnerKyb() {
           <CardContent className="space-y-3">
             {REQUIRED_DOCS.map((d) => {
               const uploaded = docsByType.get(d.type) as any;
+              const upload = uploadStates[d.type];
+              const isBusy = upload.status === 'uploading' || upload.status === 'saving';
+              const hasError = upload.status === 'error';
               return (
-                <div key={d.type} className="rounded-lg border p-4 flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">{d.label}</span>
-                      {uploaded ? (
-                        <Badge variant="secondary" className="bg-success/10 text-success text-xs">Uploaded</Badge>
-                      ) : (
-                        <Badge variant="secondary" className="bg-warning/10 text-warning text-xs">Required</Badge>
+                <div key={d.type} className="rounded-lg border p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-sm">{d.label}</span>
+                        {uploaded ? (
+                          <Badge variant="secondary" className="bg-success/10 text-success text-xs">Uploaded</Badge>
+                        ) : (
+                          <Badge variant="secondary" className="bg-warning/10 text-warning text-xs">Required</Badge>
+                        )}
+                        {hasError && (
+                          <Badge variant="secondary" className="bg-destructive/10 text-destructive text-xs">
+                            Upload failed
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{d.helper}</p>
+                      {uploaded && !isBusy && !hasError && (
+                        <p className="text-xs text-muted-foreground mt-1 truncate">📄 {uploaded.file_name}</p>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">{d.helper}</p>
-                    {uploaded && (
-                      <p className="text-xs text-muted-foreground mt-1 truncate">📄 {uploaded.file_name}</p>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <input
+                        id={`upload-${d.type}`}
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleUpload(f, d.type);
+                          e.target.value = '';
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant={uploaded ? 'outline' : 'default'}
+                        size="sm"
+                        disabled={isBusy}
+                        onClick={() => document.getElementById(`upload-${d.type}`)?.click()}
+                      >
+                        {isBusy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileUp className="h-4 w-4 mr-2" />}
+                        {isBusy
+                          ? upload.status === 'uploading' ? 'Uploading…' : 'Saving…'
+                          : uploaded ? 'Replace' : 'Upload'}
+                      </Button>
+                    </div>
                   </div>
-                  <div>
-                    <input
-                      id={`upload-${d.type}`}
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      className="hidden"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) handleUpload(f, d.type);
-                        e.target.value = '';
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      variant={uploaded ? 'outline' : 'default'}
-                      size="sm"
-                      disabled={uploadingDoc === d.type}
-                      onClick={() => document.getElementById(`upload-${d.type}`)?.click()}
-                    >
-                      {uploadingDoc === d.type ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileUp className="h-4 w-4 mr-2" />}
-                      {uploaded ? 'Replace' : 'Upload'}
-                    </Button>
-                  </div>
+
+                  {isBusy && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="truncate">{upload.fileName ?? 'Uploading file'}</span>
+                        <span>{Math.round(upload.progress)}%</span>
+                      </div>
+                      <Progress value={upload.progress} className="h-1.5" />
+                    </div>
+                  )}
+
+                  {hasError && (
+                    <Alert variant="destructive" className="py-2">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription className="flex items-start justify-between gap-3">
+                        <div className="text-xs">
+                          <div className="font-medium">{upload.fileName ?? 'File'} didn't upload</div>
+                          <div className="opacity-90 mt-0.5">{upload.errorMessage}</div>
+                          {upload.attempts > 1 && (
+                            <div className="opacity-75 mt-0.5">Attempts: {upload.attempts}</div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {upload.lastFile && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 px-2 text-xs"
+                              onClick={() => handleRetry(d.type)}
+                            >
+                              <RefreshCw className="h-3 w-3 mr-1" /> Retry
+                            </Button>
+                          )}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => dismissUploadError(d.type)}
+                            aria-label="Dismiss error"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </div>
               );
             })}

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import NotificationBell from '@/components/NotificationBell';
+import PartnerKybStatusBadge from '@/components/PartnerKybStatusBadge';
 
 interface NavItem {
   label: string;
@@ -122,9 +123,12 @@ export default function GreystarLayout({ children }: { children: React.ReactNode
           <div className="flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-md bg-[hsl(142_71%_45%)] text-[11px] font-bold text-white">
             {(user?.email ?? 'P').charAt(0).toUpperCase()}
           </div>
-          <span className="flex-1 truncate text-[12px] font-semibold text-sidebar-foreground">
-            {role === 'partner_admin' || role === 'partner_staff' ? 'Partner Workspace' : 'Workspace'}
-          </span>
+          <div className="flex flex-1 flex-col gap-1 truncate">
+            <span className="truncate text-[12px] font-semibold text-sidebar-foreground">
+              {role === 'partner_admin' || role === 'partner_staff' ? 'Partner Workspace' : 'Workspace'}
+            </span>
+            <PartnerKybStatusBadge variant="compact" className="self-start" />
+          </div>
           <ChevronDown className="h-3 w-3 text-sidebar-foreground/30" />
         </div>
 
@@ -206,6 +210,7 @@ export default function GreystarLayout({ children }: { children: React.ReactNode
             <span className="text-sm font-semibold text-foreground">{pageTitle}</span>
           </div>
           <div className="flex items-center gap-2.5">
+            <PartnerKybStatusBadge />
             <NotificationBell />
             {showNewExporterCta && (
               <Button
