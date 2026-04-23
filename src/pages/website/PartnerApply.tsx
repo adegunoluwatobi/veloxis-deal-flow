@@ -103,6 +103,11 @@ export default function PartnerApply() {
         phone: `${DIAL_COUNTRIES.find(c => c.iso === form.phone_iso)?.dial ?? "+234"} ${form.phone.trim()}`,
         description: form.description.trim() || null,
         website: form.website.trim() || null,
+        company_registration_number: form.company_registration_number.trim() || null,
+        country_of_incorporation: form.country_of_incorporation.trim() || null,
+        registered_address_line1: form.registered_address_line1.trim() || null,
+        registered_city: form.registered_city.trim() || null,
+        registered_country: form.registered_country.trim() || null,
         status: "under_review",
       } as any);
       if (error) throw error;
