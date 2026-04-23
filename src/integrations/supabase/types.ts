@@ -1532,7 +1532,9 @@ export type Database = {
         Row: {
           admin_notes: string | null
           company_name: string
+          company_registration_number: string | null
           countries_covered: string[]
+          country_of_incorporation: string | null
           created_at: string
           description: string | null
           email: string
@@ -1541,6 +1543,10 @@ export type Database = {
           network_size: string
           partner_type: string
           phone: string
+          registered_address_line1: string | null
+          registered_city: string | null
+          registered_country: string | null
+          registered_postcode: string | null
           sectors: string[]
           status: string
           website: string | null
@@ -1548,7 +1554,9 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           company_name: string
+          company_registration_number?: string | null
           countries_covered?: string[]
+          country_of_incorporation?: string | null
           created_at?: string
           description?: string | null
           email: string
@@ -1557,6 +1565,10 @@ export type Database = {
           network_size: string
           partner_type: string
           phone: string
+          registered_address_line1?: string | null
+          registered_city?: string | null
+          registered_country?: string | null
+          registered_postcode?: string | null
           sectors?: string[]
           status?: string
           website?: string | null
@@ -1564,7 +1576,9 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           company_name?: string
+          company_registration_number?: string | null
           countries_covered?: string[]
+          country_of_incorporation?: string | null
           created_at?: string
           description?: string | null
           email?: string
@@ -1573,6 +1587,10 @@ export type Database = {
           network_size?: string
           partner_type?: string
           phone?: string
+          registered_address_line1?: string | null
+          registered_city?: string | null
+          registered_country?: string | null
+          registered_postcode?: string | null
           sectors?: string[]
           status?: string
           website?: string | null
