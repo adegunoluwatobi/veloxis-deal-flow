@@ -251,6 +251,41 @@ export default function PartnerApply() {
             <input className={inputClass("website")} style={{ background: inputBg }} placeholder="https://yourcompany.com" value={form.website} onChange={e => set("website", e.target.value)} />
           </div>
 
+          <div className="pt-4 mt-2 border-t border-white/5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#1ABC9C] mb-3">Quick KYB (optional, speeds up review)</p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[12px] font-medium text-white/50 mb-1.5">Company registration number</label>
+                <input className={inputClass("company_registration_number")} style={{ background: inputBg }} placeholder="e.g. 12345678" value={form.company_registration_number} onChange={e => set("company_registration_number", e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-[12px] font-medium text-white/50 mb-1.5">Country of incorporation</label>
+                <select className={inputClass("country_of_incorporation")} style={{ background: inputBg }} value={form.country_of_incorporation} onChange={e => set("country_of_incorporation", e.target.value)}>
+                  <option value="">Select country</option>
+                  {countries.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[12px] font-medium text-white/50 mb-1.5">Registered address line</label>
+                <input className={inputClass("registered_address_line1")} style={{ background: inputBg }} placeholder="Street address" value={form.registered_address_line1} onChange={e => set("registered_address_line1", e.target.value)} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[12px] font-medium text-white/50 mb-1.5">City</label>
+                  <input className={inputClass("registered_city")} style={{ background: inputBg }} placeholder="City" value={form.registered_city} onChange={e => set("registered_city", e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-medium text-white/50 mb-1.5">Country</label>
+                  <select className={inputClass("registered_country")} style={{ background: inputBg }} value={form.registered_country} onChange={e => set("registered_country", e.target.value)}>
+                    <option value="">Select</option>
+                    {countries.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+              </div>
+              <p className="text-[11px] text-white/40">You'll be asked to upload supporting documents (Cert of Incorporation, Proof of Address, Director ID) after your account is approved.</p>
+            </div>
+          </div>
+
           <button onClick={handleSubmit} disabled={submitting}
             className="w-full flex items-center justify-center gap-2 gradient-veloxis-btn text-white font-semibold text-[15px] py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50">
             {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</> : <>Submit application <ArrowRight className="w-4 h-4" /></>}
