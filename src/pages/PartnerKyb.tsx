@@ -455,45 +455,103 @@ export default function PartnerKyb() {
           <CardContent className="space-y-3">
             {REQUIRED_DOCS.map((d) => {
               const uploaded = docsByType.get(d.type) as any;
+              const upload = uploadStates[d.type];
+              const isBusy = upload.status === 'uploading' || upload.status === 'saving';
+              const hasError = upload.status === 'error';
               return (
-                <div key={d.type} className="rounded-lg border p-4 flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">{d.label}</span>
-                      {uploaded ? (
-                        <Badge variant="secondary" className="bg-success/10 text-success text-xs">Uploaded</Badge>
-                      ) : (
-                        <Badge variant="secondary" className="bg-warning/10 text-warning text-xs">Required</Badge>
+                <div key={d.type} className="rounded-lg border p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-sm">{d.label}</span>
+                        {uploaded ? (
+                          <Badge variant="secondary" className="bg-success/10 text-success text-xs">Uploaded</Badge>
+                        ) : (
+                          <Badge variant="secondary" className="bg-warning/10 text-warning text-xs">Required</Badge>
+                        )}
+                        {hasError && (
+                          <Badge variant="secondary" className="bg-destructive/10 text-destructive text-xs">
+                            Upload failed
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{d.helper}</p>
+                      {uploaded && !isBusy && !hasError && (
+                        <p className="text-xs text-muted-foreground mt-1 truncate">📄 {uploaded.file_name}</p>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">{d.helper}</p>
-                    {uploaded && (
-                      <p className="text-xs text-muted-foreground mt-1 truncate">📄 {uploaded.file_name}</p>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <input
+                        id={`upload-${d.type}`}
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleUpload(f, d.type);
+                          e.target.value = '';
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant={uploaded ? 'outline' : 'default'}
+                        size="sm"
+                        disabled={isBusy}
+                        onClick={() => document.getElementById(`upload-${d.type}`)?.click()}
+                      >
+                        {isBusy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileUp className="h-4 w-4 mr-2" />}
+                        {isBusy
+                          ? upload.status === 'uploading' ? 'Uploading…' : 'Saving…'
+                          : uploaded ? 'Replace' : 'Upload'}
+                      </Button>
+                    </div>
                   </div>
-                  <div>
-                    <input
-                      id={`upload-${d.type}`}
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      className="hidden"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) handleUpload(f, d.type);
-                        e.target.value = '';
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      variant={uploaded ? 'outline' : 'default'}
-                      size="sm"
-                      disabled={uploadingDoc === d.type}
-                      onClick={() => document.getElementById(`upload-${d.type}`)?.click()}
-                    >
-                      {uploadingDoc === d.type ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileUp className="h-4 w-4 mr-2" />}
-                      {uploaded ? 'Replace' : 'Upload'}
-                    </Button>
-                  </div>
+
+                  {isBusy && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="truncate">{upload.fileName ?? 'Uploading file'}</span>
+                        <span>{Math.round(upload.progress)}%</span>
+                      </div>
+                      <Progress value={upload.progress} className="h-1.5" />
+                    </div>
+                  )}
+
+                  {hasError && (
+                    <Alert variant="destructive" className="py-2">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription className="flex items-start justify-between gap-3">
+                        <div className="text-xs">
+                          <div className="font-medium">{upload.fileName ?? 'File'} didn't upload</div>
+                          <div className="opacity-90 mt-0.5">{upload.errorMessage}</div>
+                          {upload.attempts > 1 && (
+                            <div className="opacity-75 mt-0.5">Attempts: {upload.attempts}</div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {upload.lastFile && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 px-2 text-xs"
+                              onClick={() => handleRetry(d.type)}
+                            >
+                              <RefreshCw className="h-3 w-3 mr-1" /> Retry
+                            </Button>
+                          )}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => dismissUploadError(d.type)}
+                            aria-label="Dismiss error"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </div>
               );
             })}
