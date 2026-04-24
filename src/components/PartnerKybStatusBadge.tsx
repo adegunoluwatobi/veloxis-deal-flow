@@ -52,6 +52,7 @@ export default function PartnerKybStatusBadge({ variant = 'full', className }: P
   if (!isPartner || !orgRow) return null;
 
   const state = (() => {
+    // Verified takes absolute precedence — never show Action Needed once verified.
     if (orgRow.kyb_verified_at) {
       return {
         key: 'verified' as const,
@@ -62,7 +63,12 @@ export default function PartnerKybStatusBadge({ variant = 'full', className }: P
         tooltip: 'Your organisation has passed KYB review.',
       };
     }
-    if (orgRow.kyb_rejected_at && !orgRow.kyb_verified_at) {
+    // Rejection only matters if it's more recent than the latest submission and not verified.
+    const rejectedAfterSubmit =
+      orgRow.kyb_rejected_at &&
+      (!orgRow.kyb_submitted_at ||
+        new Date(orgRow.kyb_rejected_at).getTime() >= new Date(orgRow.kyb_submitted_at).getTime());
+    if (rejectedAfterSubmit) {
       return {
         key: 'rejected' as const,
         label: 'KYB Action Needed',
