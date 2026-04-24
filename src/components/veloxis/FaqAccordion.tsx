@@ -54,9 +54,12 @@ export function FaqAccordion() {
         <h2 className="text-[34px] font-medium leading-[1.2] text-[#111827]">
           Everything you need to know.
         </h2>
-        <p className="mt-3 text-[14px] text-[#6b7280] mb-7">
+        <p className="mt-3 text-[14px] text-[#6b7280] mb-2">
           Still have questions?{" "}
           <a href="mailto:hello@veloxis.co.uk" className="text-[#0d9488] hover:underline">hello@veloxis.co.uk</a>
+        </p>
+        <p className="text-[12px] text-[#9ca3af] mb-7">
+          Veloxis Ltd · 1 Emperor Way, Exeter Business Park, Exeter, EX1 3QS, United Kingdom
         </p>
 
         <div className="text-left space-y-2">

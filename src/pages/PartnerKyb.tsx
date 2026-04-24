@@ -558,12 +558,52 @@ export default function PartnerKyb() {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end">
-          <Button onClick={handleSubmit} disabled={submitting} size="lg">
-            {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            {isSubmitted ? 'Resubmit KYB' : 'Submit KYB for review'}
-          </Button>
-        </div>
+        {(() => {
+          const missingDocs = REQUIRED_DOCS.filter((d) => !docsByType.has(d.type));
+          const missingFields: string[] = [];
+          if (!form.company_registration_number.trim()) missingFields.push('Registration number');
+          if (!form.country_of_incorporation.trim()) missingFields.push('Country of incorporation');
+          if (!form.registered_address_line1.trim()) missingFields.push('Address line 1');
+          if (!form.registered_city.trim()) missingFields.push('City');
+          if (!form.registered_country.trim()) missingFields.push('Registered country');
+          if (!form.primary_contact_name.trim()) missingFields.push('Primary contact name');
+          if (!form.primary_contact_email.trim()) missingFields.push('Primary contact email');
+          const hasBlockers = missingDocs.length > 0 || missingFields.length > 0;
+          return (
+            <div className="space-y-3">
+              {hasBlockers && (
+                <Alert className="border-warning/40 bg-warning/5">
+                  <AlertCircle className="h-4 w-4 text-warning" />
+                  <AlertTitle>Complete the following before submitting</AlertTitle>
+                  <AlertDescription>
+                    {missingDocs.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs font-medium text-foreground/80">Missing documents:</p>
+                        <ul className="mt-1 ml-4 list-disc space-y-0.5 text-xs">
+                          {missingDocs.map((d) => <li key={d.type}>{d.label}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                    {missingFields.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs font-medium text-foreground/80">Missing details:</p>
+                        <ul className="mt-1 ml-4 list-disc space-y-0.5 text-xs">
+                          {missingFields.map((f) => <li key={f}>{f}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              )}
+              <div className="flex justify-end">
+                <Button onClick={handleSubmit} disabled={submitting || hasBlockers} size="lg">
+                  {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  {isSubmitted ? 'Resubmit KYB' : 'Submit KYB for review'}
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

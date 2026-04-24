@@ -867,7 +867,13 @@ export default function VeloxisWebsite() {
           <div>
             <a href="/"><img src={veloxisLogoWhite} alt="Veloxis" className="h-9 w-auto mb-3" /></a>
             <p className="text-[13px] text-white/35 leading-[1.6] mb-3">UK-based cross-border invoice discounting. Advancing 80% of export invoice value within 24 hours for exporters worldwide shipping to UK and EU buyers.</p>
-            <a href="mailto:hello@veloxis.co.uk" className="text-[13px] text-white/25 hover:text-[#5FFFD7] transition-colors">hello@veloxis.co.uk</a>
+            <a href="mailto:hello@veloxis.co.uk" className="block text-[13px] text-white/25 hover:text-[#5FFFD7] transition-colors mb-2">hello@veloxis.co.uk</a>
+            <address className="not-italic text-[12px] text-white/30 leading-[1.6]">
+              1 Emperor Way<br />
+              Exeter Business Park<br />
+              Exeter, EX1 3QS<br />
+              United Kingdom
+            </address>
           </div>
           {[
             { title: "Product", links: [{ l: "How it works", h: "#hiw" }, { l: "Why Veloxis", h: "#why" }, { l: "FAQ", h: "#faq" }] },
