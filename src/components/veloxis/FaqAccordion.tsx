@@ -3,8 +3,8 @@ import { ChevronDown } from "lucide-react";
 
 const FAQS = [
   {
-    q: "What is invoice discounting?",
-    a: "Invoice discounting is trade finance where a financier advances cash against an unpaid invoice. Unlike a loan, there is no debt on your balance sheet. Veloxis purchases your receivable at a discount — you get cash now, we collect from your buyer at maturity. It is fully disclosed: your buyer signs a legal payment undertaking directly with Veloxis before any funds are released.",
+    q: "What is commercial factoring?",
+    a: "Commercial factoring is export trade finance where a Factor purchases the trade receivable created by your shipment. Veloxis is not a lender — we buy the right to your future payment at a discount, so you receive liquidity now and collect from your buyer's bank at maturity. Every transaction is governed by our Triple-Lock framework: independent physical verification of the commodity at source, a formal Assignment of Proceeds under English law backed by a Letter of Credit or Irrevocable Payment Undertaking under UCP 600, and controlled settlement through Virtual IBANs and escrow accounts.",
   },
   {
     q: "Who can use Veloxis?",
@@ -32,7 +32,7 @@ const FAQS = [
   },
   {
     q: "Is Veloxis a lender?",
-    a: "No. Veloxis is an invoice discounting platform — we purchase your receivable at a discount. We are buying an asset, not extending a loan. No debt appears on your balance sheet and there is no loan agreement to service.",
+    a: "No. Veloxis is a Factor in a commercial factoring transaction — we purchase your trade receivable at a discount. We are buying an asset, not extending a loan. No debt appears on your balance sheet and there is no loan agreement to service. The model is self-liquidating: settlement comes directly from the buyer's bank under the Letter of Credit or IPU.",
   },
   {
     q: "What if my buyer does not pay?",
