@@ -294,7 +294,7 @@ const CONTENT: Record<Props["slug"], PageContent> = {
         blocks: [
           {
             type: "p",
-            text: "Veloxis operates as a business-to-business commercial factoring entity that purchases trade receivables from exporters. Commercial factoring of B2B receivables is not a regulated activity under the UK Financial Services and Markets Act 2000 and sits outside the FCA regulatory perimeter. Veloxis Ltd (Company number 15663333) is registered in England and Wales and operates under English law.",
+            text: "Veloxis operates as a business-to-business invoice discounting entity that purchases trade receivables from exporters. Invoice discounting of B2B receivables is not a regulated activity under the UK Financial Services and Markets Act 2000 and sits outside the FCA regulatory perimeter. Veloxis Ltd (Company number 15663333) is registered in England and Wales and operates under English law.",
           },
         ],
       },
