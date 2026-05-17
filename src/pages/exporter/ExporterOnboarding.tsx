@@ -118,6 +118,9 @@ export default function ExporterOnboarding() {
         if (docs) {
           setSofUploaded(docs.some(d => d.document_type === 'source_of_funds_doc'));
           setBankUploaded(docs.some(d => d.document_type === 'bank_statements'));
+          setCacUploaded(docs.some(d => d.document_type === 'cac_certificate'));
+          setDirIdUploaded(docs.some(d => d.document_type === 'director_id'));
+          setNepcUploaded(docs.some(d => d.document_type === 'nepc_certificate'));
         }
       }
       setLoading(false);
