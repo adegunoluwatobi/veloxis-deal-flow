@@ -208,7 +208,7 @@ export default function ApplicationsAdmin({ embedded = false }: ApplicationsAdmi
           .from("exporters")
           .insert({
             company_name: app.company_name,
-            rc_number: "",
+            rc_number: app.rc_number?.trim() || "PENDING",
             entity_type: "limited_company" as any,
             director_name: app.full_name,
             contact_email: app.email,
