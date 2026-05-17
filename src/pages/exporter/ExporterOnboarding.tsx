@@ -369,7 +369,19 @@ export default function ExporterOnboarding() {
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground">RC Number</Label>
-                  <p className="mt-1 text-sm font-medium text-foreground">{form.rc_number || '—'}</p>
+                  {exporter?.rc_number && exporter.rc_number !== 'PENDING'
+                    ? <p className="mt-1 text-sm font-medium text-foreground">{form.rc_number || '—'}</p>
+                    : (
+                      <Input
+                        id="rc_number"
+                        className={`mt-1 ${fieldError('rc_number') ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                        placeholder="e.g. RC123456"
+                        value={form.rc_number}
+                        onChange={(e) => setForm({ ...form, rc_number: e.target.value })}
+                        onBlur={() => markTouched('rc_number')}
+                      />
+                    )}
+                  {fieldError('rc_number') && <p className="text-xs text-destructive">{fieldError('rc_number')}</p>}
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground">Entity Type</Label>
