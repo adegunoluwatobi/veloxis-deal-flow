@@ -264,17 +264,17 @@ export default function GreystarExporterDetail() {
               <div>
                 <div className="flex items-center gap-2">
                   {kycResult.status === 'verified' ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
-                  <span className="font-semibold">KYC Status: {kycResult.label}</span>
+                  <span className="font-semibold">KYB Status: {kycResult.label}</span>
                 </div>
                 <p className="mt-1 text-sm">{kycResult.description}</p>
               </div>
               {canApproveKyc && (
                 <div className="flex shrink-0 gap-2">
                   <Button size="sm" variant="outline" className="text-destructive" onClick={handleRejectKyc}>
-                    <XCircle className="mr-1 h-3.5 w-3.5" /> Reject KYC
+                    <XCircle className="mr-1 h-3.5 w-3.5" /> Reject KYB
                   </Button>
                   <Button size="sm" onClick={handleApproveKyc}>
-                    <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Approve KYC
+                    <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Approve KYB
                   </Button>
                 </div>
               )}
