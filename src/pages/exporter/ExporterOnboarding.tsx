@@ -30,6 +30,11 @@ export default function ExporterOnboarding() {
     director_name: '',
     contact_email: '',
     source_of_funds_statement: '',
+    registered_address_line1: '',
+    registered_address_line2: '',
+    registered_city: '',
+    registered_postcode: '',
+    registered_country: 'Nigeria',
   });
 
   // Compliance document uploads
@@ -37,13 +42,24 @@ export default function ExporterOnboarding() {
   const [sofUploaded, setSofUploaded] = useState(false);
   const [bankFiles, setBankFiles] = useState<File[]>([]);
   const [bankUploaded, setBankUploaded] = useState(false);
+  // KYB document uploads
+  const [cacFile, setCacFile] = useState<File | null>(null);
+  const [cacUploaded, setCacUploaded] = useState(false);
+  const [dirIdFile, setDirIdFile] = useState<File | null>(null);
+  const [dirIdUploaded, setDirIdUploaded] = useState(false);
+  const [nepcFile, setNepcFile] = useState<File | null>(null);
+  const [nepcUploaded, setNepcUploaded] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   // Per-field touched + submit-attempted tracking for inline validation
-  type FieldKey = 'director_name' | 'contact_email';
+  type FieldKey = 'director_name' | 'contact_email' | 'rc_number' | 'registered_address_line1' | 'registered_city' | 'registered_country';
   const [touched, setTouched] = useState<Record<FieldKey, boolean>>({
     director_name: false,
     contact_email: false,
+    rc_number: false,
+    registered_address_line1: false,
+    registered_city: false,
+    registered_country: false,
   });
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const markTouched = (k: FieldKey) => setTouched(p => ({ ...p, [k]: true }));
