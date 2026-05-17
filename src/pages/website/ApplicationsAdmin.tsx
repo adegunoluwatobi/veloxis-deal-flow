@@ -29,6 +29,7 @@ type ExporterApp = {
   id: string;
   full_name: string;
   company_name: string;
+  rc_number: string | null;
   country: string;
   commodity: string;
   buyer_countries: string[];
