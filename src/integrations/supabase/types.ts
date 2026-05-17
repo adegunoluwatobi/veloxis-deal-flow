@@ -916,6 +916,7 @@ export type Database = {
           id: string
           invoice_size: string
           phone: string
+          rc_number: string | null
           shipment_frequency: string
           status: string
         }
@@ -936,6 +937,7 @@ export type Database = {
           id?: string
           invoice_size: string
           phone: string
+          rc_number?: string | null
           shipment_frequency: string
           status?: string
         }
@@ -956,6 +958,7 @@ export type Database = {
           id?: string
           invoice_size?: string
           phone?: string
+          rc_number?: string | null
           shipment_frequency?: string
           status?: string
         }

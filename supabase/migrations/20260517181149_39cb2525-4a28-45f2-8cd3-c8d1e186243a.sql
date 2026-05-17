@@ -1,0 +1,1 @@
+ALTER TABLE public.exporter_applications ADD COLUMN IF NOT EXISTS rc_number text;
