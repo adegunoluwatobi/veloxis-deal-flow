@@ -298,6 +298,13 @@ export default function ExporterApply() {
             <textarea className={`${inputClass("deal_description")} min-h-[80px]`} style={{ background: inputBg }} placeholder="Tell us about your current or upcoming shipment" value={form.deal_description} onChange={e => set("deal_description", e.target.value)} />
           </div>
 
+          {/* Submit error banner */}
+          {submitError && (
+            <div id="apply-submit-error" role="alert" className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-[13px] text-red-200">
+              {submitError}
+            </div>
+          )}
+
           {/* Submit */}
           <button
             onClick={handleSubmit}
