@@ -54,6 +54,7 @@ const shipmentFreqs = ["1–2 per month", "3–5 per month", "6–10 per month",
 interface FormData {
   full_name: string;
   company_name: string;
+  rc_number: string;
   country: string;
   commodity: string;
   buyer_countries: string[];
@@ -67,7 +68,7 @@ interface FormData {
 
 export default function ExporterApply() {
   const [form, setForm] = useState<FormData>({
-    full_name: "", company_name: "", country: "", commodity: "",
+    full_name: "", company_name: "", rc_number: "", country: "", commodity: "",
     buyer_countries: [], invoice_size: "", shipment_frequency: "",
     email: "", phone_iso: "NG", phone: "", deal_description: "",
   });
@@ -75,6 +76,7 @@ export default function ExporterApply() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [resultMessage, setResultMessage] = useState("");
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const set = (key: keyof FormData, value: string | string[]) => {
     setForm(p => ({ ...p, [key]: value }));
