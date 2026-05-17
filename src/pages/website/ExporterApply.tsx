@@ -89,7 +89,7 @@ export default function ExporterApply() {
   };
 
   const validate = () => {
-    const required: (keyof FormData)[] = ["full_name", "company_name", "country", "commodity", "invoice_size", "shipment_frequency", "email", "phone"];
+    const required: (keyof FormData)[] = ["full_name", "company_name", "rc_number", "country", "commodity", "invoice_size", "shipment_frequency", "email", "phone"];
     const errs: Record<string, boolean> = {};
     required.forEach(k => { if (!form[k] || (typeof form[k] === "string" && !(form[k] as string).trim())) errs[k] = true; });
     if (form.buyer_countries.length === 0) errs.buyer_countries = true;
@@ -103,26 +103,23 @@ export default function ExporterApply() {
   };
 
   const handleSubmit = async () => {
+    setSubmitError(null);
     if (!validate()) return;
     setSubmitting(true);
     try {
-      // Look up active partners covering this country via a public security-definer RPC.
-      // The exporter form is unauthenticated, so it cannot read partner_organisations directly.
       const { data: activePartners, error: lookupError } = await supabase
         .rpc("lookup_active_partners_for_country" as any, { p_country: form.country });
 
       if (lookupError) console.error("Partner lookup failed", lookupError);
 
       const matches = (activePartners as { name: string }[] | null) || [];
-
-      // Auto-assign only when exactly one active partner covers the country.
-      // Multiple matches => leave unassigned for admin to choose.
       const autoAssigned = matches.length === 1 ? matches[0].name : null;
       const status = matches.length >= 1 ? "routed" : "pending_expansion";
 
       const { error } = await supabase.from("exporter_applications" as any).insert({
         full_name: form.full_name.trim(),
         company_name: form.company_name.trim(),
+        rc_number: form.rc_number.trim(),
         country: form.country,
         commodity: form.commodity.trim(),
         buyer_countries: form.buyer_countries,
@@ -151,8 +148,12 @@ export default function ExporterApply() {
         );
       }
       setSubmitted(true);
-    } catch (err) {
-      console.error(err);
+    } catch (err: unknown) {
+      console.error("Application submit failed", err);
+      const msg = err instanceof Error ? err.message : "Submission failed. Please try again or email support@veloxis.co.uk.";
+      setSubmitError(msg);
+      const banner = document.getElementById("apply-submit-error");
+      banner?.scrollIntoView({ behavior: "smooth", block: "center" });
     } finally {
       setSubmitting(false);
     }
