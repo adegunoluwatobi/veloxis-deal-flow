@@ -134,7 +134,7 @@ export function computeKycStatus(
 
   if (missing.length > 0 || !addressComplete) {
     const parts = [
-      ...missing.map((m) => m.type === 'cac_certificate' ? 'CAC Certificate' : m.type === 'director_id' ? 'Director ID' : 'Export Licence'),
+      ...missing.map((m) => docLabel(m.type)),
       ...(!addressComplete ? [ADDRESS_LABEL] : []),
     ];
     return {
@@ -154,8 +154,8 @@ export function computeKycStatus(
     if (!adminApprovedAt) {
       return {
         status: 'awaiting_admin_approval',
-        label: 'Pending KYC Approval',
-        badgeLabel: 'Pending KYC Approval',
+        label: 'Pending KYB Approval',
+        badgeLabel: 'Pending KYB Approval',
         description: 'Your documents are verified and awaiting final sign-off by Veloxis.',
         color: 'bg-primary/10 text-primary',
         borderColor: 'border-primary/30 bg-primary/5',
@@ -165,7 +165,7 @@ export function computeKycStatus(
     return {
       status: 'verified',
       label: 'Complete',
-      badgeLabel: 'KYC Complete',
+      badgeLabel: 'KYB Complete',
       description: 'All mandatory documents verified and approved by Veloxis.',
       color: 'bg-success/10 text-success',
       borderColor: 'border-success/30 bg-success/5',
