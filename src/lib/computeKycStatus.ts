@@ -73,6 +73,12 @@ export function computeKycStatus(
     };
   }
 
+  const docLabel = (t: string) =>
+    t === 'cac_certificate' ? 'CAC Certificate'
+      : t === 'director_id' ? 'Director ID'
+      : t === 'nepc_certificate' ? 'Export Licence'
+      : t;
+
   const byType = new Map<string, KycDocumentLike>();
 
   for (const doc of activeDocs) {
