@@ -54,6 +54,7 @@ const shipmentFreqs = ["1–2 per month", "3–5 per month", "6–10 per month",
 interface FormData {
   full_name: string;
   company_name: string;
+  rc_number: string;
   country: string;
   commodity: string;
   buyer_countries: string[];
@@ -67,7 +68,7 @@ interface FormData {
 
 export default function ExporterApply() {
   const [form, setForm] = useState<FormData>({
-    full_name: "", company_name: "", country: "", commodity: "",
+    full_name: "", company_name: "", rc_number: "", country: "", commodity: "",
     buyer_countries: [], invoice_size: "", shipment_frequency: "",
     email: "", phone_iso: "NG", phone: "", deal_description: "",
   });
@@ -75,6 +76,7 @@ export default function ExporterApply() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [resultMessage, setResultMessage] = useState("");
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const set = (key: keyof FormData, value: string | string[]) => {
     setForm(p => ({ ...p, [key]: value }));
@@ -87,7 +89,7 @@ export default function ExporterApply() {
   };
 
   const validate = () => {
-    const required: (keyof FormData)[] = ["full_name", "company_name", "country", "commodity", "invoice_size", "shipment_frequency", "email", "phone"];
+    const required: (keyof FormData)[] = ["full_name", "company_name", "rc_number", "country", "commodity", "invoice_size", "shipment_frequency", "email", "phone"];
     const errs: Record<string, boolean> = {};
     required.forEach(k => { if (!form[k] || (typeof form[k] === "string" && !(form[k] as string).trim())) errs[k] = true; });
     if (form.buyer_countries.length === 0) errs.buyer_countries = true;
@@ -101,26 +103,23 @@ export default function ExporterApply() {
   };
 
   const handleSubmit = async () => {
+    setSubmitError(null);
     if (!validate()) return;
     setSubmitting(true);
     try {
-      // Look up active partners covering this country via a public security-definer RPC.
-      // The exporter form is unauthenticated, so it cannot read partner_organisations directly.
       const { data: activePartners, error: lookupError } = await supabase
         .rpc("lookup_active_partners_for_country" as any, { p_country: form.country });
 
       if (lookupError) console.error("Partner lookup failed", lookupError);
 
       const matches = (activePartners as { name: string }[] | null) || [];
-
-      // Auto-assign only when exactly one active partner covers the country.
-      // Multiple matches => leave unassigned for admin to choose.
       const autoAssigned = matches.length === 1 ? matches[0].name : null;
       const status = matches.length >= 1 ? "routed" : "pending_expansion";
 
       const { error } = await supabase.from("exporter_applications" as any).insert({
         full_name: form.full_name.trim(),
         company_name: form.company_name.trim(),
+        rc_number: form.rc_number.trim(),
         country: form.country,
         commodity: form.commodity.trim(),
         buyer_countries: form.buyer_countries,
@@ -149,8 +148,12 @@ export default function ExporterApply() {
         );
       }
       setSubmitted(true);
-    } catch (err) {
-      console.error(err);
+    } catch (err: unknown) {
+      console.error("Application submit failed", err);
+      const msg = err instanceof Error ? err.message : "Submission failed. Please try again or email support@veloxis.co.uk.";
+      setSubmitError(msg);
+      const banner = document.getElementById("apply-submit-error");
+      banner?.scrollIntoView({ behavior: "smooth", block: "center" });
     } finally {
       setSubmitting(false);
     }
@@ -214,6 +217,13 @@ export default function ExporterApply() {
           <div data-field-error={errors.company_name || undefined}>
             <label className="block text-[12px] font-medium text-white/50 mb-1.5">Company name *</label>
             <input className={inputClass("company_name")} style={{ background: inputBg }} placeholder="Your company name" value={form.company_name} onChange={e => set("company_name", e.target.value)} />
+          </div>
+
+          {/* RC Number */}
+          <div data-field-error={errors.rc_number || undefined}>
+            <label className="block text-[12px] font-medium text-white/50 mb-1.5">RC Number *</label>
+            <input className={inputClass("rc_number")} style={{ background: inputBg }} placeholder="e.g. RC123456" value={form.rc_number} onChange={e => set("rc_number", e.target.value)} />
+            <p className="text-[11px] text-white/30 mt-1">Your company registration number (CAC / Companies House / equivalent).</p>
           </div>
 
           {/* Country */}
@@ -287,6 +297,13 @@ export default function ExporterApply() {
             <label className="block text-[12px] font-medium text-white/50 mb-1.5">Brief deal description (optional)</label>
             <textarea className={`${inputClass("deal_description")} min-h-[80px]`} style={{ background: inputBg }} placeholder="Tell us about your current or upcoming shipment" value={form.deal_description} onChange={e => set("deal_description", e.target.value)} />
           </div>
+
+          {/* Submit error banner */}
+          {submitError && (
+            <div id="apply-submit-error" role="alert" className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-[13px] text-red-200">
+              {submitError}
+            </div>
+          )}
 
           {/* Submit */}
           <button

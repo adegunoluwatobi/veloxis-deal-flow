@@ -30,6 +30,11 @@ export default function ExporterOnboarding() {
     director_name: '',
     contact_email: '',
     source_of_funds_statement: '',
+    registered_address_line1: '',
+    registered_address_line2: '',
+    registered_city: '',
+    registered_postcode: '',
+    registered_country: 'Nigeria',
   });
 
   // Compliance document uploads
@@ -37,13 +42,24 @@ export default function ExporterOnboarding() {
   const [sofUploaded, setSofUploaded] = useState(false);
   const [bankFiles, setBankFiles] = useState<File[]>([]);
   const [bankUploaded, setBankUploaded] = useState(false);
+  // KYB document uploads
+  const [cacFile, setCacFile] = useState<File | null>(null);
+  const [cacUploaded, setCacUploaded] = useState(false);
+  const [dirIdFile, setDirIdFile] = useState<File | null>(null);
+  const [dirIdUploaded, setDirIdUploaded] = useState(false);
+  const [nepcFile, setNepcFile] = useState<File | null>(null);
+  const [nepcUploaded, setNepcUploaded] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   // Per-field touched + submit-attempted tracking for inline validation
-  type FieldKey = 'director_name' | 'contact_email';
+  type FieldKey = 'director_name' | 'contact_email' | 'rc_number' | 'registered_address_line1' | 'registered_city' | 'registered_country';
   const [touched, setTouched] = useState<Record<FieldKey, boolean>>({
     director_name: false,
     contact_email: false,
+    rc_number: false,
+    registered_address_line1: false,
+    registered_city: false,
+    registered_country: false,
   });
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const markTouched = (k: FieldKey) => setTouched(p => ({ ...p, [k]: true }));
@@ -58,6 +74,14 @@ export default function ExporterOnboarding() {
         if (!form.contact_email.trim()) return 'Contact email is required';
         if (!isValidEmail(form.contact_email)) return 'Please enter a valid email address';
         return null;
+      case 'rc_number':
+        return form.rc_number.trim() ? null : 'RC Number is required';
+      case 'registered_address_line1':
+        return form.registered_address_line1.trim() ? null : 'Registered address is required';
+      case 'registered_city':
+        return form.registered_city.trim() ? null : 'City is required';
+      case 'registered_country':
+        return form.registered_country.trim() ? null : 'Country is required';
     }
   };
 
@@ -78,6 +102,11 @@ export default function ExporterOnboarding() {
           director_name: data.director_name || '',
           contact_email: data.contact_email || user.email || '',
           source_of_funds_statement: (data as any).source_of_funds_statement || '',
+          registered_address_line1: (data as any).registered_address_line1 || '',
+          registered_address_line2: (data as any).registered_address_line2 || '',
+          registered_city: (data as any).registered_city || '',
+          registered_postcode: (data as any).registered_postcode || '',
+          registered_country: (data as any).registered_country || 'Nigeria',
         });
 
         // Check if compliance docs already uploaded
@@ -89,6 +118,9 @@ export default function ExporterOnboarding() {
         if (docs) {
           setSofUploaded(docs.some(d => d.document_type === 'source_of_funds_doc'));
           setBankUploaded(docs.some(d => d.document_type === 'bank_statements'));
+          setCacUploaded(docs.some(d => d.document_type === 'cac_certificate'));
+          setDirIdUploaded(docs.some(d => d.document_type === 'director_id'));
+          setNepcUploaded(docs.some(d => d.document_type === 'nepc_certificate'));
         }
       }
       setLoading(false);
@@ -192,27 +224,43 @@ export default function ExporterOnboarding() {
     return null;
   }
 
-  const fieldsValid = form.director_name.trim() && form.contact_email.trim() && isValidEmail(form.contact_email);
-  const docsValid = sofUploaded && bankUploaded;
+  const fieldsValid =
+    form.director_name.trim() &&
+    form.contact_email.trim() &&
+    isValidEmail(form.contact_email) &&
+    form.rc_number.trim() &&
+    form.registered_address_line1.trim() &&
+    form.registered_city.trim() &&
+    form.registered_country.trim();
+  const docsValid = sofUploaded && bankUploaded && cacUploaded && dirIdUploaded && nepcUploaded;
   const isValid = fieldsValid && docsValid;
+
+  const missingDocLabels = () => {
+    const m: string[] = [];
+    if (!cacUploaded) m.push('CAC Certificate');
+    if (!dirIdUploaded) m.push('Director ID');
+    if (!nepcUploaded) m.push('Export Licence');
+    if (!sofUploaded) m.push('Source of Funds statement');
+    if (!bankUploaded) m.push('6 months bank statements');
+    return m;
+  };
 
   const handleSubmit = async () => {
     if (!user || !exporter) return;
     setSubmitAttempted(true);
     if (!fieldsValid) {
-      setTouched({ director_name: true, contact_email: true });
+      setTouched({
+        director_name: true, contact_email: true, rc_number: true,
+        registered_address_line1: true, registered_city: true, registered_country: true,
+      });
       toast({ title: 'Missing details', description: 'Please fix the highlighted fields before submitting.', variant: 'destructive' });
-      const order: FieldKey[] = ['director_name', 'contact_email'];
+      const order: FieldKey[] = ['rc_number', 'director_name', 'contact_email', 'registered_address_line1', 'registered_city', 'registered_country'];
       const firstBad = order.find(k => !!fieldError(k) || !(form as any)[k]?.trim?.());
       if (firstBad) document.getElementById(firstBad)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
     if (!docsValid) {
-      toast({
-        title: 'Required documents missing',
-        description: `Please upload ${!sofUploaded ? 'Source of Funds statement' : ''}${!sofUploaded && !bankUploaded ? ' and ' : ''}${!bankUploaded ? '6 months bank statements' : ''} before submitting.`,
-        variant: 'destructive',
-      });
+      toast({ title: 'Required documents missing', description: `Please upload: ${missingDocLabels().join(', ')}.`, variant: 'destructive' });
       return;
     }
     setSubmitting(true);
@@ -226,6 +274,11 @@ export default function ExporterOnboarding() {
           director_name: form.director_name.trim(),
           contact_email: form.contact_email.trim(),
           source_of_funds_statement: form.source_of_funds_statement.trim() || null,
+          registered_address_line1: form.registered_address_line1.trim(),
+          registered_address_line2: form.registered_address_line2.trim() || null,
+          registered_city: form.registered_city.trim(),
+          registered_postcode: form.registered_postcode.trim() || null,
+          registered_country: form.registered_country.trim(),
           onboarding_status: 'onboarding_submitted' as any,
         } as any)
         .eq('id', exporter.id);
@@ -316,7 +369,19 @@ export default function ExporterOnboarding() {
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground">RC Number</Label>
-                  <p className="mt-1 text-sm font-medium text-foreground">{form.rc_number || '—'}</p>
+                  {exporter?.rc_number && exporter.rc_number !== 'PENDING'
+                    ? <p className="mt-1 text-sm font-medium text-foreground">{form.rc_number || '—'}</p>
+                    : (
+                      <Input
+                        id="rc_number"
+                        className={`mt-1 ${fieldError('rc_number') ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                        placeholder="e.g. RC123456"
+                        value={form.rc_number}
+                        onChange={(e) => setForm({ ...form, rc_number: e.target.value })}
+                        onBlur={() => markTouched('rc_number')}
+                      />
+                    )}
+                  {fieldError('rc_number') && <p className="text-xs text-destructive">{fieldError('rc_number')}</p>}
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground">Entity Type</Label>
