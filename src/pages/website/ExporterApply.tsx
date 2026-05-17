@@ -219,6 +219,13 @@ export default function ExporterApply() {
             <input className={inputClass("company_name")} style={{ background: inputBg }} placeholder="Your company name" value={form.company_name} onChange={e => set("company_name", e.target.value)} />
           </div>
 
+          {/* RC Number */}
+          <div data-field-error={errors.rc_number || undefined}>
+            <label className="block text-[12px] font-medium text-white/50 mb-1.5">RC Number *</label>
+            <input className={inputClass("rc_number")} style={{ background: inputBg }} placeholder="e.g. RC123456" value={form.rc_number} onChange={e => set("rc_number", e.target.value)} />
+            <p className="text-[11px] text-white/30 mt-1">Your company registration number (CAC / Companies House / equivalent).</p>
+          </div>
+
           {/* Country */}
           <div data-field-error={errors.country || undefined}>
             <label className="block text-[12px] font-medium text-white/50 mb-1.5">Country of operation *</label>
