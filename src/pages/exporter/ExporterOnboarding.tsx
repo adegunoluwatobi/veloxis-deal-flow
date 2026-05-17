@@ -74,6 +74,14 @@ export default function ExporterOnboarding() {
         if (!form.contact_email.trim()) return 'Contact email is required';
         if (!isValidEmail(form.contact_email)) return 'Please enter a valid email address';
         return null;
+      case 'rc_number':
+        return form.rc_number.trim() ? null : 'RC Number is required';
+      case 'registered_address_line1':
+        return form.registered_address_line1.trim() ? null : 'Registered address is required';
+      case 'registered_city':
+        return form.registered_city.trim() ? null : 'City is required';
+      case 'registered_country':
+        return form.registered_country.trim() ? null : 'Country is required';
     }
   };
 
@@ -94,6 +102,11 @@ export default function ExporterOnboarding() {
           director_name: data.director_name || '',
           contact_email: data.contact_email || user.email || '',
           source_of_funds_statement: (data as any).source_of_funds_statement || '',
+          registered_address_line1: (data as any).registered_address_line1 || '',
+          registered_address_line2: (data as any).registered_address_line2 || '',
+          registered_city: (data as any).registered_city || '',
+          registered_postcode: (data as any).registered_postcode || '',
+          registered_country: (data as any).registered_country || 'Nigeria',
         });
 
         // Check if compliance docs already uploaded
