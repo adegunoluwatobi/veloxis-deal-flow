@@ -224,27 +224,43 @@ export default function ExporterOnboarding() {
     return null;
   }
 
-  const fieldsValid = form.director_name.trim() && form.contact_email.trim() && isValidEmail(form.contact_email);
-  const docsValid = sofUploaded && bankUploaded;
+  const fieldsValid =
+    form.director_name.trim() &&
+    form.contact_email.trim() &&
+    isValidEmail(form.contact_email) &&
+    form.rc_number.trim() &&
+    form.registered_address_line1.trim() &&
+    form.registered_city.trim() &&
+    form.registered_country.trim();
+  const docsValid = sofUploaded && bankUploaded && cacUploaded && dirIdUploaded && nepcUploaded;
   const isValid = fieldsValid && docsValid;
+
+  const missingDocLabels = () => {
+    const m: string[] = [];
+    if (!cacUploaded) m.push('CAC Certificate');
+    if (!dirIdUploaded) m.push('Director ID');
+    if (!nepcUploaded) m.push('Export Licence');
+    if (!sofUploaded) m.push('Source of Funds statement');
+    if (!bankUploaded) m.push('6 months bank statements');
+    return m;
+  };
 
   const handleSubmit = async () => {
     if (!user || !exporter) return;
     setSubmitAttempted(true);
     if (!fieldsValid) {
-      setTouched({ director_name: true, contact_email: true });
+      setTouched({
+        director_name: true, contact_email: true, rc_number: true,
+        registered_address_line1: true, registered_city: true, registered_country: true,
+      });
       toast({ title: 'Missing details', description: 'Please fix the highlighted fields before submitting.', variant: 'destructive' });
-      const order: FieldKey[] = ['director_name', 'contact_email'];
+      const order: FieldKey[] = ['rc_number', 'director_name', 'contact_email', 'registered_address_line1', 'registered_city', 'registered_country'];
       const firstBad = order.find(k => !!fieldError(k) || !(form as any)[k]?.trim?.());
       if (firstBad) document.getElementById(firstBad)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
     if (!docsValid) {
-      toast({
-        title: 'Required documents missing',
-        description: `Please upload ${!sofUploaded ? 'Source of Funds statement' : ''}${!sofUploaded && !bankUploaded ? ' and ' : ''}${!bankUploaded ? '6 months bank statements' : ''} before submitting.`,
-        variant: 'destructive',
-      });
+      toast({ title: 'Required documents missing', description: `Please upload: ${missingDocLabels().join(', ')}.`, variant: 'destructive' });
       return;
     }
     setSubmitting(true);
@@ -258,6 +274,11 @@ export default function ExporterOnboarding() {
           director_name: form.director_name.trim(),
           contact_email: form.contact_email.trim(),
           source_of_funds_statement: form.source_of_funds_statement.trim() || null,
+          registered_address_line1: form.registered_address_line1.trim(),
+          registered_address_line2: form.registered_address_line2.trim() || null,
+          registered_city: form.registered_city.trim(),
+          registered_postcode: form.registered_postcode.trim() || null,
+          registered_country: form.registered_country.trim(),
           onboarding_status: 'onboarding_submitted' as any,
         } as any)
         .eq('id', exporter.id);
