@@ -42,16 +42,21 @@ export default function NbccRedirect() {
     'w-full rounded-md bg-white/5 border border-white/15 px-3 py-2.5 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-[#3DE8B8] focus:border-transparent transition';
 
   return (
-    <div className="w-full">
+    <div className="w-full relative">
       <Helmet>
         <title>Get Early Access · Veloxis</title>
         <meta name="robots" content="noindex" />
       </Helmet>
 
-      <div className="w-full bg-white py-12 sm:py-20 px-4">
+      {/* Homepage in background */}
+      <div aria-hidden className="pointer-events-none select-none">
+        <VeloxisHome />
+      </div>
 
+      {/* Modal overlay */}
+      <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-8 overflow-y-auto bg-black/55 backdrop-blur-sm">
       <section
-        className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-3xl px-4 sm:px-10 py-14 sm:py-20 flex items-center justify-center"
+        className="relative my-auto w-full max-w-md overflow-hidden rounded-2xl px-4 sm:px-6 py-6 sm:py-8 flex items-center justify-center"
         style={{
           background:
             'radial-gradient(ellipse at top left, #0E5A47 0%, #0B3D2E 50%, #07231B 100%)',
