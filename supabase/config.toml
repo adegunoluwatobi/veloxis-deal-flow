@@ -17,3 +17,13 @@ project_id = "mesvzeqhqdokyysyfknn"
     verify_jwt = false
   [functions.verify-buyer-companies-house]
     verify_jwt = true
+  [functions.smileid-callback]
+    verify_jwt = false
+  [functions.smileid-test]
+    verify_jwt = true
+  [functions.smileid-kyb]
+    verify_jwt = true
+  [functions.smileid-kyc]
+    verify_jwt = true
+  [functions.smileid-review]
+    verify_jwt = true

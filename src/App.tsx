@@ -41,6 +41,8 @@ import GreystarReviewQueue from "@/pages/greystar/GreystarReviewQueue";
 import GreystarSettings from "@/pages/greystar/GreystarSettings";
 import GreystarDeals from "@/pages/greystar/GreystarDeals";
 import GreystarDealDetail from "@/pages/greystar/GreystarDealDetail";
+import GreystarVerifications from "@/pages/greystar/GreystarVerifications";
+import AdminVerifications from "@/pages/admin/AdminVerifications";
 
 // Exporter portal pages
 import ExporterDashboardPage from "@/pages/exporter/ExporterDashboard";
@@ -143,6 +145,7 @@ const App = () => (
             <Route path="/greystar/deals" element={<GreystarRoute><GreystarDeals /></GreystarRoute>} />
             <Route path="/greystar/deals/:id" element={<GreystarRoute><GreystarDealDetail /></GreystarRoute>} />
             <Route path="/greystar/review" element={<GreystarRoute><GreystarReviewQueue /></GreystarRoute>} />
+            <Route path="/greystar/verifications" element={<GreystarRoute><GreystarVerifications /></GreystarRoute>} />
             <Route path="/greystar/settings" element={<GreystarRoute><GreystarSettings /></GreystarRoute>} />
             {/* Registration Pipeline is admin-only — partners are redirected to their Applications view */}
             <Route path="/greystar/pipeline" element={<Navigate to="/greystar/deals" replace />} />
@@ -174,6 +177,7 @@ const App = () => (
             <Route path="/admin/partners" element={<AdminLayout><PartnersPage /></AdminLayout>} />
             <Route path="/admin/partners/:id" element={<AdminLayout><PartnerDetail /></AdminLayout>} />
             <Route path="/admin/partner-kyb" element={<AdminLayout><AdminPartnerKybQueue /></AdminLayout>} />
+            <Route path="/admin/verifications" element={<AdminLayout><AdminVerifications /></AdminLayout>} />
 
             {/* Partner KYB onboarding gate (no GreystarLayout — full-screen form) */}
             <Route path="/partner-kyb" element={
