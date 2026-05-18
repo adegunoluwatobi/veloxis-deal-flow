@@ -114,6 +114,8 @@ export default function PricingSettings() {
         const payload = {
           term_days: parseInt(t.term_days),
           discount_fee_pct: parseFloat(t.discount_fee_pct),
+          platform_fee_pct: parseFloat(t.platform_fee_pct || '0'),
+          late_penalty_rate_pct_daily: parseFloat(t.late_penalty_rate_pct_daily || '0'),
           label: t.label || `${t.term_days} days`,
           sort_order: t.sort_order,
           updated_by: user.id,
