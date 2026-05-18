@@ -71,3 +71,24 @@ export function normalizeKycResult(resp: any): { provider_status: string; intern
   if (code) return { provider_status: "action_required", internal_status: "manual_review" };
   return { provider_status: "provider_pending", internal_status: "submitted" };
 }
+
+// AML / PEP / Sanctions / Adverse Media screening result.
+// Smile ID returns Actions.Politically_Exposed_Person, Actions.Sanction, Actions.Adverse_Media
+// plus a hits array. Any "Match" or non-empty hits -> manual review.
+export function normalizeAmlResult(resp: any): { provider_status: string; internal_status: string; hits_count: number; risk_band: string } {
+  const actions = resp?.Actions ?? resp?.data?.Actions ?? {};
+  const hits = resp?.hits ?? resp?.Hits ?? resp?.data?.hits ?? [];
+  const hitsCount = Array.isArray(hits) ? hits.length : 0;
+  const flagged =
+    actions?.Politically_Exposed_Person === "Match" ||
+    actions?.Sanction === "Match" ||
+    actions?.Adverse_Media === "Match" ||
+    hitsCount > 0;
+  const code = String(resp?.ResultCode ?? "");
+  if (code && code.startsWith("11")) return { provider_status: "provider_failed", internal_status: "failed", hits_count: hitsCount, risk_band: "unknown" };
+  if (flagged) return { provider_status: "action_required", internal_status: "manual_review", hits_count: hitsCount, risk_band: hitsCount > 0 ? "high" : "medium" };
+  if (code === "1014" || resp?.success === true || actions?.PEP === "No Match") {
+    return { provider_status: "provider_verified", internal_status: "verified", hits_count: 0, risk_band: "low" };
+  }
+  return { provider_status: "provider_pending", internal_status: "submitted", hits_count: hitsCount, risk_band: "unknown" };
+}
