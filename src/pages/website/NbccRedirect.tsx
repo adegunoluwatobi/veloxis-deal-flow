@@ -25,7 +25,7 @@ export default function NbccRedirect() {
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     if (!emailRegex.test(email.trim())) {
-      setError('Please enter a valid email address (e.g. name@company.com).');
+      setError('Please enter a valid email address.');
       return;
     }
     setSubmitting(true);
