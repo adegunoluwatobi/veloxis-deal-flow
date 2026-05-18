@@ -192,6 +192,21 @@ export default function ExporterOnboarding() {
     }
   };
 
+  const handleUploadKyb = async (file: File | null, docType: ExporterDocumentType, setFile: (f: File | null) => void, setDone: (v: boolean) => void, label: string) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      await uploadComplianceDoc(file, docType);
+      setFile(null);
+      setDone(true);
+      toast({ title: `${label} uploaded` });
+    } catch (err: unknown) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Upload failed', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
