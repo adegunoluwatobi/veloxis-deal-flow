@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react';
 import { Helmet } from 'react-helmet';
 import { supabase } from '@/integrations/supabase/client';
 import veloxisLogoWhite from '@/assets/veloxis-logo-white.png';
+import VeloxisHome from '@/pages/website/VeloxisHome';
 
 const REDIRECT_URL = '/?utm_source=nbcc&utm_medium=print&utm_campaign=magazine_may2026';
 
