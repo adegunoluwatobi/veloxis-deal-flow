@@ -58,6 +58,7 @@ import PartnerApply from "@/pages/website/PartnerApply";
 import ApplicationsAdmin from "@/pages/website/ApplicationsAdmin";
 import Unsubscribe from "@/pages/website/Unsubscribe";
 import NbccRedirect from "@/pages/website/NbccRedirect";
+import MarketingLeads from "@/pages/MarketingLeads";
 
 // Account pages
 import AccountSettings from "@/pages/account/AccountSettings";
@@ -168,6 +169,7 @@ const App = () => (
             <Route path="/greystar/account" element={<GreystarRoute><AccountSettings /></GreystarRoute>} />
             <Route path="/admin/settings" element={<AdminLayout><SettingsPage /></AdminLayout>} />
             <Route path="/admin/pricing" element={<AdminLayout><PricingSettings /></AdminLayout>} />
+            <Route path="/admin/marketing" element={<AdminLayout><MarketingLeads /></AdminLayout>} />
             <Route path="/admin/capital" element={<AdminLayout><CapitalPool /></AdminLayout>} />
             <Route path="/admin/partners" element={<AdminLayout><PartnersPage /></AdminLayout>} />
             <Route path="/admin/partners/:id" element={<AdminLayout><PartnerDetail /></AdminLayout>} />
