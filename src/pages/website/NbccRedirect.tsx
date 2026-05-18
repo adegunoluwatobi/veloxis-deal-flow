@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react';
 import { Helmet } from 'react-helmet';
 import { supabase } from '@/integrations/supabase/client';
 import veloxisLogoWhite from '@/assets/veloxis-logo-white.png';
+import VeloxisHome from '@/pages/website/VeloxisHome';
 
 const REDIRECT_URL = '/?utm_source=nbcc&utm_medium=print&utm_campaign=magazine_may2026';
 
@@ -41,11 +42,13 @@ export default function NbccRedirect() {
     'w-full rounded-md bg-white/5 border border-white/15 px-3 py-2.5 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-[#3DE8B8] focus:border-transparent transition';
 
   return (
-    <div className="w-full bg-white py-10 sm:py-16 px-4">
+    <div className="w-full">
       <Helmet>
         <title>Get Early Access · Veloxis</title>
         <meta name="robots" content="noindex" />
       </Helmet>
+
+      <div className="w-full bg-white py-12 sm:py-20 px-4">
 
       <section
         className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-3xl px-4 sm:px-10 py-14 sm:py-20 flex items-center justify-center"
@@ -180,6 +183,9 @@ export default function NbccRedirect() {
           </p>
         </div>
       </section>
+      </div>
+
+      <VeloxisHome />
     </div>
   );
 }
