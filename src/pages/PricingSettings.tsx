@@ -45,6 +45,9 @@ export default function PricingSettings() {
     },
   });
 
+  const [form, setForm] = useState<Record<string, string>>({});
+
+
   // Discount fee tiers (e.g. 30d/60d/90d)
   type TierRow = { id?: string; term_days: string; discount_fee_pct: string; label: string; sort_order: number; _dirty?: boolean; _new?: boolean };
   const [tiers, setTiers] = useState<TierRow[]>([]);
