@@ -143,9 +143,6 @@ export default function PricingSettings() {
     if (!config) return;
     setForm({
       advance_rate_pct: String(config.advance_rate_pct),
-      platform_fee_pct: String(config.platform_fee_pct),
-      discount_fee_pct_monthly: String(config.discount_fee_pct_monthly),
-      late_penalty_rate_pct_daily: String(config.late_penalty_rate_pct_daily),
       min_payment_terms_days: String(config.min_payment_terms_days),
       max_payment_terms_days: String(config.max_payment_terms_days),
     });
@@ -156,9 +153,6 @@ export default function PricingSettings() {
 
   const FIELD_LABELS: Record<string, string> = {
     advance_rate_pct: 'Advance Rate %',
-    platform_fee_pct: 'Platform Fee % (one-off)',
-    discount_fee_pct_monthly: 'Discount Fee % (per month)',
-    late_penalty_rate_pct_daily: 'Late Penalty Rate % (per day)',
     min_payment_terms_days: 'Minimum Payment Terms (days)',
     max_payment_terms_days: 'Maximum Payment Terms (days)',
   };
