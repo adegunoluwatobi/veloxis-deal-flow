@@ -156,6 +156,11 @@ export default function UboDeclarationForm({ exporterId, readOnly = false }: Pro
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {locked && !readOnly && (
+          <div className="rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground flex items-center gap-2">
+            <Lock className="h-3.5 w-3.5" /> UBO declarations are locked after saving. Contact support to make changes.
+          </div>
+        )}
         {ubos.map((ubo, i) => (
           <div key={i} className="rounded-lg border border-border p-4 space-y-3">
             <div className="flex items-center justify-between">
