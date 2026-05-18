@@ -45,6 +45,7 @@ export default function UboDeclarationForm({ exporterId, readOnly = false }: Pro
   const [ubos, setUbos] = useState<UboFormEntry[]>([]);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [locked, setLocked] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -62,6 +63,7 @@ export default function UboDeclarationForm({ exporterId, readOnly = false }: Pro
           residential_address: u.residential_address,
           ownership_percentage: String(u.ownership_percentage),
         })));
+        setLocked(true);
       } else {
         setUbos([{ ...EMPTY_UBO }]);
       }
