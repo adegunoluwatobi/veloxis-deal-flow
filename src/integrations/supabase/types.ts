@@ -1889,6 +1889,8 @@ export type Database = {
           discount_fee_pct: number
           id: string
           label: string | null
+          late_penalty_rate_pct_daily: number
+          platform_fee_pct: number
           sort_order: number
           term_days: number
           updated_at: string
@@ -1899,6 +1901,8 @@ export type Database = {
           discount_fee_pct: number
           id?: string
           label?: string | null
+          late_penalty_rate_pct_daily?: number
+          platform_fee_pct?: number
           sort_order?: number
           term_days: number
           updated_at?: string
@@ -1909,6 +1913,8 @@ export type Database = {
           discount_fee_pct?: number
           id?: string
           label?: string | null
+          late_penalty_rate_pct_daily?: number
+          platform_fee_pct?: number
           sort_order?: number
           term_days?: number
           updated_at?: string
