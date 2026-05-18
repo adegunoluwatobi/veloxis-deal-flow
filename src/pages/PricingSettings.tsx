@@ -229,54 +229,6 @@ export default function PricingSettings() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Global Rates</CardTitle>
-          <CardDescription>These rates apply to all new applications on the platform. Only Super Admins can edit them.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <Skeleton className="h-40" />
-          ) : (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Object.entries(FIELD_LABELS).map(([key, label]) => (
-                  <div key={key} className="space-y-2">
-                    <Label htmlFor={`pricing-${key}`} className="text-sm">{label}</Label>
-                    <Input
-                      id={`pricing-${key}`}
-                      type="number"
-                      step={key.includes('days') ? '1' : '0.001'}
-                      min="0"
-                      value={form[key] ?? ''}
-                      onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              {parseInt(form.max_payment_terms_days) > 60 && (
-                <div className="flex items-start gap-2 rounded-md border border-[hsl(30,90%,50%)]/40 bg-[hsl(30,90%,50%)]/10 p-3">
-                  <AlertTriangle className="h-4 w-4 text-[hsl(30,90%,50%)] shrink-0 mt-0.5" />
-                  <p className="text-sm text-[hsl(30,90%,50%)]">Setting maximum terms above 60 days increases platform risk exposure.</p>
-                </div>
-              )}
-
-              <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/5 p-4">
-                <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
-                <p className="text-sm text-muted-foreground">
-                  Changing these rates will apply to all new applications going forward. Existing approved deals will not be affected.
-                </p>
-              </div>
-
-              <Button onClick={handleSave} disabled={saving} className="gap-2">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                {saving ? 'Saving…' : 'Save Pricing Configuration'}
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Discount Fee Tiers */}
       <Card>
