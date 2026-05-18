@@ -1,0 +1,1 @@
+ALTER VIEW public.verification_jobs_safe SET (security_invoker = true);
