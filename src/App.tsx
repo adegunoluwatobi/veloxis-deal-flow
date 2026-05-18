@@ -41,6 +41,8 @@ import GreystarReviewQueue from "@/pages/greystar/GreystarReviewQueue";
 import GreystarSettings from "@/pages/greystar/GreystarSettings";
 import GreystarDeals from "@/pages/greystar/GreystarDeals";
 import GreystarDealDetail from "@/pages/greystar/GreystarDealDetail";
+import GreystarVerifications from "@/pages/greystar/GreystarVerifications";
+import AdminVerifications from "@/pages/admin/AdminVerifications";
 
 // Exporter portal pages
 import ExporterDashboardPage from "@/pages/exporter/ExporterDashboard";
