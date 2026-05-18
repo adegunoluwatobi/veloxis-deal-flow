@@ -2122,9 +2122,235 @@ export type Database = {
         }
         Relationships: []
       }
+      verification_audit_events: {
+        Row: {
+          actor_role: string | null
+          actor_user_id: string | null
+          created_at: string
+          details: Json | null
+          event_type: string
+          id: string
+          subject_id: string | null
+          subject_type:
+            | Database["public"]["Enums"]["verification_subject_type"]
+            | null
+          verification_job_id: string | null
+        }
+        Insert: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json | null
+          event_type: string
+          id?: string
+          subject_id?: string | null
+          subject_type?:
+            | Database["public"]["Enums"]["verification_subject_type"]
+            | null
+          verification_job_id?: string | null
+        }
+        Update: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json | null
+          event_type?: string
+          id?: string
+          subject_id?: string | null
+          subject_type?:
+            | Database["public"]["Enums"]["verification_subject_type"]
+            | null
+          verification_job_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_audit_events_verification_job_id_fkey"
+            columns: ["verification_job_id"]
+            isOneToOne: false
+            referencedRelation: "verification_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "verification_audit_events_verification_job_id_fkey"
+            columns: ["verification_job_id"]
+            isOneToOne: false
+            referencedRelation: "verification_jobs_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verification_callbacks: {
+        Row: {
+          created_at: string
+          id: string
+          processed: boolean
+          processing_error: string | null
+          provider: string
+          provider_job_id: string | null
+          provider_user_id: string | null
+          raw_payload: Json
+          signature: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          processed?: boolean
+          processing_error?: string | null
+          provider?: string
+          provider_job_id?: string | null
+          provider_user_id?: string | null
+          raw_payload: Json
+          signature?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          processed?: boolean
+          processing_error?: string | null
+          provider?: string
+          provider_job_id?: string | null
+          provider_user_id?: string | null
+          raw_payload?: Json
+          signature?: string | null
+        }
+        Relationships: []
+      }
+      verification_jobs: {
+        Row: {
+          created_at: string
+          final_access_status: Database["public"]["Enums"]["verification_access_status"]
+          id: string
+          initiated_by: string | null
+          internal_status: string
+          job_type: Database["public"]["Enums"]["verification_job_type"]
+          manual_override_at: string | null
+          manual_override_by: string | null
+          manual_override_reason: string | null
+          partner_organisation_id: string | null
+          partner_review_notes: string | null
+          partner_review_status: Database["public"]["Enums"]["verification_review_status"]
+          partner_reviewed_at: string | null
+          provider: string
+          provider_job_id: string | null
+          provider_status: Database["public"]["Enums"]["verification_provider_status"]
+          provider_user_id: string | null
+          request_payload: Json | null
+          result_payload: Json | null
+          reviewed_by_partner_admin_id: string | null
+          reviewed_by_super_admin_id: string | null
+          subject_id: string
+          subject_type: Database["public"]["Enums"]["verification_subject_type"]
+          super_admin_review_notes: string | null
+          super_admin_review_status: Database["public"]["Enums"]["verification_review_status"]
+          super_admin_reviewed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          final_access_status?: Database["public"]["Enums"]["verification_access_status"]
+          id?: string
+          initiated_by?: string | null
+          internal_status?: string
+          job_type: Database["public"]["Enums"]["verification_job_type"]
+          manual_override_at?: string | null
+          manual_override_by?: string | null
+          manual_override_reason?: string | null
+          partner_organisation_id?: string | null
+          partner_review_notes?: string | null
+          partner_review_status?: Database["public"]["Enums"]["verification_review_status"]
+          partner_reviewed_at?: string | null
+          provider?: string
+          provider_job_id?: string | null
+          provider_status?: Database["public"]["Enums"]["verification_provider_status"]
+          provider_user_id?: string | null
+          request_payload?: Json | null
+          result_payload?: Json | null
+          reviewed_by_partner_admin_id?: string | null
+          reviewed_by_super_admin_id?: string | null
+          subject_id: string
+          subject_type: Database["public"]["Enums"]["verification_subject_type"]
+          super_admin_review_notes?: string | null
+          super_admin_review_status?: Database["public"]["Enums"]["verification_review_status"]
+          super_admin_reviewed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          final_access_status?: Database["public"]["Enums"]["verification_access_status"]
+          id?: string
+          initiated_by?: string | null
+          internal_status?: string
+          job_type?: Database["public"]["Enums"]["verification_job_type"]
+          manual_override_at?: string | null
+          manual_override_by?: string | null
+          manual_override_reason?: string | null
+          partner_organisation_id?: string | null
+          partner_review_notes?: string | null
+          partner_review_status?: Database["public"]["Enums"]["verification_review_status"]
+          partner_reviewed_at?: string | null
+          provider?: string
+          provider_job_id?: string | null
+          provider_status?: Database["public"]["Enums"]["verification_provider_status"]
+          provider_user_id?: string | null
+          request_payload?: Json | null
+          result_payload?: Json | null
+          reviewed_by_partner_admin_id?: string | null
+          reviewed_by_super_admin_id?: string | null
+          subject_id?: string
+          subject_type?: Database["public"]["Enums"]["verification_subject_type"]
+          super_admin_review_notes?: string | null
+          super_admin_review_status?: Database["public"]["Enums"]["verification_review_status"]
+          super_admin_reviewed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_jobs_partner_organisation_id_fkey"
+            columns: ["partner_organisation_id"]
+            isOneToOne: false
+            referencedRelation: "partner_organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      verification_jobs_safe: {
+        Row: {
+          created_at: string | null
+          display_status: string | null
+          id: string | null
+          job_type: Database["public"]["Enums"]["verification_job_type"] | null
+          subject_id: string | null
+          subject_type:
+            | Database["public"]["Enums"]["verification_subject_type"]
+            | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_status?: never
+          id?: string | null
+          job_type?: Database["public"]["Enums"]["verification_job_type"] | null
+          subject_id?: string | null
+          subject_type?:
+            | Database["public"]["Enums"]["verification_subject_type"]
+            | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_status?: never
+          id?: string | null
+          job_type?: Database["public"]["Enums"]["verification_job_type"] | null
+          subject_id?: string | null
+          subject_type?:
+            | Database["public"]["Enums"]["verification_subject_type"]
+            | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accrue_demurrage: { Args: { p_deal_id: string }; Returns: undefined }
@@ -2437,6 +2663,29 @@ export type Database = {
       sanctions_screening_status: "pending_screening" | "clear" | "flagged"
       settlement_method_type: "dom_account" | "naira_account"
       subscription_tier: "pay_as_you_go" | "veloxis_pro"
+      verification_access_status:
+        | "access_locked"
+        | "access_unlocked"
+        | "manually_checked"
+      verification_job_type: "kyb" | "kyc" | "aml"
+      verification_provider_status:
+        | "not_started"
+        | "submitted"
+        | "provider_pending"
+        | "provider_verified"
+        | "provider_failed"
+        | "action_required"
+      verification_review_status:
+        | "not_started"
+        | "under_review"
+        | "approved"
+        | "rejected"
+        | "action_required"
+      verification_subject_type:
+        | "exporter"
+        | "partner_organisation"
+        | "buyer"
+        | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2758,6 +3007,33 @@ export const Constants = {
       sanctions_screening_status: ["pending_screening", "clear", "flagged"],
       settlement_method_type: ["dom_account", "naira_account"],
       subscription_tier: ["pay_as_you_go", "veloxis_pro"],
+      verification_access_status: [
+        "access_locked",
+        "access_unlocked",
+        "manually_checked",
+      ],
+      verification_job_type: ["kyb", "kyc", "aml"],
+      verification_provider_status: [
+        "not_started",
+        "submitted",
+        "provider_pending",
+        "provider_verified",
+        "provider_failed",
+        "action_required",
+      ],
+      verification_review_status: [
+        "not_started",
+        "under_review",
+        "approved",
+        "rejected",
+        "action_required",
+      ],
+      verification_subject_type: [
+        "exporter",
+        "partner_organisation",
+        "buyer",
+        "user",
+      ],
     },
   },
 } as const
