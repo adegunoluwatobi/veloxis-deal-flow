@@ -189,8 +189,6 @@ export default function NbccRedirect() {
         </div>
       </section>
       </div>
-
-      <VeloxisHome />
     </div>
   );
 }
