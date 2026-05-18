@@ -145,6 +145,7 @@ const App = () => (
             <Route path="/greystar/deals" element={<GreystarRoute><GreystarDeals /></GreystarRoute>} />
             <Route path="/greystar/deals/:id" element={<GreystarRoute><GreystarDealDetail /></GreystarRoute>} />
             <Route path="/greystar/review" element={<GreystarRoute><GreystarReviewQueue /></GreystarRoute>} />
+            <Route path="/greystar/verifications" element={<GreystarRoute><GreystarVerifications /></GreystarRoute>} />
             <Route path="/greystar/settings" element={<GreystarRoute><GreystarSettings /></GreystarRoute>} />
             {/* Registration Pipeline is admin-only — partners are redirected to their Applications view */}
             <Route path="/greystar/pipeline" element={<Navigate to="/greystar/deals" replace />} />
