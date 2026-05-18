@@ -116,7 +116,8 @@ export default function UboDeclarationForm({ exporterId, readOnly = false }: Pro
           ubo.id = data.id;
         }
       }
-      toast({ title: 'UBO declarations saved' });
+      setLocked(true);
+      toast({ title: 'UBO declarations saved', description: 'Entries are now locked. Contact support to make changes.' });
       // Reload from DB to ensure IDs are fresh
       const { data: refreshed } = await supabase
         .from('ubo_declarations')
