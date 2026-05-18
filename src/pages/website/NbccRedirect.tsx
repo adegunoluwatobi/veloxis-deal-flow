@@ -175,10 +175,11 @@ export default function NbccRedirect() {
           </form>
         </div>
 
-        <p className="mt-5 text-center text-[11px] uppercase tracking-[0.18em] text-white/40">
-          Veloxis · UK · Funding global exporters
-        </p>
-      </div>
+          <p className="mt-5 text-center text-[11px] uppercase tracking-[0.18em] text-white/40">
+            Veloxis · UK · Funding global exporters
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
