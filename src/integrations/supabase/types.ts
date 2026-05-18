@@ -1498,6 +1498,33 @@ export type Database = {
           },
         ]
       }
+      nbcc_leads: {
+        Row: {
+          company_name: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          whatsapp_number: string
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          whatsapp_number: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          whatsapp_number?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
