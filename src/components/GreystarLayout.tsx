@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard, Users, FileText, LogOut, Briefcase,
-  Menu, X, Building2, UserCog, ChevronDown, Plus, GitPullRequestArrow,
+  Menu, X, Building2, UserCog, ChevronDown, Plus, GitPullRequestArrow, BadgeCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import NotificationBell from '@/components/NotificationBell';
