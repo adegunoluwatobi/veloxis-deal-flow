@@ -38,85 +38,145 @@ export default function NbccRedirect() {
   };
 
   const inputClass =
-    'w-full rounded-md bg-white/10 border border-white/20 px-3 py-2.5 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-[#3DE8B8] focus:border-transparent';
+    'w-full rounded-md bg-white/5 border border-white/15 px-3 py-2.5 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-[#3DE8B8] focus:border-transparent transition';
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto"
-      style={{ backgroundColor: '#0F6E56' }}
+      className="min-h-screen w-full relative overflow-hidden flex items-center justify-center px-4 py-12 sm:py-20"
+      style={{
+        background:
+          'radial-gradient(ellipse at top left, #0E5A47 0%, #0B3D2E 45%, #07231B 100%)',
+      }}
     >
       <Helmet>
         <title>Get Early Access · Veloxis</title>
         <meta name="robots" content="noindex" />
       </Helmet>
-      <div className="w-full max-w-md text-white py-8">
-        <div className="flex justify-center mb-8">
-          <img src={veloxisLogoWhite} alt="Veloxis" className="h-10 w-auto" />
-        </div>
-        <h1 className="text-3xl font-semibold text-center leading-tight">
-          Stop waiting 60 days to get paid.
-        </h1>
-        <p className="mt-3 text-center text-white/80">
-          Register your interest and we'll be in touch within 24 hours.
-        </p>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-3">
-          <input
-            className={inputClass}
-            placeholder="Full name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            autoComplete="name"
-          />
-          <input
-            className={inputClass}
-            placeholder="Company name"
-            value={companyName}
-            onChange={(e) => setCompanyName(e.target.value)}
-            autoComplete="organization"
-          />
-          <input
-            className={inputClass}
-            type="email"
-            placeholder="Email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-          />
-          <input
-            className={inputClass}
-            type="tel"
-            placeholder="WhatsApp number"
-            value={whatsapp}
-            onChange={(e) => setWhatsapp(e.target.value)}
-            autoComplete="tel"
-          />
+      {/* Background: subtle world map / trade corridors */}
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-[0.18] pointer-events-none"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 900'><defs><radialGradient id='d' cx='50%25' cy='50%25' r='50%25'><stop offset='0%25' stop-color='%235FFFD7' stop-opacity='0.9'/><stop offset='100%25' stop-color='%235FFFD7' stop-opacity='0'/></radialGradient></defs><g fill='%235FFFD7'><circle cx='280' cy='320' r='3'/><circle cx='520' cy='280' r='3'/><circle cx='780' cy='340' r='3'/><circle cx='980' cy='300' r='3'/><circle cx='1220' cy='360' r='3'/><circle cx='1380' cy='420' r='3'/><circle cx='180' cy='480' r='3'/><circle cx='620' cy='560' r='3'/><circle cx='900' cy='540' r='3'/><circle cx='1120' cy='600' r='3'/></g><g fill='none' stroke='%235FFFD7' stroke-width='1' stroke-opacity='0.55' stroke-dasharray='4 6'><path d='M280 320 Q 420 220 520 280'/><path d='M520 280 Q 660 240 780 340'/><path d='M780 340 Q 880 260 980 300'/><path d='M980 300 Q 1120 280 1220 360'/><path d='M1220 360 Q 1320 380 1380 420'/><path d='M180 480 Q 380 540 620 560'/><path d='M620 560 Q 780 500 900 540'/><path d='M900 540 Q 1040 580 1120 600'/><path d='M280 320 Q 380 440 620 560'/><path d='M780 340 Q 840 460 900 540'/></g></svg>\")",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
 
-          {error && <p className="text-sm text-red-200">{error}</p>}
+      {/* Soft mint glow accents */}
+      <div
+        aria-hidden
+        className="absolute -top-32 -left-32 w-[480px] h-[480px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(95,255,215,0.18) 0%, transparent 70%)' }}
+      />
+      <div
+        aria-hidden
+        className="absolute -bottom-40 -right-32 w-[520px] h-[520px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(26,188,156,0.22) 0%, transparent 70%)' }}
+      />
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-md py-3 font-semibold text-[#0F6E56] transition-opacity disabled:opacity-60 hover:opacity-90"
-            style={{ backgroundColor: '#3DE8B8' }}
-          >
-            {submitting ? 'Submitting…' : 'Get Early Access'}
-          </button>
+      {/* Faint finance grid */}
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-[0.06] pointer-events-none"
+        style={{
+          backgroundImage:
+            'linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)',
+          backgroundSize: '56px 56px',
+        }}
+      />
 
-          <p className="text-center text-xs text-white/60 pt-1">
-            No commitment. No obligation. Just faster cash flow.
-          </p>
-
-          <div className="text-center pt-2">
-            <button
-              type="button"
-              onClick={redirect}
-              className="text-sm text-white/80 hover:text-white underline-offset-4 hover:underline"
-            >
-              Continue to site →
-            </button>
+      {/* Card */}
+      <div className="relative w-full max-w-md">
+        <div
+          className="rounded-2xl border border-white/10 shadow-2xl backdrop-blur-xl px-6 sm:px-8 py-8 sm:py-10"
+          style={{
+            background:
+              'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%)',
+            boxShadow:
+              '0 30px 80px -20px rgba(0,0,0,0.55), 0 0 0 1px rgba(95,255,215,0.06) inset',
+          }}
+        >
+          <div className="flex justify-center mb-6">
+            <img src={veloxisLogoWhite} alt="Veloxis" className="h-9 w-auto" />
           </div>
-        </form>
+
+          <div className="text-center">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] uppercase tracking-wider text-[#5FFFD7] border border-[#5FFFD7]/25 bg-[#5FFFD7]/5">
+              Early Access · Cross-border trade finance
+            </span>
+            <h1 className="mt-4 text-2xl sm:text-3xl font-semibold text-white leading-tight">
+              Stop waiting 60 days to get paid.
+            </h1>
+            <p className="mt-2 text-sm sm:text-base text-white/70">
+              Register your interest and we'll be in touch within 24 hours.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="mt-7 space-y-3">
+            <input
+              className={inputClass}
+              placeholder="Full name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              autoComplete="name"
+            />
+            <input
+              className={inputClass}
+              placeholder="Company name"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              autoComplete="organization"
+            />
+            <input
+              className={inputClass}
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+            />
+            <input
+              className={inputClass}
+              type="tel"
+              placeholder="WhatsApp number"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+              autoComplete="tel"
+            />
+
+            {error && <p className="text-sm text-red-200">{error}</p>}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full rounded-md py-3 font-semibold text-[#07231B] transition-all disabled:opacity-60 hover:shadow-[0_0_24px_rgba(95,255,215,0.35)]"
+              style={{ background: 'linear-gradient(135deg, #5FFFD7 0%, #1ABC9C 100%)' }}
+            >
+              {submitting ? 'Submitting…' : 'Get Early Access'}
+            </button>
+
+            <p className="text-center text-xs text-white/55 pt-1">
+              No commitment. No obligation. Just faster cash flow.
+            </p>
+
+            <div className="text-center pt-1">
+              <button
+                type="button"
+                onClick={redirect}
+                className="text-sm text-white/70 hover:text-white underline-offset-4 hover:underline"
+              >
+                Continue to site →
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <p className="mt-5 text-center text-[11px] uppercase tracking-[0.18em] text-white/40">
+          Veloxis · UK · Funding global exporters
+        </p>
       </div>
     </div>
   );
