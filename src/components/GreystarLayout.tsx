@@ -38,6 +38,7 @@ function buildNavGroups(role: string | null): NavGroup[] {
       items: [
         { label: 'Applications', href: '/greystar/deals', icon: FileText },
         { label: 'Requests', href: '/greystar/review', icon: GitPullRequestArrow },
+        { label: 'Verifications', href: '/greystar/verifications', icon: BadgeCheck },
       ],
     },
     {
