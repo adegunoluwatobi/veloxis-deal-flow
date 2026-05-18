@@ -390,8 +390,12 @@ function InitiateVerificationDialog({ open, onOpenChange, scope, partnerOrgs, on
           )}
           <div className="grid grid-cols-2 gap-2">
             <div><Label>Country</Label><Input value={form.country} onChange={e => setForm((f: any) => ({ ...f, country: e.target.value }))} /></div>
-            <div><Label>ID type</Label><Input value={form.id_type ?? ''} onChange={e => setForm((f: any) => ({ ...f, id_type: e.target.value }))} placeholder={kind === 'kyb' ? 'BUSINESS_REGISTRATION' : 'NIN'} /></div>
-            <div className="col-span-2"><Label>ID number</Label><Input value={form.id_number ?? ''} onChange={e => setForm((f: any) => ({ ...f, id_number: e.target.value }))} /></div>
+            {kind !== 'aml' && (
+              <div><Label>ID type</Label><Input value={form.id_type ?? ''} onChange={e => setForm((f: any) => ({ ...f, id_type: e.target.value }))} placeholder={kind === 'kyb' ? 'BUSINESS_REGISTRATION' : 'NIN'} /></div>
+            )}
+            {kind !== 'aml' && (
+              <div className="col-span-2"><Label>ID number</Label><Input value={form.id_number ?? ''} onChange={e => setForm((f: any) => ({ ...f, id_number: e.target.value }))} /></div>
+            )}
           </div>
           {kind === 'kyb' && (
             <div className="grid grid-cols-2 gap-2">
@@ -399,7 +403,7 @@ function InitiateVerificationDialog({ open, onOpenChange, scope, partnerOrgs, on
               <div><Label>Business name</Label><Input value={form.business_name ?? ''} onChange={e => setForm((f: any) => ({ ...f, business_name: e.target.value }))} /></div>
             </div>
           )}
-          {kind === 'kyc' && (
+          {(kind === 'kyc' || kind === 'aml') && (
             <div className="grid grid-cols-3 gap-2">
               <div><Label>First name</Label><Input value={form.first_name ?? ''} onChange={e => setForm((f: any) => ({ ...f, first_name: e.target.value }))} /></div>
               <div><Label>Last name</Label><Input value={form.last_name ?? ''} onChange={e => setForm((f: any) => ({ ...f, last_name: e.target.value }))} /></div>
@@ -409,7 +413,16 @@ function InitiateVerificationDialog({ open, onOpenChange, scope, partnerOrgs, on
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={submit} disabled={submitting || !form.subject_id || !form.id_number}>{submitting ? 'Submitting…' : 'Initiate'}</Button>
+          <Button
+            onClick={submit}
+            disabled={
+              submitting ||
+              !form.subject_id ||
+              (kind === 'aml'
+                ? !form.first_name || !form.last_name || !form.dob
+                : !form.id_number)
+            }
+          >{submitting ? 'Submitting…' : 'Initiate'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
