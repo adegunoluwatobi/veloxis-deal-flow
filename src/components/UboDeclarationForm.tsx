@@ -160,7 +160,7 @@ export default function UboDeclarationForm({ exporterId, readOnly = false }: Pro
           <div key={i} className="rounded-lg border border-border p-4 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-foreground">UBO #{i + 1}</span>
-              {!readOnly && ubos.length > 1 && (
+              {!(readOnly || locked) && ubos.length > 1 && (
                 <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive" onClick={() => removeUbo(i)}>
                   <Trash2 className="mr-1 h-3 w-3" /> Remove
                 </Button>
@@ -169,24 +169,24 @@ export default function UboDeclarationForm({ exporterId, readOnly = false }: Pro
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Full Name *</Label>
-                <Input value={ubo.full_name} onChange={e => updateUbo(i, 'full_name', e.target.value)} placeholder="Full legal name" disabled={readOnly} />
+                <Input value={ubo.full_name} onChange={e => updateUbo(i, 'full_name', e.target.value)} placeholder="Full legal name" disabled={readOnly || locked} />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Nationality *</Label>
-                <Input value={ubo.nationality} onChange={e => updateUbo(i, 'nationality', e.target.value)} placeholder="e.g. Nigerian" disabled={readOnly} />
+                <Input value={ubo.nationality} onChange={e => updateUbo(i, 'nationality', e.target.value)} placeholder="e.g. Nigerian" disabled={readOnly || locked} />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Date of Birth *</Label>
-                <Input type="date" value={ubo.date_of_birth} onChange={e => updateUbo(i, 'date_of_birth', e.target.value)} disabled={readOnly} />
+                <Input type="date" value={ubo.date_of_birth} onChange={e => updateUbo(i, 'date_of_birth', e.target.value)} disabled={readOnly || locked} />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Ownership % *</Label>
-                <Input type="number" min="25" max="100" value={ubo.ownership_percentage} onChange={e => updateUbo(i, 'ownership_percentage', e.target.value)} placeholder="25-100" disabled={readOnly} />
+                <Input type="number" min="25" max="100" value={ubo.ownership_percentage} onChange={e => updateUbo(i, 'ownership_percentage', e.target.value)} placeholder="25-100" disabled={readOnly || locked} />
               </div>
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Residential Address *</Label>
-              <Input value={ubo.residential_address} onChange={e => updateUbo(i, 'residential_address', e.target.value)} placeholder="Full residential address" disabled={readOnly} />
+              <Input value={ubo.residential_address} onChange={e => updateUbo(i, 'residential_address', e.target.value)} placeholder="Full residential address" disabled={readOnly || locked} />
             </div>
           </div>
         ))}
@@ -197,7 +197,7 @@ export default function UboDeclarationForm({ exporterId, readOnly = false }: Pro
           </p>
         )}
 
-        {!readOnly && (
+        {!(readOnly || locked) && (
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={addUbo} className="gap-1">
               <Plus className="h-3 w-3" /> Add UBO
