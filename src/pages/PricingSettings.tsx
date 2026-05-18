@@ -199,9 +199,6 @@ export default function PricingSettings() {
       // Update config
       const { error } = await supabase.from('pricing_config').update({
         advance_rate_pct: parseFloat(form.advance_rate_pct),
-        platform_fee_pct: parseFloat(form.platform_fee_pct),
-        discount_fee_pct_monthly: parseFloat(form.discount_fee_pct_monthly),
-        late_penalty_rate_pct_daily: parseFloat(form.late_penalty_rate_pct_daily),
         min_payment_terms_days: parseInt(form.min_payment_terms_days),
         max_payment_terms_days: parseInt(form.max_payment_terms_days),
         updated_by: user.id,
