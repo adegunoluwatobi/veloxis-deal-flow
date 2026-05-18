@@ -47,43 +47,50 @@ export default function NbccRedirect() {
         <meta name="robots" content="noindex" />
       </Helmet>
 
-      {/* Background: subtle world map / trade corridors */}
-      <div
-        aria-hidden
-        className="absolute inset-0 opacity-[0.18] pointer-events-none"
+      <section
+        className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-3xl px-4 sm:px-10 py-14 sm:py-20 flex items-center justify-center"
         style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 900'><defs><radialGradient id='d' cx='50%25' cy='50%25' r='50%25'><stop offset='0%25' stop-color='%235FFFD7' stop-opacity='0.9'/><stop offset='100%25' stop-color='%235FFFD7' stop-opacity='0'/></radialGradient></defs><g fill='%235FFFD7'><circle cx='280' cy='320' r='3'/><circle cx='520' cy='280' r='3'/><circle cx='780' cy='340' r='3'/><circle cx='980' cy='300' r='3'/><circle cx='1220' cy='360' r='3'/><circle cx='1380' cy='420' r='3'/><circle cx='180' cy='480' r='3'/><circle cx='620' cy='560' r='3'/><circle cx='900' cy='540' r='3'/><circle cx='1120' cy='600' r='3'/></g><g fill='none' stroke='%235FFFD7' stroke-width='1' stroke-opacity='0.55' stroke-dasharray='4 6'><path d='M280 320 Q 420 220 520 280'/><path d='M520 280 Q 660 240 780 340'/><path d='M780 340 Q 880 260 980 300'/><path d='M980 300 Q 1120 280 1220 360'/><path d='M1220 360 Q 1320 380 1380 420'/><path d='M180 480 Q 380 540 620 560'/><path d='M620 560 Q 780 500 900 540'/><path d='M900 540 Q 1040 580 1120 600'/><path d='M280 320 Q 380 440 620 560'/><path d='M780 340 Q 840 460 900 540'/></g></svg>\")",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          background:
+            'radial-gradient(ellipse at top left, #0E5A47 0%, #0B3D2E 50%, #07231B 100%)',
         }}
-      />
+      >
+        {/* Background: subtle world map / trade corridors */}
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-[0.18] pointer-events-none"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 900'><g fill='%235FFFD7'><circle cx='280' cy='320' r='3'/><circle cx='520' cy='280' r='3'/><circle cx='780' cy='340' r='3'/><circle cx='980' cy='300' r='3'/><circle cx='1220' cy='360' r='3'/><circle cx='1380' cy='420' r='3'/><circle cx='180' cy='480' r='3'/><circle cx='620' cy='560' r='3'/><circle cx='900' cy='540' r='3'/><circle cx='1120' cy='600' r='3'/></g><g fill='none' stroke='%235FFFD7' stroke-width='1' stroke-opacity='0.55' stroke-dasharray='4 6'><path d='M280 320 Q 420 220 520 280'/><path d='M520 280 Q 660 240 780 340'/><path d='M780 340 Q 880 260 980 300'/><path d='M980 300 Q 1120 280 1220 360'/><path d='M1220 360 Q 1320 380 1380 420'/><path d='M180 480 Q 380 540 620 560'/><path d='M620 560 Q 780 500 900 540'/><path d='M900 540 Q 1040 580 1120 600'/><path d='M280 320 Q 380 440 620 560'/><path d='M780 340 Q 840 460 900 540'/></g></svg>\")",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
 
-      {/* Soft mint glow accents */}
-      <div
-        aria-hidden
-        className="absolute -top-32 -left-32 w-[480px] h-[480px] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(95,255,215,0.18) 0%, transparent 70%)' }}
-      />
-      <div
-        aria-hidden
-        className="absolute -bottom-40 -right-32 w-[520px] h-[520px] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(26,188,156,0.22) 0%, transparent 70%)' }}
-      />
+        {/* Soft mint glow accents */}
+        <div
+          aria-hidden
+          className="absolute -top-32 -left-32 w-[420px] h-[420px] rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(95,255,215,0.18) 0%, transparent 70%)' }}
+        />
+        <div
+          aria-hidden
+          className="absolute -bottom-40 -right-32 w-[460px] h-[460px] rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(26,188,156,0.22) 0%, transparent 70%)' }}
+        />
 
-      {/* Faint finance grid */}
-      <div
-        aria-hidden
-        className="absolute inset-0 opacity-[0.06] pointer-events-none"
-        style={{
-          backgroundImage:
-            'linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)',
-          backgroundSize: '56px 56px',
-        }}
-      />
+        {/* Faint finance grid */}
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-[0.06] pointer-events-none"
+          style={{
+            backgroundImage:
+              'linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)',
+            backgroundSize: '56px 56px',
+          }}
+        />
 
-      {/* Card */}
-      <div className="relative w-full max-w-md">
+        {/* Card */}
+        <div className="relative w-full max-w-md">
         <div
           className="rounded-2xl border border-white/10 shadow-2xl backdrop-blur-xl px-6 sm:px-8 py-8 sm:py-10"
           style={{
