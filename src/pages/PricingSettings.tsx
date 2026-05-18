@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useConfirm } from '@/components/ConfirmDialog';
-import { Settings, History, AlertTriangle, Loader2 } from 'lucide-react';
+import { Settings, History, AlertTriangle, Loader2, Plus, Trash2 } from 'lucide-react';
 
 export default function PricingSettings() {
   const { user, role } = useAuth();
@@ -46,6 +46,93 @@ export default function PricingSettings() {
   });
 
   const [form, setForm] = useState<Record<string, string>>({});
+
+
+  // Discount fee tiers (e.g. 30d/60d/90d)
+  type TierRow = { id?: string; term_days: string; discount_fee_pct: string; label: string; sort_order: number; _dirty?: boolean; _new?: boolean };
+  const [tiers, setTiers] = useState<TierRow[]>([]);
+  const [tiersLoaded, setTiersLoaded] = useState(false);
+  const [savingTiers, setSavingTiers] = useState(false);
+  const [deletedTierIds, setDeletedTierIds] = useState<string[]>([]);
+
+  const { data: tiersData } = useQuery({
+    queryKey: ['pricing_discount_tiers'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('pricing_discount_tiers')
+        .select('*')
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  if (tiersData && !tiersLoaded) {
+    setTiers(tiersData.map((t: any) => ({
+      id: t.id,
+      term_days: String(t.term_days),
+      discount_fee_pct: String(t.discount_fee_pct),
+      label: t.label ?? '',
+      sort_order: t.sort_order ?? 0,
+    })));
+    setTiersLoaded(true);
+  }
+
+  const addTier = () => setTiers([...tiers, { term_days: '', discount_fee_pct: '', label: '', sort_order: tiers.length + 1, _new: true, _dirty: true }]);
+  const updateTier = (i: number, field: keyof TierRow, value: string) => {
+    const next = [...tiers];
+    (next[i] as any)[field] = value;
+    next[i]._dirty = true;
+    setTiers(next);
+  };
+  const removeTier = (i: number) => {
+    const row = tiers[i];
+    if (row.id) setDeletedTierIds(prev => [...prev, row.id!]);
+    setTiers(tiers.filter((_, idx) => idx !== i));
+  };
+
+  const handleSaveTiers = async () => {
+    if (!user) return;
+    // Validate
+    for (const t of tiers) {
+      const td = parseInt(t.term_days);
+      const pct = parseFloat(t.discount_fee_pct);
+      if (!td || td <= 0 || isNaN(pct) || pct < 0) {
+        toast({ title: 'Invalid tier', description: 'Term days must be > 0 and fee % must be valid.', variant: 'destructive' });
+        return;
+      }
+    }
+    setSavingTiers(true);
+    try {
+      for (const id of deletedTierIds) {
+        await (supabase as any).from('pricing_discount_tiers').delete().eq('id', id);
+      }
+      for (const t of tiers) {
+        if (!t._dirty && !t._new) continue;
+        const payload = {
+          term_days: parseInt(t.term_days),
+          discount_fee_pct: parseFloat(t.discount_fee_pct),
+          label: t.label || `${t.term_days} days`,
+          sort_order: t.sort_order,
+          updated_by: user.id,
+        };
+        if (t.id) {
+          await (supabase as any).from('pricing_discount_tiers').update(payload).eq('id', t.id);
+        } else {
+          await (supabase as any).from('pricing_discount_tiers').insert(payload);
+        }
+      }
+      setDeletedTierIds([]);
+      toast({ title: 'Discount tiers saved' });
+      queryClient.invalidateQueries({ queryKey: ['pricing_discount_tiers'] });
+      setTiersLoaded(false);
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setSavingTiers(false);
+    }
+  };
+
 
   // Initialize form when config loads
   const initForm = () => {
@@ -195,6 +282,54 @@ export default function PricingSettings() {
           )}
         </CardContent>
       </Card>
+
+      {/* Discount Fee Tiers */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Discount Fee Tiers</CardTitle>
+          <CardDescription>
+            Configure multiple discount fee rates based on payment term length (e.g. 3.5% for 30 days, 4.5% for 60 days, 5.5% for 90 days). These rates apply to new applications going forward.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {tiers.length === 0 && (
+            <p className="text-sm text-muted-foreground">No tiers configured. Add at least one tier below.</p>
+          )}
+          <div className="space-y-3">
+            {tiers.map((t, i) => (
+              <div key={t.id ?? `new-${i}`} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end rounded-md border border-border p-3">
+                <div className="md:col-span-3 space-y-1">
+                  <Label className="text-xs">Term (days)</Label>
+                  <Input type="number" min="1" step="1" value={t.term_days} onChange={e => updateTier(i, 'term_days', e.target.value)} />
+                </div>
+                <div className="md:col-span-3 space-y-1">
+                  <Label className="text-xs">Discount Fee %</Label>
+                  <Input type="number" min="0" step="0.001" value={t.discount_fee_pct} onChange={e => updateTier(i, 'discount_fee_pct', e.target.value)} />
+                </div>
+                <div className="md:col-span-4 space-y-1">
+                  <Label className="text-xs">Label (optional)</Label>
+                  <Input value={t.label} onChange={e => updateTier(i, 'label', e.target.value)} placeholder={`${t.term_days || '30'} days`} />
+                </div>
+                <div className="md:col-span-2 flex justify-end">
+                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => removeTier(i)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={addTier} className="gap-1">
+              <Plus className="h-3 w-3" /> Add Tier
+            </Button>
+            <Button size="sm" onClick={handleSaveTiers} disabled={savingTiers}>
+              {savingTiers ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+              {savingTiers ? 'Saving…' : 'Save Tiers'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
 
       {/* Rate History */}
       <Card>

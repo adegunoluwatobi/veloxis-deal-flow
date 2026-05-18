@@ -1856,6 +1856,39 @@ export type Database = {
           },
         ]
       }
+      pricing_discount_tiers: {
+        Row: {
+          created_at: string
+          discount_fee_pct: number
+          id: string
+          label: string | null
+          sort_order: number
+          term_days: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          discount_fee_pct: number
+          id?: string
+          label?: string | null
+          sort_order?: number
+          term_days: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          discount_fee_pct?: number
+          id?: string
+          label?: string | null
+          sort_order?: number
+          term_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       pricing_rate_history: {
         Row: {
           changed_by: string

@@ -192,6 +192,21 @@ export default function ExporterOnboarding() {
     }
   };
 
+  const handleUploadKyb = async (file: File | null, docType: ExporterDocumentType, setFile: (f: File | null) => void, setDone: (v: boolean) => void, label: string) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      await uploadComplianceDoc(file, docType);
+      setFile(null);
+      setDone(true);
+      toast({ title: `${label} uploaded` });
+    } catch (err: unknown) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Upload failed', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -423,12 +438,138 @@ export default function ExporterOnboarding() {
               />
             </div>
 
+            {/* Registered Address */}
+            <div className="space-y-3 pt-2">
+              <div className="text-sm font-semibold text-foreground">Registered Address</div>
+              <div className="space-y-2">
+                <Label htmlFor="registered_address_line1">Address Line 1 *</Label>
+                <Input
+                  id="registered_address_line1"
+                  placeholder="Street address"
+                  value={form.registered_address_line1}
+                  onChange={(e) => setForm({ ...form, registered_address_line1: e.target.value })}
+                  onBlur={() => markTouched('registered_address_line1')}
+                  className={fieldError('registered_address_line1') ? 'border-destructive focus-visible:ring-destructive' : ''}
+                />
+                {fieldError('registered_address_line1') && <p className="text-xs text-destructive">{fieldError('registered_address_line1')}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="registered_address_line2">Address Line 2</Label>
+                <Input
+                  id="registered_address_line2"
+                  placeholder="Apt, suite, etc. (optional)"
+                  value={form.registered_address_line2}
+                  onChange={(e) => setForm({ ...form, registered_address_line2: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="registered_city">City *</Label>
+                  <Input
+                    id="registered_city"
+                    placeholder="City"
+                    value={form.registered_city}
+                    onChange={(e) => setForm({ ...form, registered_city: e.target.value })}
+                    onBlur={() => markTouched('registered_city')}
+                    className={fieldError('registered_city') ? 'border-destructive focus-visible:ring-destructive' : ''}
+                  />
+                  {fieldError('registered_city') && <p className="text-xs text-destructive">{fieldError('registered_city')}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="registered_postcode">Postcode</Label>
+                  <Input
+                    id="registered_postcode"
+                    placeholder="Postcode"
+                    value={form.registered_postcode}
+                    onChange={(e) => setForm({ ...form, registered_postcode: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="registered_country">Country *</Label>
+                <Input
+                  id="registered_country"
+                  placeholder="Country"
+                  value={form.registered_country}
+                  onChange={(e) => setForm({ ...form, registered_country: e.target.value })}
+                  onBlur={() => markTouched('registered_country')}
+                  className={fieldError('registered_country') ? 'border-destructive focus-visible:ring-destructive' : ''}
+                />
+                {fieldError('registered_country') && <p className="text-xs text-destructive">{fieldError('registered_country')}</p>}
+              </div>
+            </div>
+
             {/* UBO Declaration — sits under Directors */}
             {exporter && (
               <div className="pt-2">
                 <UboDeclarationForm exporterId={exporter.id} />
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* KYB Documents */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-4 w-4" /> KYB Documents
+            </CardTitle>
+            <CardDescription>All documents below are required for verification</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            {/* CAC Certificate */}
+            <div className="space-y-2">
+              <Label>CAC Certificate *</Label>
+              <p className="text-xs text-muted-foreground">Corporate Affairs Commission certificate of incorporation.</p>
+              {cacUploaded ? (
+                <div className="flex items-center gap-1 text-xs text-success">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> CAC Certificate uploaded
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Input type="file" accept=".pdf,image/*" onChange={e => setCacFile(e.target.files?.[0] ?? null)} className="flex-1" />
+                  <Button size="sm" onClick={() => handleUploadKyb(cacFile, 'cac_certificate', setCacFile, setCacUploaded, 'CAC Certificate')} disabled={!cacFile || uploading}>
+                    <Upload className="mr-1 h-3 w-3" /> Upload
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Director ID */}
+            <div className="space-y-2">
+              <Label>Director ID *</Label>
+              <p className="text-xs text-muted-foreground">Government-issued ID for the primary director (passport, NIN, driver's licence).</p>
+              {dirIdUploaded ? (
+                <div className="flex items-center gap-1 text-xs text-success">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Director ID uploaded
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Input type="file" accept=".pdf,image/*" onChange={e => setDirIdFile(e.target.files?.[0] ?? null)} className="flex-1" />
+                  <Button size="sm" onClick={() => handleUploadKyb(dirIdFile, 'director_id', setDirIdFile, setDirIdUploaded, 'Director ID')} disabled={!dirIdFile || uploading}>
+                    <Upload className="mr-1 h-3 w-3" /> Upload
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Export Licence (NEPC) */}
+            <div className="space-y-2">
+              <Label>Export Licence *</Label>
+              <p className="text-xs text-muted-foreground">NEPC export licence or equivalent.</p>
+              {nepcUploaded ? (
+                <div className="flex items-center gap-1 text-xs text-success">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Export Licence uploaded
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Input type="file" accept=".pdf,image/*" onChange={e => setNepcFile(e.target.files?.[0] ?? null)} className="flex-1" />
+                  <Button size="sm" onClick={() => handleUploadKyb(nepcFile, 'nepc_certificate', setNepcFile, setNepcUploaded, 'Export Licence')} disabled={!nepcFile || uploading}>
+                    <Upload className="mr-1 h-3 w-3" /> Upload
+                  </Button>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
