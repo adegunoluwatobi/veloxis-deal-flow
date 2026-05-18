@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useConfirm } from '@/components/ConfirmDialog';
-import { Settings, History, AlertTriangle, Loader2 } from 'lucide-react';
+import { Settings, History, AlertTriangle, Loader2, Plus, Trash2 } from 'lucide-react';
 
 export default function PricingSettings() {
   const { user, role } = useAuth();
