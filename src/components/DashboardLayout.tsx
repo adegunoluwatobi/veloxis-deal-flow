@@ -30,6 +30,7 @@ const ADMIN_NAV: NavItem[] = [
   { label: 'Partners', href: '/admin/partners', icon: Building2, roles: ['super_admin'] },
   { label: 'Pricing', href: '/admin/pricing', icon: Banknote, roles: ['super_admin'] },
   { label: 'Marketing', href: '/admin/marketing', icon: Megaphone, roles: ['super_admin', 'deal_manager'] },
+  { label: 'Verifications', href: '/admin/verifications', icon: BadgeCheck, roles: ['super_admin', 'deal_manager'] },
   { label: 'User Management', href: '/admin/users', icon: Users, roles: ['super_admin'] },
   { label: 'Account', href: '/admin/account', icon: Settings, roles: ['super_admin', 'deal_manager'] },
 ];
