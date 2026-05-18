@@ -41,13 +41,7 @@ export default function NbccRedirect() {
     'w-full rounded-md bg-white/5 border border-white/15 px-3 py-2.5 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-[#3DE8B8] focus:border-transparent transition';
 
   return (
-    <div
-      className="min-h-screen w-full relative overflow-hidden flex items-center justify-center px-4 py-12 sm:py-20"
-      style={{
-        background:
-          'radial-gradient(ellipse at top left, #0E5A47 0%, #0B3D2E 45%, #07231B 100%)',
-      }}
-    >
+    <div className="w-full bg-white py-10 sm:py-16 px-4">
       <Helmet>
         <title>Get Early Access · Veloxis</title>
         <meta name="robots" content="noindex" />
