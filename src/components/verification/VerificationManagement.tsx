@@ -322,20 +322,24 @@ function InitiateVerificationDialog({ open, onOpenChange, scope, partnerOrgs, on
   partnerOrgs: PartnerOrgOption[]; onCreated: () => void;
 }) {
   const { toast } = useToast();
-  const [kind, setKind] = useState<'kyb' | 'kyc'>('kyb');
+  const [kind, setKind] = useState<'kyb' | 'kyc' | 'aml'>('kyb');
   const [form, setForm] = useState<any>({ subject_type: 'exporter', country: 'NG' });
   const [submitting, setSubmitting] = useState(false);
 
   async function submit() {
     setSubmitting(true);
-    const fn = kind === 'kyb' ? 'smileid-kyb' : 'smileid-kyc';
+    const fn = kind === 'kyb' ? 'smileid-kyb' : kind === 'aml' ? 'smileid-aml' : 'smileid-kyc';
     const { data, error } = await supabase.functions.invoke(fn, { body: form });
     setSubmitting(false);
     if (error || (data && (data as any).error)) {
       toast({ title: 'Failed', description: error?.message ?? (data as any).error, variant: 'destructive' });
       return;
     }
-    toast({ title: 'Verification initiated', description: `Status: ${(data as any).internal_status}` });
+    const d = data as any;
+    const desc = kind === 'aml'
+      ? `Status: ${d.internal_status} · Hits: ${d.hits_count ?? 0} · Risk: ${d.risk_band ?? 'unknown'}`
+      : `Status: ${d.internal_status}`;
+    toast({ title: 'Verification initiated', description: desc });
     onOpenChange(false);
     onCreated();
   }
@@ -352,6 +356,7 @@ function InitiateVerificationDialog({ open, onOpenChange, scope, partnerOrgs, on
               <SelectContent>
                 <SelectItem value="kyb">KYB — Business Verification</SelectItem>
                 <SelectItem value="kyc">KYC — Identity Verification</SelectItem>
+                <SelectItem value="aml">AML — PEP / Sanctions / Adverse Media</SelectItem>
               </SelectContent>
             </Select>
           </div>
