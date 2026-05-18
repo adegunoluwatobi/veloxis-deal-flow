@@ -129,7 +129,7 @@ export default function NbccRedirect() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-7 space-y-3">
+          <form onSubmit={handleSubmit} noValidate className="mt-7 space-y-3">
             <input
               className={inputClass}
               placeholder="Full name"
