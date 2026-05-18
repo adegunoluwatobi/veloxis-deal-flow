@@ -23,6 +23,11 @@ export default function NbccRedirect() {
       setError('Please complete all fields.');
       return;
     }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(email.trim())) {
+      setError('Please enter a valid email address (e.g. name@company.com).');
+      return;
+    }
     setSubmitting(true);
     const { error: insertErr } = await supabase.from('nbcc_leads').insert({
       full_name: fullName.trim(),
