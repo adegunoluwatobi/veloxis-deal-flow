@@ -292,23 +292,35 @@ export default function PricingSettings() {
           )}
           <div className="space-y-3">
             {tiers.map((t, i) => (
-              <div key={t.id ?? `new-${i}`} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end rounded-md border border-border p-3">
-                <div className="md:col-span-3 space-y-1">
-                  <Label className="text-xs">Term (days)</Label>
-                  <Input type="number" min="1" step="1" value={t.term_days} onChange={e => updateTier(i, 'term_days', e.target.value)} />
+              <div key={t.id ?? `new-${i}`} className="space-y-3 rounded-md border border-border p-3">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                  <div className="md:col-span-3 space-y-1">
+                    <Label className="text-xs">Term (days)</Label>
+                    <Input type="number" min="1" step="1" value={t.term_days} onChange={e => updateTier(i, 'term_days', e.target.value)} />
+                  </div>
+                  <div className="md:col-span-3 space-y-1">
+                    <Label className="text-xs">Discount Fee %</Label>
+                    <Input type="number" min="0" step="0.001" value={t.discount_fee_pct} onChange={e => updateTier(i, 'discount_fee_pct', e.target.value)} />
+                  </div>
+                  <div className="md:col-span-3 space-y-1">
+                    <Label className="text-xs">Platform Fee % (one-off)</Label>
+                    <Input type="number" min="0" step="0.001" value={t.platform_fee_pct} onChange={e => updateTier(i, 'platform_fee_pct', e.target.value)} />
+                  </div>
+                  <div className="md:col-span-3 space-y-1">
+                    <Label className="text-xs">Late Penalty % (per day)</Label>
+                    <Input type="number" min="0" step="0.001" value={t.late_penalty_rate_pct_daily} onChange={e => updateTier(i, 'late_penalty_rate_pct_daily', e.target.value)} />
+                  </div>
                 </div>
-                <div className="md:col-span-3 space-y-1">
-                  <Label className="text-xs">Discount Fee %</Label>
-                  <Input type="number" min="0" step="0.001" value={t.discount_fee_pct} onChange={e => updateTier(i, 'discount_fee_pct', e.target.value)} />
-                </div>
-                <div className="md:col-span-4 space-y-1">
-                  <Label className="text-xs">Label (optional)</Label>
-                  <Input value={t.label} onChange={e => updateTier(i, 'label', e.target.value)} placeholder={`${t.term_days || '30'} days`} />
-                </div>
-                <div className="md:col-span-2 flex justify-end">
-                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => removeTier(i)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                  <div className="md:col-span-10 space-y-1">
+                    <Label className="text-xs">Label (optional)</Label>
+                    <Input value={t.label} onChange={e => updateTier(i, 'label', e.target.value)} placeholder={`${t.term_days || '30'} days`} />
+                  </div>
+                  <div className="md:col-span-2 flex justify-end">
+                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => removeTier(i)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
