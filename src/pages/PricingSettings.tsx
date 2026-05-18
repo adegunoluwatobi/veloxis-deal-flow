@@ -283,6 +283,54 @@ export default function PricingSettings() {
         </CardContent>
       </Card>
 
+      {/* Discount Fee Tiers */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Discount Fee Tiers</CardTitle>
+          <CardDescription>
+            Configure multiple discount fee rates based on payment term length (e.g. 3.5% for 30 days, 4.5% for 60 days, 5.5% for 90 days). These rates apply to new applications going forward.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {tiers.length === 0 && (
+            <p className="text-sm text-muted-foreground">No tiers configured. Add at least one tier below.</p>
+          )}
+          <div className="space-y-3">
+            {tiers.map((t, i) => (
+              <div key={t.id ?? `new-${i}`} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end rounded-md border border-border p-3">
+                <div className="md:col-span-3 space-y-1">
+                  <Label className="text-xs">Term (days)</Label>
+                  <Input type="number" min="1" step="1" value={t.term_days} onChange={e => updateTier(i, 'term_days', e.target.value)} />
+                </div>
+                <div className="md:col-span-3 space-y-1">
+                  <Label className="text-xs">Discount Fee %</Label>
+                  <Input type="number" min="0" step="0.001" value={t.discount_fee_pct} onChange={e => updateTier(i, 'discount_fee_pct', e.target.value)} />
+                </div>
+                <div className="md:col-span-4 space-y-1">
+                  <Label className="text-xs">Label (optional)</Label>
+                  <Input value={t.label} onChange={e => updateTier(i, 'label', e.target.value)} placeholder={`${t.term_days || '30'} days`} />
+                </div>
+                <div className="md:col-span-2 flex justify-end">
+                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => removeTier(i)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={addTier} className="gap-1">
+              <Plus className="h-3 w-3" /> Add Tier
+            </Button>
+            <Button size="sm" onClick={handleSaveTiers} disabled={savingTiers}>
+              {savingTiers ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+              {savingTiers ? 'Saving…' : 'Save Tiers'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+
       {/* Rate History */}
       <Card>
         <CardHeader>
