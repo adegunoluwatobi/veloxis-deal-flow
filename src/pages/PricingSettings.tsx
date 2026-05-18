@@ -45,7 +45,91 @@ export default function PricingSettings() {
     },
   });
 
-  const [form, setForm] = useState<Record<string, string>>({});
+  // Discount fee tiers (e.g. 30d/60d/90d)
+  type TierRow = { id?: string; term_days: string; discount_fee_pct: string; label: string; sort_order: number; _dirty?: boolean; _new?: boolean };
+  const [tiers, setTiers] = useState<TierRow[]>([]);
+  const [tiersLoaded, setTiersLoaded] = useState(false);
+  const [savingTiers, setSavingTiers] = useState(false);
+  const [deletedTierIds, setDeletedTierIds] = useState<string[]>([]);
+
+  const { data: tiersData } = useQuery({
+    queryKey: ['pricing_discount_tiers'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('pricing_discount_tiers')
+        .select('*')
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  if (tiersData && !tiersLoaded) {
+    setTiers(tiersData.map((t: any) => ({
+      id: t.id,
+      term_days: String(t.term_days),
+      discount_fee_pct: String(t.discount_fee_pct),
+      label: t.label ?? '',
+      sort_order: t.sort_order ?? 0,
+    })));
+    setTiersLoaded(true);
+  }
+
+  const addTier = () => setTiers([...tiers, { term_days: '', discount_fee_pct: '', label: '', sort_order: tiers.length + 1, _new: true, _dirty: true }]);
+  const updateTier = (i: number, field: keyof TierRow, value: string) => {
+    const next = [...tiers];
+    (next[i] as any)[field] = value;
+    next[i]._dirty = true;
+    setTiers(next);
+  };
+  const removeTier = (i: number) => {
+    const row = tiers[i];
+    if (row.id) setDeletedTierIds(prev => [...prev, row.id!]);
+    setTiers(tiers.filter((_, idx) => idx !== i));
+  };
+
+  const handleSaveTiers = async () => {
+    if (!user) return;
+    // Validate
+    for (const t of tiers) {
+      const td = parseInt(t.term_days);
+      const pct = parseFloat(t.discount_fee_pct);
+      if (!td || td <= 0 || isNaN(pct) || pct < 0) {
+        toast({ title: 'Invalid tier', description: 'Term days must be > 0 and fee % must be valid.', variant: 'destructive' });
+        return;
+      }
+    }
+    setSavingTiers(true);
+    try {
+      for (const id of deletedTierIds) {
+        await (supabase as any).from('pricing_discount_tiers').delete().eq('id', id);
+      }
+      for (const t of tiers) {
+        if (!t._dirty && !t._new) continue;
+        const payload = {
+          term_days: parseInt(t.term_days),
+          discount_fee_pct: parseFloat(t.discount_fee_pct),
+          label: t.label || `${t.term_days} days`,
+          sort_order: t.sort_order,
+          updated_by: user.id,
+        };
+        if (t.id) {
+          await (supabase as any).from('pricing_discount_tiers').update(payload).eq('id', t.id);
+        } else {
+          await (supabase as any).from('pricing_discount_tiers').insert(payload);
+        }
+      }
+      setDeletedTierIds([]);
+      toast({ title: 'Discount tiers saved' });
+      queryClient.invalidateQueries({ queryKey: ['pricing_discount_tiers'] });
+      setTiersLoaded(false);
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setSavingTiers(false);
+    }
+  };
+
 
   // Initialize form when config loads
   const initForm = () => {
