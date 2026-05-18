@@ -49,7 +49,7 @@ export default function PricingSettings() {
 
 
   // Discount fee tiers (e.g. 30d/60d/90d)
-  type TierRow = { id?: string; term_days: string; discount_fee_pct: string; label: string; sort_order: number; _dirty?: boolean; _new?: boolean };
+  type TierRow = { id?: string; term_days: string; discount_fee_pct: string; platform_fee_pct: string; late_penalty_rate_pct_daily: string; label: string; sort_order: number; _dirty?: boolean; _new?: boolean };
   const [tiers, setTiers] = useState<TierRow[]>([]);
   const [tiersLoaded, setTiersLoaded] = useState(false);
   const [savingTiers, setSavingTiers] = useState(false);
@@ -72,13 +72,15 @@ export default function PricingSettings() {
       id: t.id,
       term_days: String(t.term_days),
       discount_fee_pct: String(t.discount_fee_pct),
+      platform_fee_pct: String(t.platform_fee_pct ?? 0),
+      late_penalty_rate_pct_daily: String(t.late_penalty_rate_pct_daily ?? 0),
       label: t.label ?? '',
       sort_order: t.sort_order ?? 0,
     })));
     setTiersLoaded(true);
   }
 
-  const addTier = () => setTiers([...tiers, { term_days: '', discount_fee_pct: '', label: '', sort_order: tiers.length + 1, _new: true, _dirty: true }]);
+  const addTier = () => setTiers([...tiers, { term_days: '', discount_fee_pct: '', platform_fee_pct: '', late_penalty_rate_pct_daily: '', label: '', sort_order: tiers.length + 1, _new: true, _dirty: true }]);
   const updateTier = (i: number, field: keyof TierRow, value: string) => {
     const next = [...tiers];
     (next[i] as any)[field] = value;
