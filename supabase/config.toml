@@ -25,5 +25,7 @@ project_id = "mesvzeqhqdokyysyfknn"
     verify_jwt = true
   [functions.smileid-kyc]
     verify_jwt = true
+  [functions.smileid-aml]
+    verify_jwt = true
   [functions.smileid-review]
     verify_jwt = true

@@ -1,6 +1,6 @@
 // Smile ID async callback (webhook). verify_jwt=false. Always returns HTTP 200.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { corsHeaders, normalizeKybResult, normalizeKycResult } from "../_shared/smileid.ts";
+import { corsHeaders, normalizeKybResult, normalizeKycResult, normalizeAmlResult } from "../_shared/smileid.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -33,12 +33,19 @@ Deno.serve(async (req) => {
         .eq("provider_job_id", providerJobId).maybeSingle();
 
       if (job) {
-        const norm = job.job_type === "kyb" ? normalizeKybResult(payload) : normalizeKycResult(payload);
+        const norm = job.job_type === "kyb"
+          ? normalizeKybResult(payload)
+          : job.job_type === "aml"
+            ? normalizeAmlResult(payload)
+            : normalizeKycResult(payload);
+        const extraPayload = job.job_type === "aml"
+          ? { ...payload, _hits_count: (norm as any).hits_count, _risk_band: (norm as any).risk_band }
+          : payload;
         await admin.from("verification_jobs")
           .update({
             provider_status: norm.provider_status,
             internal_status: norm.internal_status,
-            result_payload: payload,
+            result_payload: extraPayload,
           })
           .eq("id", job.id);
 
@@ -47,7 +54,11 @@ Deno.serve(async (req) => {
           subject_type: job.subject_type, subject_id: job.subject_id,
           event_type: `${job.job_type}_result_received`,
           actor_user_id: null, actor_role: "system",
-          details: { provider_status: norm.provider_status, internal_status: norm.internal_status },
+          details: {
+            provider_status: norm.provider_status,
+            internal_status: norm.internal_status,
+            ...(job.job_type === "aml" ? { hits_count: (norm as any).hits_count, risk_band: (norm as any).risk_band } : {}),
+          },
         });
 
         await admin.from("verification_callbacks")
