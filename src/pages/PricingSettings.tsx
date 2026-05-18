@@ -49,7 +49,7 @@ export default function PricingSettings() {
 
 
   // Discount fee tiers (e.g. 30d/60d/90d)
-  type TierRow = { id?: string; term_days: string; discount_fee_pct: string; label: string; sort_order: number; _dirty?: boolean; _new?: boolean };
+  type TierRow = { id?: string; term_days: string; discount_fee_pct: string; platform_fee_pct: string; late_penalty_rate_pct_daily: string; label: string; sort_order: number; _dirty?: boolean; _new?: boolean };
   const [tiers, setTiers] = useState<TierRow[]>([]);
   const [tiersLoaded, setTiersLoaded] = useState(false);
   const [savingTiers, setSavingTiers] = useState(false);
@@ -72,13 +72,15 @@ export default function PricingSettings() {
       id: t.id,
       term_days: String(t.term_days),
       discount_fee_pct: String(t.discount_fee_pct),
+      platform_fee_pct: String(t.platform_fee_pct ?? 0),
+      late_penalty_rate_pct_daily: String(t.late_penalty_rate_pct_daily ?? 0),
       label: t.label ?? '',
       sort_order: t.sort_order ?? 0,
     })));
     setTiersLoaded(true);
   }
 
-  const addTier = () => setTiers([...tiers, { term_days: '', discount_fee_pct: '', label: '', sort_order: tiers.length + 1, _new: true, _dirty: true }]);
+  const addTier = () => setTiers([...tiers, { term_days: '', discount_fee_pct: '', platform_fee_pct: '', late_penalty_rate_pct_daily: '', label: '', sort_order: tiers.length + 1, _new: true, _dirty: true }]);
   const updateTier = (i: number, field: keyof TierRow, value: string) => {
     const next = [...tiers];
     (next[i] as any)[field] = value;
@@ -112,6 +114,8 @@ export default function PricingSettings() {
         const payload = {
           term_days: parseInt(t.term_days),
           discount_fee_pct: parseFloat(t.discount_fee_pct),
+          platform_fee_pct: parseFloat(t.platform_fee_pct || '0'),
+          late_penalty_rate_pct_daily: parseFloat(t.late_penalty_rate_pct_daily || '0'),
           label: t.label || `${t.term_days} days`,
           sort_order: t.sort_order,
           updated_by: user.id,
@@ -139,9 +143,6 @@ export default function PricingSettings() {
     if (!config) return;
     setForm({
       advance_rate_pct: String(config.advance_rate_pct),
-      platform_fee_pct: String(config.platform_fee_pct),
-      discount_fee_pct_monthly: String(config.discount_fee_pct_monthly),
-      late_penalty_rate_pct_daily: String(config.late_penalty_rate_pct_daily),
       min_payment_terms_days: String(config.min_payment_terms_days),
       max_payment_terms_days: String(config.max_payment_terms_days),
     });
@@ -152,9 +153,6 @@ export default function PricingSettings() {
 
   const FIELD_LABELS: Record<string, string> = {
     advance_rate_pct: 'Advance Rate %',
-    platform_fee_pct: 'Platform Fee % (one-off)',
-    discount_fee_pct_monthly: 'Discount Fee % (per month)',
-    late_penalty_rate_pct_daily: 'Late Penalty Rate % (per day)',
     min_payment_terms_days: 'Minimum Payment Terms (days)',
     max_payment_terms_days: 'Maximum Payment Terms (days)',
   };
@@ -201,9 +199,6 @@ export default function PricingSettings() {
       // Update config
       const { error } = await supabase.from('pricing_config').update({
         advance_rate_pct: parseFloat(form.advance_rate_pct),
-        platform_fee_pct: parseFloat(form.platform_fee_pct),
-        discount_fee_pct_monthly: parseFloat(form.discount_fee_pct_monthly),
-        late_penalty_rate_pct_daily: parseFloat(form.late_penalty_rate_pct_daily),
         min_payment_terms_days: parseInt(form.min_payment_terms_days),
         max_payment_terms_days: parseInt(form.max_payment_terms_days),
         updated_by: user.id,
@@ -297,23 +292,35 @@ export default function PricingSettings() {
           )}
           <div className="space-y-3">
             {tiers.map((t, i) => (
-              <div key={t.id ?? `new-${i}`} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end rounded-md border border-border p-3">
-                <div className="md:col-span-3 space-y-1">
-                  <Label className="text-xs">Term (days)</Label>
-                  <Input type="number" min="1" step="1" value={t.term_days} onChange={e => updateTier(i, 'term_days', e.target.value)} />
+              <div key={t.id ?? `new-${i}`} className="space-y-3 rounded-md border border-border p-3">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                  <div className="md:col-span-3 space-y-1">
+                    <Label className="text-xs">Term (days)</Label>
+                    <Input type="number" min="1" step="1" value={t.term_days} onChange={e => updateTier(i, 'term_days', e.target.value)} />
+                  </div>
+                  <div className="md:col-span-3 space-y-1">
+                    <Label className="text-xs">Discount Fee %</Label>
+                    <Input type="number" min="0" step="0.001" value={t.discount_fee_pct} onChange={e => updateTier(i, 'discount_fee_pct', e.target.value)} />
+                  </div>
+                  <div className="md:col-span-3 space-y-1">
+                    <Label className="text-xs">Platform Fee % (one-off)</Label>
+                    <Input type="number" min="0" step="0.001" value={t.platform_fee_pct} onChange={e => updateTier(i, 'platform_fee_pct', e.target.value)} />
+                  </div>
+                  <div className="md:col-span-3 space-y-1">
+                    <Label className="text-xs">Late Penalty % (per day)</Label>
+                    <Input type="number" min="0" step="0.001" value={t.late_penalty_rate_pct_daily} onChange={e => updateTier(i, 'late_penalty_rate_pct_daily', e.target.value)} />
+                  </div>
                 </div>
-                <div className="md:col-span-3 space-y-1">
-                  <Label className="text-xs">Discount Fee %</Label>
-                  <Input type="number" min="0" step="0.001" value={t.discount_fee_pct} onChange={e => updateTier(i, 'discount_fee_pct', e.target.value)} />
-                </div>
-                <div className="md:col-span-4 space-y-1">
-                  <Label className="text-xs">Label (optional)</Label>
-                  <Input value={t.label} onChange={e => updateTier(i, 'label', e.target.value)} placeholder={`${t.term_days || '30'} days`} />
-                </div>
-                <div className="md:col-span-2 flex justify-end">
-                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => removeTier(i)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                  <div className="md:col-span-10 space-y-1">
+                    <Label className="text-xs">Label (optional)</Label>
+                    <Input value={t.label} onChange={e => updateTier(i, 'label', e.target.value)} placeholder={`${t.term_days || '30'} days`} />
+                  </div>
+                  <div className="md:col-span-2 flex justify-end">
+                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => removeTier(i)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
