@@ -123,27 +123,56 @@ export default function PartnersPage() {
 
   const handleAdd = async () => {
     if (!newName.trim()) { toast({ title: 'Organisation name is required', variant: 'destructive' }); return; }
-    if (!newEmail.trim()) { toast({ title: 'Admin email is required', variant: 'destructive' }); return; }
+    const email = newEmail.trim().toLowerCase();
+    if (!email) { toast({ title: 'Admin email is required', variant: 'destructive' }); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast({ title: 'Enter a valid email address', variant: 'destructive' }); return;
+    }
     setSaving(true);
 
-    const { error } = await supabase.from('partner_organisations').insert({
-      name: newName.trim(),
-      country: newCountry,
-      admin_email: newEmail.trim(),
-      notes: newNotes.trim() || null,
+    const { data: inserted, error } = await supabase
+      .from('partner_organisations')
+      .insert({
+        name: newName.trim(),
+        country: newCountry,
+        admin_email: email,
+        notes: newNotes.trim() || null,
+      })
+      .select('id')
+      .single();
+
+    if (error || !inserted) {
+      toast({ title: 'Failed to create partner', description: error?.message, variant: 'destructive' });
+      setSaving(false);
+      return;
+    }
+
+    // Invite the Partner Admin so they receive an onboarding email and can log in.
+    const { data: inviteData, error: inviteErr } = await supabase.functions.invoke('invite-partner-admin', {
+      body: {
+        partner_organisation_id: inserted.id,
+        email,
+        full_name: newAdminName.trim(),
+      },
     });
 
-    if (error) {
-      toast({ title: 'Failed to create partner', description: error.message, variant: 'destructive' });
+    if (inviteErr || (inviteData as any)?.error) {
+      toast({
+        title: 'Partner created, but invite failed',
+        description: (inviteData as any)?.error ?? inviteErr?.message ?? 'Send the invite again from the partner detail page.',
+        variant: 'destructive',
+      });
     } else {
-      toast({ title: 'Partner organisation created' });
-      setShowAdd(false);
-      setNewName('');
-      setNewCountry('Nigeria');
-      setNewEmail('');
-      setNewNotes('');
-      load();
+      toast({ title: 'Partner created and invite email sent' });
     }
+
+    setShowAdd(false);
+    setNewName('');
+    setNewCountry('Nigeria');
+    setNewEmail('');
+    setNewAdminName('');
+    setNewNotes('');
+    load();
     setSaving(false);
   };
 
