@@ -296,6 +296,22 @@ function UserDetailSheet({ user, currentUserId, onClose, onChanged, confirm }: a
             <Button variant="outline" className="w-full justify-start" onClick={handleForceReset}>
               <KeyRound className="h-4 w-4 mr-2" /> Force Password Reset
             </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={async () => {
+                const { data, error } = await supabase.functions.invoke('send-registration-link', {
+                  body: { email: user.email, full_name: user.full_name ?? '', path: '/apply/exporter' },
+                });
+                if (error || (data as any)?.error) {
+                  toast.error((data as any)?.error ?? error?.message ?? 'Failed to send');
+                  return;
+                }
+                toast.success(`Registration link sent to ${user.email}`);
+              }}
+            >
+              <Send className="h-4 w-4 mr-2" /> Send registration link
+            </Button>
             {!isSelf && (
               user.is_active === false ? (
                 <Button variant="outline" className="w-full justify-start" onClick={handleReactivate}>
@@ -311,5 +327,148 @@ function UserDetailSheet({ user, currentUserId, onClose, onChanged, confirm }: a
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Registration invites panel + Invite-by-email dialog
+// ---------------------------------------------------------------------------
+
+function RegistrationInvitesPanel() {
+  const queryClient = useQueryClient();
+  const { data: invites, isLoading } = useQuery({
+    queryKey: ['registration_invites'],
+    queryFn: async () => {
+      const [{ data: invs }, { data: apps }, { data: exps }] = await Promise.all([
+        supabase.from('registration_invites' as any).select('*').order('last_sent_at', { ascending: false }),
+        supabase.from('exporter_applications').select('email, status, created_at'),
+        supabase.from('exporters').select('contact_email, onboarding_status, activated_at'),
+      ]);
+      const appByEmail: Record<string, any> = {};
+      (apps ?? []).forEach((a: any) => { appByEmail[a.email?.toLowerCase()] = a; });
+      const expByEmail: Record<string, any> = {};
+      (exps ?? []).forEach((e: any) => { if (e.contact_email) expByEmail[e.contact_email.toLowerCase()] = e; });
+      return (invs ?? []).map((i: any) => {
+        const e = i.email?.toLowerCase();
+        const app = appByEmail[e];
+        const exp = expByEmail[e];
+        let stage: 'invited' | 'applied' | 'onboarding' | 'approved' = 'invited';
+        if (exp?.activated_at) stage = 'approved';
+        else if (exp) stage = 'onboarding';
+        else if (app) stage = 'applied';
+        return { ...i, stage, app_status: app?.status, exp_status: exp?.onboarding_status };
+      });
+    },
+  });
+
+  const resend = async (email: string, full_name?: string) => {
+    const { data, error } = await supabase.functions.invoke('send-registration-link', {
+      body: { email, full_name: full_name ?? '', path: '/apply/exporter' },
+    });
+    if (error || (data as any)?.error) {
+      toast.error((data as any)?.error ?? error?.message ?? 'Failed to send');
+      return;
+    }
+    toast.success(`Registration link resent to ${email}`);
+    queryClient.invalidateQueries({ queryKey: ['registration_invites'] });
+  };
+
+  const stageBadge = (s: string) => {
+    switch (s) {
+      case 'approved': return <Badge className="bg-success/10 text-success border-success/30">Approved</Badge>;
+      case 'onboarding': return <Badge className="bg-blue-100 text-blue-800 border-blue-300">Onboarding</Badge>;
+      case 'applied': return <Badge className="bg-amber-100 text-amber-800 border-amber-300">Application submitted</Badge>;
+      default: return <Badge variant="secondary">Invited</Badge>;
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader><CardTitle className="text-base">Registration invites</CardTitle></CardHeader>
+      <CardContent>
+        {isLoading ? <Skeleton className="h-48" /> : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Email</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Stage</TableHead>
+                <TableHead>Sent</TableHead>
+                <TableHead>Last sent</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(invites ?? []).length === 0 ? (
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No registration invites yet.</TableCell></TableRow>
+              ) : (invites ?? []).map((i: any) => (
+                <TableRow key={i.id}>
+                  <TableCell className="font-medium">{i.email}</TableCell>
+                  <TableCell>{i.full_name ?? '—'}</TableCell>
+                  <TableCell>{stageBadge(i.stage)}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{i.send_count}×</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{format(new Date(i.last_sent_at), 'dd MMM yyyy HH:mm')}</TableCell>
+                  <TableCell className="text-right">
+                    <Button size="sm" variant="ghost" onClick={() => resend(i.email, i.full_name)}>
+                      <Send className="h-3.5 w-3.5 mr-1" /> Resend
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function InviteByEmailDialog({ open, onOpenChange, onSent }: { open: boolean; onOpenChange: (v: boolean) => void; onSent: () => void }) {
+  const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [sending, setSending] = useState(false);
+
+  const handleSend = async () => {
+    const e = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) { toast.error('Enter a valid email address'); return; }
+    setSending(true);
+    const { data, error } = await supabase.functions.invoke('send-registration-link', {
+      body: { email: e, full_name: fullName.trim(), path: '/apply/exporter' },
+    });
+    setSending(false);
+    if (error || (data as any)?.error) { toast.error((data as any)?.error ?? error?.message ?? 'Failed to send'); return; }
+    toast.success(`Registration link sent to ${e}`);
+    setEmail(''); setFullName('');
+    onSent();
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Invite a new exporter</DialogTitle>
+          <DialogDescription>
+            Sends an email with a link to <span className="font-mono">/apply/exporter</span> so they can complete the application.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Email <span className="text-destructive">*</span></Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="prospect@company.com" />
+          </div>
+          <div>
+            <Label>Full name</Label>
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Optional" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSend} disabled={sending}>
+            {sending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Send invite
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
