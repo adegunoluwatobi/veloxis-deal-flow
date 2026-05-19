@@ -12,9 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { toast } from 'sonner';
-import { Loader2, Search, KeyRound, ShieldOff, ShieldCheck, Users } from 'lucide-react';
+import { Loader2, Search, KeyRound, ShieldOff, ShieldCheck, Users, Send, Mail, ExternalLink } from 'lucide-react';
+import { format } from 'date-fns';
 import type { AppRole } from '@/types';
 import { ROLE_LABELS } from '@/types';
 
