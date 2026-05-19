@@ -242,10 +242,12 @@ export default function PartnersPage() {
                   <TableCell>
                     {p.suspended_at ? (
                       <Badge variant="destructive">Suspended</Badge>
-                    ) : p.is_active ? (
+                    ) : !p.is_active ? (
+                      <Badge variant="secondary">Inactive</Badge>
+                    ) : adminAcceptedByOrg[p.id] ? (
                       <Badge className="bg-success/10 text-success border-success/30">Active</Badge>
                     ) : (
-                      <Badge variant="secondary">Inactive</Badge>
+                      <Badge className="bg-amber-100 text-amber-800 border-amber-300">Pending invite</Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{format(new Date(p.created_at), 'dd MMM yyyy')}</TableCell>
