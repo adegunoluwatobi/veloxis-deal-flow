@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { toast } from 'sonner';
-import { Loader2, Search, KeyRound, ShieldOff, ShieldCheck, Users, Send, Mail, ExternalLink } from 'lucide-react';
+import { Loader2, Search, KeyRound, ShieldOff, ShieldCheck, Users, Send, Mail } from 'lucide-react';
 import { format } from 'date-fns';
 import type { AppRole } from '@/types';
 import { ROLE_LABELS } from '@/types';
