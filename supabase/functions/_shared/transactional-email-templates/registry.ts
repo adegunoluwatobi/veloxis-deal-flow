@@ -45,6 +45,9 @@ import { template as ipuPendingReminder } from './ipu-pending-reminder.tsx'
 import { template as maturityReminder7 } from './maturity-reminder-7.tsx'
 import { template as maturityReminder1 } from './maturity-reminder-1.tsx'
 
+// Stage 4 — Admin-initiated invites.
+import { template as registrationLinkInvite } from './registration-link-invite.tsx'
+
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'exporter-invitation': exporterInvitation,
   'exporter-accepted-invite': exporterAcceptedInvite,
