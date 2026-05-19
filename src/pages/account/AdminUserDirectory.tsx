@@ -12,9 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { toast } from 'sonner';
-import { Loader2, Search, KeyRound, ShieldOff, ShieldCheck, Users } from 'lucide-react';
+import { Loader2, Search, KeyRound, ShieldOff, ShieldCheck, Users, Send, Mail } from 'lucide-react';
+import { format } from 'date-fns';
 import type { AppRole } from '@/types';
 import { ROLE_LABELS } from '@/types';
 
@@ -61,72 +64,92 @@ export default function AdminUserDirectory() {
 
   const selectedUser = useMemo(() => (rows ?? []).find((r: any) => r.id === selectedUserId), [rows, selectedUserId]);
 
+  const [showInviteEmail, setShowInviteEmail] = useState(false);
+
   return (
     <div className="space-y-6">
       <Helmet><title>User Management · Veloxis</title></Helmet>
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2"><Users className="h-6 w-6" /> User Management</h1>
-        <p className="text-sm text-muted-foreground">All platform users. Click a row to manage.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><Users className="h-6 w-6" /> User Management</h1>
+          <p className="text-sm text-muted-foreground">All platform users and registration invites.</p>
+        </div>
+        <Button onClick={() => setShowInviteEmail(true)}>
+          <Mail className="h-4 w-4 mr-2" /> Invite by email
+        </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="grid gap-3 md:grid-cols-[1fr_200px_200px]">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input className="pl-9" placeholder="Search name, email, organisation…" value={search} onChange={(e) => setSearch(e.target.value)} />
-            </div>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All roles</SelectItem>
-                {ALL_ROLES.map((r) => <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? <Skeleton className="h-64" /> : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Organisation</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((r: any) => (
-                  <TableRow key={r.id} className="cursor-pointer" onClick={() => setSelectedUserId(r.id)}>
-                    <TableCell className="font-medium">{r.full_name ?? '—'}</TableCell>
-                    <TableCell>{r.email}</TableCell>
-                    <TableCell>{r.role ? <Badge variant="secondary">{ROLE_LABELS[r.role as AppRole]}</Badge> : <span className="text-muted-foreground text-xs">—</span>}</TableCell>
-                    <TableCell>{r.organisation_name ?? '—'}</TableCell>
-                    <TableCell>
-                      <Badge variant={r.is_active === false ? 'destructive' : 'default'}>
-                        {r.is_active === false ? 'Suspended' : 'Active'}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filtered.length === 0 && (
-                  <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No users match your filters.</TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="users">
+        <TabsList>
+          <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="invites">Registration invites</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="users" className="mt-4">
+          <Card>
+            <CardHeader>
+              <div className="grid gap-3 md:grid-cols-[1fr_200px_200px]">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input className="pl-9" placeholder="Search name, email, organisation…" value={search} onChange={(e) => setSearch(e.target.value)} />
+                </div>
+                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All roles</SelectItem>
+                    {ALL_ROLES.map((r) => <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="suspended">Suspended</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? <Skeleton className="h-64" /> : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Organisation</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map((r: any) => (
+                      <TableRow key={r.id} className="cursor-pointer" onClick={() => setSelectedUserId(r.id)}>
+                        <TableCell className="font-medium">{r.full_name ?? '—'}</TableCell>
+                        <TableCell>{r.email}</TableCell>
+                        <TableCell>{r.role ? <Badge variant="secondary">{ROLE_LABELS[r.role as AppRole]}</Badge> : <span className="text-muted-foreground text-xs">—</span>}</TableCell>
+                        <TableCell>{r.organisation_name ?? '—'}</TableCell>
+                        <TableCell>
+                          <Badge variant={r.is_active === false ? 'destructive' : 'default'}>
+                            {r.is_active === false ? 'Suspended' : 'Active'}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {filtered.length === 0 && (
+                      <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No users match your filters.</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="invites" className="mt-4">
+          <RegistrationInvitesPanel />
+        </TabsContent>
+      </Tabs>
 
       <UserDetailSheet
         user={selectedUser}
@@ -134,6 +157,12 @@ export default function AdminUserDirectory() {
         onClose={() => setSelectedUserId(null)}
         onChanged={() => queryClient.invalidateQueries({ queryKey: ['admin_user_directory'] })}
         confirm={confirm}
+      />
+
+      <InviteByEmailDialog
+        open={showInviteEmail}
+        onOpenChange={setShowInviteEmail}
+        onSent={() => queryClient.invalidateQueries({ queryKey: ['registration_invites'] })}
       />
     </div>
   );
@@ -267,6 +296,22 @@ function UserDetailSheet({ user, currentUserId, onClose, onChanged, confirm }: a
             <Button variant="outline" className="w-full justify-start" onClick={handleForceReset}>
               <KeyRound className="h-4 w-4 mr-2" /> Force Password Reset
             </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={async () => {
+                const { data, error } = await supabase.functions.invoke('send-registration-link', {
+                  body: { email: user.email, full_name: user.full_name ?? '', path: '/apply/exporter' },
+                });
+                if (error || (data as any)?.error) {
+                  toast.error((data as any)?.error ?? error?.message ?? 'Failed to send');
+                  return;
+                }
+                toast.success(`Registration link sent to ${user.email}`);
+              }}
+            >
+              <Send className="h-4 w-4 mr-2" /> Send registration link
+            </Button>
             {!isSelf && (
               user.is_active === false ? (
                 <Button variant="outline" className="w-full justify-start" onClick={handleReactivate}>
@@ -282,5 +327,148 @@ function UserDetailSheet({ user, currentUserId, onClose, onChanged, confirm }: a
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Registration invites panel + Invite-by-email dialog
+// ---------------------------------------------------------------------------
+
+function RegistrationInvitesPanel() {
+  const queryClient = useQueryClient();
+  const { data: invites, isLoading } = useQuery({
+    queryKey: ['registration_invites'],
+    queryFn: async () => {
+      const [{ data: invs }, { data: apps }, { data: exps }] = await Promise.all([
+        supabase.from('registration_invites' as any).select('*').order('last_sent_at', { ascending: false }),
+        supabase.from('exporter_applications').select('email, status, created_at'),
+        supabase.from('exporters').select('contact_email, onboarding_status, activated_at'),
+      ]);
+      const appByEmail: Record<string, any> = {};
+      (apps ?? []).forEach((a: any) => { appByEmail[a.email?.toLowerCase()] = a; });
+      const expByEmail: Record<string, any> = {};
+      (exps ?? []).forEach((e: any) => { if (e.contact_email) expByEmail[e.contact_email.toLowerCase()] = e; });
+      return (invs ?? []).map((i: any) => {
+        const e = i.email?.toLowerCase();
+        const app = appByEmail[e];
+        const exp = expByEmail[e];
+        let stage: 'invited' | 'applied' | 'onboarding' | 'approved' = 'invited';
+        if (exp?.activated_at) stage = 'approved';
+        else if (exp) stage = 'onboarding';
+        else if (app) stage = 'applied';
+        return { ...i, stage, app_status: app?.status, exp_status: exp?.onboarding_status };
+      });
+    },
+  });
+
+  const resend = async (email: string, full_name?: string) => {
+    const { data, error } = await supabase.functions.invoke('send-registration-link', {
+      body: { email, full_name: full_name ?? '', path: '/apply/exporter' },
+    });
+    if (error || (data as any)?.error) {
+      toast.error((data as any)?.error ?? error?.message ?? 'Failed to send');
+      return;
+    }
+    toast.success(`Registration link resent to ${email}`);
+    queryClient.invalidateQueries({ queryKey: ['registration_invites'] });
+  };
+
+  const stageBadge = (s: string) => {
+    switch (s) {
+      case 'approved': return <Badge className="bg-success/10 text-success border-success/30">Approved</Badge>;
+      case 'onboarding': return <Badge className="bg-blue-100 text-blue-800 border-blue-300">Onboarding</Badge>;
+      case 'applied': return <Badge className="bg-amber-100 text-amber-800 border-amber-300">Application submitted</Badge>;
+      default: return <Badge variant="secondary">Invited</Badge>;
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader><CardTitle className="text-base">Registration invites</CardTitle></CardHeader>
+      <CardContent>
+        {isLoading ? <Skeleton className="h-48" /> : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Email</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Stage</TableHead>
+                <TableHead>Sent</TableHead>
+                <TableHead>Last sent</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(invites ?? []).length === 0 ? (
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No registration invites yet.</TableCell></TableRow>
+              ) : (invites ?? []).map((i: any) => (
+                <TableRow key={i.id}>
+                  <TableCell className="font-medium">{i.email}</TableCell>
+                  <TableCell>{i.full_name ?? '—'}</TableCell>
+                  <TableCell>{stageBadge(i.stage)}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{i.send_count}×</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{format(new Date(i.last_sent_at), 'dd MMM yyyy HH:mm')}</TableCell>
+                  <TableCell className="text-right">
+                    <Button size="sm" variant="ghost" onClick={() => resend(i.email, i.full_name)}>
+                      <Send className="h-3.5 w-3.5 mr-1" /> Resend
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function InviteByEmailDialog({ open, onOpenChange, onSent }: { open: boolean; onOpenChange: (v: boolean) => void; onSent: () => void }) {
+  const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [sending, setSending] = useState(false);
+
+  const handleSend = async () => {
+    const e = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) { toast.error('Enter a valid email address'); return; }
+    setSending(true);
+    const { data, error } = await supabase.functions.invoke('send-registration-link', {
+      body: { email: e, full_name: fullName.trim(), path: '/apply/exporter' },
+    });
+    setSending(false);
+    if (error || (data as any)?.error) { toast.error((data as any)?.error ?? error?.message ?? 'Failed to send'); return; }
+    toast.success(`Registration link sent to ${e}`);
+    setEmail(''); setFullName('');
+    onSent();
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Invite a new exporter</DialogTitle>
+          <DialogDescription>
+            Sends an email with a link to <span className="font-mono">/apply/exporter</span> so they can complete the application.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Email <span className="text-destructive">*</span></Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="prospect@company.com" />
+          </div>
+          <div>
+            <Label>Full name</Label>
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Optional" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSend} disabled={sending}>
+            {sending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Send invite
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

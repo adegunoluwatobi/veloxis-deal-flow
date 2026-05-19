@@ -29,3 +29,7 @@ project_id = "mesvzeqhqdokyysyfknn"
     verify_jwt = true
   [functions.smileid-review]
     verify_jwt = true
+  [functions.invite-partner-admin]
+    verify_jwt = true
+  [functions.send-registration-link]
+    verify_jwt = true

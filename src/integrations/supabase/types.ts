@@ -1957,6 +1957,48 @@ export type Database = {
           },
         ]
       }
+      registration_invites: {
+        Row: {
+          created_at: string
+          email: string
+          first_sent_at: string
+          full_name: string | null
+          id: string
+          invited_by: string | null
+          last_sent_at: string
+          notes: string | null
+          send_count: number
+          target_path: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_sent_at?: string
+          full_name?: string | null
+          id?: string
+          invited_by?: string | null
+          last_sent_at?: string
+          notes?: string | null
+          send_count?: number
+          target_path?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_sent_at?: string
+          full_name?: string | null
+          id?: string
+          invited_by?: string | null
+          last_sent_at?: string
+          notes?: string | null
+          send_count?: number
+          target_path?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string

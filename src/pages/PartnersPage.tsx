@@ -32,6 +32,7 @@ export default function PartnersPage() {
   const [partners, setPartners] = useState<PartnerOrg[]>([]);
   const [exporterCounts, setExporterCounts] = useState<Record<string, number>>({});
   const [dealCounts, setDealCounts] = useState<Record<string, number>>({});
+  const [adminAcceptedByOrg, setAdminAcceptedByOrg] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -41,6 +42,7 @@ export default function PartnersPage() {
   const [newName, setNewName] = useState('');
   const [newCountry, setNewCountry] = useState('Nigeria');
   const [newEmail, setNewEmail] = useState('');
+  const [newAdminName, setNewAdminName] = useState('');
   const [newNotes, setNewNotes] = useState('');
 
   const load = async () => {
@@ -71,19 +73,25 @@ export default function PartnersPage() {
       (usersData ?? []).forEach((u: any) => { usersById[u.id] = { email: u.email }; });
     }
 
-    // Prefer partner_admin email, then partner_staff, then admin_email column
+    // Prefer partner_admin email, then partner_staff, then admin_email column.
+    // Also: an org is treated as "accepted" only when at least one partner_admin
+    // row points to a user that has actually signed up (= row exists in users).
     const adminEmailByOrg: Record<string, string> = {};
     const staffEmailByOrg: Record<string, string> = {};
+    const acceptedByOrg: Record<string, boolean> = {};
     (roles ?? []).forEach((r: any) => {
       if (!r.partner_organisation_id) return;
       const email = usersById[r.user_id]?.email;
-      if (!email) return;
-      if (r.role === 'partner_admin' && !adminEmailByOrg[r.partner_organisation_id]) {
+      if (r.role === 'partner_admin' && email && !adminEmailByOrg[r.partner_organisation_id]) {
         adminEmailByOrg[r.partner_organisation_id] = email;
-      } else if (r.role === 'partner_staff' && !staffEmailByOrg[r.partner_organisation_id]) {
+      } else if (r.role === 'partner_staff' && email && !staffEmailByOrg[r.partner_organisation_id]) {
         staffEmailByOrg[r.partner_organisation_id] = email;
       }
+      if (r.role === 'partner_admin' && usersById[r.user_id]) {
+        acceptedByOrg[r.partner_organisation_id] = true;
+      }
     });
+    setAdminAcceptedByOrg(acceptedByOrg);
 
     const enriched = orgList.map(p => ({
       ...p,
@@ -115,27 +123,56 @@ export default function PartnersPage() {
 
   const handleAdd = async () => {
     if (!newName.trim()) { toast({ title: 'Organisation name is required', variant: 'destructive' }); return; }
-    if (!newEmail.trim()) { toast({ title: 'Admin email is required', variant: 'destructive' }); return; }
+    const email = newEmail.trim().toLowerCase();
+    if (!email) { toast({ title: 'Admin email is required', variant: 'destructive' }); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast({ title: 'Enter a valid email address', variant: 'destructive' }); return;
+    }
     setSaving(true);
 
-    const { error } = await supabase.from('partner_organisations').insert({
-      name: newName.trim(),
-      country: newCountry,
-      admin_email: newEmail.trim(),
-      notes: newNotes.trim() || null,
+    const { data: inserted, error } = await supabase
+      .from('partner_organisations')
+      .insert({
+        name: newName.trim(),
+        country: newCountry,
+        admin_email: email,
+        notes: newNotes.trim() || null,
+      })
+      .select('id')
+      .single();
+
+    if (error || !inserted) {
+      toast({ title: 'Failed to create partner', description: error?.message, variant: 'destructive' });
+      setSaving(false);
+      return;
+    }
+
+    // Invite the Partner Admin so they receive an onboarding email and can log in.
+    const { data: inviteData, error: inviteErr } = await supabase.functions.invoke('invite-partner-admin', {
+      body: {
+        partner_organisation_id: inserted.id,
+        email,
+        full_name: newAdminName.trim(),
+      },
     });
 
-    if (error) {
-      toast({ title: 'Failed to create partner', description: error.message, variant: 'destructive' });
+    if (inviteErr || (inviteData as any)?.error) {
+      toast({
+        title: 'Partner created, but invite failed',
+        description: (inviteData as any)?.error ?? inviteErr?.message ?? 'Send the invite again from the partner detail page.',
+        variant: 'destructive',
+      });
     } else {
-      toast({ title: 'Partner organisation created' });
-      setShowAdd(false);
-      setNewName('');
-      setNewCountry('Nigeria');
-      setNewEmail('');
-      setNewNotes('');
-      load();
+      toast({ title: 'Partner created and invite email sent' });
     }
+
+    setShowAdd(false);
+    setNewName('');
+    setNewCountry('Nigeria');
+    setNewEmail('');
+    setNewAdminName('');
+    setNewNotes('');
+    load();
     setSaving(false);
   };
 
@@ -205,10 +242,12 @@ export default function PartnersPage() {
                   <TableCell>
                     {p.suspended_at ? (
                       <Badge variant="destructive">Suspended</Badge>
-                    ) : p.is_active ? (
+                    ) : !p.is_active ? (
+                      <Badge variant="secondary">Inactive</Badge>
+                    ) : adminAcceptedByOrg[p.id] ? (
                       <Badge className="bg-success/10 text-success border-success/30">Active</Badge>
                     ) : (
-                      <Badge variant="secondary">Inactive</Badge>
+                      <Badge className="bg-amber-100 text-amber-800 border-amber-300">Pending invite</Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{format(new Date(p.created_at), 'dd MMM yyyy')}</TableCell>
@@ -245,6 +284,11 @@ export default function PartnersPage() {
             <div>
               <Label>Primary Admin Email <span className="text-destructive">*</span></Label>
               <Input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="admin@partner.com" />
+              <p className="text-xs text-muted-foreground mt-1">An invite email will be sent so they can set a password and log in.</p>
+            </div>
+            <div>
+              <Label>Primary Admin Name</Label>
+              <Input value={newAdminName} onChange={e => setNewAdminName(e.target.value)} placeholder="Full name (optional)" />
             </div>
             <div>
               <Label>Notes</Label>
