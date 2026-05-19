@@ -73,19 +73,25 @@ export default function PartnersPage() {
       (usersData ?? []).forEach((u: any) => { usersById[u.id] = { email: u.email }; });
     }
 
-    // Prefer partner_admin email, then partner_staff, then admin_email column
+    // Prefer partner_admin email, then partner_staff, then admin_email column.
+    // Also: an org is treated as "accepted" only when at least one partner_admin
+    // row points to a user that has actually signed up (= row exists in users).
     const adminEmailByOrg: Record<string, string> = {};
     const staffEmailByOrg: Record<string, string> = {};
+    const acceptedByOrg: Record<string, boolean> = {};
     (roles ?? []).forEach((r: any) => {
       if (!r.partner_organisation_id) return;
       const email = usersById[r.user_id]?.email;
-      if (!email) return;
-      if (r.role === 'partner_admin' && !adminEmailByOrg[r.partner_organisation_id]) {
+      if (r.role === 'partner_admin' && email && !adminEmailByOrg[r.partner_organisation_id]) {
         adminEmailByOrg[r.partner_organisation_id] = email;
-      } else if (r.role === 'partner_staff' && !staffEmailByOrg[r.partner_organisation_id]) {
+      } else if (r.role === 'partner_staff' && email && !staffEmailByOrg[r.partner_organisation_id]) {
         staffEmailByOrg[r.partner_organisation_id] = email;
       }
+      if (r.role === 'partner_admin' && usersById[r.user_id]) {
+        acceptedByOrg[r.partner_organisation_id] = true;
+      }
     });
+    setAdminAcceptedByOrg(acceptedByOrg);
 
     const enriched = orgList.map(p => ({
       ...p,
