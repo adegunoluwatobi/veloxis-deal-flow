@@ -76,4 +76,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'ipu-pending-reminder': ipuPendingReminder,
   'maturity-reminder-7': maturityReminder7,
   'maturity-reminder-1': maturityReminder1,
+  'registration-link-invite': registrationLinkInvite,
 }
