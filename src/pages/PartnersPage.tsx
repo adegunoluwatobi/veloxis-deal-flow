@@ -284,6 +284,11 @@ export default function PartnersPage() {
             <div>
               <Label>Primary Admin Email <span className="text-destructive">*</span></Label>
               <Input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="admin@partner.com" />
+              <p className="text-xs text-muted-foreground mt-1">An invite email will be sent so they can set a password and log in.</p>
+            </div>
+            <div>
+              <Label>Primary Admin Name</Label>
+              <Input value={newAdminName} onChange={e => setNewAdminName(e.target.value)} placeholder="Full name (optional)" />
             </div>
             <div>
               <Label>Notes</Label>
