@@ -32,6 +32,7 @@ export default function PartnersPage() {
   const [partners, setPartners] = useState<PartnerOrg[]>([]);
   const [exporterCounts, setExporterCounts] = useState<Record<string, number>>({});
   const [dealCounts, setDealCounts] = useState<Record<string, number>>({});
+  const [adminAcceptedByOrg, setAdminAcceptedByOrg] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -41,6 +42,7 @@ export default function PartnersPage() {
   const [newName, setNewName] = useState('');
   const [newCountry, setNewCountry] = useState('Nigeria');
   const [newEmail, setNewEmail] = useState('');
+  const [newAdminName, setNewAdminName] = useState('');
   const [newNotes, setNewNotes] = useState('');
 
   const load = async () => {
