@@ -64,72 +64,92 @@ export default function AdminUserDirectory() {
 
   const selectedUser = useMemo(() => (rows ?? []).find((r: any) => r.id === selectedUserId), [rows, selectedUserId]);
 
+  const [showInviteEmail, setShowInviteEmail] = useState(false);
+
   return (
     <div className="space-y-6">
       <Helmet><title>User Management · Veloxis</title></Helmet>
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2"><Users className="h-6 w-6" /> User Management</h1>
-        <p className="text-sm text-muted-foreground">All platform users. Click a row to manage.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><Users className="h-6 w-6" /> User Management</h1>
+          <p className="text-sm text-muted-foreground">All platform users and registration invites.</p>
+        </div>
+        <Button onClick={() => setShowInviteEmail(true)}>
+          <Mail className="h-4 w-4 mr-2" /> Invite by email
+        </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="grid gap-3 md:grid-cols-[1fr_200px_200px]">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input className="pl-9" placeholder="Search name, email, organisation…" value={search} onChange={(e) => setSearch(e.target.value)} />
-            </div>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All roles</SelectItem>
-                {ALL_ROLES.map((r) => <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? <Skeleton className="h-64" /> : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Organisation</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((r: any) => (
-                  <TableRow key={r.id} className="cursor-pointer" onClick={() => setSelectedUserId(r.id)}>
-                    <TableCell className="font-medium">{r.full_name ?? '—'}</TableCell>
-                    <TableCell>{r.email}</TableCell>
-                    <TableCell>{r.role ? <Badge variant="secondary">{ROLE_LABELS[r.role as AppRole]}</Badge> : <span className="text-muted-foreground text-xs">—</span>}</TableCell>
-                    <TableCell>{r.organisation_name ?? '—'}</TableCell>
-                    <TableCell>
-                      <Badge variant={r.is_active === false ? 'destructive' : 'default'}>
-                        {r.is_active === false ? 'Suspended' : 'Active'}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filtered.length === 0 && (
-                  <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No users match your filters.</TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="users">
+        <TabsList>
+          <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="invites">Registration invites</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="users" className="mt-4">
+          <Card>
+            <CardHeader>
+              <div className="grid gap-3 md:grid-cols-[1fr_200px_200px]">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input className="pl-9" placeholder="Search name, email, organisation…" value={search} onChange={(e) => setSearch(e.target.value)} />
+                </div>
+                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All roles</SelectItem>
+                    {ALL_ROLES.map((r) => <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="suspended">Suspended</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? <Skeleton className="h-64" /> : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Organisation</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map((r: any) => (
+                      <TableRow key={r.id} className="cursor-pointer" onClick={() => setSelectedUserId(r.id)}>
+                        <TableCell className="font-medium">{r.full_name ?? '—'}</TableCell>
+                        <TableCell>{r.email}</TableCell>
+                        <TableCell>{r.role ? <Badge variant="secondary">{ROLE_LABELS[r.role as AppRole]}</Badge> : <span className="text-muted-foreground text-xs">—</span>}</TableCell>
+                        <TableCell>{r.organisation_name ?? '—'}</TableCell>
+                        <TableCell>
+                          <Badge variant={r.is_active === false ? 'destructive' : 'default'}>
+                            {r.is_active === false ? 'Suspended' : 'Active'}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {filtered.length === 0 && (
+                      <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No users match your filters.</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="invites" className="mt-4">
+          <RegistrationInvitesPanel />
+        </TabsContent>
+      </Tabs>
 
       <UserDetailSheet
         user={selectedUser}
@@ -137,6 +157,12 @@ export default function AdminUserDirectory() {
         onClose={() => setSelectedUserId(null)}
         onChanged={() => queryClient.invalidateQueries({ queryKey: ['admin_user_directory'] })}
         confirm={confirm}
+      />
+
+      <InviteByEmailDialog
+        open={showInviteEmail}
+        onOpenChange={setShowInviteEmail}
+        onSent={() => queryClient.invalidateQueries({ queryKey: ['registration_invites'] })}
       />
     </div>
   );
