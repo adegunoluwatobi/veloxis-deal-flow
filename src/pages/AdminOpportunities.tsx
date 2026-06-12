@@ -159,8 +159,19 @@ export default function AdminOpportunities() {
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Opportunity Tracker</h1>
           <p className="text-sm text-muted-foreground">Accelerators, grants, seed investors, regulatory programmes & competitions.</p>
         </div>
-        <div className="text-sm text-muted-foreground">
-          Last scan: <span className="font-medium text-foreground">{lastScan ? new Date(lastScan).toLocaleString() : '—'}</span>
+        <div className="flex flex-col items-end gap-2">
+          <Button size="sm" onClick={runScan} disabled={scanning} className="gap-1.5">
+            <RefreshCw className={cn('h-3.5 w-3.5', scanning && 'animate-spin')} />
+            {scanning ? 'Scanning…' : 'Run scan now'}
+          </Button>
+          {scanResult && (
+            <span className="text-xs text-muted-foreground">
+              {scanResult.found} found · {scanResult.added} added
+            </span>
+          )}
+          <span className="text-xs text-muted-foreground">
+            Last scan: <span className="font-medium text-foreground">{lastScan ? new Date(lastScan).toLocaleString() : '—'}</span>
+          </span>
         </div>
       </div>
 
