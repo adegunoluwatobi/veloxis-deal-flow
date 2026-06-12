@@ -64,6 +64,8 @@ export default function AdminOpportunities() {
   const [rows, setRows] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastScan, setLastScan] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<{ found: number; added: number } | null>(null);
   const [search, setSearch] = useState('');
   const [fit, setFit] = useState<string>('all');
   const [category, setCategory] = useState<string>('all');
