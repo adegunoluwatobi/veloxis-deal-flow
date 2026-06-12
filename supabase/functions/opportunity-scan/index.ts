@@ -1,166 +1,195 @@
-// Daily opportunity scanner: Serper search → Claude scoring → opportunities table
-import { createClient } from "npm:@supabase/supabase-js@2";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+// supabase/functions/opportunity-scan/index.ts
+import { createClient } from 'npm:@supabase/supabase-js@2'
 
-const SERPER_API_KEY = Deno.env.get("SERPER_API_KEY")!;
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+)
 
-// Default queries — tuned for Veloxis (trade/export finance, fintech, African SMEs)
-const QUERIES: { query: string; category: string }[] = [
-  { query: "fintech accelerator 2026 application open", category: "Accelerator" },
-  { query: "trade finance grant Africa SME 2026", category: "Grant" },
-  { query: "export finance fund Nigeria 2026", category: "Grant" },
-  { query: "seed investor trade finance fintech Africa", category: "Seed Investment" },
-  { query: "FCA innovation pathway sandbox 2026", category: "Regulatory Programme" },
-  { query: "UK fintech incubator emerging markets", category: "Incubator" },
-  { query: "African Development Bank SME finance programme 2026", category: "Grant" },
-  { query: "trade finance competition pitch 2026", category: "Competition" },
-  { query: "Tony Elumelu fellowship entrepreneurs 2026", category: "Fellowship" },
-  { query: "cross-border payments fintech news 2026", category: "News" },
-];
+const VELOXIS_CONTEXT = `
+Veloxis Ltd is a UK-registered trade finance platform (Company No. 15663333).
+- ITLC (Irrevocable Transferable Letter of Credit) invoice discounting
+- Advances 80% of invoice value to African SME exporters within 24 hours of bank acceptance
+- Exporters in Africa (Nigeria-first) shipping commodities to verified UK/EU buyers
+STAGE: Pre-revenue, seed stage, UK-registered, founder-led. RAISING: $1M seed.
+SECTORS: Agricultural commodities, solid minerals, metals, textiles, timber, processed seafood, manufactured goods.
+LOOKING FOR: accelerators/incubators (fintech, trade finance, Africa, emerging markets),
+seed/pre-seed investment, non-dilutive grants (UK govt, development finance, impact funds),
+regulatory programmes (FCA sandbox), DFI programmes (UKEF, BII, Afreximbank, IFC, AFC),
+Nigeria/West Africa corridor opportunities, B2B/working-capital fintech, financial inclusion programmes.
+`
 
-interface SerperResult {
-  title: string;
-  link: string;
-  snippet?: string;
-  date?: string;
-}
+// Split into 2 batches to stay within Edge Function time limits
+const QUERIES_BATCH_1 = [
+  "fintech accelerator Africa 2026 open applications",
+  "African fintech accelerator program apply 2026",
+  "startup accelerator Nigeria fintech 2026",
+  "Africa trade finance startup accelerator 2026",
+  "West Africa fintech accelerator applications open",
+  "emerging markets fintech accelerator 2026",
+  "trade finance fintech accelerator program 2026",
+  "invoice finance startup accelerator 2026",
+  "cross border payments fintech accelerator 2026",
+  "B2B fintech accelerator working capital 2026",
+  "SME finance accelerator program 2026 apply",
+  "UK fintech accelerator program 2026 open applications",
+  "London fintech accelerator 2026 apply",
+  "Innovate UK grant fintech 2026 apply",
+  "UK government grant fintech startup 2026",
+  "British Business Bank grant 2026 fintech",
+  "UK Export Finance programme fintech 2026",
+]
 
-async function serperSearch(query: string): Promise<SerperResult[]> {
-  const res = await fetch("https://google.serper.dev/search", {
-    method: "POST",
-    headers: { "X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify({ q: query, num: 10, gl: "uk", hl: "en" }),
-  });
-  if (!res.ok) {
-    console.error("Serper error", res.status, await res.text());
-    return [];
-  }
-  const data = await res.json();
-  return (data.organic ?? []).map((r: any) => ({
-    title: r.title, link: r.link, snippet: r.snippet, date: r.date,
-  }));
-}
+const QUERIES_BATCH_2 = [
+  "development finance grant fintech Africa 2026",
+  "IFC SME finance grant program 2026",
+  "AfDB fintech grant program 2026",
+  "Afreximbank grant program 2026 accelerator cohort",
+  "BII British International Investment fintech 2026",
+  "financial inclusion fintech grant 2026",
+  "Mastercard Foundation fintech grant 2026",
+  "seed investor Africa fintech 2026",
+  "pre-seed funding Africa fintech startup 2026",
+  "Nigerian fintech seed funding 2026",
+  "UK fintech seed investor 2026",
+  "FCA regulatory sandbox 2026 apply fintech",
+  "fintech competition prize 2026 Africa",
+  "African fintech startup competition 2026",
+  "Visa Africa fintech accelerator cohort 2026",
+  "Catalyst Fund accelerator 2026 open",
+  "Techstars fintech accelerator 2026 apply",
+  "Founders Factory Africa 2026",
+  "Google for Startups Africa 2026",
+]
 
-interface Scored {
-  title: string; url: string; summary: string; organisation: string;
-  deadline: string | null; amount: string | null; fit: "HIGH" | "MEDIUM" | "LOW"; score: number;
-}
-
-async function scoreWithClaude(query: string, category: string, results: SerperResult[]): Promise<Scored[]> {
-  if (results.length === 0) return [];
-  const prompt = `You are scoring funding/programme opportunities for Veloxis — a UK-based fintech providing invoice/trade finance to African SME exporters shipping non-agricultural goods to the EU/UK/EFTA.
-
-For each search result below, assess relevance and return a JSON array. Score 0–10:
-- 8–10 (HIGH): Directly relevant accelerators, grants, investors, or regulatory programmes Veloxis could apply to / benefit from now.
-- 6–7 (MEDIUM): Plausibly relevant, worth monitoring.
-- 0–5 (LOW): Tangential or off-topic — exclude these from your output.
-
-ONLY return items scoring 6 or higher. For each item return:
-{ "title": string, "url": string, "summary": string (1–2 sentences, plain text), "organisation": string (issuer/host), "deadline": string|null (ISO date if found, else null), "amount": string|null (e.g. "£50k", "$2M", else null), "fit": "HIGH"|"MEDIUM"|"LOW", "score": number }
-
-Search query: "${query}" (category: ${category})
-
-Results:
-${results.map((r, i) => `${i + 1}. ${r.title}\n   URL: ${r.link}\n   ${r.snippet ?? ""}`).join("\n\n")}
-
-Return ONLY a JSON array, no prose, no markdown fences.`;
-
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 2048,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-  if (!res.ok) {
-    console.error("Claude error", res.status, await res.text());
-    return [];
-  }
-  const data = await res.json();
-  const text: string = data.content?.[0]?.text ?? "[]";
-  const cleaned = text.replace(/```json\s*|\s*```/g, "").trim();
-  const match = cleaned.match(/\[[\s\S]*\]/);
-  if (!match) return [];
+async function searchSerper(q: string) {
   try {
-    const arr = JSON.parse(match[0]);
-    return arr.filter((x: any) => typeof x?.score === "number" && x.score >= 6);
-  } catch (e) {
-    console.error("Parse error", e, text.slice(0, 500));
-    return [];
+    const res = await fetch('https://google.serper.dev/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-KEY': Deno.env.get('SERPER_API_KEY')!
+      },
+      body: JSON.stringify({ q, num: 10, gl: 'gb', hl: 'en', tbs: 'qdr:m3' })
+    })
+    if (!res.ok) return []
+    const data = await res.json()
+    const out: any[] = []
+    for (const item of [...(data.organic || []), ...(data.news || [])]) {
+      if (item.link) out.push({ title: item.title || '', url: item.link, snippet: item.snippet || '' })
+    }
+    return out
+  } catch { return [] }
+}
+
+async function scoreWithGemini(batch: any[]) {
+  const items = batch.map((r, i) =>
+    `[${i + 1}] TITLE: ${r.title}\nURL: ${r.url}\nSNIPPET: ${r.snippet}`
+  ).join('\n---\n')
+
+  const prompt = `Analyse these search results for funding opportunities relevant to Veloxis Ltd.
+
+VELOXIS CONTEXT:
+${VELOXIS_CONTEXT}
+
+RESULTS:
+${items}
+
+For each, score relevance 1-10 (9-10 perfect fit open now; 7-8 relevant worth investigating; 6 tangential; 1-5 irrelevant, closed, wrong geography or wrong stage).
+Category must be one of: Accelerator, Incubator, Grant, Seed Investment, Regulatory Programme, Competition, Fellowship, News, Irrelevant
+Deadline: YYYY-MM-DD if mentioned, otherwise ""
+
+Return ONLY a JSON array, no markdown, no other text:
+[{"index":1,"score":8,"category":"Accelerator","deadline":"","summary":"one sentence summary"}]`
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${Deno.env.get('GEMINI_API_KEY')}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
+        })
+      }
+    )
+    const data = await res.json()
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]'
+    const scores = JSON.parse(text.replace(/```json|```/g, '').trim())
+    return batch.map((r, i) => {
+      const s = scores.find((x: any) => x.index === i + 1) || {}
+      return {
+        ...r,
+        score: s.score ?? 5,
+        category: s.category || 'Unknown',
+        deadline: s.deadline || null,
+        summary: s.summary || r.snippet
+      }
+    })
+  } catch {
+    return batch.map(r => ({ ...r, score: 5, category: 'Unknown', deadline: null, summary: r.snippet }))
   }
+}
+
+function extractOrg(url: string) {
+  try {
+    const d = new URL(url).hostname.replace('www.', '').split('.')[0]
+    return d.charAt(0).toUpperCase() + d.slice(1)
+  } catch { return '' }
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const { batch } = await req.json().catch(() => ({ batch: 1 }))
+  const queries = batch === 2 ? QUERIES_BATCH_2 : QUERIES_BATCH_1
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-  const runDate = new Date().toISOString().slice(0, 10);
-  let queriesRun = 0;
-  let resultsFound = 0;
-  let newAdded = 0;
-  let status = "success";
+  const { data: existing } = await supabase.from('opportunities').select('url')
+  const existingUrls = new Set((existing || []).map((r: any) => r.url))
 
-  try {
-    for (const { query, category } of QUERIES) {
-      queriesRun++;
-      try {
-        const results = await serperSearch(query);
-        resultsFound += results.length;
-        if (results.length === 0) continue;
-
-        const scored = await scoreWithClaude(query, category, results);
-
-        for (const item of scored) {
-          // Dedupe by URL
-          const { data: existing } = await supabase
-            .from("opportunities").select("id").eq("url", item.url).maybeSingle();
-          if (existing) continue;
-
-          const { error } = await supabase.from("opportunities").insert({
-            title: item.title,
-            category,
-            organisation: item.organisation ?? null,
-            deadline: item.deadline ?? null,
-            amount: item.amount ?? null,
-            fit: item.fit,
-            score: item.score,
-            url: item.url,
-            summary: item.summary,
-            status: "To Review",
-            date_found: runDate,
-            search_query: query,
-          });
-          if (error) console.error("Insert error", error, item.url);
-          else newAdded++;
-        }
-      } catch (e) {
-        console.error(`Query failed: ${query}`, e);
+  const seen = new Set<string>()
+  const raw: any[] = []
+  for (const q of queries) {
+    const results = await searchSerper(q)
+    for (const r of results) {
+      if (!existingUrls.has(r.url) && !seen.has(r.url)) {
+        seen.add(r.url)
+        raw.push({ ...r, query: q })
       }
     }
-  } catch (e) {
-    status = "error";
-    console.error("Scan failed", e);
   }
 
-  await supabase.from("cron_log").insert({
-    run_date: runDate,
-    queries_run: queriesRun,
-    results_found: resultsFound,
-    new_added: newAdded,
-    status,
-  });
+  const scored: any[] = []
+  for (let i = 0; i < raw.length; i += 15) {
+    scored.push(...await scoreWithGemini(raw.slice(i, i + 15)))
+  }
 
-  return new Response(
-    JSON.stringify({ run_date: runDate, queries_run: queriesRun, results_found: resultsFound, new_added: newAdded, status }),
-    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-  );
-});
+  const relevant = scored.filter(r => r.score >= 6)
+
+  if (relevant.length) {
+    const rows = relevant.map(o => ({
+      title: o.title,
+      category: o.category,
+      organisation: extractOrg(o.url),
+      deadline: o.deadline || null,
+      fit: o.score >= 9 ? 'HIGH' : o.score >= 7 ? 'MEDIUM' : 'LOW',
+      score: o.score,
+      url: o.url,
+      summary: o.summary,
+      status: 'To Review',
+      date_found: new Date().toISOString().split('T')[0],
+      search_query: o.query
+    }))
+    await supabase.from('opportunities').upsert(rows, { onConflict: 'url', ignoreDuplicates: true })
+  }
+
+  await supabase.from('cron_log').insert({
+    queries_run: queries.length,
+    results_found: raw.length,
+    new_added: relevant.length,
+    status: `success-batch-${batch}`
+  })
+
+  return new Response(JSON.stringify({ batch, found: raw.length, added: relevant.length }), {
+    headers: { 'Content-Type': 'application/json' }
+  })
+})
