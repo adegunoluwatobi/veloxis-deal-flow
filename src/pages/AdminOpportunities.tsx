@@ -8,7 +8,8 @@ import { Progress } from '@/components/ui/progress';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { ExternalLink, Search, Sparkles, AlertTriangle, CalendarClock, Layers } from 'lucide-react';
+import { ExternalLink, Search, Sparkles, AlertTriangle, CalendarClock, Layers, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -63,6 +64,8 @@ export default function AdminOpportunities() {
   const [rows, setRows] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastScan, setLastScan] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<{ found: number; added: number } | null>(null);
   const [search, setSearch] = useState('');
   const [fit, setFit] = useState<string>('all');
   const [category, setCategory] = useState<string>('all');
@@ -127,6 +130,26 @@ export default function AdminOpportunities() {
     }
   };
 
+  const runScan = async () => {
+    setScanning(true);
+    setScanResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('opportunity-scan', { body: { batch: 1 } });
+      if (error) throw error;
+      setScanResult({ found: data.found ?? 0, added: data.added ?? 0 });
+      toast({ title: 'Scan complete', description: `${data.found ?? 0} found · ${data.added ?? 0} added` });
+      // Refresh list
+      const oppRes = await supabase.from('opportunities').select('*').limit(500);
+      if (!oppRes.error) setRows((oppRes.data ?? []) as Opportunity[]);
+      const cronRes = await supabase.from('cron_log').select('run_date').order('run_date', { ascending: false }).limit(1);
+      setLastScan(cronRes.data?.[0]?.run_date ?? null);
+    } catch (e: any) {
+      toast({ title: 'Scan failed', description: e.message ?? 'Unknown error', variant: 'destructive' });
+    } finally {
+      setScanning(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Helmet><title>Opportunity Tracker · Veloxis</title></Helmet>
@@ -136,8 +159,19 @@ export default function AdminOpportunities() {
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Opportunity Tracker</h1>
           <p className="text-sm text-muted-foreground">Accelerators, grants, seed investors, regulatory programmes & competitions.</p>
         </div>
-        <div className="text-sm text-muted-foreground">
-          Last scan: <span className="font-medium text-foreground">{lastScan ? new Date(lastScan).toLocaleString() : '—'}</span>
+        <div className="flex flex-col items-end gap-2">
+          <Button size="sm" onClick={runScan} disabled={scanning} className="gap-1.5">
+            <RefreshCw className={cn('h-3.5 w-3.5', scanning && 'animate-spin')} />
+            {scanning ? 'Scanning…' : 'Run scan now'}
+          </Button>
+          {scanResult && (
+            <span className="text-xs text-muted-foreground">
+              {scanResult.found} found · {scanResult.added} added
+            </span>
+          )}
+          <span className="text-xs text-muted-foreground">
+            Last scan: <span className="font-medium text-foreground">{lastScan ? new Date(lastScan).toLocaleString() : '—'}</span>
+          </span>
         </div>
       </div>
 
