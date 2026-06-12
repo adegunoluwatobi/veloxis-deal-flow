@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard, Users, FileText, Settings, LogOut,
-  Menu, X, ChevronRight, ShieldCheck, Banknote, Building2, Inbox, Megaphone, BadgeCheck,
+  Menu, X, ChevronRight, ShieldCheck, Banknote, Building2, Inbox, Megaphone, BadgeCheck, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import veloxisLogoWhite from '@/assets/veloxis-logo-white.png';
