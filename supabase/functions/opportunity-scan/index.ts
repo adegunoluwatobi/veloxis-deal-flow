@@ -158,9 +158,9 @@ Deno.serve(async (req) => {
 
   const seen = new Set<string>()
   const raw: any[] = []
-  for (const q of queries) {
-    const results = await searchSerper(q)
-    for (const r of results) {
+  const allResults = await Promise.all(queries.map(q => searchSerper(q).then(rs => ({ q, rs }))))
+  for (const { q, rs } of allResults) {
+    for (const r of rs) {
       if (!existingUrls.has(r.url) && !seen.has(r.url)) {
         seen.add(r.url)
         raw.push({ ...r, query: q })
@@ -168,10 +168,10 @@ Deno.serve(async (req) => {
     }
   }
 
-  const scored: any[] = []
-  for (let i = 0; i < raw.length; i += 15) {
-    scored.push(...await scoreWithGemini(raw.slice(i, i + 15)))
-  }
+  const batches: any[][] = []
+  for (let i = 0; i < raw.length; i += 15) batches.push(raw.slice(i, i + 15))
+  const scoredBatches = await Promise.all(batches.map(b => scoreWithGemini(b)))
+  const scored: any[] = scoredBatches.flat()
 
   const relevant = scored.filter(r => r.score >= 6)
 
