@@ -130,6 +130,26 @@ export default function AdminOpportunities() {
     }
   };
 
+  const runScan = async () => {
+    setScanning(true);
+    setScanResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('opportunity-scan', { body: { batch: 1 } });
+      if (error) throw error;
+      setScanResult({ found: data.found ?? 0, added: data.added ?? 0 });
+      toast({ title: 'Scan complete', description: `${data.found ?? 0} found · ${data.added ?? 0} added` });
+      // Refresh list
+      const oppRes = await supabase.from('opportunities').select('*').limit(500);
+      if (!oppRes.error) setRows((oppRes.data ?? []) as Opportunity[]);
+      const cronRes = await supabase.from('cron_log').select('run_date').order('run_date', { ascending: false }).limit(1);
+      setLastScan(cronRes.data?.[0]?.run_date ?? null);
+    } catch (e: any) {
+      toast({ title: 'Scan failed', description: e.message ?? 'Unknown error', variant: 'destructive' });
+    } finally {
+      setScanning(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Helmet><title>Opportunity Tracker · Veloxis</title></Helmet>
