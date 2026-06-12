@@ -146,6 +146,10 @@ function extractOrg(url: string) {
 }
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   const { batch } = await req.json().catch(() => ({ batch: 1 }))
   const queries = batch === 2 ? QUERIES_BATCH_2 : QUERIES_BATCH_1
 
@@ -196,6 +200,6 @@ Deno.serve(async (req) => {
   })
 
   return new Response(JSON.stringify({ batch, found: raw.length, added: relevant.length }), {
-    headers: { 'Content-Type': 'application/json' }
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
   })
 })
