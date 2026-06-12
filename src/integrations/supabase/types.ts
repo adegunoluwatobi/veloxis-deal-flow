@@ -132,6 +132,33 @@ export type Database = {
         }
         Relationships: []
       }
+      cron_log: {
+        Row: {
+          id: string
+          new_added: number | null
+          queries_run: number | null
+          results_found: number | null
+          run_date: string | null
+          status: string | null
+        }
+        Insert: {
+          id?: string
+          new_added?: number | null
+          queries_run?: number | null
+          results_found?: number | null
+          run_date?: string | null
+          status?: string | null
+        }
+        Update: {
+          id?: string
+          new_added?: number | null
+          queries_run?: number | null
+          results_found?: number | null
+          run_date?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       deal_change_requests: {
         Row: {
           created_at: string
@@ -1555,6 +1582,57 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      opportunities: {
+        Row: {
+          amount: string | null
+          category: string | null
+          created_at: string | null
+          date_found: string | null
+          deadline: string | null
+          fit: string | null
+          id: string
+          organisation: string | null
+          score: number | null
+          search_query: string | null
+          status: string | null
+          summary: string | null
+          title: string
+          url: string
+        }
+        Insert: {
+          amount?: string | null
+          category?: string | null
+          created_at?: string | null
+          date_found?: string | null
+          deadline?: string | null
+          fit?: string | null
+          id?: string
+          organisation?: string | null
+          score?: number | null
+          search_query?: string | null
+          status?: string | null
+          summary?: string | null
+          title: string
+          url: string
+        }
+        Update: {
+          amount?: string | null
+          category?: string | null
+          created_at?: string | null
+          date_found?: string | null
+          deadline?: string | null
+          fit?: string | null
+          id?: string
+          organisation?: string | null
+          score?: number | null
+          search_query?: string | null
+          status?: string | null
+          summary?: string | null
+          title?: string
+          url?: string
         }
         Relationships: []
       }
