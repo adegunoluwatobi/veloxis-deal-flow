@@ -310,22 +310,37 @@ function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label
   );
 }
 
-function OpportunityCard({ o, onStatus, onToggleFavorite }: { o: Opportunity; onStatus: (s: string) => void; onToggleFavorite: (v: boolean) => void }) {
+function OpportunityCard({ o, onStatus, onToggleFavorite, onToggleFollowUp }: { o: Opportunity; onStatus: (s: string) => void; onToggleFavorite: (v: boolean) => void; onToggleFollowUp: (v: boolean) => void }) {
   const score = o.score ?? 0;
   const fav = !!o.favorited;
+  const fu = !!o.follow_up;
   return (
-    <Card className={cn('transition-shadow hover:shadow-md', fav && 'border-amber-400/60 bg-amber-50/30 dark:bg-amber-950/10')}>
+    <Card className={cn(
+      'transition-shadow hover:shadow-md',
+      fav && 'border-amber-400/60 bg-amber-50/30 dark:bg-amber-950/10',
+      fu && !fav && 'border-blue-400/60 bg-blue-50/30 dark:bg-blue-950/10'
+    )}>
       <CardContent className="space-y-3 p-4 sm:p-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1 flex items-start gap-2">
-            <button
-              type="button"
-              onClick={() => onToggleFavorite(!fav)}
-              aria-label={fav ? 'Unfavorite' : 'Favorite'}
-              className="mt-0.5 shrink-0 rounded p-0.5 text-muted-foreground transition hover:text-amber-500"
-            >
-              <Star className={cn('h-4 w-4', fav && 'fill-amber-400 text-amber-500')} />
-            </button>
+            <div className="flex flex-col gap-1 mt-0.5">
+              <button
+                type="button"
+                onClick={() => onToggleFavorite(!fav)}
+                aria-label={fav ? 'Unfavorite' : 'Favorite'}
+                className="shrink-0 rounded p-0.5 text-muted-foreground transition hover:text-amber-500"
+              >
+                <Star className={cn('h-4 w-4', fav && 'fill-amber-400 text-amber-500')} />
+              </button>
+              <button
+                type="button"
+                onClick={() => onToggleFollowUp(!fu)}
+                aria-label={fu ? 'Remove follow-up' : 'Follow up'}
+                className="shrink-0 rounded p-0.5 text-muted-foreground transition hover:text-blue-500"
+              >
+                <Bookmark className={cn('h-4 w-4', fu && 'fill-blue-400 text-blue-500')} />
+              </button>
+            </div>
             <div className="min-w-0 flex-1">
               <a
                 href={o.url ?? '#'}
