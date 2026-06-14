@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { ExternalLink, Search, Sparkles, AlertTriangle, CalendarClock, Layers, RefreshCw, Star } from 'lucide-react';
+import { ExternalLink, Search, Sparkles, AlertTriangle, CalendarClock, Layers, RefreshCw, Star, Bookmark } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ type Opportunity = {
   search_query: string | null;
   created_at: string;
   favorited: boolean | null;
+  follow_up: boolean | null;
 };
 
 const CATEGORIES = ['Accelerator','Incubator','Grant','Seed Investment','Regulatory Programme','Competition','Fellowship','News'];
@@ -75,6 +76,7 @@ export default function AdminOpportunities() {
   const [status, setStatus] = useState<string>('all');
   const [sort, setSort] = useState<'relevance' | 'deadline' | 'newest'>('relevance');
   const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [followUpOnly, setFollowUpOnly] = useState(false);
   const [showExpired, setShowExpired] = useState(false);
 
   useEffect(() => {
@@ -101,6 +103,7 @@ export default function AdminOpportunities() {
       if (category !== 'all' && o.category !== category) return false;
       if (status !== 'all' && o.status !== status) return false;
       if (favoritesOnly && !o.favorited) return false;
+      if (followUpOnly && !o.follow_up) return false;
       if (!showExpired) {
         const d = daysUntil(o.deadline);
         if (d !== null && d < 0) return false;
@@ -117,7 +120,7 @@ export default function AdminOpportunities() {
       });
     }
     return r;
-  }, [rows, search, fit, category, status, sort, favoritesOnly, showExpired]);
+  }, [rows, search, fit, category, status, sort, favoritesOnly, followUpOnly, showExpired]);
 
   const stats = useMemo(() => {
     const total = rows.length;
@@ -144,6 +147,16 @@ export default function AdminOpportunities() {
     const prev = rows;
     setRows((r) => r.map((o) => (o.id === id ? { ...o, favorited: next } : o)));
     const { error } = await supabase.from('opportunities').update({ favorited: next }).eq('id', id);
+    if (error) {
+      setRows(prev);
+      toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const toggleFollowUp = async (id: string, next: boolean) => {
+    const prev = rows;
+    setRows((r) => r.map((o) => (o.id === id ? { ...o, follow_up: next } : o)));
+    const { error } = await supabase.from('opportunities').update({ follow_up: next }).eq('id', id);
     if (error) {
       setRows(prev);
       toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
@@ -247,6 +260,12 @@ export default function AdminOpportunities() {
               </Label>
             </div>
             <div className="flex items-center gap-2">
+              <Switch id="follow-up-only" checked={followUpOnly} onCheckedChange={setFollowUpOnly} />
+              <Label htmlFor="follow-up-only" className="cursor-pointer text-xs whitespace-nowrap flex items-center gap-1">
+                <Bookmark className="h-3.5 w-3.5" /> Follow-up only
+              </Label>
+            </div>
+            <div className="flex items-center gap-2">
               <Switch id="show-expired" checked={showExpired} onCheckedChange={setShowExpired} />
               <Label htmlFor="show-expired" className="cursor-pointer text-xs whitespace-nowrap">Show expired</Label>
             </div>
@@ -262,7 +281,15 @@ export default function AdminOpportunities() {
         </CardContent></Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map((o) => <OpportunityCard key={o.id} o={o} onStatus={(s) => updateStatus(o.id, s)} onToggleFavorite={(v) => toggleFavorite(o.id, v)} />)}
+          {filtered.map((o) => (
+            <OpportunityCard
+              key={o.id}
+              o={o}
+              onStatus={(s) => updateStatus(o.id, s)}
+              onToggleFavorite={(v) => toggleFavorite(o.id, v)}
+              onToggleFollowUp={(v) => toggleFollowUp(o.id, v)}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -283,22 +310,37 @@ function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label
   );
 }
 
-function OpportunityCard({ o, onStatus, onToggleFavorite }: { o: Opportunity; onStatus: (s: string) => void; onToggleFavorite: (v: boolean) => void }) {
+function OpportunityCard({ o, onStatus, onToggleFavorite, onToggleFollowUp }: { o: Opportunity; onStatus: (s: string) => void; onToggleFavorite: (v: boolean) => void; onToggleFollowUp: (v: boolean) => void }) {
   const score = o.score ?? 0;
   const fav = !!o.favorited;
+  const fu = !!o.follow_up;
   return (
-    <Card className={cn('transition-shadow hover:shadow-md', fav && 'border-amber-400/60 bg-amber-50/30 dark:bg-amber-950/10')}>
+    <Card className={cn(
+      'transition-shadow hover:shadow-md',
+      fav && 'border-amber-400/60 bg-amber-50/30 dark:bg-amber-950/10',
+      fu && !fav && 'border-blue-400/60 bg-blue-50/30 dark:bg-blue-950/10'
+    )}>
       <CardContent className="space-y-3 p-4 sm:p-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1 flex items-start gap-2">
-            <button
-              type="button"
-              onClick={() => onToggleFavorite(!fav)}
-              aria-label={fav ? 'Unfavorite' : 'Favorite'}
-              className="mt-0.5 shrink-0 rounded p-0.5 text-muted-foreground transition hover:text-amber-500"
-            >
-              <Star className={cn('h-4 w-4', fav && 'fill-amber-400 text-amber-500')} />
-            </button>
+            <div className="flex flex-col gap-1 mt-0.5">
+              <button
+                type="button"
+                onClick={() => onToggleFavorite(!fav)}
+                aria-label={fav ? 'Unfavorite' : 'Favorite'}
+                className="shrink-0 rounded p-0.5 text-muted-foreground transition hover:text-amber-500"
+              >
+                <Star className={cn('h-4 w-4', fav && 'fill-amber-400 text-amber-500')} />
+              </button>
+              <button
+                type="button"
+                onClick={() => onToggleFollowUp(!fu)}
+                aria-label={fu ? 'Remove follow-up' : 'Follow up'}
+                className="shrink-0 rounded p-0.5 text-muted-foreground transition hover:text-blue-500"
+              >
+                <Bookmark className={cn('h-4 w-4', fu && 'fill-blue-400 text-blue-500')} />
+              </button>
+            </div>
             <div className="min-w-0 flex-1">
               <a
                 href={o.url ?? '#'}
