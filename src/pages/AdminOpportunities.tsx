@@ -153,6 +153,16 @@ export default function AdminOpportunities() {
     }
   };
 
+  const toggleFollowUp = async (id: string, next: boolean) => {
+    const prev = rows;
+    setRows((r) => r.map((o) => (o.id === id ? { ...o, follow_up: next } : o)));
+    const { error } = await supabase.from('opportunities').update({ follow_up: next }).eq('id', id);
+    if (error) {
+      setRows(prev);
+      toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
+    }
+  };
+
   const runScan = async () => {
     setScanning(true);
     setScanResult(null);
