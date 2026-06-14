@@ -1592,6 +1592,7 @@ export type Database = {
           created_at: string | null
           date_found: string | null
           deadline: string | null
+          favorited: boolean
           fit: string | null
           id: string
           organisation: string | null
@@ -1608,6 +1609,7 @@ export type Database = {
           created_at?: string | null
           date_found?: string | null
           deadline?: string | null
+          favorited?: boolean
           fit?: string | null
           id?: string
           organisation?: string | null
@@ -1624,6 +1626,7 @@ export type Database = {
           created_at?: string | null
           date_found?: string | null
           deadline?: string | null
+          favorited?: boolean
           fit?: string | null
           id?: string
           organisation?: string | null
