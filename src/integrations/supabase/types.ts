@@ -1594,6 +1594,7 @@ export type Database = {
           deadline: string | null
           favorited: boolean
           fit: string | null
+          follow_up: boolean
           id: string
           organisation: string | null
           score: number | null
@@ -1611,6 +1612,7 @@ export type Database = {
           deadline?: string | null
           favorited?: boolean
           fit?: string | null
+          follow_up?: boolean
           id?: string
           organisation?: string | null
           score?: number | null
@@ -1628,6 +1630,7 @@ export type Database = {
           deadline?: string | null
           favorited?: boolean
           fit?: string | null
+          follow_up?: boolean
           id?: string
           organisation?: string | null
           score?: number | null

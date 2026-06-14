@@ -1,0 +1,1 @@
+ALTER TABLE public.opportunities ADD COLUMN follow_up boolean NOT NULL DEFAULT false;
