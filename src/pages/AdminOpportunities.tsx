@@ -76,6 +76,7 @@ export default function AdminOpportunities() {
   const [status, setStatus] = useState<string>('all');
   const [sort, setSort] = useState<'relevance' | 'deadline' | 'newest'>('relevance');
   const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [followUpOnly, setFollowUpOnly] = useState(false);
   const [showExpired, setShowExpired] = useState(false);
 
   useEffect(() => {
