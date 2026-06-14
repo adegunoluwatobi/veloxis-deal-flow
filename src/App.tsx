@@ -180,6 +180,7 @@ const App = () => (
             <Route path="/admin/partners/:id" element={<AdminLayout><PartnerDetail /></AdminLayout>} />
             <Route path="/admin/partner-kyb" element={<AdminLayout><AdminPartnerKybQueue /></AdminLayout>} />
             <Route path="/admin/opportunities" element={<AdminLayout><AdminOpportunities /></AdminLayout>} />
+            <Route path="/admin/opportunities/follow-ups" element={<AdminLayout><AdminOpportunityFollowUps /></AdminLayout>} />
             <Route path="/admin/verifications" element={<AdminLayout><AdminVerifications /></AdminLayout>} />
 
             {/* Partner KYB onboarding gate (no GreystarLayout — full-screen form) */}
