@@ -260,6 +260,12 @@ export default function AdminOpportunities() {
               </Label>
             </div>
             <div className="flex items-center gap-2">
+              <Switch id="follow-up-only" checked={followUpOnly} onCheckedChange={setFollowUpOnly} />
+              <Label htmlFor="follow-up-only" className="cursor-pointer text-xs whitespace-nowrap flex items-center gap-1">
+                <Bookmark className="h-3.5 w-3.5" /> Follow-up only
+              </Label>
+            </div>
+            <div className="flex items-center gap-2">
               <Switch id="show-expired" checked={showExpired} onCheckedChange={setShowExpired} />
               <Label htmlFor="show-expired" className="cursor-pointer text-xs whitespace-nowrap">Show expired</Label>
             </div>
