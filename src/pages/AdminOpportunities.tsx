@@ -283,24 +283,35 @@ function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label
   );
 }
 
-function OpportunityCard({ o, onStatus }: { o: Opportunity; onStatus: (s: string) => void }) {
+function OpportunityCard({ o, onStatus, onToggleFavorite }: { o: Opportunity; onStatus: (s: string) => void; onToggleFavorite: (v: boolean) => void }) {
   const score = o.score ?? 0;
+  const fav = !!o.favorited;
   return (
-    <Card className="transition-shadow hover:shadow-md">
+    <Card className={cn('transition-shadow hover:shadow-md', fav && 'border-amber-400/60 bg-amber-50/30 dark:bg-amber-950/10')}>
       <CardContent className="space-y-3 p-4 sm:p-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 flex-1">
-            <a
-              href={o.url ?? '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex items-start gap-1.5 text-base font-semibold text-foreground hover:text-[#15946F]"
+          <div className="min-w-0 flex-1 flex items-start gap-2">
+            <button
+              type="button"
+              onClick={() => onToggleFavorite(!fav)}
+              aria-label={fav ? 'Unfavorite' : 'Favorite'}
+              className="mt-0.5 shrink-0 rounded p-0.5 text-muted-foreground transition hover:text-amber-500"
             >
-              <span className="break-words">{o.title}</span>
-              <ExternalLink className="mt-1 h-3.5 w-3.5 shrink-0 opacity-60 group-hover:opacity-100" />
-            </a>
-            <div className="mt-0.5 text-xs text-muted-foreground">
-              {o.organisation ?? '—'}{o.category ? ` · ${o.category}` : ''}{o.amount ? ` · ${o.amount}` : ''}
+              <Star className={cn('h-4 w-4', fav && 'fill-amber-400 text-amber-500')} />
+            </button>
+            <div className="min-w-0 flex-1">
+              <a
+                href={o.url ?? '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-start gap-1.5 text-base font-semibold text-foreground hover:text-[#15946F]"
+              >
+                <span className="break-words">{o.title}</span>
+                <ExternalLink className="mt-1 h-3.5 w-3.5 shrink-0 opacity-60 group-hover:opacity-100" />
+              </a>
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                {o.organisation ?? '—'}{o.category ? ` · ${o.category}` : ''}{o.amount ? ` · ${o.amount}` : ''}
+              </div>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
