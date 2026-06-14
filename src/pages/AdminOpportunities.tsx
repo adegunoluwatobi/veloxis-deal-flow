@@ -281,7 +281,15 @@ export default function AdminOpportunities() {
         </CardContent></Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map((o) => <OpportunityCard key={o.id} o={o} onStatus={(s) => updateStatus(o.id, s)} onToggleFavorite={(v) => toggleFavorite(o.id, v)} />)}
+          {filtered.map((o) => (
+            <OpportunityCard
+              key={o.id}
+              o={o}
+              onStatus={(s) => updateStatus(o.id, s)}
+              onToggleFavorite={(v) => toggleFavorite(o.id, v)}
+              onToggleFollowUp={(v) => toggleFollowUp(o.id, v)}
+            />
+          ))}
         </div>
       )}
     </div>
