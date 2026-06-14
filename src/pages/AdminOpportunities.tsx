@@ -8,7 +8,9 @@ import { Progress } from '@/components/ui/progress';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { ExternalLink, Search, Sparkles, AlertTriangle, CalendarClock, Layers, RefreshCw } from 'lucide-react';
+import { ExternalLink, Search, Sparkles, AlertTriangle, CalendarClock, Layers, RefreshCw, Star } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -28,6 +30,7 @@ type Opportunity = {
   date_found: string | null;
   search_query: string | null;
   created_at: string;
+  favorited: boolean | null;
 };
 
 const CATEGORIES = ['Accelerator','Incubator','Grant','Seed Investment','Regulatory Programme','Competition','Fellowship','News'];
@@ -71,6 +74,8 @@ export default function AdminOpportunities() {
   const [category, setCategory] = useState<string>('all');
   const [status, setStatus] = useState<string>('all');
   const [sort, setSort] = useState<'relevance' | 'deadline' | 'newest'>('relevance');
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [showExpired, setShowExpired] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -95,6 +100,11 @@ export default function AdminOpportunities() {
       if (fit !== 'all' && (o.fit ?? '').toUpperCase() !== fit) return false;
       if (category !== 'all' && o.category !== category) return false;
       if (status !== 'all' && o.status !== status) return false;
+      if (favoritesOnly && !o.favorited) return false;
+      if (!showExpired) {
+        const d = daysUntil(o.deadline);
+        if (d !== null && d < 0) return false;
+      }
       return true;
     });
     if (sort === 'relevance') r.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
@@ -107,7 +117,7 @@ export default function AdminOpportunities() {
       });
     }
     return r;
-  }, [rows, search, fit, category, status, sort]);
+  }, [rows, search, fit, category, status, sort, favoritesOnly, showExpired]);
 
   const stats = useMemo(() => {
     const total = rows.length;
@@ -124,6 +134,16 @@ export default function AdminOpportunities() {
     const prev = rows;
     setRows((r) => r.map((o) => (o.id === id ? { ...o, status: next } : o)));
     const { error } = await supabase.from('opportunities').update({ status: next }).eq('id', id);
+    if (error) {
+      setRows(prev);
+      toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const toggleFavorite = async (id: string, next: boolean) => {
+    const prev = rows;
+    setRows((r) => r.map((o) => (o.id === id ? { ...o, favorited: next } : o)));
+    const { error } = await supabase.from('opportunities').update({ favorited: next }).eq('id', id);
     if (error) {
       setRows(prev);
       toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
@@ -219,6 +239,18 @@ export default function AdminOpportunities() {
               </SelectContent>
             </Select>
           </div>
+          <div className="flex items-center gap-4 lg:ml-2">
+            <div className="flex items-center gap-2">
+              <Switch id="fav-only" checked={favoritesOnly} onCheckedChange={setFavoritesOnly} />
+              <Label htmlFor="fav-only" className="cursor-pointer text-xs whitespace-nowrap flex items-center gap-1">
+                <Star className="h-3.5 w-3.5" /> Favorites only
+              </Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch id="show-expired" checked={showExpired} onCheckedChange={setShowExpired} />
+              <Label htmlFor="show-expired" className="cursor-pointer text-xs whitespace-nowrap">Show expired</Label>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -230,7 +262,7 @@ export default function AdminOpportunities() {
         </CardContent></Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map((o) => <OpportunityCard key={o.id} o={o} onStatus={(s) => updateStatus(o.id, s)} />)}
+          {filtered.map((o) => <OpportunityCard key={o.id} o={o} onStatus={(s) => updateStatus(o.id, s)} onToggleFavorite={(v) => toggleFavorite(o.id, v)} />)}
         </div>
       )}
     </div>
@@ -251,24 +283,35 @@ function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label
   );
 }
 
-function OpportunityCard({ o, onStatus }: { o: Opportunity; onStatus: (s: string) => void }) {
+function OpportunityCard({ o, onStatus, onToggleFavorite }: { o: Opportunity; onStatus: (s: string) => void; onToggleFavorite: (v: boolean) => void }) {
   const score = o.score ?? 0;
+  const fav = !!o.favorited;
   return (
-    <Card className="transition-shadow hover:shadow-md">
+    <Card className={cn('transition-shadow hover:shadow-md', fav && 'border-amber-400/60 bg-amber-50/30 dark:bg-amber-950/10')}>
       <CardContent className="space-y-3 p-4 sm:p-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 flex-1">
-            <a
-              href={o.url ?? '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex items-start gap-1.5 text-base font-semibold text-foreground hover:text-[#15946F]"
+          <div className="min-w-0 flex-1 flex items-start gap-2">
+            <button
+              type="button"
+              onClick={() => onToggleFavorite(!fav)}
+              aria-label={fav ? 'Unfavorite' : 'Favorite'}
+              className="mt-0.5 shrink-0 rounded p-0.5 text-muted-foreground transition hover:text-amber-500"
             >
-              <span className="break-words">{o.title}</span>
-              <ExternalLink className="mt-1 h-3.5 w-3.5 shrink-0 opacity-60 group-hover:opacity-100" />
-            </a>
-            <div className="mt-0.5 text-xs text-muted-foreground">
-              {o.organisation ?? '—'}{o.category ? ` · ${o.category}` : ''}{o.amount ? ` · ${o.amount}` : ''}
+              <Star className={cn('h-4 w-4', fav && 'fill-amber-400 text-amber-500')} />
+            </button>
+            <div className="min-w-0 flex-1">
+              <a
+                href={o.url ?? '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-start gap-1.5 text-base font-semibold text-foreground hover:text-[#15946F]"
+              >
+                <span className="break-words">{o.title}</span>
+                <ExternalLink className="mt-1 h-3.5 w-3.5 shrink-0 opacity-60 group-hover:opacity-100" />
+              </a>
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                {o.organisation ?? '—'}{o.category ? ` · ${o.category}` : ''}{o.amount ? ` · ${o.amount}` : ''}
+              </div>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
