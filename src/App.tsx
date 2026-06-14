@@ -29,6 +29,7 @@ import PartnerDetail from "@/pages/PartnerDetail";
 import PartnerKyb from "@/pages/PartnerKyb";
 import AdminPartnerKybQueue from "@/pages/AdminPartnerKybQueue";
 import AdminOpportunities from "@/pages/AdminOpportunities";
+import AdminOpportunityFollowUps from "@/pages/AdminOpportunityFollowUps";
 import BrandedNotFound from "@/pages/website/BrandedNotFound";
 import LegalPage from "@/pages/website/LegalPage";
 import { Navigate } from "react-router-dom";
@@ -179,6 +180,7 @@ const App = () => (
             <Route path="/admin/partners/:id" element={<AdminLayout><PartnerDetail /></AdminLayout>} />
             <Route path="/admin/partner-kyb" element={<AdminLayout><AdminPartnerKybQueue /></AdminLayout>} />
             <Route path="/admin/opportunities" element={<AdminLayout><AdminOpportunities /></AdminLayout>} />
+            <Route path="/admin/opportunities/follow-ups" element={<AdminLayout><AdminOpportunityFollowUps /></AdminLayout>} />
             <Route path="/admin/verifications" element={<AdminLayout><AdminVerifications /></AdminLayout>} />
 
             {/* Partner KYB onboarding gate (no GreystarLayout — full-screen form) */}
