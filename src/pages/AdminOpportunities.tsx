@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { ExternalLink, Search, Sparkles, AlertTriangle, CalendarClock, Layers, RefreshCw, Star } from 'lucide-react';
+import { ExternalLink, Search, Sparkles, AlertTriangle, CalendarClock, Layers, RefreshCw, Star, Bookmark } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
