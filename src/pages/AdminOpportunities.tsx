@@ -239,6 +239,18 @@ export default function AdminOpportunities() {
               </SelectContent>
             </Select>
           </div>
+          <div className="flex items-center gap-4 lg:ml-2">
+            <div className="flex items-center gap-2">
+              <Switch id="fav-only" checked={favoritesOnly} onCheckedChange={setFavoritesOnly} />
+              <Label htmlFor="fav-only" className="cursor-pointer text-xs whitespace-nowrap flex items-center gap-1">
+                <Star className="h-3.5 w-3.5" /> Favorites only
+              </Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch id="show-expired" checked={showExpired} onCheckedChange={setShowExpired} />
+              <Label htmlFor="show-expired" className="cursor-pointer text-xs whitespace-nowrap">Show expired</Label>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -250,7 +262,7 @@ export default function AdminOpportunities() {
         </CardContent></Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map((o) => <OpportunityCard key={o.id} o={o} onStatus={(s) => updateStatus(o.id, s)} />)}
+          {filtered.map((o) => <OpportunityCard key={o.id} o={o} onStatus={(s) => updateStatus(o.id, s)} onToggleFavorite={(v) => toggleFavorite(o.id, v)} />)}
         </div>
       )}
     </div>
