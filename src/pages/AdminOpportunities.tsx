@@ -193,10 +193,15 @@ export default function AdminOpportunities() {
           <p className="text-sm text-muted-foreground">Accelerators, grants, seed investors, regulatory programmes & competitions.</p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <Button size="sm" onClick={runScan} disabled={scanning} className="gap-1.5">
-            <RefreshCw className={cn('h-3.5 w-3.5', scanning && 'animate-spin')} />
-            {scanning ? 'Scanning…' : 'Run scan now'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild size="sm" variant="outline" className="gap-1.5">
+              <a href="/admin/opportunities/follow-ups"><Bookmark className="h-3.5 w-3.5" /> Follow-ups</a>
+            </Button>
+            <Button size="sm" onClick={runScan} disabled={scanning} className="gap-1.5">
+              <RefreshCw className={cn('h-3.5 w-3.5', scanning && 'animate-spin')} />
+              {scanning ? 'Scanning…' : 'Run scan now'}
+            </Button>
+          </div>
           {scanResult && (
             <span className="text-xs text-muted-foreground">
               {scanResult.found} found · {scanResult.added} added
