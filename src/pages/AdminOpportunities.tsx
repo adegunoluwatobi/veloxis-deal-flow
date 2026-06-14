@@ -103,6 +103,7 @@ export default function AdminOpportunities() {
       if (category !== 'all' && o.category !== category) return false;
       if (status !== 'all' && o.status !== status) return false;
       if (favoritesOnly && !o.favorited) return false;
+      if (followUpOnly && !o.follow_up) return false;
       if (!showExpired) {
         const d = daysUntil(o.deadline);
         if (d !== null && d < 0) return false;
@@ -119,7 +120,7 @@ export default function AdminOpportunities() {
       });
     }
     return r;
-  }, [rows, search, fit, category, status, sort, favoritesOnly, showExpired]);
+  }, [rows, search, fit, category, status, sort, favoritesOnly, followUpOnly, showExpired]);
 
   const stats = useMemo(() => {
     const total = rows.length;
