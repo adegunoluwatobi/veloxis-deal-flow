@@ -31,6 +31,7 @@ type Opportunity = {
   search_query: string | null;
   created_at: string;
   favorited: boolean | null;
+  follow_up: boolean | null;
 };
 
 const CATEGORIES = ['Accelerator','Incubator','Grant','Seed Investment','Regulatory Programme','Competition','Fellowship','News'];
