@@ -8,7 +8,9 @@ import { Progress } from '@/components/ui/progress';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { ExternalLink, Search, Sparkles, AlertTriangle, CalendarClock, Layers, RefreshCw } from 'lucide-react';
+import { ExternalLink, Search, Sparkles, AlertTriangle, CalendarClock, Layers, RefreshCw, Star } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -28,6 +30,7 @@ type Opportunity = {
   date_found: string | null;
   search_query: string | null;
   created_at: string;
+  favorited: boolean | null;
 };
 
 const CATEGORIES = ['Accelerator','Incubator','Grant','Seed Investment','Regulatory Programme','Competition','Fellowship','News'];
@@ -71,6 +74,8 @@ export default function AdminOpportunities() {
   const [category, setCategory] = useState<string>('all');
   const [status, setStatus] = useState<string>('all');
   const [sort, setSort] = useState<'relevance' | 'deadline' | 'newest'>('relevance');
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [showExpired, setShowExpired] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -95,6 +100,11 @@ export default function AdminOpportunities() {
       if (fit !== 'all' && (o.fit ?? '').toUpperCase() !== fit) return false;
       if (category !== 'all' && o.category !== category) return false;
       if (status !== 'all' && o.status !== status) return false;
+      if (favoritesOnly && !o.favorited) return false;
+      if (!showExpired) {
+        const d = daysUntil(o.deadline);
+        if (d !== null && d < 0) return false;
+      }
       return true;
     });
     if (sort === 'relevance') r.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
@@ -107,7 +117,7 @@ export default function AdminOpportunities() {
       });
     }
     return r;
-  }, [rows, search, fit, category, status, sort]);
+  }, [rows, search, fit, category, status, sort, favoritesOnly, showExpired]);
 
   const stats = useMemo(() => {
     const total = rows.length;
@@ -124,6 +134,16 @@ export default function AdminOpportunities() {
     const prev = rows;
     setRows((r) => r.map((o) => (o.id === id ? { ...o, status: next } : o)));
     const { error } = await supabase.from('opportunities').update({ status: next }).eq('id', id);
+    if (error) {
+      setRows(prev);
+      toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const toggleFavorite = async (id: string, next: boolean) => {
+    const prev = rows;
+    setRows((r) => r.map((o) => (o.id === id ? { ...o, favorited: next } : o)));
+    const { error } = await supabase.from('opportunities').update({ favorited: next }).eq('id', id);
     if (error) {
       setRows(prev);
       toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
