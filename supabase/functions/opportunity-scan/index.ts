@@ -66,6 +66,13 @@ const QUERIES_BATCH_2 = [
   "Techstars fintech accelerator 2026 apply",
   "Founders Factory Africa 2026",
   "Google for Startups Africa 2026",
+  // opportunitiesforafricans.com targeted queries
+  "site:opportunitiesforafricans.com fintech 2026",
+  "site:opportunitiesforafricans.com accelerator 2026",
+  "site:opportunitiesforafricans.com grant 2026",
+  "site:opportunitiesforafricans.com funding 2026",
+  "site:opportunitiesforafricans.com startup competition 2026",
+  "site:opportunitiesforafricans.com entrepreneurs 2026",
 ]
 
 async function searchSerper(q: string) {
