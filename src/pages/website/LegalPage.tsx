@@ -311,7 +311,7 @@ const CONTENT: Record<Props["slug"], PageContent> = {
         blocks: [
           {
             type: "p",
-            text: "We follow UK anti-money-laundering and know-your-customer standards in partnership with our in-country origination partners.",
+            text: "We follow international anti-money-laundering and know-your-customer standards in partnership with our in-country origination partners.",
           },
         ],
       },
