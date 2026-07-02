@@ -569,7 +569,7 @@ export default function VeloxisWebsite() {
             </p>
 
             <div className="mt-6 flex flex-wrap gap-5">
-              {["UK registered", "No collateral", "24-hour decisions", "Domiciliary settlement"].map(t => (
+              {["No collateral", "24-hour decisions", "Domiciliary settlement"].map(t => (
                 <span key={t} className="flex items-center gap-2 text-[13px] text-white/40">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#1ABC9C]" />{t}
                 </span>
