@@ -51,7 +51,7 @@ export function HeroSection() {
 
           {/* Trust strip */}
           <div className="mt-6 flex flex-wrap gap-3">
-            {["UK-Registered", "No Collateral", "24-Hour Decisions", "Domiciliary Settlement"].map((t) => (
+            {["No Collateral", "24-Hour Decisions", "Domiciliary Settlement"].map((t) => (
               <span key={t} className="flex items-center gap-1.5 text-[12px] text-[#6b7280]">
                 <span className="h-[5px] w-[5px] rounded-full bg-[#0d9488]" />
                 {t}
