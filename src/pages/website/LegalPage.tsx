@@ -140,7 +140,7 @@ const CONTENT: Record<Props["slug"], PageContent> = {
         blocks: [
           {
             type: "p",
-            text: "Veloxis Ltd (Company number 15663333). Registered in England and Wales. Registered office: Exeter Business Park, 1 Emperor Way, Exeter, EX1 3QS, United Kingdom.",
+            text: "Veloxis Ltd (Company number 15663333). Office: Exeter Business Park, 1 Emperor Way, Exeter, EX1 3QS.",
           },
         ],
       },
