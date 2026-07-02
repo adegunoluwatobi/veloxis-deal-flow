@@ -887,7 +887,7 @@ export default function VeloxisWebsite() {
           ))}
         </div>
         <div className="mx-auto max-w-[960px] flex flex-col md:flex-row justify-between items-center pt-5 gap-2" style={{ borderTop: "0.5px solid rgba(26,188,156,0.08)" }}>
-          <p className="text-[12px] text-white/25">© 2026 Veloxis Ltd (Company number 15663333). Registered in England and Wales.</p>
+          <p className="text-[12px] text-white/25">© 2026 Veloxis Ltd (Company number 15663333).</p>
         </div>
       </footer>
 
