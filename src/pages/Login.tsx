@@ -189,7 +189,7 @@ export default function Login() {
         </div>
 
         <p className="text-center text-xs text-white/50">
-          Veloxis Ltd · UK-Registered
+          Veloxis Ltd
         </p>
       </div>
     </div>

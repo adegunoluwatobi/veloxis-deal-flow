@@ -50,14 +50,12 @@ interface SlideData {
 // ─── FAQ DATA ────────────────────────────────────────────────────────────────
 
 const faqs: FaqItem[] = [
-  { q: "What is Veloxis?", a: "Veloxis is a UK-based trade finance platform. We advance cash to exporters who have shipped goods to buyers in the UK or EU but are waiting 30 to 60 days to receive payment. We bridge that gap so exporters can trade without waiting." },
-  { q: "Where is Veloxis based?", a: "Veloxis Ltd (Company number 15663333) is registered and headquartered in the United Kingdom." },
-  { q: "What is invoice discounting?", a: "Invoice discounting is a form of export trade finance where a financier advances funds against a verified trade receivable created by your shipment. Veloxis is not a lender. We advance 80% of your invoice value within 24 hours of verification, and release the residual balance once your buyer pays at maturity — minus a transparent fee. Every transaction is protected by three layers of security: independent physical verification of the commodity before shipment, a formal assignment of proceeds backed by an irrevocable Letter of Credit or Irrevocable Payment Undertaking from a UK or top-20 global bank under UCP 600, and controlled settlement through dedicated domiciliary accounts." },
+  { q: "What is Veloxis?", a: "Veloxis is a trade finance platform. We advance cash to exporters who have shipped goods to buyers in the UK or EU but are waiting 30 to 60 days to receive payment. We bridge that gap so exporters can trade without waiting." },
+  { q: "What is invoice discounting?", a: "Invoice discounting is a form of export trade finance where a financier advances funds against a verified trade receivable created by your shipment. Veloxis is not a lender. We advance 80% of your invoice value within 24 hours of verification, and release the residual balance once your buyer pays at maturity — minus a transparent fee. Every transaction is protected by three layers of security: independent physical verification of the commodity before shipment, a formal assignment of proceeds backed by an irrevocable Letter of Credit or Irrevocable Payment Undertaking from a top-20 global bank under UCP 600, and controlled settlement through dedicated domiciliary accounts." },
   { q: "Who can use Veloxis?", a: "Veloxis is for incorporated businesses anywhere in the world that export goods to verified buyers in the UK or EU. You must be onboarded through a Veloxis-approved local partner. Sole traders and unregistered partnerships are not eligible." },
   { q: "Does Veloxis finance importers?", a: "Not directly. Veloxis finances the exporter's receivable. The exporter receives the advance, and the buyer pays Veloxis when the invoice falls due." },
-  { q: "Does the exporter need to be UK registered?", a: "No. The exporter can be based anywhere. What matters is that the buyer is in the UK or EU and can be verified and underwritten." },
+  { q: "Does the exporter need to be based in a specific country?", a: "No. The exporter can be based anywhere. What matters is that the buyer is in the UK or EU and can be verified and underwritten." },
   { q: "Does Veloxis finance all buyers?", a: "No. Veloxis only finances transactions where the buyer is in the UK or EU and can be properly verified, credit-checked, and underwritten." },
-  { q: "Is Veloxis regulated?", a: "Veloxis operates strictly as a business-to-business entity that purchases commercial assets (trade receivables) rather than providing consumer or retail credit. Invoice discounting of B2B receivables sits outside the FCA regulatory perimeter and is not a regulated activity under the UK Financial Services and Markets Act 2000. Veloxis Ltd (Company number 15663333) is registered in England and Wales and operates under English law. All transactions — including the Assignment of Proceeds, Letter of Credit or Irrevocable Payment Undertaking under UCP 600 — are governed by English law. We follow UK AML and KYC standards in partnership with our in-country origination partners." },
   { q: "How long does approval take?", a: "A complete application with all documents uploaded, KYC verified by your partner, and buyer details confirmed is reviewed within 24 hours. Once your buyer signs the IPU or the letter of credit is confirmed, funds are released, typically within the same business day." },
   { q: "Do I need a UK bank account?", a: "No. Veloxis settles funds directly to your domiciliary account in your home country. You do not need a UK or EU bank account. This is one of the key reasons the platform was built." },
   { q: "What goods are eligible?", a: "Veloxis finances all legal export goods, including solid minerals, metals and scrap, manufactured goods, textiles, processed chemicals, timber and wood products, seafood, and agricultural and perishable produce shipped under standard trade terms. The only exclusions are weapons, controlled substances, and any goods prohibited under UK sanctions or applicable export controls." },
@@ -571,7 +569,7 @@ export default function VeloxisWebsite() {
             </p>
 
             <div className="mt-6 flex flex-wrap gap-5">
-              {["UK registered", "No collateral", "24-hour decisions", "Domiciliary settlement"].map(t => (
+              {["No collateral", "24-hour decisions", "Domiciliary settlement"].map(t => (
                 <span key={t} className="flex items-center gap-2 text-[13px] text-white/40">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#1ABC9C]" />{t}
                 </span>
@@ -889,7 +887,7 @@ export default function VeloxisWebsite() {
           ))}
         </div>
         <div className="mx-auto max-w-[960px] flex flex-col md:flex-row justify-between items-center pt-5 gap-2" style={{ borderTop: "0.5px solid rgba(26,188,156,0.08)" }}>
-          <p className="text-[12px] text-white/25">© 2026 Veloxis Ltd (Company number 15663333). Registered in England and Wales.</p>
+          <p className="text-[12px] text-white/25">© 2026 Veloxis Ltd (Company number 15663333).</p>
         </div>
       </footer>
 
