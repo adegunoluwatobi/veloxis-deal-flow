@@ -82,7 +82,7 @@ export default function BrandedNotFound() {
         style={{ background: "#071f1d", borderTop: "0.5px solid rgba(26,188,156,0.08)" }}
       >
         <p className="text-[12px] text-white/30">
-          © 2026 Veloxis Ltd (Company number 15663333). Registered in England and Wales.
+          © 2026 Veloxis Ltd (Company number 15663333).
         </p>
       </footer>
     </div>
