@@ -864,7 +864,7 @@ export default function VeloxisWebsite() {
         <div className="mx-auto max-w-[960px] grid grid-cols-2 md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-8 mb-8">
           <div>
             <a href="/"><img src={veloxisLogoWhite} alt="Veloxis" className="h-9 w-auto mb-3" /></a>
-            <p className="text-[13px] text-white/35 leading-[1.6] mb-3">UK-based trade finance for cross-border export trade finance. Advancing 80% of export invoice value within 24 hours for commodity exporters worldwide shipping to UK and EU buyers.</p>
+            <p className="text-[13px] text-white/35 leading-[1.6] mb-3">Veloxis provides invoice finance to African commodity exporters shipping to verified buyers in the United Kingdom and Europe. Exporters receive the bulk of their invoice value once shipment is verified, with the balance settled when the buyer pays. Get paid the day you ship — not 30 to 60 days later.</p>
             <a href="mailto:hello@veloxis.co.uk" className="block text-[13px] text-white/25 hover:text-[#5FFFD7] transition-colors mb-2">hello@veloxis.co.uk</a>
             <address className="not-italic text-[12px] text-white/30 leading-[1.6]">
               1 Emperor Way<br />
