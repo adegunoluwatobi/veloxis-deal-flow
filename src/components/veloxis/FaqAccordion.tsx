@@ -3,8 +3,8 @@ import { ChevronDown } from "lucide-react";
 
 const FAQS = [
   {
-    q: "What is invoice discounting?",
-    a: "Invoice discounting is a form of export trade finance where a financier advances funds against a verified trade receivable created by your shipment. Veloxis is not a lender. We advance 80% of your invoice value within 24 hours of verification, and release the residual balance once your buyer pays at maturity — minus a transparent fee. Every transaction is protected by three layers of security: independent physical verification of the commodity before shipment, a formal assignment of proceeds backed by an irrevocable Letter of Credit or Irrevocable Payment Undertaking from a UK or top-20 global bank under UCP 600, and controlled settlement through dedicated domiciliary accounts.",
+    q: "What is trade finance?",
+    a: "Trade finance is a form of export trade finance where a financier advances funds against a verified trade receivable created by your shipment. Veloxis is not a lender. We advance 80% of your invoice value within 24 hours of verification, and release the residual balance once your buyer pays at maturity — minus a transparent fee. Every transaction is protected by three layers of security: independent physical verification of the commodity before shipment, a formal assignment of proceeds backed by an irrevocable Letter of Credit or Irrevocable Payment Undertaking from a UK or top-20 global bank under UCP 600, and controlled settlement through dedicated domiciliary accounts.",
   },
   {
     q: "Who can use Veloxis?",
@@ -32,7 +32,7 @@ const FAQS = [
   },
   {
     q: "Is Veloxis a lender?",
-    a: "No. Veloxis is a financier in an invoice discounting transaction — we advance funds against your trade receivable at a discount. We are buying an asset, not extending a loan. No debt appears on your balance sheet and there is no loan agreement to service. The model is self-liquidating: settlement comes directly from the buyer's bank under the Letter of Credit or IPU.",
+    a: "No. Veloxis is a trade finance provider — we advance funds against your trade receivable. We are buying an asset, not extending a loan. No debt appears on your balance sheet and there is no loan agreement to service. The model is self-liquidating: settlement comes directly from the buyer's bank under the Letter of Credit or IPU.",
   },
   {
     q: "What if my buyer does not pay?",
