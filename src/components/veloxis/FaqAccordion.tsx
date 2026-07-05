@@ -32,7 +32,7 @@ const FAQS = [
   },
   {
     q: "Is Veloxis a lender?",
-    a: "No. Veloxis is a financier in an trade finance transaction — we advance funds against your trade receivable at a discount. We are buying an asset, not extending a loan. No debt appears on your balance sheet and there is no loan agreement to service. The model is self-liquidating: settlement comes directly from the buyer's bank under the Letter of Credit or IPU.",
+    a: "No. Veloxis is a trade finance provider — we advance funds against your trade receivable. We are buying an asset, not extending a loan. No debt appears on your balance sheet and there is no loan agreement to service. The model is self-liquidating: settlement comes directly from the buyer's bank under the Letter of Credit or IPU.",
   },
   {
     q: "What if my buyer does not pay?",
