@@ -14,22 +14,22 @@ export function HeroSection() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#0d9488] opacity-75" />
               <span className="relative inline-flex h-[6px] w-[6px] rounded-full bg-[#0d9488]" />
             </span>
-            Working capital without borders
+            Invoice finance for African commodity exporters
           </div>
 
           {/* Typing headline */}
           <h1 className="mb-4 text-[42px] font-medium leading-[1.12] text-[#111827]">
             <TypingHeadline
               lines={[
-                { text: "You've shipped the goods.", speed: 55 },
-                { text: "Get paid now.", speed: 68, className: "text-[#0d9488]" },
+                { text: "Ship today. Get paid today.", speed: 55 },
+                { text: "Not 30 to 60 days later.", speed: 68, className: "text-[#0d9488]" },
               ]}
             />
           </h1>
 
           {/* Subtitle */}
-          <p className="mb-6 max-w-[400px] text-[14px] leading-[1.6] text-[#6b7280]">
-            Veloxis advances 80% of your export invoice value within 24 hours — before your UK or EU buyer's payment terms expire. No collateral. No bank required.
+          <p className="mb-6 max-w-[420px] text-[14px] leading-[1.6] text-[#6b7280]">
+            Veloxis provides invoice finance to African commodity exporters shipping to verified buyers in the United Kingdom and Europe. Receive the bulk of your invoice value the day shipment is verified, with the balance settled when the buyer pays.
           </p>
 
           {/* Buttons */}
