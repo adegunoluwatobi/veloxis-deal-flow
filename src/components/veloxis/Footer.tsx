@@ -55,7 +55,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="text-[17px] font-medium text-[#111827] cursor-pointer">Veloxis</Link>
             <p className="mt-2.5 text-[13px] leading-[1.6] text-[#6b7280]">
-              UK-based invoice discounting for cross-border export trade finance. Advancing 80% of export invoice value within 24 hours for commodity exporters worldwide shipping to UK and EU buyers.
+              UK-based trade finance for cross-border export trade finance. Advancing 80% of export invoice value within 24 hours for commodity exporters worldwide shipping to UK and EU buyers.
             </p>
             <a href="mailto:hello@veloxis.co.uk" className="mt-3 block text-[13px] text-[#6b7280] hover:text-[#111827]">
               hello@veloxis.co.uk

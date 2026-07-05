@@ -51,7 +51,7 @@ interface SlideData {
 
 const faqs: FaqItem[] = [
   { q: "What is Veloxis?", a: "Veloxis is a trade finance platform. We advance cash to exporters who have shipped goods to buyers in the UK or EU but are waiting 30 to 60 days to receive payment. We bridge that gap so exporters can trade without waiting." },
-  { q: "What is invoice discounting?", a: "Invoice discounting is a form of export trade finance where a financier advances funds against a verified trade receivable created by your shipment. Veloxis is not a lender. We advance 80% of your invoice value within 24 hours of verification, and release the residual balance once your buyer pays at maturity — minus a transparent fee. Every transaction is protected by three layers of security: independent physical verification of the commodity before shipment, a formal assignment of proceeds backed by an irrevocable Letter of Credit or Irrevocable Payment Undertaking from a top-20 global bank under UCP 600, and controlled settlement through dedicated domiciliary accounts." },
+  { q: "What is trade finance?", a: "Trade finance is a form of export trade finance where a financier advances funds against a verified trade receivable created by your shipment. Veloxis is not a lender. We advance 80% of your invoice value within 24 hours of verification, and release the residual balance once your buyer pays at maturity — minus a transparent fee. Every transaction is protected by three layers of security: independent physical verification of the commodity before shipment, a formal assignment of proceeds backed by an irrevocable Letter of Credit or Irrevocable Payment Undertaking from a top-20 global bank under UCP 600, and controlled settlement through dedicated domiciliary accounts." },
   { q: "Who can use Veloxis?", a: "Veloxis is for incorporated businesses anywhere in the world that export goods to verified buyers in the UK or EU. You must be onboarded through a Veloxis-approved local partner. Sole traders and unregistered partnerships are not eligible." },
   { q: "Does Veloxis finance importers?", a: "Not directly. Veloxis finances the exporter's receivable. The exporter receives the advance, and the buyer pays Veloxis when the invoice falls due." },
   { q: "Does the exporter need to be based in a specific country?", a: "No. The exporter can be based anywhere. What matters is that the buyer is in the UK or EU and can be verified and underwritten." },
@@ -59,7 +59,7 @@ const faqs: FaqItem[] = [
   { q: "How long does approval take?", a: "A complete application with all documents uploaded, KYC verified by your partner, and buyer details confirmed is reviewed within 24 hours. Once your buyer signs the IPU or the letter of credit is confirmed, funds are released, typically within the same business day." },
   { q: "Do I need a UK bank account?", a: "No. Veloxis settles funds directly to your domiciliary account in your home country. You do not need a UK or EU bank account. This is one of the key reasons the platform was built." },
   { q: "What goods are eligible?", a: "Veloxis finances all legal export goods, including solid minerals, metals and scrap, manufactured goods, textiles, processed chemicals, timber and wood products, seafood, and agricultural and perishable produce shipped under standard trade terms. The only exclusions are weapons, controlled substances, and any goods prohibited under UK sanctions or applicable export controls." },
-  { q: "Is Veloxis a lender?", a: "No. Veloxis is a financier in an invoice discounting transaction. We advance funds against your trade receivable at a discount — we are buying an asset, not extending a loan. There is no debt on your balance sheet and no loan agreement to service. The model is self-liquidating: the transaction is settled directly by the buyer's bank under the Letter of Credit or Irrevocable Payment Undertaking." },
+  { q: "Is Veloxis a lender?", a: "No. Veloxis is a financier in an trade finance transaction. We advance funds against your trade receivable at a discount — we are buying an asset, not extending a loan. There is no debt on your balance sheet and no loan agreement to service. The model is self-liquidating: the transaction is settled directly by the buyer's bank under the Letter of Credit or Irrevocable Payment Undertaking." },
   { q: "Can I submit multiple invoices?", a: "Yes. Once your KYC is verified and your profile is set up, subsequent deals are significantly faster. Many exporters use Veloxis on a rolling basis across multiple buyers and shipment cycles." },
 ];
 
@@ -687,7 +687,7 @@ export default function VeloxisWebsite() {
         <div className="text-center px-8 mb-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#1ABC9C] mb-3">Built for your problems</p>
           <h2 className="text-[34px] font-semibold text-white leading-[1.2] tracking-[-0.01em] mb-3">Every barrier exporters face. Solved.</h2>
-          <p className="text-[14px] text-white/45 max-w-[480px] mx-auto">Traditional finance was built for domestic markets. Veloxis was built for cross-border export discounting.</p>
+          <p className="text-[14px] text-white/45 max-w-[480px] mx-auto">Traditional finance was built for domestic markets. Veloxis was built for cross-border cross-border trade finance.</p>
         </div>
         <div className="space-y-1">
           <p className="text-[11px] text-white/25 uppercase tracking-wider px-8 mb-2">The challenges</p>
@@ -864,7 +864,7 @@ export default function VeloxisWebsite() {
         <div className="mx-auto max-w-[960px] grid grid-cols-2 md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-8 mb-8">
           <div>
             <a href="/"><img src={veloxisLogoWhite} alt="Veloxis" className="h-9 w-auto mb-3" /></a>
-            <p className="text-[13px] text-white/35 leading-[1.6] mb-3">UK-based invoice discounting for cross-border export trade finance. Advancing 80% of export invoice value within 24 hours for commodity exporters worldwide shipping to UK and EU buyers.</p>
+            <p className="text-[13px] text-white/35 leading-[1.6] mb-3">UK-based trade finance for cross-border export trade finance. Advancing 80% of export invoice value within 24 hours for commodity exporters worldwide shipping to UK and EU buyers.</p>
             <a href="mailto:hello@veloxis.co.uk" className="block text-[13px] text-white/25 hover:text-[#5FFFD7] transition-colors mb-2">hello@veloxis.co.uk</a>
             <address className="not-italic text-[12px] text-white/30 leading-[1.6]">
               1 Emperor Way<br />

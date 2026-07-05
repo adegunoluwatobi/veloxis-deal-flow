@@ -293,7 +293,7 @@ const CONTENT: Record<Props["slug"], PageContent> = {
         blocks: [
           {
             type: "p",
-            text: "Veloxis operates as a business-to-business invoice discounting entity that purchases trade receivables from exporters, rather than providing consumer or retail credit.",
+            text: "Veloxis operates as a business-to-business trade finance entity that purchases trade receivables from exporters, rather than providing consumer or retail credit.",
           },
         ],
       },
