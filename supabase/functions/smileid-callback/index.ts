@@ -1,6 +1,7 @@
-// Smile ID async callback (webhook). verify_jwt=false. Always returns HTTP 200.
+// Smile ID async callback (webhook). verify_jwt=false. Always returns HTTP 200
+// for accepted (signature-verified) payloads; rejects unsigned/invalid with 401.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { corsHeaders, normalizeKybResult, normalizeKycResult, normalizeAmlResult } from "../_shared/smileid.ts";
+import { corsHeaders, buildSignature, normalizeKybResult, normalizeKycResult, normalizeAmlResult } from "../_shared/smileid.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -11,6 +12,34 @@ Deno.serve(async (req) => {
     const providerJobId = payload?.SmileJobID ?? payload?.PartnerParams?.job_id ?? null;
     const providerUserId = payload?.PartnerParams?.user_id ?? null;
     const signature = payload?.signature ?? null;
+    const timestamp = payload?.timestamp ?? null;
+
+    // Verify Smile ID HMAC signature (same scheme as _shared/smileid.ts).
+    // Reject unsigned or invalid payloads to prevent forged KYC/AML/KYB results.
+    if (!signature || !timestamp) {
+      return new Response(JSON.stringify({ error: "missing signature" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    // Replay protection: reject callbacks older than 15 minutes.
+    const ts = Date.parse(String(timestamp));
+    if (!Number.isFinite(ts) || Math.abs(Date.now() - ts) > 15 * 60 * 1000) {
+      return new Response(JSON.stringify({ error: "stale timestamp" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    let expectedSig = "";
+    try { expectedSig = await buildSignature(String(timestamp)); } catch {
+      return new Response(JSON.stringify({ error: "signature check unavailable" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (expectedSig !== String(signature)) {
+      return new Response(JSON.stringify({ error: "invalid signature" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
 
     // 1. Insert raw callback (idempotent on provider_job_id + signature)
     const { error: cbErr } = await admin.from("verification_callbacks").insert({
