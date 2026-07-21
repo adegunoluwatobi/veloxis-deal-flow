@@ -38,10 +38,14 @@ export default function MarketingLeads() {
   return (
     <div className="space-y-6">
       <Helmet><title>Marketing Leads · Veloxis</title></Helmet>
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground">Marketing</h1>
+      </div>
       <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-semibold text-foreground">Marketing Leads</h1>
+        <MarketingTabs />
         <Badge variant="secondary">{leads.length} total</Badge>
       </div>
+
 
       <div className="rounded-lg border border-border bg-card">
         <Table>
