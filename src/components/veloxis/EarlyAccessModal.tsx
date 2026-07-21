@@ -15,6 +15,7 @@ export function EarlyAccessModal() {
 
   useEffect(() => {
     try {
+      if (window.location.pathname.startsWith('/nbcc')) return;
       if (localStorage.getItem(STORAGE_KEY) !== '1') setOpen(true);
     } catch {
       setOpen(true);
