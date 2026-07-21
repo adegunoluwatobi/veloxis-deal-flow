@@ -51,7 +51,7 @@ interface SlideData {
 // ─── FAQ DATA ────────────────────────────────────────────────────────────────
 
 const faqs: FaqItem[] = [
-  { q: "What is Veloxis?", a: "Veloxis provides invoice finance to African commodity exporters shipping to verified buyers in the United Kingdom and Europe. We advance the bulk of your invoice value once shipment is verified, and settle the balance when your buyer pays. You get paid the day you ship — not 30 to 60 days later." },
+  { q: "What is Veloxis?", a: "Veloxis provides invoice finance to African commodity exporters shipping to verified buyers in the United Kingdom and Europe. We advance the bulk of your invoice value once shipment is verified, and settle the balance when your buyer pays. You get paid the day you ship — not 30 to 90 days later." },
   { q: "What is trade finance?", a: "Trade finance is a form of export trade finance where a financier advances funds against a verified trade receivable created by your shipment. Veloxis is not a lender. We advance the bulk of your invoice value within 24 hours of verification, and release the residual balance once your buyer pays at maturity — minus a transparent fee. Every transaction is protected by three layers of security: independent physical verification of the commodity before shipment, a formal assignment of proceeds backed by an irrevocable Letter of Credit or Irrevocable Payment Undertaking from a top-20 global bank under UCP 600, and controlled settlement through dedicated domiciliary accounts." },
   { q: "Who can use Veloxis?", a: "Veloxis is for incorporated African commodity exporters shipping goods to verified buyers in the United Kingdom or Europe. You must be onboarded through a Veloxis-approved local partner. Sole traders and unregistered partnerships are not eligible." },
   { q: "Does Veloxis finance importers?", a: "Not directly. Veloxis finances the exporter's receivable. The exporter receives the advance, and the buyer pays Veloxis when the invoice falls due." },
@@ -71,7 +71,7 @@ const slides: SlideData[] = [
     num: "01 of 04 — The problem",
     iconBg: "rgba(245,158,11,0.12)",
     icon: <Clock className="w-6 h-6 text-amber-500" />,
-    title: "Waiting 30 to 60 days for payment",
+    title: "Waiting 30 to 90 days for payment",
     body: "You ship goods and wait months to be paid while still covering suppliers, staff, logistics, and overheads. The invoice is real. The money isn't there yet.",
   },
   {
@@ -118,7 +118,7 @@ const solutionChecks = ["80% within 24hrs", "Zero collateral", "Domiciliary sett
 // ─── TICKER PILLS ─────────────────────────────────────────────────────────────
 
 const problemPills = [
-  "Waiting 30 to 60 days for payment",
+  "Waiting 30 to 90 days for payment",
   "Banks reject emerging market exporters",
   "No UK collateral to secure finance",
   "FX conversion costs eating margins",
@@ -670,7 +670,7 @@ export default function VeloxisWebsite() {
           {[
             { v: "80%", l: "Advanced on day one" },
             { v: "24hrs", l: "From approval to funds" },
-            { v: "30 to 60", l: "Day payment terms" },
+            { v: "30 to 90", l: "Day payment terms" },
             { v: "UK & EU", l: "Buyer destination markets" },
           ].map(s => (
             <div key={s.v}>
@@ -866,7 +866,7 @@ export default function VeloxisWebsite() {
         <div className="mx-auto max-w-[960px] grid grid-cols-2 md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-8 mb-8">
           <div>
             <a href="/"><img src={veloxisLogoWhite} alt="Veloxis" className="h-9 w-auto mb-3" /></a>
-            <p className="text-[13px] text-white/35 leading-[1.6] mb-3">Veloxis provides invoice finance to African commodity exporters shipping to verified buyers in the United Kingdom and Europe. Exporters receive the bulk of their invoice value once shipment is verified, with the balance settled when the buyer pays. Get paid the day you ship — not 30 to 60 days later.</p>
+            <p className="text-[13px] text-white/35 leading-[1.6] mb-3">Veloxis provides invoice finance to African commodity exporters shipping to verified buyers in the United Kingdom and Europe. Exporters receive the bulk of their invoice value once shipment is verified, with the balance settled when the buyer pays. Get paid the day you ship — not 30 to 90 days later.</p>
             <a href="mailto:hello@veloxis.co.uk" className="block text-[13px] text-white/25 hover:text-[#5FFFD7] transition-colors mb-2">hello@veloxis.co.uk</a>
             <address className="not-italic text-[12px] text-white/30 leading-[1.6]">
               1 Emperor Way<br />
