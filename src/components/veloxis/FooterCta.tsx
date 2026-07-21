@@ -8,7 +8,7 @@ export function FooterCta() {
           Your invoice is an asset. Start using it.
         </h2>
         <p className="mx-auto mt-3 mb-[26px] max-w-[440px] text-[15px] text-[#99f6e4]">
-          Join exporters from emerging markets worldwide growing faster because they are not waiting 60 days to be paid.
+          Join exporters from emerging markets worldwide growing faster because they are not waiting 90 days to be paid.
         </p>
         <div className="flex items-center justify-center gap-3">
           <Link

@@ -849,7 +849,7 @@ export default function VeloxisWebsite() {
         <div className="absolute top-[-40px] right-[80px] w-[200px] h-[200px] rounded-full opacity-[0.10] blur-[40px]" style={{ background: C.mint }} />
         <div className="relative z-10 text-center max-w-[520px] mx-auto">
           <h2 className="text-[34px] font-semibold text-white leading-[1.2] tracking-[-0.01em] mb-4">Your invoice is an asset.<br />Convert it to cash.</h2>
-          <p className="text-[15px] text-[#5FFFD7]/80 mb-7 max-w-[440px] mx-auto">Join exporters from emerging markets worldwide growing faster because they are not waiting 60 days to be paid.</p>
+          <p className="text-[15px] text-[#5FFFD7]/80 mb-7 max-w-[440px] mx-auto">Join exporters from emerging markets worldwide growing faster because they are not waiting 90 days to be paid.</p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Link to="/apply/exporter" className="inline-flex items-center justify-center gap-1.5 gradient-veloxis-btn text-white font-semibold text-[14px] px-6 py-3 rounded-[10px] transition-all duration-200 glow-mint-hover">
               Get started <ArrowRight className="w-4 h-4" />
