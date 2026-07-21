@@ -320,7 +320,7 @@ const CONTENT: Record<Props["slug"], PageContent> = {
         blocks: [
           {
             type: "p",
-            text: "Advance rate: 80% of invoice value. Platform fee: 1% (one-off, waived on Veloxis Pro). Discount fee: 2% per month. Late penalty: 0.067% per day. Payment terms: 30 to 60 days. Indicative only; actual pricing is set per transaction at underwriting.",
+            text: "Advance rate: 80% of invoice value. Platform fee: 1% (one-off, waived on Veloxis Pro). Discount fee: 2% per month. Late penalty: 0.067% per day. Payment terms: 30 to 90 days. Indicative only; actual pricing is set per transaction at underwriting.",
           },
         ],
       },

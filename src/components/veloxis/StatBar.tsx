@@ -1,7 +1,7 @@
 const STATS = [
   { value: "80%", label: "Advanced on day one" },
   { value: "24hrs", label: "From approval to funds" },
-  { value: "30–60", label: "Day payment terms" },
+  { value: "30–90", label: "Day payment terms" },
   { value: "UK & EU", label: "Buyer destination markets" },
 ];
 

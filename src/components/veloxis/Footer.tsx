@@ -55,7 +55,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="text-[17px] font-medium text-[#111827] cursor-pointer">Veloxis</Link>
             <p className="mt-2.5 text-[13px] leading-[1.6] text-[#6b7280]">
-              Veloxis provides invoice finance to African commodity exporters shipping to verified buyers in the United Kingdom and Europe. Exporters receive the bulk of their invoice value once shipment is verified, with the balance settled when the buyer pays. Get paid the day you ship — not 30 to 60 days later.
+              Veloxis provides invoice finance to African commodity exporters shipping to verified buyers in the United Kingdom and Europe. Exporters receive the bulk of their invoice value once shipment is verified, with the balance settled when the buyer pays. Get paid the day you ship — not 30 to 90 days later.
             </p>
             <a href="mailto:hello@veloxis.co.uk" className="mt-3 block text-[13px] text-[#6b7280] hover:text-[#111827]">
               hello@veloxis.co.uk
