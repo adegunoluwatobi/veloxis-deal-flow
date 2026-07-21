@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard, Users, FileText, Settings, LogOut,
-  Menu, X, ChevronRight, ShieldCheck, Banknote, Building2, Inbox, Megaphone, BadgeCheck, Sparkles,
+  Menu, X, ChevronRight, ChevronDown, ShieldCheck, Banknote, Building2, Inbox, Megaphone, BadgeCheck, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import veloxisLogoWhite from '@/assets/veloxis-logo-white.png';
@@ -16,6 +16,7 @@ interface NavItem {
   href: string;
   icon: React.ElementType;
   roles: string[];
+  children?: { label: string; href: string; icon: React.ElementType; roles: string[] }[];
 }
 
 // Top cluster only shown for non-admin internal roles (none today, kept for future)
@@ -29,8 +30,13 @@ const ADMIN_NAV: NavItem[] = [
   { label: 'Capital Pool', href: '/admin/capital', icon: Banknote, roles: ['super_admin', 'deal_manager'] },
   { label: 'Partners', href: '/admin/partners', icon: Building2, roles: ['super_admin'] },
   { label: 'Pricing', href: '/admin/pricing', icon: Banknote, roles: ['super_admin'] },
-  { label: 'Marketing', href: '/admin/marketing', icon: Megaphone, roles: ['super_admin', 'deal_manager'] },
-  { label: 'Content Generation', href: '/admin/marketing/content', icon: Sparkles, roles: ['super_admin', 'deal_manager'] },
+  {
+    label: 'Marketing', href: '/admin/marketing', icon: Megaphone, roles: ['super_admin', 'deal_manager'],
+    children: [
+      { label: 'Marketing Leads', href: '/admin/marketing', icon: Users, roles: ['super_admin', 'deal_manager'] },
+      { label: 'Content Generation', href: '/admin/marketing/content', icon: Sparkles, roles: ['super_admin', 'deal_manager'] },
+    ],
+  },
   { label: 'Verifications', href: '/admin/verifications', icon: BadgeCheck, roles: ['super_admin', 'deal_manager'] },
   { label: 'Opportunities', href: '/admin/opportunities', icon: Sparkles, roles: ['super_admin', 'deal_manager'] },
   { label: 'User Management', href: '/admin/users', icon: Users, roles: ['super_admin'] },
@@ -56,7 +62,68 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isActive = (href: string) =>
     location.pathname === href || (href !== '/' && href !== '/admin' && location.pathname.startsWith(href));
 
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+
+  const isChildActive = (item: NavItem) =>
+    !!item.children?.some((c) => location.pathname === c.href || location.pathname.startsWith(c.href + '/'));
+
+  useEffect(() => {
+    const next: Record<string, boolean> = {};
+    ADMIN_NAV.forEach((item) => {
+      if (item.children && isChildActive(item)) next[item.href] = true;
+    });
+    setOpenGroups((prev) => ({ ...next, ...prev }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
   const renderNavLink = (item: NavItem) => {
+    if (item.children && item.children.length > 0) {
+      const filteredChildren = item.children.filter((c) => role && c.roles.includes(role as string));
+      const groupOpen = openGroups[item.href] ?? isChildActive(item);
+      const active = isChildActive(item);
+      return (
+        <div key={item.href}>
+          <button
+            type="button"
+            onClick={() => setOpenGroups((s) => ({ ...s, [item.href]: !groupOpen }))}
+            className={cn(
+              'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+              active
+                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+            )}
+          >
+            <item.icon className="h-4 w-4" />
+            {item.label}
+            <ChevronDown className={cn('ml-auto h-4 w-4 opacity-60 transition-transform', groupOpen && 'rotate-180')} />
+          </button>
+          {groupOpen && (
+            <div className="mt-1 ml-4 space-y-1 border-l border-sidebar-border/50 pl-3">
+              {filteredChildren.map((c) => {
+                const childActive = location.pathname === c.href;
+                return (
+                  <Link
+                    key={c.href}
+                    to={c.href}
+                    onClick={() => setSidebarOpen(false)}
+                    className={cn(
+                      'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
+                      childActive
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                    )}
+                  >
+                    <c.icon className="h-3.5 w-3.5" />
+                    {c.label}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     const active = isActive(item.href);
     return (
       <Link
