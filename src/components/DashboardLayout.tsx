@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard, Users, FileText, Settings, LogOut,
-  Menu, X, ChevronRight, ShieldCheck, Banknote, Building2, Inbox, Megaphone, BadgeCheck, Sparkles,
+  Menu, X, ChevronRight, ChevronDown, ShieldCheck, Banknote, Building2, Inbox, Megaphone, BadgeCheck, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import veloxisLogoWhite from '@/assets/veloxis-logo-white.png';
