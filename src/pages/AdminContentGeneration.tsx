@@ -7,21 +7,22 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Copy, Sparkles } from 'lucide-react';
+import { Loader2, Copy, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
 import MarketingTabs from '@/components/MarketingTabs';
 
 type Channel = 'SOCIAL' | 'LANDING_PAGE' | 'EMAIL' | 'COMMUNITY';
+type Mode = 'REDRAFT' | 'SOURCE';
+type SubCategory = 'MARKET_INTEL' | 'SEEDED_QUESTION' | 'WIN_AMPLIFICATION' | 'DM_PIVOT';
 
 function parseDrafts(text: string): string[] {
   if (!text) return [];
-  // Split on lines beginning with "1.", "2.", "3." (or "Option 1:", etc.)
   const regex = /(?:^|\n)\s*(?:Option\s*)?(\d+)[\.\):]\s*/gi;
-  const parts: string[] = [];
   const indices: number[] = [];
   let m: RegExpExecArray | null;
   while ((m = regex.exec(text)) !== null) indices.push(m.index);
   if (indices.length === 0) return [text.trim()];
+  const parts: string[] = [];
   for (let i = 0; i < indices.length; i++) {
     const start = indices[i];
     const end = i + 1 < indices.length ? indices[i + 1] : text.length;
@@ -31,25 +32,59 @@ function parseDrafts(text: string): string[] {
   return parts;
 }
 
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
 export default function AdminContentGeneration() {
   const [channel, setChannel] = useState<Channel>('SOCIAL');
+  const [mode, setMode] = useState<Mode>('REDRAFT');
   const [campaignName, setCampaignName] = useState('');
-  const [subCategory, setSubCategory] = useState('');
+  const [subCategory, setSubCategory] = useState<SubCategory>('MARKET_INTEL');
   const [recentTopics, setRecentTopics] = useState('');
   const [memberContext, setMemberContext] = useState('');
+  const [suppliedMaterial, setSuppliedMaterial] = useState('');
+  const [suppliedImage, setSuppliedImage] = useState<string>('');
+  const [imageName, setImageName] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [drafts, setDrafts] = useState<string[]>([]);
   const [rawText, setRawText] = useState('');
 
   const isCommunity = channel === 'COMMUNITY';
+  const isRedraft = mode === 'REDRAFT';
+
+  const onImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be under 5MB');
+      return;
+    }
+    const dataUrl = await fileToDataUrl(file);
+    setSuppliedImage(dataUrl);
+    setImageName(file.name);
+  };
 
   const submit = async () => {
     if (!campaignName.trim()) {
       toast.error('Campaign name is required');
       return;
     }
-    if (isCommunity && (!subCategory.trim() || !memberContext.trim())) {
-      toast.error('Sub-category and known member context are required for COMMUNITY');
+    if (isCommunity && !subCategory) {
+      toast.error('Sub-category is required for COMMUNITY');
+      return;
+    }
+    if (isRedraft && !suppliedMaterial.trim() && !suppliedImage) {
+      toast.error('REDRAFT mode needs supplied text or an image');
       return;
     }
     setLoading(true);
@@ -59,10 +94,13 @@ export default function AdminContentGeneration() {
       const { data, error } = await supabase.functions.invoke('generate-content', {
         body: {
           channel,
+          mode,
           campaign_name: campaignName.trim(),
-          sub_category: isCommunity ? subCategory.trim() : undefined,
+          sub_category: isCommunity ? subCategory : undefined,
           recent_topics_covered: recentTopics.trim() || undefined,
-          known_member_context: isCommunity ? memberContext.trim() : undefined,
+          known_member_context: isCommunity ? memberContext.trim() || undefined : undefined,
+          supplied_material: isRedraft ? suppliedMaterial.trim() || undefined : undefined,
+          supplied_image: isRedraft ? suppliedImage || undefined : undefined,
         },
       });
       if (error) throw error;
@@ -92,7 +130,6 @@ export default function AdminContentGeneration() {
       </div>
       <MarketingTabs />
 
-
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Brief</CardTitle>
@@ -112,16 +149,68 @@ export default function AdminContentGeneration() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Campaign name</Label>
-              <Input value={campaignName} onChange={(e) => setCampaignName(e.target.value)} placeholder="e.g. Cocoa exporter awareness Q1" />
+              <Label>Mode</Label>
+              <Select value={mode} onValueChange={(v) => setMode(v as Mode)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="REDRAFT">Redraft (I supply material)</SelectItem>
+                  <SelectItem value="SOURCE">Source (find recent development)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Campaign name</Label>
+            <Input value={campaignName} onChange={(e) => setCampaignName(e.target.value)} placeholder="e.g. nbcc, lagos-trade-summit" />
           </div>
 
           {isCommunity && (
             <div className="space-y-2">
               <Label>Sub-category</Label>
-              <Input value={subCategory} onChange={(e) => setSubCategory(e.target.value)} placeholder="e.g. logistics, FX, buyer verification" />
+              <Select value={subCategory} onValueChange={(v) => setSubCategory(v as SubCategory)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MARKET_INTEL">Market intel</SelectItem>
+                  <SelectItem value="SEEDED_QUESTION">Seeded question</SelectItem>
+                  <SelectItem value="WIN_AMPLIFICATION">Win amplification</SelectItem>
+                  <SelectItem value="DM_PIVOT">DM pivot</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+          )}
+
+          {isRedraft && (
+            <>
+              <div className="space-y-2">
+                <Label>Supplied material</Label>
+                <Textarea
+                  rows={5}
+                  value={suppliedMaterial}
+                  onChange={(e) => setSuppliedMaterial(e.target.value)}
+                  placeholder="Paste the note, update, or rough draft to turn into polished content"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Supplied image <span className="text-muted-foreground font-normal">(optional, e.g. screenshot, flyer)</span></Label>
+                <div className="flex items-center gap-3">
+                  <Input type="file" accept="image/*" onChange={onImageChange} className="max-w-sm" />
+                  {suppliedImage && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span className="truncate max-w-[200px]">{imageName}</span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => { setSuppliedImage(''); setImageName(''); }}
+                        className="h-6 w-6"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
           )}
 
           <div className="space-y-2">
@@ -131,8 +220,8 @@ export default function AdminContentGeneration() {
 
           {isCommunity && (
             <div className="space-y-2">
-              <Label>Known member context</Label>
-              <Textarea rows={3} value={memberContext} onChange={(e) => setMemberContext(e.target.value)} placeholder="Who is in this group and what do they care about?" />
+              <Label>Known member context <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Textarea rows={3} value={memberContext} onChange={(e) => setMemberContext(e.target.value)} placeholder="Names, engagement history, flagged cash gaps" />
             </div>
           )}
 
