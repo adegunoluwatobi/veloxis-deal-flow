@@ -164,9 +164,6 @@ Deno.serve(async (req) => {
     if (!['REDRAFT', 'SOURCE'].includes(mode)) {
       return new Response(JSON.stringify({ error: 'Invalid mode' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-    if (!campaign_name || typeof campaign_name !== 'string') {
-      return new Response(JSON.stringify({ error: 'campaign_name required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
     if (channel === 'COMMUNITY' && !sub_category) {
       return new Response(JSON.stringify({ error: 'sub_category required for COMMUNITY' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
@@ -177,7 +174,7 @@ Deno.serve(async (req) => {
     const textParts = [
       `CHANNEL: ${channel}`,
       `MODE: ${mode}`,
-      `campaign_name: ${campaign_name}`,
+      campaign_name ? `campaign_name: ${campaign_name}` : 'campaign_name: (not supplied — propose one)',
       sub_category ? `sub_category: ${sub_category}` : null,
       recent_topics_covered ? `recent_topics_covered: ${recent_topics_covered}` : null,
       known_member_context ? `known_member_context: ${known_member_context}` : null,
