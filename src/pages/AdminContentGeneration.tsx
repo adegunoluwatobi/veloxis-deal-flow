@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Copy, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import MarketingTabs from '@/components/MarketingTabs';
 
 type Channel = 'SOCIAL' | 'LANDING_PAGE' | 'EMAIL' | 'COMMUNITY';
 
