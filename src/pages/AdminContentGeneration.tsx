@@ -75,8 +75,8 @@ export default function AdminContentGeneration() {
   };
 
   const submit = async () => {
-    if (!campaignName.trim()) {
-      toast.error('Campaign name is required');
+    if (isCommunity && !subCategory) {
+      toast.error('Sub-category is required for COMMUNITY');
       return;
     }
     if (isCommunity && !subCategory) {
@@ -95,7 +95,7 @@ export default function AdminContentGeneration() {
         body: {
           channel,
           mode,
-          campaign_name: campaignName.trim(),
+          campaign_name: campaignName.trim() || undefined,
           sub_category: isCommunity ? subCategory : undefined,
           recent_topics_covered: recentTopics.trim() || undefined,
           known_member_context: isCommunity ? memberContext.trim() || undefined : undefined,
@@ -161,7 +161,7 @@ export default function AdminContentGeneration() {
           </div>
 
           <div className="space-y-2">
-            <Label>Campaign name</Label>
+            <Label>Campaign name <span className="text-muted-foreground font-normal">(optional — model will propose one if left blank)</span></Label>
             <Input value={campaignName} onChange={(e) => setCampaignName(e.target.value)} placeholder="e.g. nbcc, lagos-trade-summit" />
           </div>
 
