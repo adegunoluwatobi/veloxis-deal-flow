@@ -75,8 +75,8 @@ export default function AdminContentGeneration() {
   };
 
   const submit = async () => {
-    if (!campaignName.trim()) {
-      toast.error('Campaign name is required');
+    if (isCommunity && !subCategory) {
+      toast.error('Sub-category is required for COMMUNITY');
       return;
     }
     if (isCommunity && !subCategory) {
