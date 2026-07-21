@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import MarketingTabs from '@/components/MarketingTabs';
 
 interface Lead {
   id: string;
