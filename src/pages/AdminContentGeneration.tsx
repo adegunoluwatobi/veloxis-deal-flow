@@ -84,11 +84,13 @@ export default function AdminContentGeneration() {
     <div className="space-y-6 max-w-5xl">
       <Helmet><title>Content Generation · Veloxis</title></Helmet>
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Content Generation</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Marketing</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Generate draft marketing content. All output is drafts only — review and edit before posting.
         </p>
       </div>
+      <MarketingTabs />
+
 
       <Card>
         <CardHeader>
