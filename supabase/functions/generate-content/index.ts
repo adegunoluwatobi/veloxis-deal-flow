@@ -171,6 +171,49 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'supplied_material or supplied_image required for REDRAFT mode' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // SOURCE mode grounding: fetch real recent search results via Serper so the
+    // model can only cite verified URLs (prevents fabricated links).
+    let sourceResultsBlock: string | null = null;
+    if (mode === 'SOURCE') {
+      const serperKey = Deno.env.get('SERPER_API_KEY');
+      if (!serperKey) {
+        return new Response(JSON.stringify({ error: 'SERPER_API_KEY not configured — required for SOURCE mode grounding' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      const queries = [
+        'Nigeria export trade UK EU',
+        'Nigeria agricultural commodities export',
+        'NGN GBP EUR USD exchange rate',
+        'Nigeria port shipping freight disruption',
+        'UK EU import customs rules African exporters',
+      ];
+      const collected: { title: string; link: string; snippet: string; date?: string; source?: string }[] = [];
+      await Promise.all(queries.map(async (q) => {
+        try {
+          const r = await fetch('https://google.serper.dev/news', {
+            method: 'POST',
+            headers: { 'X-API-KEY': serperKey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ q, gl: 'ng', tbs: 'qdr:w', num: 6 }),
+          });
+          if (!r.ok) return;
+          const j = await r.json();
+          for (const n of (j.news ?? [])) {
+            collected.push({ title: n.title, link: n.link, snippet: n.snippet, date: n.date, source: n.source });
+          }
+        } catch (_) { /* ignore */ }
+      }));
+      // Dedupe by link
+      const seen = new Set<string>();
+      const unique = collected.filter(c => c.link && !seen.has(c.link) && seen.add(c.link));
+      if (unique.length === 0) {
+        // No real items — return the exact fallback the prompt mandates.
+        return new Response(JSON.stringify({ text: 'No relevant development found in the current window. Recommend posting supplied-update content or a seeded question instead.' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      sourceResultsBlock = 'VERIFIED_SEARCH_RESULTS (only cite links from this list — do not invent any URL):\n' +
+        unique.slice(0, 25).map((u, i) => `${i + 1}. ${u.title}\n   Source: ${u.source ?? ''} | Date: ${u.date ?? ''}\n   URL: ${u.link}\n   Snippet: ${u.snippet ?? ''}`).join('\n\n');
+    }
+
     const textParts = [
       `CHANNEL: ${channel}`,
       `MODE: ${mode}`,
@@ -179,9 +222,10 @@ Deno.serve(async (req) => {
       recent_topics_covered ? `recent_topics_covered: ${recent_topics_covered}` : null,
       known_member_context ? `known_member_context: ${known_member_context}` : null,
       supplied_material ? `supplied_material:\n${supplied_material}` : null,
+      sourceResultsBlock,
       '',
       mode === 'SOURCE'
-        ? 'Follow SOURCE mode rules. If no usable item is found, return only the exact fallback sentence specified.'
+        ? 'Follow SOURCE mode rules. You MUST only cite URLs that appear exactly in VERIFIED_SEARCH_RESULTS above. Never invent, guess, shorten, or modify a URL. If none of the results are usable per the tiered logic, return only the exact fallback sentence specified.'
         : 'Follow REDRAFT mode rules. Work only from the supplied material plus fixed Veloxis context.',
       'Return 2-3 numbered draft options only.',
     ].filter(Boolean).join('\n');
