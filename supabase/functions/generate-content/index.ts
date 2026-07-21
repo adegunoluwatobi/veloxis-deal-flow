@@ -189,43 +189,43 @@ Deno.serve(async (req) => {
     const userContent: any[] = [{ type: 'text', text: textParts }];
 
     if (supplied_image && typeof supplied_image === 'string' && supplied_image.startsWith('data:image/')) {
-      const match = supplied_image.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
-      if (match) {
-        userContent.push({
-          type: 'image',
-          source: { type: 'base64', media_type: match[1], data: match[2] },
-        });
-      }
+      // Gateway expects OpenAI-style image_url blocks with a data URL
+      userContent.push({
+        type: 'image_url',
+        image_url: { url: supplied_image },
+      });
     }
 
-    const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
-    if (!anthropicKey) {
-      return new Response(JSON.stringify({ error: 'ANTHROPIC_API_KEY not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const lovableKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableKey) {
+      return new Response(JSON.stringify({ error: 'LOVABLE_API_KEY not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+    const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01',
+        'Lovable-API-Key': lovableKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5-20250929',
+        model: 'google/gemini-3-flash-preview',
         max_tokens: 2048,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userContent }],
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: userContent },
+        ],
       }),
     });
 
-    if (!anthropicRes.ok) {
-      const errText = await anthropicRes.text();
-      console.error('Anthropic error:', errText);
-      return new Response(JSON.stringify({ error: 'AI request failed', details: errText }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!aiRes.ok) {
+      const errText = await aiRes.text();
+      console.error('AI Gateway error:', aiRes.status, errText);
+      const status = aiRes.status === 429 || aiRes.status === 402 ? aiRes.status : 502;
+      return new Response(JSON.stringify({ error: 'AI request failed', status: aiRes.status, details: errText }), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const data = await anthropicRes.json();
-    const text = data?.content?.map((c: any) => c.text).filter(Boolean).join('\n') ?? '';
+    const data = await aiRes.json();
+    const text = data?.choices?.[0]?.message?.content ?? '';
 
     return new Response(JSON.stringify({ text }), {
       status: 200,
