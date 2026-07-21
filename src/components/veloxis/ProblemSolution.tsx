@@ -24,7 +24,7 @@ export function ProblemSolution() {
           You've shipped. Why are you still waiting?
         </h2>
         <p className="mt-3 max-w-[520px] text-[14px] leading-[1.6] text-[#6b7280]">
-          The invoice exists. The buyer is real. The goods are gone. The problem is the 60 days in between.
+          The invoice exists. The buyer is real. The goods are gone. The problem is the 90 days in between.
         </p>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -37,7 +37,7 @@ export function ProblemSolution() {
               <h3 className="text-[16px] font-medium text-[#111827]">The problem</h3>
             </div>
             <p className="text-[14px] leading-[1.6] text-[#6b7280] mb-4">
-              You ship on 30–60 day terms. The invoice is real, goods gone — but you wait months while covering suppliers, staff, and overheads.
+              You ship on 30–90 day terms. The invoice is real, goods gone — but you wait months while covering suppliers, staff, and overheads.
             </p>
             <div className="space-y-3">
               {PROBLEMS.map((p) => (

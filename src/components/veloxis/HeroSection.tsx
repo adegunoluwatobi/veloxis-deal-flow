@@ -22,7 +22,7 @@ export function HeroSection() {
             <TypingHeadline
               lines={[
                 { text: "Ship today. Get paid today.", speed: 55 },
-                { text: "Not 30 to 60 days later.", speed: 68, className: "text-[#0d9488]" },
+                { text: "Not 30 to 90 days later.", speed: 68, className: "text-[#0d9488]" },
               ]}
             />
           </h1>

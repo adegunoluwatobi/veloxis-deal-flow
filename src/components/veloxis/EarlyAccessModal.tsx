@@ -97,7 +97,7 @@ export function EarlyAccessModal() {
                 Early Access · Cross-border trade finance
               </span>
               <h2 className="mt-4 text-2xl sm:text-3xl font-semibold text-white leading-tight">
-                Stop waiting 60 days to get paid.
+                Stop waiting 90 days to get paid.
               </h2>
               <p className="mt-2 text-sm sm:text-base text-white/70">
                 Register your interest and we'll be in touch within 24 hours.
