@@ -20,6 +20,7 @@ import {
   Loader2,
 } from "lucide-react";
 import veloxisLogoWhite from "@/assets/veloxis-logo-white.png";
+import { EarlyAccessModal } from "@/components/veloxis/EarlyAccessModal";
 
 // ─── BRAND COLORS ────────────────────────────────────────────────────────────
 const C = {
