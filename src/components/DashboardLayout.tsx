@@ -16,6 +16,7 @@ interface NavItem {
   href: string;
   icon: React.ElementType;
   roles: string[];
+  children?: { label: string; href: string; icon: React.ElementType; roles: string[] }[];
 }
 
 // Top cluster only shown for non-admin internal roles (none today, kept for future)
@@ -29,8 +30,13 @@ const ADMIN_NAV: NavItem[] = [
   { label: 'Capital Pool', href: '/admin/capital', icon: Banknote, roles: ['super_admin', 'deal_manager'] },
   { label: 'Partners', href: '/admin/partners', icon: Building2, roles: ['super_admin'] },
   { label: 'Pricing', href: '/admin/pricing', icon: Banknote, roles: ['super_admin'] },
-  { label: 'Marketing', href: '/admin/marketing', icon: Megaphone, roles: ['super_admin', 'deal_manager'] },
-  { label: 'Content Generation', href: '/admin/marketing/content', icon: Sparkles, roles: ['super_admin', 'deal_manager'] },
+  {
+    label: 'Marketing', href: '/admin/marketing', icon: Megaphone, roles: ['super_admin', 'deal_manager'],
+    children: [
+      { label: 'Marketing Leads', href: '/admin/marketing', icon: Users, roles: ['super_admin', 'deal_manager'] },
+      { label: 'Content Generation', href: '/admin/marketing/content', icon: Sparkles, roles: ['super_admin', 'deal_manager'] },
+    ],
+  },
   { label: 'Verifications', href: '/admin/verifications', icon: BadgeCheck, roles: ['super_admin', 'deal_manager'] },
   { label: 'Opportunities', href: '/admin/opportunities', icon: Sparkles, roles: ['super_admin', 'deal_manager'] },
   { label: 'User Management', href: '/admin/users', icon: Users, roles: ['super_admin'] },
