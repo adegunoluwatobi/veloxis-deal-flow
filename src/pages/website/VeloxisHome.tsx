@@ -20,6 +20,7 @@ import {
   Loader2,
 } from "lucide-react";
 import veloxisLogoWhite from "@/assets/veloxis-logo-white.png";
+import { EarlyAccessModal } from "@/components/veloxis/EarlyAccessModal";
 
 // ─── BRAND COLORS ────────────────────────────────────────────────────────────
 const C = {
@@ -506,6 +507,7 @@ export default function VeloxisWebsite() {
 
   return (
     <div className="min-h-screen" style={{ scrollBehavior: "smooth", background: C.deepEmerald }}>
+      <EarlyAccessModal />
       <Helmet>
         <title>Veloxis — Trade without waiting.</title>
         <meta name="description" content="Veloxis is a UK-based trade finance platform that advances 80% of your invoice value within 24 hours. No collateral required." />
