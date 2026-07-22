@@ -9,6 +9,7 @@ const PRODUCT = [
 const COMPANY = [
   { label: "Partners", href: "/partners" },
   { label: "Contact", href: "mailto:hello@veloxis.co.uk" },
+  { label: "Mail", href: "https://webmail.veloxis.co.uk/" },
 ];
 
 const LEGAL = [
