@@ -353,6 +353,9 @@ export type Database = {
           buyer_country: string | null
           buyer_country_of_incorporation: string | null
           buyer_credit_check_status: Database["public"]["Enums"]["buyer_credit_check_status"]
+          buyer_direct_confirmation_at: string | null
+          buyer_direct_confirmation_by: string | null
+          buyer_direct_confirmation_notes: string | null
           buyer_name_match: boolean | null
           buyer_sanctions_status: Database["public"]["Enums"]["sanctions_screening_status"]
           buyer_underwriter_notes: string | null
@@ -362,9 +365,17 @@ export type Database = {
           correspondent_swift_bic: string | null
           created_at: string
           deal_reference: string | null
+          deed_of_assignment_acknowledged_at: string | null
+          deed_of_assignment_acknowledged_by: string | null
+          deed_of_assignment_sent_at: string | null
+          deed_of_assignment_sent_by: string | null
           demurrage_amount: number
           demurrage_rate_daily: number
+          disbursement_amount: number | null
           disbursement_date: string | null
+          disbursement_recorded_at: string | null
+          disbursement_recorded_by: string | null
+          disbursement_reference: string | null
           discount_fee_amount: number | null
           discount_fee_pct: number | null
           expected_settlement_date: string | null
@@ -399,6 +410,10 @@ export type Database = {
           licence_name_match: boolean | null
           net_advance_amount: number | null
           ngn_equivalent_at_disbursement: number | null
+          notice_of_assignment_acknowledged_at: string | null
+          notice_of_assignment_acknowledged_by: string | null
+          notice_of_assignment_sent_at: string | null
+          notice_of_assignment_sent_by: string | null
           offer_accepted_at: string | null
           offer_accepted_by: string | null
           offer_decline_reason: string | null
@@ -429,6 +444,9 @@ export type Database = {
           repayment_reconciliation_status:
             | Database["public"]["Enums"]["repayment_reconciliation_status"]
             | null
+          repayment_recorded_at: string | null
+          repayment_recorded_by: string | null
+          repayment_reference: string | null
           residual_balance: number | null
           residual_remittance_doc_id: string | null
           residual_sent_at: string | null
@@ -485,6 +503,9 @@ export type Database = {
           buyer_country?: string | null
           buyer_country_of_incorporation?: string | null
           buyer_credit_check_status?: Database["public"]["Enums"]["buyer_credit_check_status"]
+          buyer_direct_confirmation_at?: string | null
+          buyer_direct_confirmation_by?: string | null
+          buyer_direct_confirmation_notes?: string | null
           buyer_name_match?: boolean | null
           buyer_sanctions_status?: Database["public"]["Enums"]["sanctions_screening_status"]
           buyer_underwriter_notes?: string | null
@@ -494,9 +515,17 @@ export type Database = {
           correspondent_swift_bic?: string | null
           created_at?: string
           deal_reference?: string | null
+          deed_of_assignment_acknowledged_at?: string | null
+          deed_of_assignment_acknowledged_by?: string | null
+          deed_of_assignment_sent_at?: string | null
+          deed_of_assignment_sent_by?: string | null
           demurrage_amount?: number
           demurrage_rate_daily?: number
+          disbursement_amount?: number | null
           disbursement_date?: string | null
+          disbursement_recorded_at?: string | null
+          disbursement_recorded_by?: string | null
+          disbursement_reference?: string | null
           discount_fee_amount?: number | null
           discount_fee_pct?: number | null
           expected_settlement_date?: string | null
@@ -531,6 +560,10 @@ export type Database = {
           licence_name_match?: boolean | null
           net_advance_amount?: number | null
           ngn_equivalent_at_disbursement?: number | null
+          notice_of_assignment_acknowledged_at?: string | null
+          notice_of_assignment_acknowledged_by?: string | null
+          notice_of_assignment_sent_at?: string | null
+          notice_of_assignment_sent_by?: string | null
           offer_accepted_at?: string | null
           offer_accepted_by?: string | null
           offer_decline_reason?: string | null
@@ -561,6 +594,9 @@ export type Database = {
           repayment_reconciliation_status?:
             | Database["public"]["Enums"]["repayment_reconciliation_status"]
             | null
+          repayment_recorded_at?: string | null
+          repayment_recorded_by?: string | null
+          repayment_reference?: string | null
           residual_balance?: number | null
           residual_remittance_doc_id?: string | null
           residual_sent_at?: string | null
@@ -617,6 +653,9 @@ export type Database = {
           buyer_country?: string | null
           buyer_country_of_incorporation?: string | null
           buyer_credit_check_status?: Database["public"]["Enums"]["buyer_credit_check_status"]
+          buyer_direct_confirmation_at?: string | null
+          buyer_direct_confirmation_by?: string | null
+          buyer_direct_confirmation_notes?: string | null
           buyer_name_match?: boolean | null
           buyer_sanctions_status?: Database["public"]["Enums"]["sanctions_screening_status"]
           buyer_underwriter_notes?: string | null
@@ -626,9 +665,17 @@ export type Database = {
           correspondent_swift_bic?: string | null
           created_at?: string
           deal_reference?: string | null
+          deed_of_assignment_acknowledged_at?: string | null
+          deed_of_assignment_acknowledged_by?: string | null
+          deed_of_assignment_sent_at?: string | null
+          deed_of_assignment_sent_by?: string | null
           demurrage_amount?: number
           demurrage_rate_daily?: number
+          disbursement_amount?: number | null
           disbursement_date?: string | null
+          disbursement_recorded_at?: string | null
+          disbursement_recorded_by?: string | null
+          disbursement_reference?: string | null
           discount_fee_amount?: number | null
           discount_fee_pct?: number | null
           expected_settlement_date?: string | null
@@ -663,6 +710,10 @@ export type Database = {
           licence_name_match?: boolean | null
           net_advance_amount?: number | null
           ngn_equivalent_at_disbursement?: number | null
+          notice_of_assignment_acknowledged_at?: string | null
+          notice_of_assignment_acknowledged_by?: string | null
+          notice_of_assignment_sent_at?: string | null
+          notice_of_assignment_sent_by?: string | null
           offer_accepted_at?: string | null
           offer_accepted_by?: string | null
           offer_decline_reason?: string | null
@@ -693,6 +744,9 @@ export type Database = {
           repayment_reconciliation_status?:
             | Database["public"]["Enums"]["repayment_reconciliation_status"]
             | null
+          repayment_recorded_at?: string | null
+          repayment_recorded_by?: string | null
+          repayment_reference?: string | null
           residual_balance?: number | null
           residual_remittance_doc_id?: string | null
           residual_sent_at?: string | null
