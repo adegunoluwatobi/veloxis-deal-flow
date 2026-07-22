@@ -877,13 +877,21 @@ export default function VeloxisWebsite() {
           </div>
           {[
             { title: "Product", links: [{ l: "How it works", h: "#hiw" }, { l: "Why Veloxis", h: "#why" }, { l: "FAQ", h: "#faq" }] },
-            { title: "Company", links: [{ l: "Partners", h: "#partners" }, { l: "Contact", h: "mailto:hello@veloxis.co.uk" }] },
+            { title: "Company", links: [{ l: "Partners", h: "#partners" }, { l: "Contact", h: "mailto:hello@veloxis.co.uk" }, { l: "Mail", h: "https://webmail.veloxis.co.uk/" }] },
             { title: "Legal", links: [{ l: "Privacy policy", h: "/privacy" }, { l: "Terms and conditions", h: "/terms" }, { l: "Disclosure", h: "/disclosure" }, { l: "Cookies", h: "/cookies" }] },
           ].map(col => (
             <div key={col.title}>
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/25 mb-3.5">{col.title}</p>
               {col.links.map(link => (
-                <a key={link.l} href={link.h} className="block text-[13px] text-white/35 mb-2 hover:text-[#5FFFD7] transition-colors">{link.l}</a>
+                <a
+                  key={link.l}
+                  href={link.h}
+                  target={link.h.startsWith("http") ? "_blank" : undefined}
+                  rel={link.h.startsWith("http") ? "noopener noreferrer" : undefined}
+                  className="block text-[13px] text-white/35 mb-2 hover:text-[#5FFFD7] transition-colors"
+                >
+                  {link.l}
+                </a>
               ))}
             </div>
           ))}
