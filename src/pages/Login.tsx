@@ -81,10 +81,7 @@ export default function Login() {
       } else {
         navigate('/exporter/onboarding');
       }
-    } else if (userRole === 'partner_admin' || userRole === 'partner_staff') {
-      setIsLoading(false);
-      navigate('/greystar');
-    } else if (userRole === 'super_admin' || userRole === 'deal_manager') {
+    } else if (userRole === 'super_admin' || userRole === 'deal_manager' || userRole === 'admin_manager') {
       setIsLoading(false);
       navigate('/admin');
     } else {

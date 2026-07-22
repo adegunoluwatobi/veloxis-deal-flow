@@ -33,7 +33,7 @@ import BuyerComplianceSection from '@/components/BuyerComplianceSection';
 import SettlementFxSection from '@/components/SettlementFxSection';
 import PaymentAdvicePanel from '@/components/PaymentAdvicePanel';
 import SettlementSummaryBanner from '@/components/SettlementSummaryBanner';
-import IpuUploadSection from '@/components/IpuUploadSection';
+import AssignmentTrackingPanel from '@/components/AssignmentTrackingPanel';
 import TradePackChecklist from '@/components/TradePackChecklist';
 import OverdueActionsPanel from '@/components/OverdueActionsPanel';
 import RequestDocsModal from '@/components/RequestDocsModal';
@@ -357,10 +357,9 @@ export default function DealDetail() {
 
   const activeDocs = docs.filter(d => !d.is_superseded);
 
-  // Approve prerequisites — pricing accepted by exporter, IPU verified
+  // Approve prerequisites — pricing accepted by exporter
   const approvePrereqs: ValidationRule[] = [
     { fieldId: 'pricing-card', label: 'Exporter must have accepted pricing', condition: !!(deal as any)?.fee_acceptance_at },
-    { fieldId: 'ipu-section', label: 'IPU must be uploaded and verified', condition: !!(deal as any)?.ipu_verified },
   ];
   const approveTooltip = buildPrerequisiteTooltip(approvePrereqs);
   const approveDisabled = actionLoading || approvePrereqs.some(r => !r.condition);
@@ -411,7 +410,7 @@ export default function DealDetail() {
           <div>
             <p className="text-sm font-medium text-foreground">Application Approved</p>
             <p className="text-sm text-muted-foreground">
-              Exporter accepted fee terms on {new Date((deal as any).fee_acceptance_at).toLocaleDateString('en-GB')}. Proceed with the IPU process.
+              Exporter accepted fee terms on {new Date((deal as any).fee_acceptance_at).toLocaleDateString('en-GB')}. Proceed with the Deed of Assignment.
             </p>
           </div>
         </div>
@@ -521,31 +520,7 @@ export default function DealDetail() {
                   <Clock className="h-4 w-4" /> Back to Review
                 </Button>
               )}
-              {/* Post-approval lifecycle buttons */}
-              {deal.status === 'approved' && (
-                <Button size="sm" onClick={() => updateStatus('ipu_sent')} disabled={actionLoading} className="gap-1">
-                  <Send className="h-4 w-4" /> Send IPU to Buyer
-                </Button>
-              )}
-              {deal.status === ('ipu_sent' as DealStatus) && (
-                <Button size="sm" onClick={async () => {
-                  await updateStatus('ipu_signed_awaiting_funding');
-                  // Email #11 — notify exporter that IPU has been signed
-                  void sendIpuSignedEmail(deal.id);
-                }} disabled={actionLoading} className="gap-1 bg-success hover:bg-success/90">
-                  <CheckCircle2 className="h-4 w-4" /> Mark IPU Signed
-                </Button>
-              )}
-              {deal.status === ('ipu_signed_awaiting_funding' as DealStatus) && (
-                <Button size="sm" onClick={async () => {
-                  const gbpEq = deal.invoice_currency_v2 === 'GBP' ? (deal.advance_amount ?? 0) : (deal.gbp_equivalent ?? deal.advance_amount ?? 0);
-                  await updateStatus('funded_active', { funded_at: new Date().toISOString(), disbursement_date: new Date().toISOString().split('T')[0], gbp_equivalent: gbpEq });
-                  // Email #12 — notify exporter + partner of disbursement
-                  void sendDealFundedEmails(deal.id);
-                }} disabled={actionLoading} className="gap-1 bg-success hover:bg-success/90">
-                  <DollarSign className="h-4 w-4" /> Record Funding / Disbursement
-                </Button>
-              )}
+              {/* Post-approval lifecycle handled by AssignmentTrackingPanel below */}
             </div>
           </CardContent>
         </Card>
@@ -734,17 +709,18 @@ export default function DealDetail() {
         />
       )}
 
-      {/* IPU Upload & Verification */}
-      {isDM && (
-        <IpuUploadSection
-          dealId={deal.id}
-          ipuVerified={(deal as any).ipu_verified ?? false}
-          ipuVerifiedAt={(deal as any).ipu_verified_at ?? null}
-          ipuDocuments={activeDocs.filter(d => d.document_type === 'ipu_signed').map(d => ({ id: d.id, file_name: d.file_name, uploaded_at: d.uploaded_at }))}
-          dealStatus={deal.status}
-          onReload={load}
-        />
-      )}
+      {/* Deed / Notice of Assignment + Disbursement tracking */}
+      <AssignmentTrackingPanel
+        dealId={deal.id}
+        dealStatus={deal.status}
+        deedSentAt={(deal as any).deed_sent_at ?? null}
+        deedAcknowledgedAt={(deal as any).deed_acknowledged_at ?? null}
+        buyerConfirmedAt={(deal as any).buyer_confirmed_at ?? null}
+        disbursementDate={(deal as any).disbursement_date ?? null}
+        disbursementReference={(deal as any).disbursement_reference ?? null}
+        documents={activeDocs.map(d => ({ id: d.id, document_type: d.document_type, file_name: d.file_name, uploaded_at: d.uploaded_at }))}
+        onReload={load}
+      />
 
       {/* Record Buyer Payment */}
       <PaymentAdvicePanel

@@ -22,7 +22,7 @@ import type { AppRole } from '@/types';
 import { ROLE_LABELS } from '@/types';
 
 const TEAL = '#0BA4A4';
-const ALL_ROLES: AppRole[] = ['super_admin', 'deal_manager', 'partner_admin', 'partner_staff', 'exporter'];
+const ALL_ROLES: AppRole[] = ['super_admin', 'admin_manager', 'deal_manager', 'exporter'];
 
 export default function AdminUserDirectory() {
   const { user: currentUser } = useAuth();
