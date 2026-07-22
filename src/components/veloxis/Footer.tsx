@@ -25,10 +25,12 @@ function FooterColumn({ title, links }: { title: string; links: { label: string;
       <h4 className="text-[11px] font-medium uppercase tracking-[0.08em] text-[#6b7280] mb-[14px]">{title}</h4>
       <div className="space-y-2">
         {links.map((link) =>
-          link.href.startsWith("mailto:") ? (
+          link.href.startsWith("mailto:") || link.href.startsWith("http") ? (
             <a
               key={link.href}
               href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
               className="block text-[13px] text-[#6b7280] hover:text-[#111827] transition-colors"
             >
               {link.label}
