@@ -2621,6 +2621,7 @@ export type Database = {
         | "super_admin"
         | "partner_admin"
         | "partner_staff"
+        | "admin_manager"
       audit_action:
         | "deal_created"
         | "deal_submitted"
@@ -2702,6 +2703,11 @@ export type Database = {
         | "insurance_certificate"
         | "nxp_form"
         | "export_licence"
+        | "deed_of_assignment"
+        | "notice_of_assignment"
+        | "buyer_confirmation"
+        | "disbursement_proof"
+        | "repayment_proof"
       deal_status:
         | "draft"
         | "submitted"
@@ -2727,6 +2733,8 @@ export type Database = {
         | "in_collections"
         | "pending_exporter_acceptance"
         | "declined_by_exporter"
+        | "deed_sent"
+        | "deed_acknowledged"
       document_request_status:
         | "pending_upload"
         | "uploaded_pending_review"
@@ -2948,6 +2956,7 @@ export const Constants = {
         "super_admin",
         "partner_admin",
         "partner_staff",
+        "admin_manager",
       ],
       audit_action: [
         "deal_created",
@@ -3032,6 +3041,11 @@ export const Constants = {
         "insurance_certificate",
         "nxp_form",
         "export_licence",
+        "deed_of_assignment",
+        "notice_of_assignment",
+        "buyer_confirmation",
+        "disbursement_proof",
+        "repayment_proof",
       ],
       deal_status: [
         "draft",
@@ -3058,6 +3072,8 @@ export const Constants = {
         "in_collections",
         "pending_exporter_acceptance",
         "declined_by_exporter",
+        "deed_sent",
+        "deed_acknowledged",
       ],
       document_request_status: [
         "pending_upload",
