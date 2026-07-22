@@ -22,19 +22,19 @@ interface NavItem {
 // Top cluster only shown for non-admin internal roles (none today, kept for future)
 const NAV_ITEMS: NavItem[] = [];
 
+const ALL_ADMIN = ['super_admin', 'admin_manager', 'deal_manager'];
 const ADMIN_NAV: NavItem[] = [
-  { label: 'Overview', href: '/admin', icon: ShieldCheck, roles: ['super_admin', 'deal_manager'] },
-  { label: 'Exporters', href: '/exporters', icon: Users, roles: ['super_admin', 'deal_manager'] },
-  { label: 'Applications', href: '/admin/deals', icon: FileText, roles: ['super_admin', 'deal_manager'] },
-  { label: 'Registration Pipeline', href: '/admin/registration-pipeline', icon: Inbox, roles: ['super_admin', 'deal_manager'] },
-  { label: 'Capital Pool', href: '/admin/capital', icon: Banknote, roles: ['super_admin', 'deal_manager'] },
-  { label: 'Partners', href: '/admin/partners', icon: Building2, roles: ['super_admin'] },
-  { label: 'Pricing', href: '/admin/pricing', icon: Banknote, roles: ['super_admin'] },
-  { label: 'Marketing', href: '/admin/marketing', icon: Megaphone, roles: ['super_admin', 'deal_manager'] },
-  { label: 'Verifications', href: '/admin/verifications', icon: BadgeCheck, roles: ['super_admin', 'deal_manager'] },
-  { label: 'Opportunities', href: '/admin/opportunities', icon: Sparkles, roles: ['super_admin', 'deal_manager'] },
-  { label: 'User Management', href: '/admin/users', icon: Users, roles: ['super_admin'] },
-  { label: 'Account', href: '/admin/account', icon: Settings, roles: ['super_admin', 'deal_manager'] },
+  { label: 'Overview', href: '/admin', icon: ShieldCheck, roles: ALL_ADMIN },
+  { label: 'Exporters', href: '/exporters', icon: Users, roles: ALL_ADMIN },
+  { label: 'Applications', href: '/admin/deals', icon: FileText, roles: ALL_ADMIN },
+  { label: 'Registration Pipeline', href: '/admin/registration-pipeline', icon: Inbox, roles: ALL_ADMIN },
+  { label: 'Capital Pool', href: '/admin/capital', icon: Banknote, roles: ALL_ADMIN },
+  { label: 'Pricing', href: '/admin/pricing', icon: Banknote, roles: ['super_admin', 'admin_manager'] },
+  { label: 'Marketing', href: '/admin/marketing', icon: Megaphone, roles: ALL_ADMIN },
+  { label: 'Verifications', href: '/admin/verifications', icon: BadgeCheck, roles: ALL_ADMIN },
+  { label: 'Opportunities', href: '/admin/opportunities', icon: Sparkles, roles: ALL_ADMIN },
+  { label: 'User Management', href: '/admin/users', icon: Users, roles: ['super_admin', 'admin_manager'] },
+  { label: 'Account', href: '/admin/account', icon: Settings, roles: ALL_ADMIN },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -51,7 +51,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     navigate('/login');
   };
 
-  const roleLabel = role === 'super_admin' ? 'Super Admin' : role === 'deal_manager' ? 'Deal Manager' : 'Staff';
+  const roleLabel = role === 'super_admin' ? 'Super Admin' : role === 'admin_manager' ? 'Admin Manager' : role === 'deal_manager' ? 'Deal Manager' : 'Staff';
 
   const isActive = (href: string) =>
     location.pathname === href || (href !== '/' && href !== '/admin' && location.pathname.startsWith(href));
