@@ -709,17 +709,18 @@ export default function DealDetail() {
         />
       )}
 
-      {/* IPU Upload & Verification */}
-      {isDM && (
-        <IpuUploadSection
-          dealId={deal.id}
-          ipuVerified={(deal as any).ipu_verified ?? false}
-          ipuVerifiedAt={(deal as any).ipu_verified_at ?? null}
-          ipuDocuments={activeDocs.filter(d => d.document_type === 'ipu_signed').map(d => ({ id: d.id, file_name: d.file_name, uploaded_at: d.uploaded_at }))}
-          dealStatus={deal.status}
-          onReload={load}
-        />
-      )}
+      {/* Deed / Notice of Assignment + Disbursement tracking */}
+      <AssignmentTrackingPanel
+        dealId={deal.id}
+        dealStatus={deal.status}
+        deedSentAt={(deal as any).deed_sent_at ?? null}
+        deedAcknowledgedAt={(deal as any).deed_acknowledged_at ?? null}
+        buyerConfirmedAt={(deal as any).buyer_confirmed_at ?? null}
+        disbursementDate={(deal as any).disbursement_date ?? null}
+        disbursementReference={(deal as any).disbursement_reference ?? null}
+        documents={activeDocs.map(d => ({ id: d.id, document_type: d.document_type, file_name: d.file_name, uploaded_at: d.uploaded_at }))}
+        onReload={load}
+      />
 
       {/* Record Buyer Payment */}
       <PaymentAdvicePanel
