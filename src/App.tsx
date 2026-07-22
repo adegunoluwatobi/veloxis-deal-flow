@@ -82,18 +82,11 @@ function ExporterRoute({ children }: { children: React.ReactNode }) {
 }
 
 function NotificationsShell({ children }: { children: React.ReactNode }) {
-  // Exporter uses the exporter portal; everyone else uses the admin dashboard shell
   return (
     <ProtectedRoute>
-      <NotificationsSwitch>{children}</NotificationsSwitch>
+      <DashboardLayout>{children}</DashboardLayout>
     </ProtectedRoute>
   );
-}
-
-function NotificationsSwitch({ children }: { children: React.ReactNode }) {
-  // Lightweight inline switch avoids a separate file
-  const RoleAware = require("react").useMemo ? null : null;
-  return <DashboardLayout>{children}</DashboardLayout>;
 }
 
 const App = () => (
