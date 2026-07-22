@@ -40,7 +40,7 @@ const KYC_COLORS: Record<KycStatus, string> = {
   rejected: 'bg-destructive/10 text-destructive',
 };
 
-export default function GreystarExporterDetail() {
+export default function ExporterDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, role } = useAuth();
   const navigate = useNavigate();
