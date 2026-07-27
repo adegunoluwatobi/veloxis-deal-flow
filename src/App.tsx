@@ -59,6 +59,9 @@ export default function App() {
               <Route path="/app/exporters/:id" element={<Staff><StaffExporterDetail /></Staff>} />
               <Route path="/app/buyers" element={<Staff><StaffBuyers /></Staff>} />
               <Route path="/app/buyers/:id" element={<Staff><StaffBuyerDetail /></Staff>} />
+              <Route path="/app/capital-pool" element={<Staff><StaffCapitalPool /></Staff>} />
+              <Route path="/app/verifications" element={<Staff><StaffVerifications /></Staff>} />
+              <Route path="/app/settlements" element={<Staff><StaffSettlements /></Staff>} />
               <Route path="/app/users" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffUsers /></StaffLayout></RequireAuth>} />
               <Route path="/app/audit" element={<Staff><StaffAudit /></Staff>} />
               <Route path="/app/settings" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffSettings /></StaffLayout></RequireAuth>} />
