@@ -1,0 +1,1 @@
+INSERT INTO public.app_user_roles (user_id, role) VALUES ('656b2c16-a731-4a36-8e8b-13472a9a626d','super_admin') ON CONFLICT DO NOTHING; INSERT INTO public.profiles (user_id, email, name) VALUES ('656b2c16-a731-4a36-8e8b-13472a9a626d','veloxislimited@gmail.com','Veloxis Admin') ON CONFLICT (user_id) DO NOTHING;
