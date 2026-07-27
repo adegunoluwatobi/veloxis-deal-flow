@@ -24,7 +24,8 @@ export default function Login() {
     const { error } = await signIn(email, password);
     setBusy(false);
     if (error) { toast({ title: 'Sign in failed', description: error.message, variant: 'destructive' }); return; }
-    nav('/');
+    // RootRedirect handles role-based dashboard routing.
+    nav('/home', { replace: true });
   };
 
   return (
