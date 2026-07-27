@@ -45,7 +45,8 @@ export default function App() {
           <AuthProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
-              <Route path="/" element={<RootRedirect />} />
+              <Route path="/" element={<VeloxisHome />} />
+              <Route path="/home" element={<RootRedirect />} />
 
               <Route path="/app" element={<Staff><StaffDashboard /></Staff>} />
               <Route path="/app/invoices" element={<Staff><StaffInvoices /></Staff>} />
