@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ export default function StaffExporters() {
   const [rows, setRows] = useState<E[]>([]);
   const [open, setOpen] = useState(false);
   const { roles } = useAuth();
+  const navigate = useNavigate();
   const canCreate = roles.includes('originator') || roles.includes('super_admin');
   const canActivate = roles.includes('originator') || roles.includes('super_admin') || roles.includes('credit_officer');
 
@@ -57,13 +58,17 @@ export default function StaffExporters() {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="border-t border-border hover:bg-muted/20">
-                <td className="px-4 py-3"><Link to={`/app/exporters/${r.id}`} className="text-accent hover:underline">{r.company_name}</Link></td>
+              <tr
+                key={r.id}
+                onClick={() => navigate(`/app/exporters/${r.id}`)}
+                className="border-t border-border hover:bg-muted/20 cursor-pointer"
+              >
+                <td className="px-4 py-3 text-accent">{r.company_name}</td>
                 <td className="px-4 py-3">{r.rc_number ?? '—'}</td>
                 <td className="px-4 py-3">{r.commodity ?? '—'}</td>
                 <td className="px-4 py-3">{r.email ?? '—'}</td>
                 <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded ${r.onboarding_status === 'active' ? 'bg-success/20 text-success' : r.onboarding_status === 'suspended' ? 'bg-destructive/20 text-destructive' : 'bg-muted text-muted-foreground'}`}>{r.onboarding_status}</span></td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                   {canActivate && r.onboarding_status !== 'active' && <Button size="sm" variant="outline" onClick={() => setStatus(r.id, 'active')}>Activate</Button>}
                   {canActivate && r.onboarding_status === 'active' && <Button size="sm" variant="outline" onClick={() => setStatus(r.id, 'suspended')}>Suspend</Button>}
                 </td>
