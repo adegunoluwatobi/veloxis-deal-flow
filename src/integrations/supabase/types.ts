@@ -2489,16 +2489,37 @@ export type Database = {
           bank_details: Json
           commodity: string | null
           company_name: string
+          company_registration_number: string | null
           contact_name: string | null
+          country_of_incorporation: string | null
           created_at: string
           created_by: string | null
+          director_address: string | null
+          director_dob: string | null
+          director_email: string | null
+          director_id_number: string | null
+          director_id_type: string | null
+          director_name: string | null
+          director_nationality: string | null
+          director_phone: string | null
           email: string | null
           id: string
+          incorporation_date: string | null
+          industry: string | null
+          kyb_notes: string | null
+          kyb_status: Database["public"]["Enums"]["v2_kyc_status"]
+          kyb_verified_at: string | null
+          kyb_verified_by: string | null
+          kyc_notes: string | null
+          kyc_status: Database["public"]["Enums"]["v2_kyc_status"]
+          kyc_verified_at: string | null
+          kyc_verified_by: string | null
           nepc_status: Database["public"]["Enums"]["v2_nepc_status"]
           onboarding_status: Database["public"]["Enums"]["v2_onboarding_status"]
           owner_user_id: string | null
           phone: string | null
           rc_number: string | null
+          tax_id: string | null
           updated_at: string
         }
         Insert: {
@@ -2506,16 +2527,37 @@ export type Database = {
           bank_details?: Json
           commodity?: string | null
           company_name: string
+          company_registration_number?: string | null
           contact_name?: string | null
+          country_of_incorporation?: string | null
           created_at?: string
           created_by?: string | null
+          director_address?: string | null
+          director_dob?: string | null
+          director_email?: string | null
+          director_id_number?: string | null
+          director_id_type?: string | null
+          director_name?: string | null
+          director_nationality?: string | null
+          director_phone?: string | null
           email?: string | null
           id?: string
+          incorporation_date?: string | null
+          industry?: string | null
+          kyb_notes?: string | null
+          kyb_status?: Database["public"]["Enums"]["v2_kyc_status"]
+          kyb_verified_at?: string | null
+          kyb_verified_by?: string | null
+          kyc_notes?: string | null
+          kyc_status?: Database["public"]["Enums"]["v2_kyc_status"]
+          kyc_verified_at?: string | null
+          kyc_verified_by?: string | null
           nepc_status?: Database["public"]["Enums"]["v2_nepc_status"]
           onboarding_status?: Database["public"]["Enums"]["v2_onboarding_status"]
           owner_user_id?: string | null
           phone?: string | null
           rc_number?: string | null
+          tax_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -2523,16 +2565,37 @@ export type Database = {
           bank_details?: Json
           commodity?: string | null
           company_name?: string
+          company_registration_number?: string | null
           contact_name?: string | null
+          country_of_incorporation?: string | null
           created_at?: string
           created_by?: string | null
+          director_address?: string | null
+          director_dob?: string | null
+          director_email?: string | null
+          director_id_number?: string | null
+          director_id_type?: string | null
+          director_name?: string | null
+          director_nationality?: string | null
+          director_phone?: string | null
           email?: string | null
           id?: string
+          incorporation_date?: string | null
+          industry?: string | null
+          kyb_notes?: string | null
+          kyb_status?: Database["public"]["Enums"]["v2_kyc_status"]
+          kyb_verified_at?: string | null
+          kyb_verified_by?: string | null
+          kyc_notes?: string | null
+          kyc_status?: Database["public"]["Enums"]["v2_kyc_status"]
+          kyc_verified_at?: string | null
+          kyc_verified_by?: string | null
           nepc_status?: Database["public"]["Enums"]["v2_nepc_status"]
           onboarding_status?: Database["public"]["Enums"]["v2_onboarding_status"]
           owner_user_id?: string | null
           phone?: string | null
           rc_number?: string | null
+          tax_id?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -3342,6 +3405,7 @@ export type Database = {
         | "returned_for_revision"
         | "rejected"
         | "defaulted"
+      v2_kyc_status: "not_started" | "pending" | "verified" | "rejected"
       v2_movement_type: "advance_out" | "settlement_in" | "residual_out"
       v2_nepc_status: "valid" | "expired" | "none"
       v2_onboarding_status: "pending" | "active" | "suspended"
@@ -3738,6 +3802,7 @@ export const Constants = {
         "rejected",
         "defaulted",
       ],
+      v2_kyc_status: ["not_started", "pending", "verified", "rejected"],
       v2_movement_type: ["advance_out", "settlement_in", "residual_out"],
       v2_nepc_status: ["valid", "expired", "none"],
       v2_onboarding_status: ["pending", "active", "suspended"],
