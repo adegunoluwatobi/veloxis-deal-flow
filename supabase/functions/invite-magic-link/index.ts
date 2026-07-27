@@ -60,11 +60,16 @@ Deno.serve(async (req) => {
     }
     if (!userId) return json({ error: "Failed to resolve user" }, 500);
 
-    // Ensure profile exists
+    // Ensure profile exists and stamp invited_at (first invite only)
     await admin.from("profiles").upsert(
-      { user_id: userId, email, name: name || null, active: true },
-      { onConflict: "user_id" }
+      { user_id: userId, email, name: name || null, active: true, invited_at: new Date().toISOString() },
+      { onConflict: "user_id", ignoreDuplicates: false }
     );
+    // If the row already existed without invited_at, backfill it
+    await admin.from("profiles")
+      .update({ invited_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .is("invited_at", null);
 
     // Assign role if provided
     if (role) {

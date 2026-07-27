@@ -51,6 +51,7 @@ export default function Account() {
     const { error } = await supabase.auth.updateUser({ password: newPw });
     setSavingPw(false);
     if (error) return toast({ title: 'Password update failed', description: error.message, variant: 'destructive' });
+    await supabase.from('profiles').update({ password_set_at: new Date().toISOString() }).eq('user_id', user.id);
     setCurrentPw(''); setNewPw(''); setConfirmPw('');
     toast({ title: 'Password updated' });
   };

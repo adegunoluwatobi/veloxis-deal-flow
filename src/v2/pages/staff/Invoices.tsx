@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { INVOICE_STATUS_LABEL } from '@/v2/roles';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ export default function StaffInvoices() {
   const [rows, setRows] = useState<Row[]>([]);
   const [q, setQ] = useState('');
   const [status, setStatus] = useState<string>('all');
+  const navigate = useNavigate();
 
   useEffect(() => {
     (async () => {
@@ -42,10 +43,10 @@ export default function StaffInvoices() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl">Invoices</h1>
+          <h1 className="text-2xl">Applications</h1>
           <p className="text-sm text-muted-foreground">{filtered.length} of {rows.length}</p>
         </div>
-        <Button asChild><Link to="/app/invoices/new">New invoice</Link></Button>
+        <Button asChild><Link to="/app/invoices/new">New application</Link></Button>
       </div>
 
       <div className="flex gap-3">
@@ -73,8 +74,12 @@ export default function StaffInvoices() {
           </thead>
           <tbody>
             {filtered.map((r) => (
-              <tr key={r.id} className="border-t border-border hover:bg-muted/20">
-                <td className="px-4 py-3"><Link to={`/app/invoices/${r.id}`} className="text-accent hover:underline">{r.invoice_number}</Link></td>
+              <tr
+                key={r.id}
+                onClick={() => navigate(`/app/invoices/${r.id}`)}
+                className="border-t border-border hover:bg-muted/20 cursor-pointer"
+              >
+                <td className="px-4 py-3 text-accent">{r.invoice_number}</td>
                 <td className="px-4 py-3">{r.v2_exporters?.company_name ?? '—'}</td>
                 <td className="px-4 py-3">{r.v2_buyers?.company_name ?? '—'}</td>
                 <td className="px-4 py-3 text-right tabular-nums">{r.invoice_currency} {Number(r.invoice_amount).toLocaleString()}</td>
@@ -82,7 +87,7 @@ export default function StaffInvoices() {
                 <td className="px-4 py-3">{r.maturity_date ?? '—'}</td>
               </tr>
             ))}
-            {filtered.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">No invoices</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">No applications</td></tr>}
           </tbody>
         </table>
       </div>

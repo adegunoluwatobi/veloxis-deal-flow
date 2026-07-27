@@ -2121,9 +2121,12 @@ export type Database = {
           active: boolean
           created_at: string
           email: string
+          first_signed_in_at: string | null
+          invited_at: string | null
           joined_at: string
           last_login: string | null
           name: string | null
+          password_set_at: string | null
           phone: string | null
           updated_at: string
           user_id: string
@@ -2132,9 +2135,12 @@ export type Database = {
           active?: boolean
           created_at?: string
           email: string
+          first_signed_in_at?: string | null
+          invited_at?: string | null
           joined_at?: string
           last_login?: string | null
           name?: string | null
+          password_set_at?: string | null
           phone?: string | null
           updated_at?: string
           user_id: string
@@ -2143,9 +2149,12 @@ export type Database = {
           active?: boolean
           created_at?: string
           email?: string
+          first_signed_in_at?: string | null
+          invited_at?: string | null
           joined_at?: string
           last_login?: string | null
           name?: string | null
+          password_set_at?: string | null
           phone?: string | null
           updated_at?: string
           user_id?: string
@@ -2407,13 +2416,26 @@ export type Database = {
         Row: {
           companies_house_id: string | null
           company_name: string
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
           country: string | null
+          country_of_incorporation: string | null
           created_at: string
           created_by: string | null
           credit_limit: number | null
           credit_status: Database["public"]["Enums"]["v2_verification_status"]
           id: string
+          incorporation_date: string | null
+          industry: string | null
+          kyb_notes: string | null
+          kyb_status: Database["public"]["Enums"]["v2_kyc_status"]
+          kyb_verified_at: string | null
+          kyb_verified_by: string | null
+          registered_address: string | null
+          registration_number: string | null
           sanctions_status: Database["public"]["Enums"]["v2_verification_status"]
+          tax_id: string | null
           updated_at: string
           verified_at: string | null
           verified_by: string | null
@@ -2421,13 +2443,26 @@ export type Database = {
         Insert: {
           companies_house_id?: string | null
           company_name: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           country?: string | null
+          country_of_incorporation?: string | null
           created_at?: string
           created_by?: string | null
           credit_limit?: number | null
           credit_status?: Database["public"]["Enums"]["v2_verification_status"]
           id?: string
+          incorporation_date?: string | null
+          industry?: string | null
+          kyb_notes?: string | null
+          kyb_status?: Database["public"]["Enums"]["v2_kyc_status"]
+          kyb_verified_at?: string | null
+          kyb_verified_by?: string | null
+          registered_address?: string | null
+          registration_number?: string | null
           sanctions_status?: Database["public"]["Enums"]["v2_verification_status"]
+          tax_id?: string | null
           updated_at?: string
           verified_at?: string | null
           verified_by?: string | null
@@ -2435,13 +2470,26 @@ export type Database = {
         Update: {
           companies_house_id?: string | null
           company_name?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           country?: string | null
+          country_of_incorporation?: string | null
           created_at?: string
           created_by?: string | null
           credit_limit?: number | null
           credit_status?: Database["public"]["Enums"]["v2_verification_status"]
           id?: string
+          incorporation_date?: string | null
+          industry?: string | null
+          kyb_notes?: string | null
+          kyb_status?: Database["public"]["Enums"]["v2_kyc_status"]
+          kyb_verified_at?: string | null
+          kyb_verified_by?: string | null
+          registered_address?: string | null
+          registration_number?: string | null
           sanctions_status?: Database["public"]["Enums"]["v2_verification_status"]
+          tax_id?: string | null
           updated_at?: string
           verified_at?: string | null
           verified_by?: string | null
