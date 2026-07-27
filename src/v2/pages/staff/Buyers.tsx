@@ -21,7 +21,8 @@ export default function StaffBuyers() {
   useEffect(() => { load(); }, []);
 
   const verify = async (id: string, field: 'credit_status' | 'sanctions_status', value: 'clear' | 'flagged') => {
-    await supabase.from('v2_buyers').update({ [field]: value, verified_by: user?.id, verified_at: new Date().toISOString() }).eq('id', id);
+    const patch: any = { [field]: value, verified_by: user?.id, verified_at: new Date().toISOString() };
+    await supabase.from('v2_buyers').update(patch).eq('id', id);
     load();
   };
 
