@@ -2531,10 +2531,61 @@ export type Database = {
           },
         ]
       }
+      v2_exporter_documents: {
+        Row: {
+          doc_type: Database["public"]["Enums"]["v2_exporter_doc_type"]
+          exporter_id: string
+          file_name: string | null
+          file_url: string
+          id: string
+          uploaded_at: string
+          uploaded_by: string | null
+          verified: boolean
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          doc_type: Database["public"]["Enums"]["v2_exporter_doc_type"]
+          exporter_id: string
+          file_name?: string | null
+          file_url: string
+          id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          verified?: boolean
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          doc_type?: Database["public"]["Enums"]["v2_exporter_doc_type"]
+          exporter_id?: string
+          file_name?: string | null
+          file_url?: string
+          id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          verified?: boolean
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "v2_exporter_documents_exporter_id_fkey"
+            columns: ["exporter_id"]
+            isOneToOne: false
+            referencedRelation: "v2_exporters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v2_exporters: {
         Row: {
           address: string | null
           bank_details: Json
+          bd_approved_at: string | null
+          bd_approved_by: string | null
+          bd_rejected_at: string | null
+          bd_rejection_reason: string | null
           commodity: string | null
           company_name: string
           company_registration_number: string | null
@@ -2564,6 +2615,7 @@ export type Database = {
           kyc_verified_by: string | null
           nepc_status: Database["public"]["Enums"]["v2_nepc_status"]
           onboarding_status: Database["public"]["Enums"]["v2_onboarding_status"]
+          onboarding_submitted_at: string | null
           owner_user_id: string | null
           phone: string | null
           rc_number: string | null
@@ -2573,6 +2625,10 @@ export type Database = {
         Insert: {
           address?: string | null
           bank_details?: Json
+          bd_approved_at?: string | null
+          bd_approved_by?: string | null
+          bd_rejected_at?: string | null
+          bd_rejection_reason?: string | null
           commodity?: string | null
           company_name: string
           company_registration_number?: string | null
@@ -2602,6 +2658,7 @@ export type Database = {
           kyc_verified_by?: string | null
           nepc_status?: Database["public"]["Enums"]["v2_nepc_status"]
           onboarding_status?: Database["public"]["Enums"]["v2_onboarding_status"]
+          onboarding_submitted_at?: string | null
           owner_user_id?: string | null
           phone?: string | null
           rc_number?: string | null
@@ -2611,6 +2668,10 @@ export type Database = {
         Update: {
           address?: string | null
           bank_details?: Json
+          bd_approved_at?: string | null
+          bd_approved_by?: string | null
+          bd_rejected_at?: string | null
+          bd_rejection_reason?: string | null
           commodity?: string | null
           company_name?: string
           company_registration_number?: string | null
@@ -2640,6 +2701,7 @@ export type Database = {
           kyc_verified_by?: string | null
           nepc_status?: Database["public"]["Enums"]["v2_nepc_status"]
           onboarding_status?: Database["public"]["Enums"]["v2_onboarding_status"]
+          onboarding_submitted_at?: string | null
           owner_user_id?: string | null
           phone?: string | null
           rc_number?: string | null
@@ -3441,6 +3503,12 @@ export type Database = {
         | "tripartite"
         | "kyc"
         | "other"
+      v2_exporter_doc_type:
+        | "cac_certificate"
+        | "director_id"
+        | "proof_of_address"
+        | "bank_proof"
+        | "other"
       v2_invoice_currency: "GBP" | "USD" | "EUR"
       v2_invoice_status:
         | "draft"
@@ -3835,6 +3903,13 @@ export const Constants = {
         "notice_of_assignment",
         "tripartite",
         "kyc",
+        "other",
+      ],
+      v2_exporter_doc_type: [
+        "cac_certificate",
+        "director_id",
+        "proof_of_address",
+        "bank_proof",
         "other",
       ],
       v2_invoice_currency: ["GBP", "USD", "EUR"],
