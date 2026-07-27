@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,132 +6,73 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 220 25% 10%;
+    /* Veloxis fintech dark palette */
+    --background: 174 51% 8%;           /* #0A1E1C */
+    --foreground: 150 20% 97%;          /* #F8FAF9 */
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 25% 10%;
+    --card: 174 40% 11%;
+    --card-foreground: 150 20% 97%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 10%;
+    --popover: 174 40% 11%;
+    --popover-foreground: 150 20% 97%;
 
-    --primary: 217 71% 25%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 164 74% 33%;             /* #15946F */
+    --primary-foreground: 174 51% 8%;
 
-    --secondary: 215 20% 94%;
-    --secondary-foreground: 220 25% 10%;
+    --secondary: 174 30% 14%;
+    --secondary-foreground: 150 20% 97%;
 
-    --muted: 215 20% 94%;
-    --muted-foreground: 215 14% 46%;
+    --muted: 174 25% 16%;
+    --muted-foreground: 156 12% 68%;
 
-    --accent: 40 70% 50%;
-    --accent-foreground: 40 90% 10%;
+    --accent: 164 79% 58%;              /* #3DE8B8 */
+    --accent-foreground: 174 51% 8%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 35%;
+    --success: 164 74% 40%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    --warning: 38 92% 55%;
     --warning-foreground: 38 90% 10%;
 
-    --border: 214 20% 88%;
-    --input: 214 20% 88%;
-    --ring: 217 71% 25%;
+    --border: 174 30% 18%;
+    --input: 174 30% 16%;
+    --ring: 164 79% 58%;
 
     --radius: 0.5rem;
 
-    /* Veloxis brand */
-    --veloxis-deep: 168 65% 11%;
-    --veloxis-teal: 173 80% 40%;
-    --veloxis-teal-dark: 174 84% 32%;
-
-    /* Veloxis forest-green sidebar (matches partner shell redesign) */
-    --sidebar-background: 142 51% 8%;        /* #0A1F12 */
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 142 71% 45%;          /* #16A34A */
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 142 71% 45% / 0.14;    /* active row bg tint */
-    --sidebar-accent-foreground: 142 76% 64%; /* #4ADE80 active text */
-    --sidebar-border: 0 0% 100% / 0.07;
-    --sidebar-ring: 142 71% 45%;
+    --sidebar-background: 174 55% 6%;
+    --sidebar-foreground: 150 20% 97%;
+    --sidebar-primary: 164 79% 58%;
+    --sidebar-primary-foreground: 174 51% 8%;
+    --sidebar-accent: 164 74% 33% / 0.18;
+    --sidebar-accent-foreground: 164 79% 68%;
+    --sidebar-border: 0 0% 100% / 0.06;
+    --sidebar-ring: 164 79% 58%;
     --sidebar-muted: 0 0% 100% / 0.55;
-  }
-
-  .dark {
-    --background: 220 25% 8%;
-    --foreground: 210 40% 96%;
-    --card: 220 25% 11%;
-    --card-foreground: 210 40% 96%;
-    --popover: 220 25% 11%;
-    --popover-foreground: 210 40% 96%;
-    --primary: 217 71% 45%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217 30% 18%;
-    --secondary-foreground: 210 40% 96%;
-    --muted: 217 30% 18%;
-    --muted-foreground: 215 14% 55%;
-    --accent: 40 70% 50%;
-    --accent-foreground: 40 90% 10%;
-    --destructive: 0 62% 40%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 25% 20%;
-    --input: 217 25% 20%;
-    --ring: 217 71% 45%;
-    --sidebar-background: 220 25% 6%;
-    --sidebar-foreground: 210 40% 92%;
-    --sidebar-primary: 40 70% 50%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 25% 12%;
-    --sidebar-accent-foreground: 210 40% 92%;
-    --sidebar-border: 220 25% 15%;
-    --sidebar-ring: 40 70% 50%;
-    --sidebar-muted: 220 20% 30%;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+  * { @apply border-border; }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: 'ss01', 'cv11';
   }
+  h1, h2, h3, h4 { @apply font-semibold tracking-tight; }
 }
 
 @layer utilities {
-  .gradient-primary {
-    background: linear-gradient(135deg, hsl(217 71% 25%), hsl(217 71% 35%));
+  .wordmark {
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    font-size: 0.95rem;
   }
-  .gradient-accent {
-    background: linear-gradient(135deg, hsl(40 70% 50%), hsl(40 80% 55%));
+  .card-elevated {
+    @apply bg-card border border-border rounded-lg;
   }
-  .gradient-veloxis {
-    background: linear-gradient(135deg, #0B3D2E, #0E5A47, #1ABC9C);
-  }
-  .gradient-veloxis-btn {
-    background: linear-gradient(135deg, #0E5A47, #1ABC9C);
-  }
-  .gradient-veloxis-btn:hover {
-    background: linear-gradient(135deg, #0B3D2E, #0E5A47);
-    box-shadow: 0 0 20px rgba(26, 188, 156, 0.3);
-  }
-  .glow-mint {
-    box-shadow: 0 0 24px rgba(95, 255, 215, 0.15);
-  }
-  .glow-mint-hover:hover {
-    box-shadow: 0 0 28px rgba(95, 255, 215, 0.25);
-  }
-}
-
-/* Validation error highlight animation */
-@keyframes validation-pulse {
-  0%, 100% { border-color: hsl(var(--destructive)); box-shadow: 0 0 0 0 hsl(var(--destructive) / 0.3); }
-  50% { border-color: hsl(var(--destructive)); box-shadow: 0 0 0 4px hsl(var(--destructive) / 0.15); }
-}
-
-.validation-error-highlight {
-  border-color: hsl(var(--destructive)) !important;
-  animation: validation-pulse 1s ease-in-out 3;
+  .stat-value { @apply text-2xl font-semibold tracking-tight; }
+  .stat-label { @apply text-xs uppercase tracking-wider text-muted-foreground; }
 }
