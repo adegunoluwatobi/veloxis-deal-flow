@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS "Anyone authenticated can view discount tiers" ON public.pricing_discount_tiers;
+CREATE POLICY "Staff can view discount tiers" ON public.pricing_discount_tiers FOR SELECT TO authenticated USING (public.is_veloxis_staff(auth.uid()));
