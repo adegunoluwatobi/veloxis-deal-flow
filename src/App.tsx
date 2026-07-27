@@ -26,6 +26,9 @@ import ExporterInvoiceNew from '@/v2/pages/exporter/InvoiceNew';
 import ExporterInvoiceDetail from '@/v2/pages/exporter/InvoiceDetail';
 import ExporterProfile from '@/v2/pages/exporter/Profile';
 import VeloxisHome from '@/pages/website/VeloxisHome';
+import StaffCapitalPool from '@/v2/pages/staff/CapitalPool';
+import StaffVerifications from '@/v2/pages/staff/Verifications';
+import StaffSettlements from '@/v2/pages/staff/Settlements';
 
 const qc = new QueryClient();
 

@@ -2,17 +2,23 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from './useAuth';
 import { ROLE_LABEL } from './roles';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, FileText, Users, Building2, ShieldCheck, Settings, ScrollText, LogOut } from 'lucide-react';
+import {
+  LayoutDashboard, Users, FileText, Building2, Wallet, ShieldCheck,
+  Landmark, ScrollText, UserCog, Settings, LogOut,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV = [
-  { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/app/invoices', label: 'Invoices', icon: FileText },
+  { to: '/app', label: 'Overview', icon: LayoutDashboard, end: true },
   { to: '/app/exporters', label: 'Exporters', icon: Users },
+  { to: '/app/invoices', label: 'Applications', icon: FileText },
   { to: '/app/buyers', label: 'Buyers', icon: Building2 },
-  { to: '/app/users', label: 'Users', icon: ShieldCheck, superOnly: true },
+  { to: '/app/capital-pool', label: 'Capital Pool', icon: Wallet },
+  { to: '/app/verifications', label: 'Verifications', icon: ShieldCheck },
+  { to: '/app/settlements', label: 'Settlements', icon: Landmark },
   { to: '/app/audit', label: 'Audit Log', icon: ScrollText },
-  { to: '/app/settings', label: 'Settings', icon: Settings, superOnly: true },
+  { to: '/app/users', label: 'User Management', icon: UserCog, superOnly: true },
+  { to: '/app/settings', label: 'Account', icon: Settings, superOnly: true },
 ];
 
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
@@ -28,7 +34,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
         <div className="h-16 flex items-center px-5 border-b border-sidebar-border">
           <span className="wordmark text-accent">VELOXIS</span>
         </div>
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {items.map((n) => (
             <NavLink
               key={n.to}
