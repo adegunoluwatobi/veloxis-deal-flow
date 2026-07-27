@@ -1,0 +1,320 @@
+import { useCallback, useEffect, useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/v2/useAuth';
+import { INVOICE_STATUS_LABEL, canApprove, canVerify } from '@/v2/roles';
+import { logAudit } from '@/v2/audit';
+import { CheckCircle2, XCircle, ArrowLeft } from 'lucide-react';
+
+type Doc = { id: string; doc_type: string; file_url: string; file_name: string | null; verified: boolean; uploaded_by: string | null; uploaded_at: string };
+
+const DOC_TYPES = [
+  'pro_forma', 'commercial_invoice', 'bill_of_lading', 'quality_cert',
+  'deed_of_assignment', 'notice_of_assignment', 'tripartite', 'kyc', 'other',
+];
+
+const DOC_LABEL: Record<string, string> = {
+  pro_forma: 'Pro-forma invoice', commercial_invoice: 'Commercial invoice',
+  bill_of_lading: 'Bill of lading', quality_cert: 'Quality certificate',
+  deed_of_assignment: 'Deed of Assignment', notice_of_assignment: 'Notice of Assignment',
+  tripartite: 'Tripartite Domiciliation Agreement', kyc: 'KYC', other: 'Other',
+};
+
+const fmt = (n: number, cur = 'GBP') => new Intl.NumberFormat('en-GB', { style: 'currency', currency: cur }).format(n);
+
+export default function StaffInvoiceDetail() {
+  const { id } = useParams<{ id: string }>();
+  const { user, roles } = useAuth();
+  const nav = useNavigate();
+  const [inv, setInv] = useState<any>(null);
+  const [docs, setDocs] = useState<Doc[]>([]);
+  const [movements, setMovements] = useState<any[]>([]);
+  const [decisions, setDecisions] = useState<any[]>([]);
+  const [audit, setAudit] = useState<any[]>([]);
+  const [buyer, setBuyer] = useState<any>(null);
+  const [reason, setReason] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    const { data: i } = await supabase.from('v2_invoices').select('*, v2_exporters(id, company_name), v2_buyers(*)').eq('id', id!).maybeSingle();
+    setInv(i); setBuyer((i as any)?.v2_buyers ?? null);
+    const [{ data: d }, { data: m }, { data: dc }, { data: al }] = await Promise.all([
+      supabase.from('v2_invoice_documents').select('*').eq('invoice_id', id!).order('uploaded_at', { ascending: false }),
+      supabase.from('v2_money_movements').select('*').eq('invoice_id', id!).order('recorded_at', { ascending: false }),
+      supabase.from('v2_decisions').select('*').eq('invoice_id', id!).order('created_at', { ascending: false }),
+      supabase.from('v2_audit_log').select('*').eq('invoice_id', id!).order('created_at', { ascending: false }),
+    ]);
+    setDocs((d ?? []) as any); setMovements(m ?? []); setDecisions(dc ?? []); setAudit(al ?? []);
+  }, [id]);
+
+  useEffect(() => { load(); }, [load]);
+
+  if (!inv) return <div className="text-muted-foreground">Loading…</div>;
+
+  const advance = Number(inv.invoice_amount) * Number(inv.advance_rate) / 100;
+  const fee = Number(inv.invoice_amount) * Number(inv.fee_percent) / 100;
+  const residual = Number(inv.invoice_amount) - advance - fee;
+
+  const hasVerifiedDoc = (t: string) => docs.some((d) => d.doc_type === t && d.verified);
+  const gate = {
+    deed: hasVerifiedDoc('deed_of_assignment'),
+    tripartite: hasVerifiedDoc('tripartite'),
+    noa: hasVerifiedDoc('notice_of_assignment'),
+    buyerClear: buyer?.credit_status === 'clear' && buyer?.sanctions_status === 'clear',
+    bol: hasVerifiedDoc('bill_of_lading'),
+  };
+  const allGatesPass = Object.values(gate).every(Boolean);
+
+  const isCreator = inv.created_by === user?.id || inv.submitted_by === user?.id;
+  const status = inv.status as string;
+
+  const transition = async (to: string, action: string, decisionType?: string) => {
+    if (['returned_for_revision', 'rejected'].includes(to) && !reason.trim()) {
+      toast({ title: 'Reason required', variant: 'destructive' }); return;
+    }
+    if (to === 'approved' && isCreator && !window.confirm('You created this invoice. Approving requires an override — proceed?')) return;
+    setBusy(true);
+    const patch: any = { status: to };
+    if (to === 'verified') patch.verified_by = user?.id;
+    if (to === 'approved') patch.approved_by = user?.id;
+    if (to === 'funded') { patch.funded_date = new Date().toISOString().slice(0, 10); }
+    if (to === 'settled') { patch.settled_date = new Date().toISOString().slice(0, 10); }
+    const { error } = await supabase.from('v2_invoices').update(patch).eq('id', id!);
+    if (error) { toast({ title: 'Failed', description: error.message, variant: 'destructive' }); setBusy(false); return; }
+    if (decisionType) {
+      await supabase.from('v2_decisions').insert({ invoice_id: id!, decision_type: decisionType as any, reason: reason || null, actor_user_id: user?.id });
+    }
+    const overrideMeta = isCreator && to === 'approved' ? { override: true } : {};
+    await logAudit({ invoice_id: id!, action, from_status: status as any, to_status: to as any, note: reason || null, metadata: overrideMeta });
+    setReason(''); setBusy(false); load();
+    toast({ title: 'Updated' });
+  };
+
+  const upload = async (e: React.ChangeEvent<HTMLInputElement>, doc_type: string) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    const path = `v2/invoices/${id}/${Date.now()}-${file.name.replace(/[^a-z0-9._-]+/gi, '_')}`;
+    const { error: upErr } = await supabase.storage.from('veloxis-documents').upload(path, file);
+    if (upErr) { toast({ title: 'Upload failed', description: upErr.message, variant: 'destructive' }); return; }
+    await supabase.from('v2_invoice_documents').insert({ invoice_id: id!, doc_type: doc_type as any, file_url: path, file_name: file.name, uploaded_by: user?.id });
+    await logAudit({ invoice_id: id!, action: 'document_uploaded', metadata: { doc_type } });
+    load();
+  };
+
+  const verifyDoc = async (docId: string, verified: boolean) => {
+    await supabase.from('v2_invoice_documents').update({ verified, verified_by: verified ? user?.id : null, verified_at: verified ? new Date().toISOString() : null }).eq('id', docId);
+    await logAudit({ invoice_id: id!, action: verified ? 'document_verified' : 'document_unverified' });
+    load();
+  };
+
+  const openDoc = async (path: string) => {
+    const { data } = await supabase.storage.from('veloxis-documents').createSignedUrl(path, 300);
+    if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+  };
+
+  const recordMovement = async (type: string, amount: number, note?: string) => {
+    if (!amount) return;
+    await supabase.from('v2_money_movements').insert({ invoice_id: id!, type: type as any, amount, currency: inv.invoice_currency, recorded_by: user?.id, note: note ?? null });
+    await logAudit({ invoice_id: id!, action: `movement_${type}`, metadata: { amount } });
+    load();
+  };
+
+  return (
+    <div className="space-y-6">
+      <button onClick={() => nav(-1)} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Back</button>
+
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl">Invoice {inv.invoice_number}</h1>
+          <p className="text-sm text-muted-foreground">
+            {inv.v2_exporters?.company_name} → {buyer?.company_name ?? '—'} · Status: <span className="text-accent">{INVOICE_STATUS_LABEL[status]}</span>
+          </p>
+        </div>
+      </div>
+
+      {['returned_for_revision', 'rejected'].includes(status) && decisions[0] && (
+        <div className="card-elevated p-4 border-destructive/60 bg-destructive/10">
+          <div className="text-sm font-medium text-destructive">{status === 'rejected' ? 'Rejected' : 'Returned for revision'}</div>
+          <div className="text-sm mt-1">{decisions[0].reason}</div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <section className="card-elevated p-5">
+            <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-3">Five-point funding gate</h3>
+            <ul className="space-y-2 text-sm">
+              {[
+                ['Deed of Assignment uploaded & verified', gate.deed],
+                ['Tripartite Domiciliation Agreement uploaded & verified', gate.tripartite],
+                ['Notice of Assignment uploaded & verified', gate.noa],
+                ['Buyer credit clear & sanctions clear', gate.buyerClear],
+                ['Bill of Lading uploaded & verified', gate.bol],
+              ].map(([label, ok]) => (
+                <li key={label as string} className="flex items-center gap-2">
+                  {ok ? <CheckCircle2 className="h-4 w-4 text-success" /> : <XCircle className="h-4 w-4 text-destructive" />}
+                  <span className={ok ? '' : 'text-muted-foreground'}>{label as string}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="card-elevated p-5 space-y-3">
+            <h3 className="text-sm uppercase tracking-wider text-muted-foreground">Documents</h3>
+            {docs.length === 0 && <p className="text-sm text-muted-foreground">No documents yet.</p>}
+            {docs.map((d) => (
+              <div key={d.id} className="flex items-center justify-between border-t border-border pt-3">
+                <div>
+                  <button onClick={() => openDoc(d.file_url)} className="text-sm text-accent hover:underline">{d.file_name || d.doc_type}</button>
+                  <div className="text-xs text-muted-foreground">{DOC_LABEL[d.doc_type] ?? d.doc_type}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs px-2 py-1 rounded ${d.verified ? 'bg-success/20 text-success' : 'bg-muted text-muted-foreground'}`}>{d.verified ? 'Verified' : 'Unverified'}</span>
+                  {canVerify(roles) && (
+                    d.verified
+                      ? <Button size="sm" variant="ghost" onClick={() => verifyDoc(d.id, false)}>Unverify</Button>
+                      : <Button size="sm" onClick={() => verifyDoc(d.id, true)}>Verify</Button>
+                  )}
+                </div>
+              </div>
+            ))}
+            <div className="pt-3 border-t border-border">
+              <Label>Upload document</Label>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {DOC_TYPES.map((t) => (
+                  <label key={t} className="text-xs px-3 py-2 border border-border rounded cursor-pointer hover:bg-muted/20">
+                    {DOC_LABEL[t]}
+                    <input type="file" className="hidden" onChange={(e) => upload(e, t)} />
+                  </label>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="card-elevated p-5 space-y-3">
+            <h3 className="text-sm uppercase tracking-wider text-muted-foreground">Money movements</h3>
+            {movements.length === 0 && <p className="text-sm text-muted-foreground">None yet.</p>}
+            {movements.map((m) => (
+              <div key={m.id} className="flex justify-between text-sm border-t border-border pt-2">
+                <span>{m.type.replace('_', ' ')}</span>
+                <span className="tabular-nums">{m.currency} {Number(m.amount).toLocaleString()}</span>
+                <span className="text-muted-foreground">{new Date(m.recorded_at).toLocaleDateString()}</span>
+              </div>
+            ))}
+            {canApprove(roles) && (status === 'approved' || status === 'funded' || status === 'monitoring') && (
+              <MovementForm onSubmit={recordMovement} advance={advance} residual={residual} amount={Number(inv.invoice_amount)} />
+            )}
+          </section>
+
+          <section className="card-elevated p-5">
+            <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-3">Audit log</h3>
+            <div className="space-y-2 text-xs">
+              {audit.map((a) => (
+                <div key={a.id} className="flex justify-between border-t border-border pt-2">
+                  <span>{a.action} {a.from_status && `· ${a.from_status} → ${a.to_status}`} {a.metadata?.override && <span className="text-warning">[override]</span>}</span>
+                  <span className="text-muted-foreground">{new Date(a.created_at).toLocaleString()}</span>
+                </div>
+              ))}
+              {audit.length === 0 && <p className="text-muted-foreground">No entries.</p>}
+            </div>
+          </section>
+        </div>
+
+        <aside className="space-y-6">
+          <section className="card-elevated p-5 space-y-2 text-sm">
+            <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-2">Economics</h3>
+            <Row label="Amount">{fmt(Number(inv.invoice_amount), inv.invoice_currency)}</Row>
+            <Row label="Advance rate">{inv.advance_rate}%</Row>
+            <Row label="Fee">{inv.fee_percent}%</Row>
+            <Row label="Terms">{inv.terms_days} days</Row>
+            <div className="border-t border-border my-2" />
+            <Row label="Advance">{fmt(advance, inv.invoice_currency)}</Row>
+            <Row label="Fee">{fmt(fee, inv.invoice_currency)}</Row>
+            <Row label="Residual">{fmt(residual, inv.invoice_currency)}</Row>
+            <div className="border-t border-border my-2" />
+            <Row label="Shipment">{inv.shipment_date ?? '—'}</Row>
+            <Row label="Maturity">{inv.maturity_date ?? '—'}</Row>
+          </section>
+
+          <section className="card-elevated p-5 space-y-3">
+            <h3 className="text-sm uppercase tracking-wider text-muted-foreground">Actions</h3>
+            {status === 'submitted' && canVerify(roles) && (
+              <>
+                <Button className="w-full" disabled={busy} onClick={() => transition('verified', 'verified', 'verified')}>Mark verified</Button>
+                <Textarea placeholder="Reason to return" value={reason} onChange={(e) => setReason(e.target.value)} />
+                <Button variant="outline" className="w-full" disabled={busy} onClick={() => transition('returned_for_revision', 'returned_for_revision', 'returned')}>Return for revision</Button>
+              </>
+            )}
+            {status === 'verified' && canApprove(roles) && (
+              <>
+                <Button className="w-full" disabled={busy || !allGatesPass} onClick={() => transition('approved', 'approved', 'approved')}>
+                  {allGatesPass ? 'Approve for funding' : 'Gate not met'}
+                </Button>
+                <Textarea placeholder="Reason to reject" value={reason} onChange={(e) => setReason(e.target.value)} />
+                <Button variant="outline" className="w-full" disabled={busy} onClick={() => transition('rejected', 'rejected', 'rejected')}>Reject</Button>
+              </>
+            )}
+            {status === 'approved' && canApprove(roles) && (
+              <Button className="w-full" disabled={busy} onClick={() => transition('funded', 'funded', 'funded')}>Mark funded</Button>
+            )}
+            {status === 'funded' && canApprove(roles) && (
+              <Button className="w-full" disabled={busy} onClick={() => transition('monitoring', 'monitoring')}>Move to monitoring</Button>
+            )}
+            {(status === 'monitoring' || status === 'funded') && canApprove(roles) && (
+              <Button className="w-full" disabled={busy} onClick={() => transition('settled', 'settled', 'settled')}>Mark settled</Button>
+            )}
+            {status === 'draft' && (
+              <Button className="w-full" disabled={busy} onClick={() => transition('submitted', 'submitted')}>Submit for review</Button>
+            )}
+          </section>
+
+          {buyer && (
+            <section className="card-elevated p-5 space-y-2 text-sm">
+              <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-2">Buyer</h3>
+              <Row label="Name"><Link to={`/app/buyers/${buyer.id}`} className="text-accent hover:underline">{buyer.company_name}</Link></Row>
+              <Row label="Country">{buyer.country ?? '—'}</Row>
+              <Row label="Credit"><StatusPill s={buyer.credit_status} /></Row>
+              <Row label="Sanctions"><StatusPill s={buyer.sanctions_status} /></Row>
+              <Row label="Limit">{buyer.credit_limit ? fmt(Number(buyer.credit_limit)) : '—'}</Row>
+            </section>
+          )}
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return <div className="flex justify-between text-sm"><span className="text-muted-foreground">{label}</span><span>{children}</span></div>;
+}
+function StatusPill({ s }: { s: string }) {
+  const map: Record<string, string> = { clear: 'bg-success/20 text-success', flagged: 'bg-destructive/20 text-destructive', pending: 'bg-muted text-muted-foreground' };
+  return <span className={`text-xs px-2 py-0.5 rounded ${map[s] ?? ''}`}>{s}</span>;
+}
+
+function MovementForm({ onSubmit, advance, residual, amount }: { onSubmit: (t: string, a: number, n?: string) => void; advance: number; residual: number; amount: number }) {
+  const [type, setType] = useState('advance_out');
+  const [amt, setAmt] = useState('');
+  return (
+    <div className="pt-3 border-t border-border space-y-2">
+      <Label className="text-xs">Record movement</Label>
+      <div className="flex gap-2">
+        <Select value={type} onValueChange={(v) => { setType(v); setAmt(String(v === 'advance_out' ? advance : v === 'settlement_in' ? amount : residual)); }}>
+          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="advance_out">Advance out</SelectItem>
+            <SelectItem value="settlement_in">Settlement in</SelectItem>
+            <SelectItem value="residual_out">Residual out</SelectItem>
+          </SelectContent>
+        </Select>
+        <Input type="number" step="0.01" placeholder="Amount" value={amt} onChange={(e) => setAmt(e.target.value)} />
+        <Button onClick={() => { onSubmit(type, Number(amt)); setAmt(''); }}>Record</Button>
+      </div>
+    </div>
+  );
+}

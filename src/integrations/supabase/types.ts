@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["v2_app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["v2_app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["v2_app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action_type: Database["public"]["Enums"]["audit_action"]
@@ -2095,6 +2116,42 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string
+          joined_at: string
+          last_login: string | null
+          name: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email: string
+          joined_at?: string
+          last_login?: string | null
+          name?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string
+          joined_at?: string
+          last_login?: string | null
+          name?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       registration_invites: {
         Row: {
           created_at: string
@@ -2299,6 +2356,383 @@ export type Database = {
           organisation?: string | null
           phone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      v2_audit_log: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          created_at: string
+          from_status: Database["public"]["Enums"]["v2_invoice_status"] | null
+          id: string
+          invoice_id: string | null
+          metadata: Json
+          note: string | null
+          to_status: Database["public"]["Enums"]["v2_invoice_status"] | null
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["v2_invoice_status"] | null
+          id?: string
+          invoice_id?: string | null
+          metadata?: Json
+          note?: string | null
+          to_status?: Database["public"]["Enums"]["v2_invoice_status"] | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["v2_invoice_status"] | null
+          id?: string
+          invoice_id?: string | null
+          metadata?: Json
+          note?: string | null
+          to_status?: Database["public"]["Enums"]["v2_invoice_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "v2_audit_log_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v2_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v2_buyers: {
+        Row: {
+          companies_house_id: string | null
+          company_name: string
+          country: string | null
+          created_at: string
+          created_by: string | null
+          credit_limit: number | null
+          credit_status: Database["public"]["Enums"]["v2_verification_status"]
+          id: string
+          sanctions_status: Database["public"]["Enums"]["v2_verification_status"]
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          companies_house_id?: string | null
+          company_name: string
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          credit_limit?: number | null
+          credit_status?: Database["public"]["Enums"]["v2_verification_status"]
+          id?: string
+          sanctions_status?: Database["public"]["Enums"]["v2_verification_status"]
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          companies_house_id?: string | null
+          company_name?: string
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          credit_limit?: number | null
+          credit_status?: Database["public"]["Enums"]["v2_verification_status"]
+          id?: string
+          sanctions_status?: Database["public"]["Enums"]["v2_verification_status"]
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
+      v2_decisions: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          decision_type: Database["public"]["Enums"]["v2_decision_type"]
+          id: string
+          invoice_id: string
+          reason: string | null
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          decision_type: Database["public"]["Enums"]["v2_decision_type"]
+          id?: string
+          invoice_id: string
+          reason?: string | null
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          decision_type?: Database["public"]["Enums"]["v2_decision_type"]
+          id?: string
+          invoice_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "v2_decisions_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v2_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v2_exporters: {
+        Row: {
+          address: string | null
+          bank_details: Json
+          commodity: string | null
+          company_name: string
+          contact_name: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          nepc_status: Database["public"]["Enums"]["v2_nepc_status"]
+          onboarding_status: Database["public"]["Enums"]["v2_onboarding_status"]
+          owner_user_id: string | null
+          phone: string | null
+          rc_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          bank_details?: Json
+          commodity?: string | null
+          company_name: string
+          contact_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          nepc_status?: Database["public"]["Enums"]["v2_nepc_status"]
+          onboarding_status?: Database["public"]["Enums"]["v2_onboarding_status"]
+          owner_user_id?: string | null
+          phone?: string | null
+          rc_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          bank_details?: Json
+          commodity?: string | null
+          company_name?: string
+          contact_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          nepc_status?: Database["public"]["Enums"]["v2_nepc_status"]
+          onboarding_status?: Database["public"]["Enums"]["v2_onboarding_status"]
+          owner_user_id?: string | null
+          phone?: string | null
+          rc_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      v2_invoice_documents: {
+        Row: {
+          doc_type: Database["public"]["Enums"]["v2_doc_type"]
+          file_name: string | null
+          file_url: string
+          id: string
+          invoice_id: string
+          uploaded_at: string
+          uploaded_by: string | null
+          verified: boolean
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          doc_type: Database["public"]["Enums"]["v2_doc_type"]
+          file_name?: string | null
+          file_url: string
+          id?: string
+          invoice_id: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          verified?: boolean
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          doc_type?: Database["public"]["Enums"]["v2_doc_type"]
+          file_name?: string | null
+          file_url?: string
+          id?: string
+          invoice_id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          verified?: boolean
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "v2_invoice_documents_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v2_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v2_invoices: {
+        Row: {
+          advance_rate: number
+          approved_by: string | null
+          buyer_id: string | null
+          commodity: string | null
+          created_at: string
+          created_by: string | null
+          exporter_id: string
+          fee_percent: number
+          funded_date: string | null
+          id: string
+          invoice_amount: number
+          invoice_currency: Database["public"]["Enums"]["v2_invoice_currency"]
+          invoice_number: string
+          maturity_date: string | null
+          settled_date: string | null
+          shipment_date: string | null
+          status: Database["public"]["Enums"]["v2_invoice_status"]
+          submitted_by: string | null
+          terms_days: number
+          updated_at: string
+          verified_by: string | null
+        }
+        Insert: {
+          advance_rate?: number
+          approved_by?: string | null
+          buyer_id?: string | null
+          commodity?: string | null
+          created_at?: string
+          created_by?: string | null
+          exporter_id: string
+          fee_percent?: number
+          funded_date?: string | null
+          id?: string
+          invoice_amount: number
+          invoice_currency?: Database["public"]["Enums"]["v2_invoice_currency"]
+          invoice_number: string
+          maturity_date?: string | null
+          settled_date?: string | null
+          shipment_date?: string | null
+          status?: Database["public"]["Enums"]["v2_invoice_status"]
+          submitted_by?: string | null
+          terms_days?: number
+          updated_at?: string
+          verified_by?: string | null
+        }
+        Update: {
+          advance_rate?: number
+          approved_by?: string | null
+          buyer_id?: string | null
+          commodity?: string | null
+          created_at?: string
+          created_by?: string | null
+          exporter_id?: string
+          fee_percent?: number
+          funded_date?: string | null
+          id?: string
+          invoice_amount?: number
+          invoice_currency?: Database["public"]["Enums"]["v2_invoice_currency"]
+          invoice_number?: string
+          maturity_date?: string | null
+          settled_date?: string | null
+          shipment_date?: string | null
+          status?: Database["public"]["Enums"]["v2_invoice_status"]
+          submitted_by?: string | null
+          terms_days?: number
+          updated_at?: string
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "v2_invoices_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "v2_buyers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "v2_invoices_exporter_id_fkey"
+            columns: ["exporter_id"]
+            isOneToOne: false
+            referencedRelation: "v2_exporters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v2_money_movements: {
+        Row: {
+          amount: number
+          currency: Database["public"]["Enums"]["v2_invoice_currency"]
+          id: string
+          invoice_id: string
+          note: string | null
+          recorded_at: string
+          recorded_by: string | null
+          type: Database["public"]["Enums"]["v2_movement_type"]
+        }
+        Insert: {
+          amount: number
+          currency?: Database["public"]["Enums"]["v2_invoice_currency"]
+          id?: string
+          invoice_id: string
+          note?: string | null
+          recorded_at?: string
+          recorded_by?: string | null
+          type: Database["public"]["Enums"]["v2_movement_type"]
+        }
+        Update: {
+          amount?: number
+          currency?: Database["public"]["Enums"]["v2_invoice_currency"]
+          id?: string
+          invoice_id?: string
+          note?: string | null
+          recorded_at?: string
+          recorded_by?: string | null
+          type?: Database["public"]["Enums"]["v2_movement_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "v2_money_movements_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v2_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v2_settings: {
+        Row: {
+          capital_base: number
+          currency: Database["public"]["Enums"]["v2_invoice_currency"]
+          id: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          capital_base?: number
+          currency?: Database["public"]["Enums"]["v2_invoice_currency"]
+          id?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          capital_base?: number
+          currency?: Database["public"]["Enums"]["v2_invoice_currency"]
+          id?: number
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -2588,6 +3022,13 @@ export type Database = {
         }[]
       }
       get_partner_org_id: { Args: { _user_id: string }; Returns: string }
+      has_app_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["v2_app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2613,6 +3054,7 @@ export type Database = {
         Returns: boolean
       }
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_v2_staff: { Args: { _user_id: string }; Returns: boolean }
       is_veloxis_staff: { Args: { _user_id: string }; Returns: boolean }
       lookup_active_partners_for_country: {
         Args: { p_country: string }
@@ -2647,6 +3089,18 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      v2_exporter_can_see_buyer: {
+        Args: { _buyer_id: string; _user_id: string }
+        Returns: boolean
+      }
+      v2_owns_exporter: {
+        Args: { _exporter_id: string; _user_id: string }
+        Returns: boolean
+      }
+      v2_owns_invoice: {
+        Args: { _invoice_id: string; _user_id: string }
+        Returns: boolean
       }
       validate_status_transition: {
         Args: {
@@ -2852,6 +3306,46 @@ export type Database = {
       sanctions_screening_status: "pending_screening" | "clear" | "flagged"
       settlement_method_type: "dom_account" | "naira_account"
       subscription_tier: "pay_as_you_go" | "veloxis_pro"
+      v2_app_role:
+        | "exporter"
+        | "originator"
+        | "credit_officer"
+        | "approver"
+        | "super_admin"
+      v2_decision_type:
+        | "returned"
+        | "rejected"
+        | "approved"
+        | "verified"
+        | "funded"
+        | "settled"
+        | "override"
+      v2_doc_type:
+        | "pro_forma"
+        | "commercial_invoice"
+        | "bill_of_lading"
+        | "quality_cert"
+        | "deed_of_assignment"
+        | "notice_of_assignment"
+        | "tripartite"
+        | "kyc"
+        | "other"
+      v2_invoice_currency: "GBP" | "USD" | "EUR"
+      v2_invoice_status:
+        | "draft"
+        | "submitted"
+        | "verified"
+        | "approved"
+        | "funded"
+        | "monitoring"
+        | "settled"
+        | "returned_for_revision"
+        | "rejected"
+        | "defaulted"
+      v2_movement_type: "advance_out" | "settlement_in" | "residual_out"
+      v2_nepc_status: "valid" | "expired" | "none"
+      v2_onboarding_status: "pending" | "active" | "suspended"
+      v2_verification_status: "pending" | "clear" | "flagged"
       verification_access_status:
         | "access_locked"
         | "access_unlocked"
@@ -3204,6 +3698,50 @@ export const Constants = {
       sanctions_screening_status: ["pending_screening", "clear", "flagged"],
       settlement_method_type: ["dom_account", "naira_account"],
       subscription_tier: ["pay_as_you_go", "veloxis_pro"],
+      v2_app_role: [
+        "exporter",
+        "originator",
+        "credit_officer",
+        "approver",
+        "super_admin",
+      ],
+      v2_decision_type: [
+        "returned",
+        "rejected",
+        "approved",
+        "verified",
+        "funded",
+        "settled",
+        "override",
+      ],
+      v2_doc_type: [
+        "pro_forma",
+        "commercial_invoice",
+        "bill_of_lading",
+        "quality_cert",
+        "deed_of_assignment",
+        "notice_of_assignment",
+        "tripartite",
+        "kyc",
+        "other",
+      ],
+      v2_invoice_currency: ["GBP", "USD", "EUR"],
+      v2_invoice_status: [
+        "draft",
+        "submitted",
+        "verified",
+        "approved",
+        "funded",
+        "monitoring",
+        "settled",
+        "returned_for_revision",
+        "rejected",
+        "defaulted",
+      ],
+      v2_movement_type: ["advance_out", "settlement_in", "residual_out"],
+      v2_nepc_status: ["valid", "expired", "none"],
+      v2_onboarding_status: ["pending", "active", "suspended"],
+      v2_verification_status: ["pending", "clear", "flagged"],
       verification_access_status: [
         "access_locked",
         "access_unlocked",

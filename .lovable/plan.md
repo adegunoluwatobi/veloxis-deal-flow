@@ -1,110 +1,97 @@
-# Veloxis Restructure Plan
 
-Same product, same backend, same storage bucket. This is a structural cleanup + new assignment-based deal lifecycle. No data drops; only additive schema changes and code removal.
+# Veloxis Rebuild — Invoice Finance Management
 
-## 1. Scope confirmation
+Rebuild the app around a clean invoice-finance data model with **hard RLS isolation** between exporters, five roles, and a strict invoice lifecycle. Keep the Supabase project, the `veloxis-documents` bucket, and existing edge functions. Old tables stay in place but are no longer used by the new UI.
 
-- **Keep data**: no `DROP TABLE`. Deprecated tables become unused; we stop reading/writing them from the app.
-- **Keep secrets & edge functions**: only add what the new flow requires; remove nothing.
-- **Keep** `veloxis-documents` bucket and files.
-- **Same product**: Veloxis cross-border trade finance for African commodity exporters.
+## Scope
 
-## 2. Removals (frontend + routing only)
+**In:** Auth-only app, staff side + sandboxed exporter side, RLS-enforced isolation, invoice lifecycle with role gates, 5-point funding checklist, buyer verification reuse, mandatory rejection/return reasons, staff metrics dashboard, audit log, user management.
 
-Delete from the running app (files removed from `src/`):
+**Out (v1):** Payments, external APIs (Ship24, Creditsafe, Companies House), public marketing pages, IPU/Partner/Greystar flows (already removed), old deal detail UI.
 
-- All `src/pages/greystar/*` pages and `/greystar/*` routes
-- All partner-facing components: `GreystarLayout`, `PartnerKybStatusBadge`, `PartnerKyb.tsx`, `PartnerDetail.tsx`, `PartnersPage.tsx`, `AdminPartnerKybQueue.tsx`, `account/PartnerOrgProfile.tsx`, `account/PartnerTeamMembers.tsx`
-- IPU UI: `IpuUploadSection.tsx`, IPU steps in `DealLifecycleBanner`, IPU columns in deal detail
-- Nav links to partner/greystar sections in `DashboardLayout` and elsewhere
-- `NotificationsRoleShell` branch for partner roles
-- Partner routing branches in `ProtectedRoute`, `Dashboard`
+## Roles
 
-Kept top-level pages: Dashboard, Exporters, Applications, Capital Pool, Pricing, Opportunities, User Management, Account.
+`exporter`, `originator`, `credit_officer`, `approver`, `super_admin`. Staff users may hold multiple staff roles; exporter users hold only `exporter`. Segregation of duties: creator/submitter cannot approve without an explicit override recorded in audit log.
 
-## 3. Role changes
+## Data model (new tables, `public` schema)
 
-- Enum `app_role`: add value `admin_manager`. Leave `partner_admin` and `partner_staff` in the enum (Postgres can't drop enum values safely) but stop assigning them and stop checking them in RLS/UI.
-- Update `has_role` usage sites and RLS policies that gate on partner roles → gate on `super_admin | deal_manager | admin_manager` instead.
-- `is_veloxis_staff` extended to include `admin_manager`.
-- New role `admin_manager` gets the same read/write access as `deal_manager` unless specified otherwise.
-- Existing users with partner roles: left as-is in `user_roles`; they simply lose access because no partner routes exist.
+- `profiles` — user_id (pk, fk auth.users), name, email, phone, active, joined_at, last_login
+- `app_user_roles` — user_id, role (enum), unique(user_id, role) — separate from existing `user_roles` to avoid enum churn
+- `v2_exporters` — id, owner_user_id, company_name, rc_number, contact_name, phone, email, commodity, nepc_status, address, bank_details (jsonb), onboarding_status (pending/active/suspended), created_by, created_at
+- `v2_buyers` — id, company_name, country, companies_house_id, credit_status, sanctions_status, credit_limit, verified_by, verified_at, created_at
+- `v2_invoices` — id, invoice_number, exporter_id, buyer_id, commodity, invoice_currency, invoice_amount, terms_days, advance_rate, fee_percent, status, created_by, verified_by, approved_by, shipment_date, maturity_date, funded_date, settled_date, created_at
+- `v2_invoice_documents` — id, invoice_id, doc_type, file_url, verified, verified_by, uploaded_by, uploaded_at
+- `v2_money_movements` — id, invoice_id, type, amount, currency, recorded_by, recorded_at
+- `v2_decisions` — id, invoice_id, decision_type, reason, actor_user_id, created_at
+- `v2_audit_log` — id, invoice_id, actor_user_id, action, from_status, to_status, note, created_at
+- `v2_settings` — singleton (capital_base, currency)
 
-## 4. New deal status pipeline
+Prefixed `v2_` so existing tables and their data stay untouched. Once verified, we can drop the legacy tables in a later migration.
 
-Replace the current status flow. New enum values added to `deal_status`:
+## RLS (hard requirement)
 
-```text
-draft
- → submitted
- → under_review
- → docs_requested (loops back to under_review)
- → approved
- → deed_sent
- → deed_acknowledged
- → funded_active
- → repayment_due
- → payment_received
- → closed_repaid | closed_partial
-```
+- Exporter can SELECT/INSERT/UPDATE only rows tied to their own `v2_exporters.id` (via `owner_user_id = auth.uid()`). Blocked on all other tables except their own profile and their own invoices/documents/decisions (read-only for decisions).
+- Exporter UPDATE on invoice allowed only when status ∈ {draft, returned_for_revision}.
+- Staff policies via `has_app_role(uid, role)` security-definer function.
+- Super admin unrestricted.
+- Test with a second exporter account to confirm isolation.
 
-- Add missing values (`deed_sent`, `deed_acknowledged`) to the `deal_status` enum.
-- Rewrite `validate_status_transition` to enforce the new graph for `super_admin | deal_manager | admin_manager` and the exporter transitions (`draft → submitted`, `docs_requested → submitted`).
-- Remove all IPU-related transitions (`ipu_sent`, `ipu_signed_awaiting_funding`, `ipu_expired`) from the validator; existing rows in those statuses remain valid data but cannot be transitioned into anymore. Admin can migrate them to `approved` via a one-off script if needed later.
+## Invoice lifecycle
 
-## 5. New assignment + settlement tracking
+`draft → submitted → verified → approved → funded → monitoring → settled`, side-states `returned_for_revision`, `rejected`, `defaulted`. Each transition role-gated in a DB function `v2_transition_invoice(invoice_id, new_status, reason?)` that also writes `v2_audit_log` and `v2_decisions` when needed.
 
-All manual admin actions on the deal detail page (no automated buyer flows).
+## Five-point funding gate
 
-New columns on `public.deals` (nullable, additive):
+`Approve for Funding` disabled until:
+1. Deed of Assignment verified
+2. Tripartite Domiciliation verified
+3. Notice of Assignment verified
+4. Buyer credit=clear AND sanctions=clear
+5. Bill of Lading verified
 
-- `deed_of_assignment_sent_at timestamptz`, `deed_of_assignment_sent_by uuid`
-- `deed_of_assignment_acknowledged_at timestamptz`, `deed_of_assignment_acknowledged_by uuid`
-- `notice_of_assignment_sent_at timestamptz`, `notice_of_assignment_sent_by uuid`
-- `notice_of_assignment_acknowledged_at timestamptz`, `notice_of_assignment_acknowledged_by uuid`
-- `buyer_direct_confirmation_at timestamptz`, `buyer_direct_confirmation_by uuid`, `buyer_direct_confirmation_notes text`
-- `disbursement_recorded_at timestamptz`, `disbursement_recorded_by uuid`, `disbursement_amount numeric`, `disbursement_reference text`
-- `repayment_recorded_at timestamptz`, `repayment_recorded_by uuid`, `repayment_amount numeric`, `repayment_reference text`
+Live checklist on staff invoice view lists what's missing.
 
-New `document_type` values for `deal_documents`: `deed_of_assignment`, `notice_of_assignment`, `buyer_confirmation`, `disbursement_proof`, `repayment_proof`. (IPU document type stays in the enum for historic rows; no new uploads.)
+## Fee auto-calc
 
-## 6. Deal detail UI (admin)
+`terms_days` 30→3.5%, 45→4.5%, 60→5.5%. Advance default 80%. Computed columns on invoice detail (staff only): advance, fee, residual, maturity, days-to-maturity. Exporter sees only invoice_amount, status, advance amount, residual amount.
 
-New panel `AssignmentTrackingPanel` on `DealDetail.tsx` with sequential cards, each showing status badge + timestamp + actor + "Mark …" button gated by role and prior step:
+## Screens
 
-1. Deed of Assignment — Sent → Acknowledged (each with optional file upload to `deal_documents`)
-2. Notice of Assignment — Sent → Acknowledged
-3. Buyer direct confirmation — single action with notes
-4. Disbursement — amount + reference + optional proof upload; sets status to `funded_active`
-5. Repayment — amount + reference + optional proof upload; sets status to `payment_received`; admin then closes to `closed_repaid` or `closed_partial`
+**Staff:**
+- `/app` Metrics Dashboard (portfolio, credit, velocity, pipeline, financial, relationships, "needs my action")
+- `/app/invoices` list + `/app/invoices/:id` detail
+- `/app/invoices/new` (Originator/Super Admin)
+- `/app/exporters` list + detail
+- `/app/buyers` list + detail (verify — Credit only)
+- `/app/users` (Super Admin)
+- `/app/audit`
+- `/app/settings` (Super Admin)
 
-Each action writes an `audit_logs` row via existing `insert_audit_log` RPC.
+**Exporter (sandboxed, visually distinct):**
+- `/portal` My Dashboard
+- `/portal/invoices` + `/portal/invoices/new` + `/portal/invoices/:id`
+- `/portal/documents`
+- `/portal/profile`
 
-Remove `IpuUploadSection` from the page.
+## Design tokens
 
-## 7. Migrations (single migration, in order)
+Update `src/index.css` and `tailwind.config.ts` to the new palette: bg `#0A1E1C`, primary `#15946F`, accent `#3DE8B8`, foreground `#F8FAF9`. Bold sans-serif headings. Two distinct layouts: `StaffLayout` (dense admin) and `ExporterPortalLayout` (calmer, customer-facing).
 
-1. `ALTER TYPE app_role ADD VALUE 'admin_manager'` (idempotent guard)
-2. `ALTER TYPE deal_status ADD VALUE 'deed_sent'`, `'deed_acknowledged'` (idempotent guards)
-3. `ALTER TABLE public.deals ADD COLUMN …` for all new columns above
-4. Extend `document_type` enum with the new values
-5. Replace `validate_status_transition` with the new graph
-6. Update `is_veloxis_staff` to include `admin_manager`
+## What gets removed from UI
 
-GRANTs unchanged (existing `deals` grants already cover new columns).
+- Old `DealDetail`, `AssignmentTrackingPanel`, `DealsList`, `ExportersList`, `ExporterNew`, `ExporterDetail`, `AdminDashboard`, capital pool page (replaced), opportunities/marketing/verification screens stay only if still on nav — cut from nav for the rebuild.
+- `App.tsx` route table rebuilt around `/app/*` and `/portal/*`. Old `/admin/*`, `/exporter/*`, `/greystar/*` routes redirect to the new equivalents.
+- Website / marketing pages stay as-is (public unauth entry lands on `/login`).
 
-## 8. Files touched (high level)
+## Migration approach
 
-- **Delete**: partner/greystar pages + components, IPU section, partner nav entries
-- **Edit**: `src/App.tsx` (routes), `DashboardLayout`, `ProtectedRoute`, `Dashboard`, `NotificationsRoleShell`, `DealDetail`, `AdminUserDirectory` (role dropdown), `types/index.ts` (deal status labels/colors, roles)
-- **Add**: `src/components/AssignmentTrackingPanel.tsx`
-- **DB**: one migration as described above
-- **Edge functions**: none added or removed in this pass — role/status changes are enforced in the DB and UI
+1. Migration 1: enums, new `v2_*` tables, GRANTs, RLS, `has_app_role`, `v2_transition_invoice`, seed `v2_settings`.
+2. After types regen, build the new UI (layouts, pages, hooks).
+3. Manually create test users for each role, verify RLS with a second exporter.
 
-## 9. Out of scope for this pass
+## Out of this plan
 
-- Migrating historical deals stuck in IPU statuses (can be handled with a follow-up data script)
-- Emails/notifications for the new assignment steps (can be added after the UI ships)
-- Removing partner-related tables from the database
+- Data migration from legacy `deals`/`exporters` into `v2_*` — not requested; legacy remains dormant.
+- Deleting old tables/edge functions — deferred until the new build is validated.
 
-If this looks right, approve and I'll run the migration first, then land the code changes.
+Reply **approve** to proceed, or tell me what to change (e.g. reuse existing `exporters`/`deals` tables instead of `v2_*`, kill legacy tables immediately, keep marketing pages linked from staff nav, etc.).
