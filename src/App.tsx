@@ -25,6 +25,7 @@ import ExporterInvoices from '@/v2/pages/exporter/Invoices';
 import ExporterInvoiceNew from '@/v2/pages/exporter/InvoiceNew';
 import ExporterInvoiceDetail from '@/v2/pages/exporter/InvoiceDetail';
 import ExporterProfile from '@/v2/pages/exporter/Profile';
+import ExporterOnboarding from '@/v2/pages/exporter/Onboarding';
 import VeloxisHome from '@/pages/website/VeloxisHome';
 import StaffCapitalPool from '@/v2/pages/staff/CapitalPool';
 import StaffVerifications from '@/v2/pages/staff/Verifications';
@@ -70,6 +71,7 @@ export default function App() {
               <Route path="/app/settings" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffSettings /></StaffLayout></RequireAuth>} />
               <Route path="/app/account" element={<Staff><Account /></Staff>} />
 
+              <Route path="/portal/onboarding" element={<RequireAuth allow="exporter"><ExporterOnboarding /></RequireAuth>} />
               <Route path="/portal" element={<Portal><ExporterDashboard /></Portal>} />
               <Route path="/portal/invoices" element={<Portal><ExporterInvoices /></Portal>} />
               <Route path="/portal/invoices/new" element={<Portal><ExporterInvoiceNew /></Portal>} />

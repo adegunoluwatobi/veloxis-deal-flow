@@ -25,7 +25,7 @@ export default function SetPasswordFirst() {
     await refresh();
     setBusy(false);
     toast({ title: 'Password set', description: 'You can now sign in with your email and password.' });
-    nav('/', { replace: true });
+    nav('/home', { replace: true });
   };
 
   return (
