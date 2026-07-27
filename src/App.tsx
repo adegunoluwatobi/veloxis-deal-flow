@@ -25,6 +25,7 @@ import ExporterInvoices from '@/v2/pages/exporter/Invoices';
 import ExporterInvoiceNew from '@/v2/pages/exporter/InvoiceNew';
 import ExporterInvoiceDetail from '@/v2/pages/exporter/InvoiceDetail';
 import ExporterProfile from '@/v2/pages/exporter/Profile';
+import VeloxisHome from '@/pages/website/VeloxisHome';
 
 const qc = new QueryClient();
 
