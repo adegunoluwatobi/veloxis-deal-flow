@@ -4,7 +4,7 @@ export const STAFF_ROLES: AppRole[] = ['originator', 'credit_officer', 'approver
 
 export const ROLE_LABEL: Record<AppRole, string> = {
   exporter: 'Exporter',
-  originator: 'Originator',
+  originator: 'Business Developer',
   credit_officer: 'Credit & Compliance',
   approver: 'Approver (MD)',
   super_admin: 'Super Admin',
