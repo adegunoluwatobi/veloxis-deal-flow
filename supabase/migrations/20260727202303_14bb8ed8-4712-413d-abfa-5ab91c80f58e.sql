@@ -1,0 +1,3 @@
+CREATE POLICY "super_admin_insert_roles" ON public.app_user_roles FOR INSERT TO authenticated WITH CHECK (public.has_app_role(auth.uid(), 'super_admin'));
+CREATE POLICY "super_admin_update_roles" ON public.app_user_roles FOR UPDATE TO authenticated USING (public.has_app_role(auth.uid(), 'super_admin')) WITH CHECK (public.has_app_role(auth.uid(), 'super_admin'));
+CREATE POLICY "super_admin_delete_roles" ON public.app_user_roles FOR DELETE TO authenticated USING (public.has_app_role(auth.uid(), 'super_admin'));
