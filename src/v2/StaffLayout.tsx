@@ -3,7 +3,7 @@ import { useAuth } from './useAuth';
 import { ROLE_LABEL } from './roles';
 import { Button } from '@/components/ui/button';
 import {
-  LayoutDashboard, Users, FileText, Building2, Wallet, ShieldCheck,
+  LayoutDashboard, Users, FileText, Building2, ShieldCheck,
   Landmark, ScrollText, UserCog, Settings, LogOut, UserCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -13,7 +13,6 @@ const NAV = [
   { to: '/app/exporters', label: 'Exporters', icon: Users },
   { to: '/app/invoices', label: 'Applications', icon: FileText },
   { to: '/app/buyers', label: 'Buyers', icon: Building2 },
-  { to: '/app/capital-pool', label: 'Capital Pool', icon: Wallet },
   { to: '/app/verifications', label: 'Verifications', icon: ShieldCheck },
   { to: '/app/settlements', label: 'Settlements', icon: Landmark },
   { to: '/app/audit', label: 'Audit Log', icon: ScrollText },
