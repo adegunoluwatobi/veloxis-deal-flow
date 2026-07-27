@@ -1,15 +1,25 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import type { AppRole } from '@/v2/roles';
 import { ROLE_LABEL } from '@/v2/roles';
+import { Copy, Send } from 'lucide-react';
 
 type Row = { user_id: string; email: string; name: string | null; active: boolean; roles: AppRole[] };
 
 export default function StaffUsers() {
   const [rows, setRows] = useState<Row[]>([]);
+  const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState<AppRole | ''>('');
+  const [sending, setSending] = useState(false);
+  const [lastLink, setLastLink] = useState<string | null>(null);
 
   const load = async () => {
     const [{ data: profs }, { data: allRoles }] = await Promise.all([
@@ -20,7 +30,9 @@ export default function StaffUsers() {
     (allRoles ?? []).forEach((r: any) => {
       const arr = byUser.get(r.user_id) ?? []; arr.push(r.role); byUser.set(r.user_id, arr);
     });
-    setRows((profs ?? []).map((p: any) => ({ user_id: p.user_id, email: p.email, name: p.name, active: p.active, roles: byUser.get(p.user_id) ?? [] })));
+    setRows((profs ?? []).map((p: any) => ({
+      user_id: p.user_id, email: p.email, name: p.name, active: p.active, roles: byUser.get(p.user_id) ?? [],
+    })));
   };
   useEffect(() => { load(); }, []);
 
@@ -38,43 +50,130 @@ export default function StaffUsers() {
     load();
   };
 
+  const sendInvite = async () => {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return toast({ title: 'Enter a valid email', variant: 'destructive' });
+    }
+    setSending(true); setLastLink(null);
+    const { data, error } = await supabase.functions.invoke('invite-magic-link', {
+      body: { email: email.trim(), name: name.trim(), role: role || undefined },
+    });
+    setSending(false);
+    if (error) return toast({ title: 'Invite failed', description: error.message, variant: 'destructive' });
+    setLastLink((data as any)?.action_link ?? null);
+    toast({ title: 'Magic link sent', description: `${email} has been invited.` });
+    load();
+  };
+
+  const resendMagic = async (row: Row) => {
+    const { data, error } = await supabase.functions.invoke('invite-magic-link', {
+      body: { email: row.email, name: row.name ?? '' },
+    });
+    if (error) return toast({ title: 'Failed', description: error.message, variant: 'destructive' });
+    const link = (data as any)?.action_link;
+    if (link) {
+      await navigator.clipboard.writeText(link).catch(() => {});
+      toast({ title: 'Magic link ready', description: 'Link copied to clipboard.' });
+    } else {
+      toast({ title: 'Magic link sent' });
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl">Users</h1>
-        <p className="text-sm text-muted-foreground">Manage staff and exporter accounts. Create users via Sign-up (or invite) then assign roles here.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl">Users</h1>
+          <p className="text-sm text-muted-foreground">Invite staff and exporters by magic link, and manage roles.</p>
+        </div>
+        <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setEmail(''); setName(''); setRole(''); setLastLink(null); } }}>
+          <DialogTrigger asChild><Button><Send className="h-4 w-4 mr-2" />Invite via magic link</Button></DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Invite user</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Email *</Label>
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="user@example.com" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Full name</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Jane Doe" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Assign role (optional)</Label>
+                <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
+                  <SelectTrigger><SelectValue placeholder="No role — add later" /></SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(ROLE_LABEL) as AppRole[]).map((r) => (
+                      <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {lastLink && (
+                <div className="rounded-md border border-border bg-muted/30 p-3 text-xs space-y-2">
+                  <div className="text-muted-foreground">Magic link (also emailed):</div>
+                  <div className="break-all font-mono">{lastLink}</div>
+                  <Button size="sm" variant="outline" onClick={() => navigator.clipboard.writeText(lastLink)}>
+                    <Copy className="h-3 w-3 mr-1" /> Copy
+                  </Button>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setOpen(false)}>Close</Button>
+              <Button onClick={sendInvite} disabled={sending}>{sending ? 'Sending…' : 'Send invite'}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
+
       <div className="card-elevated overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-muted/30 text-xs uppercase tracking-wider text-muted-foreground">
-            <tr><th className="text-left px-4 py-3">Name / Email</th><th className="text-left px-4 py-3">Roles</th><th className="text-left px-4 py-3">Active</th><th className="text-right px-4 py-3">Add role</th></tr>
+            <tr>
+              <th className="text-left px-4 py-3">Name / Email</th>
+              <th className="text-left px-4 py-3">Roles</th>
+              <th className="text-left px-4 py-3">Active</th>
+              <th className="text-right px-4 py-3">Actions</th>
+            </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.user_id} className="border-t border-border align-top">
-                <td className="px-4 py-3"><div>{r.name || '—'}</div><div className="text-xs text-muted-foreground">{r.email}</div></td>
+                <td className="px-4 py-3">
+                  <div>{r.name || '—'}</div>
+                  <div className="text-xs text-muted-foreground">{r.email}</div>
+                </td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1">
                     {r.roles.map((role) => (
-                      <button key={role} onClick={() => removeRole(r.user_id, role)} className="text-xs px-2 py-0.5 rounded bg-primary/20 text-accent hover:bg-destructive/20 hover:text-destructive" title="Click to remove">
-                        {ROLE_LABEL[role]} ×
-                      </button>
+                      <button key={role} onClick={() => removeRole(r.user_id, role)}
+                        className="text-xs px-2 py-0.5 rounded bg-primary/20 text-accent hover:bg-destructive/20 hover:text-destructive"
+                        title="Click to remove">{ROLE_LABEL[role]} ×</button>
                     ))}
                     {r.roles.length === 0 && <span className="text-xs text-muted-foreground">No roles</span>}
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <Button size="sm" variant={r.active ? 'outline' : 'destructive'} onClick={() => setActive(r.user_id, !r.active)}>{r.active ? 'Active' : 'Inactive'}</Button>
+                  <Button size="sm" variant={r.active ? 'outline' : 'destructive'} onClick={() => setActive(r.user_id, !r.active)}>
+                    {r.active ? 'Active' : 'Inactive'}
+                  </Button>
                 </td>
-                <td className="px-4 py-3 text-right">
-                  <Select onValueChange={(v) => addRole(r.user_id, v as AppRole)}>
-                    <SelectTrigger className="w-40 ml-auto"><SelectValue placeholder="+ role" /></SelectTrigger>
-                    <SelectContent>
-                      {(Object.keys(ROLE_LABEL) as AppRole[]).filter((x) => !r.roles.includes(x)).map((x) => (
-                        <SelectItem key={x} value={x}>{ROLE_LABEL[x]}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2 justify-end">
+                    <Select onValueChange={(v) => addRole(r.user_id, v as AppRole)}>
+                      <SelectTrigger className="w-36"><SelectValue placeholder="+ role" /></SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(ROLE_LABEL) as AppRole[]).filter((x) => !r.roles.includes(x)).map((x) => (
+                          <SelectItem key={x} value={x}>{ROLE_LABEL[x]}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button size="sm" variant="outline" onClick={() => resendMagic(r)}>
+                      <Send className="h-3 w-3 mr-1" />Magic link
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}

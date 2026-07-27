@@ -29,6 +29,7 @@ import VeloxisHome from '@/pages/website/VeloxisHome';
 import StaffCapitalPool from '@/v2/pages/staff/CapitalPool';
 import StaffVerifications from '@/v2/pages/staff/Verifications';
 import StaffSettlements from '@/v2/pages/staff/Settlements';
+import Account from '@/v2/pages/Account';
 
 const qc = new QueryClient();
 
@@ -65,12 +66,14 @@ export default function App() {
               <Route path="/app/users" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffUsers /></StaffLayout></RequireAuth>} />
               <Route path="/app/audit" element={<Staff><StaffAudit /></Staff>} />
               <Route path="/app/settings" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffSettings /></StaffLayout></RequireAuth>} />
+              <Route path="/app/account" element={<Staff><Account /></Staff>} />
 
               <Route path="/portal" element={<Portal><ExporterDashboard /></Portal>} />
               <Route path="/portal/invoices" element={<Portal><ExporterInvoices /></Portal>} />
               <Route path="/portal/invoices/new" element={<Portal><ExporterInvoiceNew /></Portal>} />
               <Route path="/portal/invoices/:id" element={<Portal><ExporterInvoiceDetail /></Portal>} />
               <Route path="/portal/profile" element={<Portal><ExporterProfile /></Portal>} />
+              <Route path="/portal/account" element={<Portal><Account /></Portal>} />
 
               <Route path="*" element={<RootRedirect />} />
             </Routes>

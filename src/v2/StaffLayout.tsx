@@ -4,7 +4,7 @@ import { ROLE_LABEL } from './roles';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard, Users, FileText, Building2, Wallet, ShieldCheck,
-  Landmark, ScrollText, UserCog, Settings, LogOut,
+  Landmark, ScrollText, UserCog, Settings, LogOut, UserCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +18,8 @@ const NAV = [
   { to: '/app/settlements', label: 'Settlements', icon: Landmark },
   { to: '/app/audit', label: 'Audit Log', icon: ScrollText },
   { to: '/app/users', label: 'User Management', icon: UserCog, superOnly: true },
-  { to: '/app/settings', label: 'Account', icon: Settings, superOnly: true },
+  { to: '/app/account', label: 'My Account', icon: UserCircle },
+  { to: '/app/settings', label: 'Settings', icon: Settings, superOnly: true },
 ];
 
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
