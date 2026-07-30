@@ -182,9 +182,10 @@ export default function ExporterOnboarding() {
   return (
     <div className="min-h-screen bg-background">
       <header className="h-16 border-b border-border bg-card">
-        <div className="max-w-4xl mx-auto h-full flex items-center px-6">
+        <div className="max-w-4xl mx-auto h-full flex items-center gap-4 px-6">
           <span className="wordmark text-accent">VELOXIS</span>
-          <span className="ml-auto text-xs text-muted-foreground">{profile?.email}</span>
+          <span className="ml-auto text-xs text-muted-foreground truncate">{profile?.email}</span>
+          <SignOutButton />
         </div>
       </header>
       <main className="max-w-4xl mx-auto p-8 space-y-6">
