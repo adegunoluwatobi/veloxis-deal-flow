@@ -290,8 +290,11 @@ export default function DocumentReviewPanel({
               <div className="text-xs text-amber-400 mt-1">
                 Requested {fmtDateTime(request.requested_at)}{request.due_date ? ` · due ${request.due_date}` : ''} · {request.reason}
               </div>
+            )}
             {doc && <AccessHistory documentId={doc.id} />}
           </div>
+
+
 
           <div className="flex items-center gap-2">
             <StatusPill status={doc ? doc.status : 'pending'} />
