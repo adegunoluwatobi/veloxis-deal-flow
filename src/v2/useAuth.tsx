@@ -12,7 +12,12 @@ interface AuthCtx {
   roles: AppRole[];
   profile: Profile | null;
   exporterOnboarding: ExporterOnboardingState | null;
+  /** Single source of truth: true only when session AND roles/profile are fully resolved. */
+  ready: boolean;
+  /** Kept for backwards compatibility — always the inverse of `ready`. */
   loading: boolean;
+  /** Set when roles/profile could not be fetched. UI should show a retry state, not role-based content. */
+  error: string | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -26,27 +31,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [exporterOnboarding, setExporterOnboarding] = useState<ExporterOnboardingState | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [sessionResolved, setSessionResolved] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const load = async (uid: string) => {
-    const [{ data: r }, { data: p }] = await Promise.all([
-      supabase.from('app_user_roles').select('role').eq('user_id', uid),
-      supabase.from('profiles').select('*').eq('user_id', uid).maybeSingle(),
-    ]);
-    const roleList = (r ?? []).map((x: any) => x.role as AppRole);
-    setRoles(roleList);
-    setProfile((p as any) ?? null);
-    if (roleList.includes('exporter')) {
-      const { data: e } = await supabase
-        .from('v2_exporters')
-        .select('id, onboarding_status, bd_approved_at, onboarding_submitted_at')
-        .eq('owner_user_id', uid).maybeSingle();
-      setExporterOnboarding((e as any) ?? null);
-    } else {
+    setError(null);
+    try {
+      const [rolesRes, profileRes] = await Promise.all([
+        supabase.from('app_user_roles').select('role').eq('user_id', uid),
+        supabase.from('profiles').select('*').eq('user_id', uid).maybeSingle(),
+      ]);
+      if (rolesRes.error) throw new Error(rolesRes.error.message);
+      if (profileRes.error) throw new Error(profileRes.error.message);
+
+      const roleList = (rolesRes.data ?? []).map((x: any) => x.role as AppRole);
+      setRoles(roleList);
+      setProfile((profileRes.data as any) ?? null);
+
+      if (roleList.includes('exporter')) {
+        const { data: e, error: expErr } = await supabase
+          .from('v2_exporters')
+          .select('id, onboarding_status, bd_approved_at, onboarding_submitted_at')
+          .eq('owner_user_id', uid).maybeSingle();
+        if (expErr) throw new Error(expErr.message);
+        setExporterOnboarding((e as any) ?? null);
+      } else {
+        setExporterOnboarding(null);
+      }
+    } catch (err: any) {
+      console.error('[auth] failed to load roles/profile', err?.message ?? err);
+      setRoles([]);
+      setProfile(null);
       setExporterOnboarding(null);
+      setError(err?.message || 'Could not load your account details.');
+    } finally {
+      setDataLoaded(true);
     }
-    setDataLoaded(true);
   };
 
   useEffect(() => {
@@ -54,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s); setUser(s?.user ?? null);
       if (s?.user) {
         const uid = s.user.id;
+        setDataLoaded(false);
         setTimeout(() => load(uid), 0);
         if (event === 'SIGNED_IN') {
           setTimeout(async () => {
@@ -62,14 +84,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await supabase.from('profiles').update({ first_signed_in_at: nowIso }).eq('user_id', uid).is('first_signed_in_at', null);
           }, 0);
         }
-      } else { setRoles([]); setProfile(null); setExporterOnboarding(null); setDataLoaded(true); }
-      setLoading(false);
+      } else {
+        setRoles([]); setProfile(null); setExporterOnboarding(null); setError(null); setDataLoaded(true);
+      }
+      setSessionResolved(true);
     });
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session); setUser(session?.user ?? null);
-      if (session?.user) load(session.user.id).finally(() => setLoading(false));
-      else { setDataLoaded(true); setLoading(false); }
+      if (session?.user) load(session.user.id).finally(() => setSessionResolved(true));
+      else { setDataLoaded(true); setSessionResolved(true); }
     });
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -85,10 +111,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error ? new Error(error.message) : null };
   };
 
-  const signOut = async () => { await supabase.auth.signOut(); setRoles([]); setProfile(null); setExporterOnboarding(null); };
-  const refresh = async () => { if (user) await load(user.id); };
+  const signOut = async () => { await supabase.auth.signOut(); setRoles([]); setProfile(null); setExporterOnboarding(null); setError(null); };
+  const refresh = async () => { if (user) { setDataLoaded(false); await load(user.id); } };
 
-  return <Ctx.Provider value={{ user, session, roles, profile, exporterOnboarding, loading: loading || (!!user && !dataLoaded), signIn, signOut, refresh }}>{children}</Ctx.Provider>;
+  // Single readiness source of truth: session resolved, and (if signed in) roles/profile fetched.
+  const ready = sessionResolved && (!user || dataLoaded);
+
+  return (
+    <Ctx.Provider
+      value={{
+        user, session, roles, profile, exporterOnboarding,
+        ready, loading: !ready, error,
+        signIn, signOut, refresh,
+      }}
+    >
+      {children}
+    </Ctx.Provider>
+  );
 }
 
 export function useAuth() {
