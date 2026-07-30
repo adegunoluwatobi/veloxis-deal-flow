@@ -167,9 +167,10 @@ export default function ExporterOnboarding() {
     }).eq('id', expId);
     setBusy(false);
     if (error) return toast({ title: 'Submit failed', description: error.message, variant: 'destructive' });
-    toast({ title: 'Submitted for review', description: 'Your Business Developer will review next.' });
+    setSubmittedOpen(true);
     load();
   };
+
 
   const status = exp?.onboarding_status ?? 'pending';
   const submitted = !!exp?.onboarding_submitted_at;
