@@ -19,7 +19,8 @@ export function RequireAuth({ children, allow }: { children: React.ReactNode; al
   }
 
   // Exporter must complete KYB/KYC and be approved before entering the portal.
-  const isExporter = roles.includes('exporter');
+  // Staff roles take precedence — never trap a staff user in the exporter onboarding flow.
+  const isExporter = roles.includes('exporter') && !isStaff(roles);
   const onboardingComplete = exporterOnboarding?.onboarding_status === 'active';
   if (isExporter && !onboardingComplete && loc.pathname !== '/portal/onboarding' && loc.pathname !== '/portal/account') {
     return <Navigate to="/portal/onboarding" replace />;
