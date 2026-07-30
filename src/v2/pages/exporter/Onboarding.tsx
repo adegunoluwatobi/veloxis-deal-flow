@@ -28,6 +28,8 @@ export default function ExporterOnboarding() {
   const [f, setF] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<Record<string, number>>({});
+  const [uploadingName, setUploadingName] = useState<Record<string, string>>({});
+
 
   const load = useCallback(async () => {
     const { data: e } = await supabase.from('v2_exporters').select('*').eq('owner_user_id', user!.id).maybeSingle();
