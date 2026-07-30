@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { OptionSelect, ID_TYPES, COUNTRIES, NIGERIAN_BANKS } from '@/v2/lib/formOptions';
-import { CheckCircle2, Upload, Clock, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Upload, Clock, AlertCircle, Lock } from 'lucide-react';
 import AdditionalDirectors from '@/v2/components/AdditionalDirectors';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 
 type DocType = 'cac_certificate' | 'director_id' | 'proof_of_address' | 'bank_proof';
@@ -27,6 +28,7 @@ export default function ExporterOnboarding() {
   const [docs, setDocs] = useState<any[]>([]);
   const [f, setF] = useState<any>(null);
   const [busy, setBusy] = useState(false);
+  const [submittedOpen, setSubmittedOpen] = useState(false);
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [uploadingName, setUploadingName] = useState<Record<string, string>>({});
   const [uploadError, setUploadError] = useState<Record<string, { file: File; message: string }>>({});
@@ -166,9 +168,10 @@ export default function ExporterOnboarding() {
     }).eq('id', expId);
     setBusy(false);
     if (error) return toast({ title: 'Submit failed', description: error.message, variant: 'destructive' });
-    toast({ title: 'Submitted for review', description: 'Your Business Developer will review next.' });
+    setSubmittedOpen(true);
     load();
   };
+
 
   const status = exp?.onboarding_status ?? 'pending';
   const submitted = !!exp?.onboarding_submitted_at;
@@ -210,7 +213,9 @@ export default function ExporterOnboarding() {
               <div className="font-medium text-amber-400">
                 {bdApproved ? 'Awaiting Credit & Compliance approval' : 'Awaiting Business Developer review'}
               </div>
-              <div className="text-muted-foreground">You’ll be able to access the portal once approved. You can still update your details below.</div>
+              <div className="text-muted-foreground">
+                Your application has been submitted. You won’t have access to the exporter portal until it is approved or rejected. We’ll notify you by email once a decision is made. You can still update your details below.
+              </div>
             </div>
           </div>
         )}
@@ -353,6 +358,29 @@ export default function ExporterOnboarding() {
           </Button>
         </div>
       </main>
+
+      <Dialog open={submittedOpen} onOpenChange={setSubmittedOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 text-accent">
+              <CheckCircle2 className="h-5 w-5" />
+              <DialogTitle>Application submitted</DialogTitle>
+            </div>
+            <DialogDescription className="pt-2">
+              Thanks — your onboarding has been submitted for review. Your Business Developer reviews first, then Credit &amp; Compliance gives final approval.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-start gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+            <Lock className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="text-muted-foreground">
+              You will <span className="text-amber-400 font-medium">not have access to the exporter portal</span> until your application is approved or rejected. We’ll email you as soon as there’s a decision.
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setSubmittedOpen(false)}>Got it</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
