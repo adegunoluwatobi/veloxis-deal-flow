@@ -32,7 +32,8 @@ export default function ExporterOnboarding() {
 
 
   const load = useCallback(async () => {
-    const { data: e } = await supabase.from('v2_exporters').select('*').eq('owner_user_id', user!.id).maybeSingle();
+    const { data: rows } = await supabase.from('v2_exporters').select('*').eq('owner_user_id', user!.id).order('created_at', { ascending: true }).limit(1);
+    const e = rows?.[0] ?? null;
     setExp(e);
     setF(e ?? {
       company_name: '', company_registration_number: '', country_of_incorporation: '', incorporation_date: '',
