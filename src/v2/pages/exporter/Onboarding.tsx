@@ -117,15 +117,14 @@ export default function ExporterOnboarding() {
       xhr.send(fd);
     });
 
-  const upload = async (e: React.ChangeEvent<HTMLInputElement>, doc_type: DocType) => {
-    const file = e.target.files?.[0]; if (!file) return;
-    e.target.value = '';
+  const runUpload = async (file: File, doc_type: DocType) => {
     setBusy(true);
+    setUploadError((x) => { const n = { ...x }; delete n[doc_type]; return n; });
     setProgress((p) => ({ ...p, [doc_type]: 0 }));
     setUploadingName((n) => ({ ...n, [doc_type]: file.name }));
     try {
       const expId = await saveProfile();
-      if (!expId) return;
+      if (!expId) throw new Error('Could not save your company details. Check the required fields and try again.');
 
       const { data: sess } = await supabase.auth.getSession();
       const token = sess.session?.access_token;
@@ -139,14 +138,21 @@ export default function ExporterOnboarding() {
       await load();
       toast({ title: 'Uploaded', description: file.name });
     } catch (err: any) {
-      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
+      setUploadError((x) => ({ ...x, [doc_type]: { file, message: err?.message ?? 'Upload failed. Please try again.' } }));
+      toast({ title: 'Upload failed', description: err?.message, variant: 'destructive' });
     } finally {
       setBusy(false);
       setProgress((p) => { const n = { ...p }; delete n[doc_type]; return n; });
       setUploadingName((n) => { const x = { ...n }; delete x[doc_type]; return x; });
     }
-
   };
+
+  const upload = async (e: React.ChangeEvent<HTMLInputElement>, doc_type: DocType) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    e.target.value = '';
+    await runUpload(file, doc_type);
+  };
+
 
   const submitForReview = async () => {
     if (!requiredFieldsOk) { toast({ title: 'Complete required company & director fields', variant: 'destructive' }); return; }
