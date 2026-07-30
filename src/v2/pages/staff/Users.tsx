@@ -93,7 +93,16 @@ export default function StaffUsers() {
     load();
   };
 
+  const sendReset = async (row: Row) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(row.email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) return toast({ title: 'Reset failed', description: error.message, variant: 'destructive' });
+    toast({ title: 'Password reset sent', description: `${row.email} can now set a new password.` });
+  };
+
   const fmt = (d: string | null) => d ? new Date(d).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : null;
+
 
   return (
     <div className="space-y-6">
