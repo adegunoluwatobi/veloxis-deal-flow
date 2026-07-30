@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { logAudit } from '@/v2/audit';
+import { getAdvanceRatePct } from '@/v2/lib/config';
 
 export default function StaffInvoiceNew() {
   const nav = useNavigate();
@@ -15,20 +16,23 @@ export default function StaffInvoiceNew() {
   const [form, setForm] = useState({
     invoice_number: '', exporter_id: '', buyer_id: '', commodity: '',
     invoice_currency: 'GBP', invoice_amount: '', terms_days: '30',
-    advance_rate: '80', shipment_date: '',
+    advance_rate: '', shipment_date: '',
   });
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const [{ data: exps }, { data: buys }] = await Promise.all([
+      const [{ data: exps }, { data: buys }, advancePct] = await Promise.all([
         supabase.from('v2_exporters').select('id, company_name').eq('onboarding_status', 'active').order('company_name'),
         supabase.from('v2_buyers').select('id, company_name').order('company_name'),
+        getAdvanceRatePct(),
       ]);
       setExporters(exps ?? []);
       setBuyers(buys ?? []);
+      setForm((f) => (f.advance_rate ? f : { ...f, advance_rate: String(advancePct) }));
     })();
   }, []);
+
 
   const set = <K extends keyof typeof form>(k: K, v: string) => setForm((f) => ({ ...f, [k]: v }));
 

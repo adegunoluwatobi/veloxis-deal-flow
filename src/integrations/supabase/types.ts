@@ -1764,6 +1764,39 @@ export type Database = {
           },
         ]
       }
+      fx_rates: {
+        Row: {
+          captured_by: string | null
+          created_at: string
+          effective_from: string
+          from_currency: string
+          id: string
+          rate: number
+          source: string
+          to_currency: string
+        }
+        Insert: {
+          captured_by?: string | null
+          created_at?: string
+          effective_from?: string
+          from_currency: string
+          id?: string
+          rate: number
+          source: string
+          to_currency: string
+        }
+        Update: {
+          captured_by?: string | null
+          created_at?: string
+          effective_from?: string
+          from_currency?: string
+          id?: string
+          rate?: number
+          source?: string
+          to_currency?: string
+        }
+        Relationships: []
+      }
       internal_notes: {
         Row: {
           author_id: string
@@ -3323,7 +3356,9 @@ export type Database = {
           commodity_id: string | null
           created_at: string
           created_by: string | null
+          days_past_maturity: number | null
           decision_due_at: string | null
+          escalation_stage: string | null
           estimated_arrival_date: string | null
           exporter_id: string
           fee_percent: number
@@ -3370,7 +3405,9 @@ export type Database = {
           commodity_id?: string | null
           created_at?: string
           created_by?: string | null
+          days_past_maturity?: number | null
           decision_due_at?: string | null
+          escalation_stage?: string | null
           estimated_arrival_date?: string | null
           exporter_id: string
           fee_percent?: number
@@ -3417,7 +3454,9 @@ export type Database = {
           commodity_id?: string | null
           created_at?: string
           created_by?: string | null
+          days_past_maturity?: number | null
           decision_due_at?: string | null
+          escalation_stage?: string | null
           estimated_arrival_date?: string | null
           exporter_id?: string
           fee_percent?: number
@@ -3552,6 +3591,30 @@ export type Database = {
           id?: number
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      v2_system_config: {
+        Row: {
+          description: string | null
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
         }
         Relationships: []
       }
@@ -3932,6 +3995,7 @@ export type Database = {
         }
         Returns: string
       }
+      v2_advance_rate: { Args: never; Returns: number }
       v2_can_review_documents: { Args: { _user_id: string }; Returns: boolean }
       v2_exporter_can_see_buyer: {
         Args: { _buyer_id: string; _user_id: string }
@@ -4191,6 +4255,9 @@ export type Database = {
         | "returned_for_revision"
         | "rejected"
         | "defaulted"
+        | "overdue"
+        | "in_recovery"
+        | "written_off"
       v2_kyc_status: "not_started" | "pending" | "verified" | "rejected"
       v2_movement_type: "advance_out" | "settlement_in" | "residual_out"
       v2_nepc_status: "valid" | "expired" | "none"
@@ -4594,6 +4661,9 @@ export const Constants = {
         "returned_for_revision",
         "rejected",
         "defaulted",
+        "overdue",
+        "in_recovery",
+        "written_off",
       ],
       v2_kyc_status: ["not_started", "pending", "verified", "rejected"],
       v2_movement_type: ["advance_out", "settlement_in", "residual_out"],
