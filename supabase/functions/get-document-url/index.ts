@@ -50,10 +50,10 @@ Deno.serve(async (req) => {
   if (kind === 'invoice') {
     const { data } = await userClient
       .from('invoice_documents')
-      .select('id, file_path, invoice_id, v2_invoices!inner(exporter_id)')
+      .select('id, storage_path, invoice_id, v2_invoices!inner(exporter_id)')
       .eq('id', documentId).maybeSingle();
     if (data) {
-      path = (data as any).file_path;
+      path = (data as any).storage_path;
       invoiceId = (data as any).invoice_id;
       exporterId = (data as any).v2_invoices?.exporter_id ?? null;
     } else {
@@ -69,10 +69,10 @@ Deno.serve(async (req) => {
     }
   } else {
     const { data } = await userClient
-      .from('company_documents').select('id, file_path, exporter_id')
+      .from('company_documents').select('id, storage_path, exporter_id')
       .eq('id', documentId).maybeSingle();
     if (data) {
-      path = (data as any).file_path;
+      path = (data as any).storage_path;
       exporterId = (data as any).exporter_id;
     } else {
       const { data: legacy } = await userClient
