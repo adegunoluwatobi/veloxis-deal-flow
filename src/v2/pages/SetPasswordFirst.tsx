@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
+import { isStaff } from '@/v2/roles';
 
 export default function SetPasswordFirst() {
-  const { user, refresh, signOut } = useAuth();
+  const { user, roles, refresh, signOut } = useAuth();
+
   const nav = useNavigate();
   const [pw, setPw] = useState('');
   const [confirm, setConfirm] = useState('');
