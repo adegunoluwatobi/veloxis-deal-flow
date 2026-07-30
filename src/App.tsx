@@ -32,6 +32,7 @@ import StaffVerifications from '@/v2/pages/staff/Verifications';
 import StaffSettlements from '@/v2/pages/staff/Settlements';
 import Account from '@/v2/pages/Account';
 import SetPasswordFirst from '@/v2/pages/SetPasswordFirst';
+import ResetPassword from '@/v2/pages/ResetPassword';
 
 const qc = new QueryClient();
 
@@ -53,6 +54,7 @@ export default function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<VeloxisHome />} />
               <Route path="/set-password" element={<RequireAuth><SetPasswordFirst /></RequireAuth>} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/home" element={<RootRedirect />} />
 
               <Route path="/app" element={<Staff><StaffDashboard /></Staff>} />
