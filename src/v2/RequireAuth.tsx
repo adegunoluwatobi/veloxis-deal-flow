@@ -2,12 +2,17 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './useAuth';
 import type { AppRole } from './roles';
 import { isStaff } from './roles';
+import { AuthLoading, AuthError } from './components/AuthStates';
 
 export function RequireAuth({ children, allow }: { children: React.ReactNode; allow?: AppRole[] | 'staff' | 'exporter' }) {
-  const { user, roles, profile, exporterOnboarding, loading } = useAuth();
+  const { user, roles, profile, exporterOnboarding, ready, error, refresh } = useAuth();
   const loc = useLocation();
-  if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" /></div>;
+
+  // Single source of truth for readiness — never render role-based content before this.
+  if (!ready) return <AuthLoading />;
   if (!user) return <Navigate to="/login" replace state={{ from: loc.pathname }} />;
+  if (error) return <AuthError message={error} onRetry={() => { void refresh(); }} />;
+
 
   // Force first-time users (signed in via magic link) to set a password before anything else.
   if (profile && !(profile as any).password_set_at && loc.pathname !== '/set-password') {
