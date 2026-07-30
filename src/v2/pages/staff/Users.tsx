@@ -218,9 +218,21 @@ export default function StaffUsers() {
                           </SelectContent>
                         </Select>
                       )}
-                      <Button size="sm" variant="outline" onClick={() => resendMagic(r)}>
-                        <Send className="h-3 w-3 mr-1" />Magic link
-                      </Button>
+                      {r.password_set_at ? (
+                        <>
+                          <Button size="sm" variant="outline" disabled title="This user has already signed in and set a password">
+                            <Send className="h-3 w-3 mr-1" />Magic link
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => sendReset(r)}>
+                            <KeyRound className="h-3 w-3 mr-1" />Send password reset
+                          </Button>
+                        </>
+                      ) : (
+                        <Button size="sm" variant="outline" onClick={() => resendMagic(r)}>
+                          <Send className="h-3 w-3 mr-1" />Magic link
+                        </Button>
+                      )}
+
                     </div>
                   </td>
                 </tr>
