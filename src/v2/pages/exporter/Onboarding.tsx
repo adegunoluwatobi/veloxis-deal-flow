@@ -309,8 +309,28 @@ export default function ExporterOnboarding() {
                         </div>
                       </div>
                     )}
-
+                    {err && !uploading && (
+                      <div className="mt-2 rounded border border-destructive/40 bg-destructive/10 p-2.5 space-y-2">
+                        <div className="flex items-start gap-2 text-xs">
+                          <AlertCircle className="h-3.5 w-3.5 shrink-0 text-destructive mt-0.5" />
+                          <div className="min-w-0">
+                            <div className="font-medium truncate" title={err.file.name}>{err.file.name}</div>
+                            <div className="text-muted-foreground">Upload failed — {err.message}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" variant="outline" className="h-7 text-xs" disabled={busy} onClick={() => runUpload(err.file, r.key)}>
+                            Retry upload
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-7 text-xs" disabled={busy}
+                            onClick={() => setUploadError((x) => { const n = { ...x }; delete n[r.key]; return n; })}>
+                            Dismiss
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
+
                   <label className={`text-xs px-3 py-2 border border-border rounded inline-flex items-center gap-2 ${busy ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:bg-muted/20'}`}>
                     <Upload className="h-3.5 w-3.5" /> {uploading ? 'Uploading…' : d ? 'Replace' : 'Upload'}
                     <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => upload(e, r.key)} disabled={busy} />
