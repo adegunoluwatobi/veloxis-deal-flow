@@ -27,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [exporterOnboarding, setExporterOnboarding] = useState<ExporterOnboardingState | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   const load = async (uid: string) => {
     const [{ data: r }, { data: p }] = await Promise.all([
@@ -45,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       setExporterOnboarding(null);
     }
+    setDataLoaded(true);
   };
 
   useEffect(() => {
@@ -60,13 +62,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await supabase.from('profiles').update({ first_signed_in_at: nowIso }).eq('user_id', uid).is('first_signed_in_at', null);
           }, 0);
         }
-      } else { setRoles([]); setProfile(null); setExporterOnboarding(null); }
+      } else { setRoles([]); setProfile(null); setExporterOnboarding(null); setDataLoaded(true); }
       setLoading(false);
     });
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session); setUser(session?.user ?? null);
       if (session?.user) load(session.user.id).finally(() => setLoading(false));
-      else setLoading(false);
+      else { setDataLoaded(true); setLoading(false); }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -86,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => { await supabase.auth.signOut(); setRoles([]); setProfile(null); setExporterOnboarding(null); };
   const refresh = async () => { if (user) await load(user.id); };
 
-  return <Ctx.Provider value={{ user, session, roles, profile, exporterOnboarding, loading, signIn, signOut, refresh }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ user, session, roles, profile, exporterOnboarding, loading: loading || (!!user && !dataLoaded), signIn, signOut, refresh }}>{children}</Ctx.Provider>;
 }
 
 export function useAuth() {
