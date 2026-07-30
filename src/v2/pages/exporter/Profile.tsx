@@ -54,7 +54,9 @@ export default function ExporterProfile() {
   const save = async () => {
     const payload: any = {
       company_name: f.company_name, rc_number: f.rc_number || null, contact_name: f.contact_name,
-      phone: f.phone, email: f.email, commodity: f.commodity, address: f.address, bank_details: f.bank_details ?? {},
+      phone: f.phone, email: f.email, commodity: f.commodity, address: f.address,
+      bank_details: { ...(f.bank_details ?? {}), account_name: f.company_name ?? '' },
+
       company_registration_number: f.company_registration_number || null,
       incorporation_date: f.incorporation_date || null,
       country_of_incorporation: f.country_of_incorporation || null,

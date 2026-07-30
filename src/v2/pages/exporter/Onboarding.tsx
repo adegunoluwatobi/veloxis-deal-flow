@@ -78,7 +78,7 @@ export default function ExporterOnboarding() {
       director_nationality: f.director_nationality || null,
       director_id_type: f.director_id_type || null, director_id_number: f.director_id_number || null,
       director_address: f.director_address || null,
-      bank_details: f.bank_details ?? {},
+      bank_details: { ...(f.bank_details ?? {}), account_name: f.company_name ?? '' },
     };
     if (exp?.id) {
       const { error } = await supabase.from('v2_exporters').update(payload).eq('id', exp.id);
