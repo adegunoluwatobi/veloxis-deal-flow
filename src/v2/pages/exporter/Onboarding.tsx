@@ -29,6 +29,7 @@ export default function ExporterOnboarding() {
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [uploadingName, setUploadingName] = useState<Record<string, string>>({});
+  const [uploadError, setUploadError] = useState<Record<string, { file: File; message: string }>>({});
 
 
   const load = useCallback(async () => {
@@ -116,15 +117,14 @@ export default function ExporterOnboarding() {
       xhr.send(fd);
     });
 
-  const upload = async (e: React.ChangeEvent<HTMLInputElement>, doc_type: DocType) => {
-    const file = e.target.files?.[0]; if (!file) return;
-    e.target.value = '';
+  const runUpload = async (file: File, doc_type: DocType) => {
     setBusy(true);
+    setUploadError((x) => { const n = { ...x }; delete n[doc_type]; return n; });
     setProgress((p) => ({ ...p, [doc_type]: 0 }));
     setUploadingName((n) => ({ ...n, [doc_type]: file.name }));
     try {
       const expId = await saveProfile();
-      if (!expId) return;
+      if (!expId) throw new Error('Could not save your company details. Check the required fields and try again.');
 
       const { data: sess } = await supabase.auth.getSession();
       const token = sess.session?.access_token;
@@ -138,14 +138,21 @@ export default function ExporterOnboarding() {
       await load();
       toast({ title: 'Uploaded', description: file.name });
     } catch (err: any) {
-      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
+      setUploadError((x) => ({ ...x, [doc_type]: { file, message: err?.message ?? 'Upload failed. Please try again.' } }));
+      toast({ title: 'Upload failed', description: err?.message, variant: 'destructive' });
     } finally {
       setBusy(false);
       setProgress((p) => { const n = { ...p }; delete n[doc_type]; return n; });
       setUploadingName((n) => { const x = { ...n }; delete x[doc_type]; return x; });
     }
-
   };
+
+  const upload = async (e: React.ChangeEvent<HTMLInputElement>, doc_type: DocType) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    e.target.value = '';
+    await runUpload(file, doc_type);
+  };
+
 
   const submitForReview = async () => {
     if (!requiredFieldsOk) { toast({ title: 'Complete required company & director fields', variant: 'destructive' }); return; }
@@ -269,12 +276,13 @@ export default function ExporterOnboarding() {
               const d = latestDoc(r.key);
               const pct = progress[r.key];
               const uploading = pct !== undefined;
+              const err = uploadError[r.key];
               return (
                 <div key={r.key} className="flex items-start justify-between gap-4 border-t border-border pt-3">
                   <div className="flex-1">
                     <div className="text-sm font-medium">{r.label}</div>
                     <div className="text-xs text-muted-foreground">{r.hint}</div>
-                    {d && !uploading && (
+                    {d && !uploading && !err && (
                       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
                         <span className="inline-flex items-center gap-1.5 max-w-full px-2 py-1 rounded bg-primary/15 text-accent">
                           <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
@@ -301,8 +309,28 @@ export default function ExporterOnboarding() {
                         </div>
                       </div>
                     )}
-
+                    {err && !uploading && (
+                      <div className="mt-2 rounded border border-destructive/40 bg-destructive/10 p-2.5 space-y-2">
+                        <div className="flex items-start gap-2 text-xs">
+                          <AlertCircle className="h-3.5 w-3.5 shrink-0 text-destructive mt-0.5" />
+                          <div className="min-w-0">
+                            <div className="font-medium truncate" title={err.file.name}>{err.file.name}</div>
+                            <div className="text-muted-foreground">Upload failed — {err.message}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" variant="outline" className="h-7 text-xs" disabled={busy} onClick={() => runUpload(err.file, r.key)}>
+                            Retry upload
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-7 text-xs" disabled={busy}
+                            onClick={() => setUploadError((x) => { const n = { ...x }; delete n[r.key]; return n; })}>
+                            Dismiss
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
+
                   <label className={`text-xs px-3 py-2 border border-border rounded inline-flex items-center gap-2 ${busy ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:bg-muted/20'}`}>
                     <Upload className="h-3.5 w-3.5" /> {uploading ? 'Uploading…' : d ? 'Replace' : 'Upload'}
                     <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => upload(e, r.key)} disabled={busy} />
