@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { logAudit } from '@/v2/audit';
+import { openDocument, invoiceDocPath } from '@/v2/lib/documents';
 
 const DOC_TYPES = ['pro_forma', 'commercial_invoice', 'bill_of_lading', 'quality_cert', 'other'];
 const DOC_LABEL: Record<string, string> = {
@@ -39,15 +40,11 @@ export default function ExporterInvoiceDetail() {
 
   const upload = async (e: React.ChangeEvent<HTMLInputElement>, doc_type: string) => {
     const file = e.target.files?.[0]; if (!file) return;
-    const path = `v2/invoices/${id}/${Date.now()}-${file.name.replace(/[^a-z0-9._-]+/gi, '_')}`;
+    const path = invoiceDocPath(inv.exporter_id, id!, file.name);
     const { error } = await supabase.storage.from('veloxis-documents').upload(path, file);
     if (error) return toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
     await supabase.from('v2_invoice_documents').insert({ invoice_id: id!, doc_type: doc_type as any, file_url: path, file_name: file.name, uploaded_by: user?.id });
     load();
-  };
-  const openDoc = async (path: string) => {
-    const { data } = await supabase.storage.from('veloxis-documents').createSignedUrl(path, 300);
-    if (data?.signedUrl) window.open(data.signedUrl, '_blank');
   };
   const submit = async () => {
     await supabase.from('v2_invoices').update({ status: 'submitted', submitted_by: user?.id }).eq('id', id!);
@@ -96,7 +93,7 @@ export default function ExporterInvoiceDetail() {
         <h3 className="text-sm uppercase tracking-wider text-muted-foreground">Documents</h3>
         {docs.map((d) => (
           <div key={d.id} className="flex justify-between border-t border-border pt-2 text-sm">
-            <button onClick={() => openDoc(d.file_url)} className="text-accent hover:underline">{d.file_name || d.doc_type}</button>
+            <button onClick={() => openDocument(d.id, 'invoice')} className="text-accent hover:underline">{d.file_name || d.doc_type}</button>
             <span className="text-xs text-muted-foreground">{DOC_LABEL[d.doc_type] ?? d.doc_type}</span>
           </div>
         ))}

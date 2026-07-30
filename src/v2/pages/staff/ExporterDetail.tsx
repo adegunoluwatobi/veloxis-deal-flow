@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { logAudit } from '@/v2/audit';
+import { openDocument } from '@/v2/lib/documents';
 import { CheckCircle2, XCircle, FileText, Clock } from 'lucide-react';
 
 const DOC_LABEL: Record<string, string> = {
@@ -50,10 +51,6 @@ export default function StaffExporterDetail() {
   const bdRejected = !!exp.bd_rejected_at;
   const isActive = exp.onboarding_status === 'active';
 
-  const openDoc = async (path: string) => {
-    const { data } = await supabase.storage.from('veloxis-documents').createSignedUrl(path, 300);
-    if (data?.signedUrl) window.open(data.signedUrl, '_blank');
-  };
   const verifyDoc = async (docId: string, verified: boolean) => {
     await supabase.from('v2_exporter_documents').update({
       verified, verified_by: verified ? user?.id : null, verified_at: verified ? new Date().toISOString() : null,
@@ -181,7 +178,7 @@ export default function StaffExporterDetail() {
             {docs.map((d) => (
               <div key={d.id} className="flex items-center justify-between border-t border-border pt-2">
                 <div>
-                  <button onClick={() => openDoc(d.file_url)} className="text-sm text-accent hover:underline inline-flex items-center gap-2">
+                  <button onClick={() => openDocument(d.id, 'company')} className="text-sm text-accent hover:underline inline-flex items-center gap-2">
                     <FileText className="h-4 w-4" /> {d.file_name || d.doc_type}
                   </button>
                   <div className="text-xs text-muted-foreground">{DOC_LABEL[d.doc_type] ?? d.doc_type}</div>

@@ -132,7 +132,7 @@ export default function ExporterOnboarding() {
       const { data: sess } = await supabase.auth.getSession();
       const token = sess.session?.access_token;
       if (!token) throw new Error('Session expired — please sign in again.');
-      const path = `v2/exporters/${expId}/onboarding/${doc_type}-${Date.now()}-${file.name.replace(/[^a-z0-9._-]+/gi, '_')}`;
+      const path = `${expId}/company/onboarding/${doc_type}-${Date.now()}-${file.name.replace(/[^a-z0-9._-]+/gi, '_')}`;
       await uploadWithProgress(path, file, token, (pct) => setProgress((p) => ({ ...p, [doc_type]: pct })));
       const { error: insErr } = await supabase.from('v2_exporter_documents').insert({
         exporter_id: expId, doc_type, file_url: path, file_name: file.name, uploaded_by: user!.id,

@@ -10,6 +10,7 @@ import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/v2/useAuth';
 import { INVOICE_STATUS_LABEL, canApprove, canVerify } from '@/v2/roles';
 import { logAudit } from '@/v2/audit';
+import { openDocument, invoiceDocPath } from '@/v2/lib/documents';
 import { CheckCircle2, XCircle, ArrowLeft } from 'lucide-react';
 
 type Doc = { id: string; doc_type: string; file_url: string; file_name: string | null; verified: boolean; uploaded_by: string | null; uploaded_at: string };
@@ -98,7 +99,7 @@ export default function StaffInvoiceDetail() {
 
   const upload = async (e: React.ChangeEvent<HTMLInputElement>, doc_type: string) => {
     const file = e.target.files?.[0]; if (!file) return;
-    const path = `v2/invoices/${id}/${Date.now()}-${file.name.replace(/[^a-z0-9._-]+/gi, '_')}`;
+    const path = invoiceDocPath(inv.exporter_id, id!, file.name);
     const { error: upErr } = await supabase.storage.from('veloxis-documents').upload(path, file);
     if (upErr) { toast({ title: 'Upload failed', description: upErr.message, variant: 'destructive' }); return; }
     await supabase.from('v2_invoice_documents').insert({ invoice_id: id!, doc_type: doc_type as any, file_url: path, file_name: file.name, uploaded_by: user?.id });
@@ -112,10 +113,6 @@ export default function StaffInvoiceDetail() {
     load();
   };
 
-  const openDoc = async (path: string) => {
-    const { data } = await supabase.storage.from('veloxis-documents').createSignedUrl(path, 300);
-    if (data?.signedUrl) window.open(data.signedUrl, '_blank');
-  };
 
   const recordMovement = async (type: string, amount: number, note?: string) => {
     if (!amount) return;
@@ -170,7 +167,7 @@ export default function StaffInvoiceDetail() {
             {docs.map((d) => (
               <div key={d.id} className="flex items-center justify-between border-t border-border pt-3">
                 <div>
-                  <button onClick={() => openDoc(d.file_url)} className="text-sm text-accent hover:underline">{d.file_name || d.doc_type}</button>
+                  <button onClick={() => openDocument(d.id, 'invoice')} className="text-sm text-accent hover:underline">{d.file_name || d.doc_type}</button>
                   <div className="text-xs text-muted-foreground">{DOC_LABEL[d.doc_type] ?? d.doc_type}</div>
                 </div>
                 <div className="flex items-center gap-2">
