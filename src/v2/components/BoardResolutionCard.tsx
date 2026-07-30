@@ -92,12 +92,16 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
       setSigs([]);
     }
 
-    const { data: inv } = await supabase
-      .from('v2_invoices')
-      .select('invoice_amount, status')
-      .eq('exporter_id', exporterId)
-      .in('status', HEADROOM_STATUSES as any);
-    setCommitted((inv ?? []).reduce((t, i: any) => t + Number(i.invoice_amount ?? 0), 0));
+    const { data: hr, error: hrErr } = await supabase.rpc('exporter_headroom', { p_exporter_id: exporterId });
+    if (hrErr) {
+      setHeadroomError(hrErr.message);
+      setCommitted(null);
+    } else {
+      setHeadroomError(null);
+      const row: any = Array.isArray(hr) ? hr[0] : hr;
+      setCommitted(row ? Number(row.committed_exposure ?? 0) : null);
+    }
+
 
     setLoading(false);
   }, [exporterId]);
