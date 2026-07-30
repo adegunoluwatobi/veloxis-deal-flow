@@ -17,6 +17,8 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/v2/useAuth';
 import { ArrowDown, ArrowUp, Plus, Search } from 'lucide-react';
+import FxRatesTab from '@/v2/components/FxRatesTab';
+
 
 const CATEGORIES = [
   { value: 'agricultural', label: 'Agricultural' },
