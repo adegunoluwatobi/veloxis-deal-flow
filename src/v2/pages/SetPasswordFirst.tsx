@@ -76,8 +76,3 @@ export default function SetPasswordFirst() {
     </div>
   );
 }
-
-      </div>
-    </div>
-  );
-}
