@@ -140,7 +140,9 @@ export default function ExporterOnboarding() {
     } finally {
       setBusy(false);
       setProgress((p) => { const n = { ...p }; delete n[doc_type]; return n; });
+      setUploadingName((n) => { const x = { ...n }; delete x[doc_type]; return x; });
     }
+
   };
 
   const submitForReview = async () => {
