@@ -86,20 +86,54 @@ export default function ExporterOnboarding() {
     return data.id;
   };
 
+  const uploadWithProgress = (path: string, file: File, token: string, onProgress: (pct: number) => void) =>
+    new Promise<void>((resolve, reject) => {
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/veloxis-documents/${path}`;
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url, true);
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      xhr.setRequestHeader('apikey', import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string);
+      xhr.setRequestHeader('x-upsert', 'true');
+      xhr.upload.onprogress = (ev) => {
+        if (ev.lengthComputable) onProgress(Math.round((ev.loaded / ev.total) * 100));
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) return resolve();
+        let msg = `Upload failed (${xhr.status})`;
+        try { msg = JSON.parse(xhr.responseText)?.message ?? msg; } catch { /* ignore */ }
+        reject(new Error(msg));
+      };
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+      const fd = new FormData();
+      fd.append('file', file);
+      xhr.send(fd);
+    });
+
   const upload = async (e: React.ChangeEvent<HTMLInputElement>, doc_type: DocType) => {
     const file = e.target.files?.[0]; if (!file) return;
+    e.target.value = '';
     setBusy(true);
-    const expId = await saveProfile();
-    if (!expId) { setBusy(false); return; }
-    const path = `v2/exporters/${expId}/onboarding/${doc_type}-${Date.now()}-${file.name.replace(/[^a-z0-9._-]+/gi, '_')}`;
-    const { error: upErr } = await supabase.storage.from('veloxis-documents').upload(path, file);
-    if (upErr) { toast({ title: 'Upload failed', description: upErr.message, variant: 'destructive' }); setBusy(false); return; }
-    await supabase.from('v2_exporter_documents').insert({
-      exporter_id: expId, doc_type, file_url: path, file_name: file.name, uploaded_by: user!.id,
-    });
-    await load();
-    setBusy(false);
-    toast({ title: 'Uploaded' });
+    setProgress((p) => ({ ...p, [doc_type]: 0 }));
+    try {
+      const expId = await saveProfile();
+      if (!expId) return;
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      if (!token) throw new Error('Session expired — please sign in again.');
+      const path = `v2/exporters/${expId}/onboarding/${doc_type}-${Date.now()}-${file.name.replace(/[^a-z0-9._-]+/gi, '_')}`;
+      await uploadWithProgress(path, file, token, (pct) => setProgress((p) => ({ ...p, [doc_type]: pct })));
+      const { error: insErr } = await supabase.from('v2_exporter_documents').insert({
+        exporter_id: expId, doc_type, file_url: path, file_name: file.name, uploaded_by: user!.id,
+      });
+      if (insErr) throw new Error(insErr.message);
+      await load();
+      toast({ title: 'Uploaded', description: file.name });
+    } catch (err: any) {
+      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setBusy(false);
+      setProgress((p) => { const n = { ...p }; delete n[doc_type]; return n; });
+    }
   };
 
   const submitForReview = async () => {
