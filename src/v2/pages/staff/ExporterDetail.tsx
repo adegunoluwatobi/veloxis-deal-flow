@@ -9,6 +9,8 @@ import { toast } from '@/hooks/use-toast';
 import { logAudit } from '@/v2/audit';
 import { openDocument } from '@/v2/lib/documents';
 import { CheckCircle2, XCircle, FileText, Clock } from 'lucide-react';
+import AuditLogTable from '@/v2/components/AuditLogTable';
+
 
 const DOC_LABEL: Record<string, string> = {
   cac_certificate: 'Company registration (CAC / RC)',
@@ -210,7 +212,15 @@ export default function StaffExporterDetail() {
           {invoices.length === 0 && <p className="text-muted-foreground">No invoices</p>}
         </div>
       </section>
+
+      <AuditLogTable
+        exporterId={id}
+        entityTypes={['company_document', 'board_resolution', 'exporter']}
+        title="Company audit trail"
+        csvName="company-audit"
+      />
     </div>
+
   );
 }
 

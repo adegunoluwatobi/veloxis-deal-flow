@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import AuditLogTable from '@/v2/components/AuditLogTable';
+
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/v2/useAuth';
 import { INVOICE_STATUS_LABEL, canApprove, canVerify, has } from '@/v2/roles';
@@ -179,7 +181,13 @@ export default function StaffInvoiceDetail() {
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
+              <TabsTrigger value="audit">Audit</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="audit" className="space-y-6 mt-4">
+              <AuditLogTable invoiceId={id} title="Full audit trail" csvName="application-audit" />
+            </TabsContent>
+
 
             <TabsContent value="overview" className="space-y-6 mt-4">
               <section className="card-elevated p-5">
