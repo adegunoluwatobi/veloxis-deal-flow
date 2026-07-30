@@ -17,6 +17,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/v2/useAuth';
 import { ArrowDown, ArrowUp, Plus, Search } from 'lucide-react';
+import PublicHolidaysTab from '@/v2/components/PublicHolidaysTab';
 import FxRatesTab from '@/v2/components/FxRatesTab';
 
 
@@ -450,12 +451,14 @@ export default function ReferenceData() {
           <TabsTrigger value="regulated">Regulated commodities</TabsTrigger>
           <TabsTrigger value="config">System config</TabsTrigger>
           {isSuperAdmin && <TabsTrigger value="fx">Exchange rates</TabsTrigger>}
+          {isSuperAdmin && <TabsTrigger value="holidays">Public holidays</TabsTrigger>}
         </TabsList>
         <TabsContent value="documents" className="mt-6"><DocumentTypesTab /></TabsContent>
         <TabsContent value="commodities" className="mt-6"><CommoditiesTab regulated={false} /></TabsContent>
         <TabsContent value="regulated" className="mt-6"><CommoditiesTab regulated /></TabsContent>
         <TabsContent value="config" className="mt-6"><SystemConfigTab /></TabsContent>
         {isSuperAdmin && <TabsContent value="fx" className="mt-6"><FxRatesTab /></TabsContent>}
+        {isSuperAdmin && <TabsContent value="holidays" className="mt-6"><PublicHolidaysTab /></TabsContent>}
       </Tabs>
     </div>
   );

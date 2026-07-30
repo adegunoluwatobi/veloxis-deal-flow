@@ -19,10 +19,11 @@ type FxRate = {
   source: string | null;
   effective_from: string;
   captured_by: string | null;
+  is_placeholder: boolean;
 };
 
 const CURRENCIES = ['GBP', 'USD', 'EUR'];
-const PLACEHOLDER = 'placeholder, replace before first live invoice';
+
 
 export default function FxRatesTab() {
   const { user } = useAuth();
@@ -64,7 +65,7 @@ export default function FxRatesTab() {
   const missing = CURRENCIES.filter((c) => c !== 'GBP' && !effectiveFor(c, 'GBP')).map((c) => `${c} → GBP`);
   const placeholders = CURRENCIES.filter((c) => c !== 'GBP')
     .map((c) => ({ c, r: effectiveFor(c, 'GBP') }))
-    .filter((x) => x.r && (x.r.source ?? '').startsWith('placeholder'))
+    .filter((x) => x.r?.is_placeholder)
     .map((x) => `${x.c} → GBP`);
 
   const save = async () => {
@@ -83,6 +84,7 @@ export default function FxRatesTab() {
       source: form.source || null,
       effective_from: new Date(form.effective_from).toISOString(),
       captured_by: user?.id ?? null,
+      is_placeholder: false,
     });
     setSaving(false);
     if (error) return toast({ title: 'Could not capture the rate', description: error.message, variant: 'destructive' });
@@ -136,13 +138,13 @@ export default function FxRatesTab() {
             {rows.map((r) => {
               const current = effectiveFor(r.from_currency, r.to_currency)?.id === r.id;
               return (
-                <TableRow key={r.id} className={current ? 'bg-primary/5' : undefined}>
+                <TableRow key={r.id} className={r.is_placeholder ? 'bg-destructive/10 text-destructive' : current ? 'bg-primary/5' : undefined}>
                   <TableCell className="font-medium">{r.from_currency}</TableCell>
                   <TableCell>{r.to_currency}</TableCell>
                   <TableCell className="font-mono">{Number(r.rate).toFixed(6)}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {r.source}
-                    {(r.source ?? '').startsWith('placeholder') && (
+                    <span className={r.is_placeholder ? 'text-destructive' : ''}>{r.source}</span>
+                    {r.is_placeholder && (
                       <Badge variant="destructive" className="ml-2">Placeholder</Badge>
                     )}
                   </TableCell>
@@ -190,7 +192,7 @@ export default function FxRatesTab() {
             <div className="space-y-2">
               <Label>Source</Label>
               <Input value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="CBN official" />
-              <p className="text-xs text-muted-foreground">Free text. Default is CBN official. Replace placeholder rates ({PLACEHOLDER}) before going live.</p>
+              <p className="text-xs text-muted-foreground">Free text. Default is CBN official. Placeholder rates are never deleted. A real rate simply supersedes them from its effective date.</p>
             </div>
             <div className="space-y-2">
               <Label>Effective from</Label>

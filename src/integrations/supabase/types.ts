@@ -1771,6 +1771,7 @@ export type Database = {
           effective_from: string
           from_currency: string
           id: string
+          is_placeholder: boolean
           rate: number
           source: string
           to_currency: string
@@ -1781,6 +1782,7 @@ export type Database = {
           effective_from?: string
           from_currency: string
           id?: string
+          is_placeholder?: boolean
           rate: number
           source: string
           to_currency: string
@@ -1791,6 +1793,7 @@ export type Database = {
           effective_from?: string
           from_currency?: string
           id?: string
+          is_placeholder?: boolean
           rate?: number
           source?: string
           to_currency?: string
@@ -2663,6 +2666,36 @@ export type Database = {
         }
         Relationships: []
       }
+      public_holidays: {
+        Row: {
+          active: boolean
+          created_at: string
+          holiday_date: string
+          id: string
+          jurisdiction: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          holiday_date: string
+          id?: string
+          jurisdiction?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          holiday_date?: string
+          id?: string
+          jurisdiction?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       registration_invites: {
         Row: {
           created_at: string
@@ -3410,6 +3443,9 @@ export type Database = {
           invoice_currency: Database["public"]["Enums"]["v2_invoice_currency"]
           invoice_number: string
           maturity_date: string | null
+          maturity_date_overridden_at: string | null
+          maturity_date_overridden_by: string | null
+          maturity_date_override_reason: string | null
           port_of_discharge: string | null
           port_of_loading: string | null
           reference: string | null
@@ -3458,6 +3494,9 @@ export type Database = {
           invoice_currency?: Database["public"]["Enums"]["v2_invoice_currency"]
           invoice_number: string
           maturity_date?: string | null
+          maturity_date_overridden_at?: string | null
+          maturity_date_overridden_by?: string | null
+          maturity_date_override_reason?: string | null
           port_of_discharge?: string | null
           port_of_loading?: string | null
           reference?: string | null
@@ -3506,6 +3545,9 @@ export type Database = {
           invoice_currency?: Database["public"]["Enums"]["v2_invoice_currency"]
           invoice_number?: string
           maturity_date?: string | null
+          maturity_date_overridden_at?: string | null
+          maturity_date_overridden_by?: string | null
+          maturity_date_override_reason?: string | null
           port_of_discharge?: string | null
           port_of_loading?: string | null
           reference?: string | null
@@ -4081,6 +4123,10 @@ export type Database = {
     }
     Functions: {
       accrue_demurrage: { Args: { p_deal_id: string }; Returns: undefined }
+      add_working_days: {
+        Args: { p_days: number; p_from: string }
+        Returns: string
+      }
       advance_escalation_ladder: { Args: never; Returns: undefined }
       calculate_deal_pricing: {
         Args: {
@@ -4213,6 +4259,14 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      set_invoice_maturity_date: {
+        Args: {
+          p_invoice_id: string
+          p_new_maturity_date: string
+          p_reason: string
+        }
+        Returns: string
       }
       supersede_board_resolution: {
         Args: {
