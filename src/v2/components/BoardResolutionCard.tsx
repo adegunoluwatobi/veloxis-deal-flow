@@ -188,14 +188,28 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
       {res?.verification_status === 'verified' && (
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <Row label="Authorised limit">{money(Number(res.authorised_limit), res.limit_currency)}</Row>
-            <Row label="Currency">{res.limit_currency}</Row>
+            <Row label="Authorised limit">
+              {money(Number(res.authorised_limit), res.limit_currency)} {res.limit_currency}
+            </Row>
             <Row label="Valid from">{res.valid_from}</Row>
             <Row label="Valid until">{res.valid_until}</Row>
             <Row label="Headroom remaining">
-              <span className={headroom <= 0 ? 'text-destructive' : ''}>{money(headroom, res.limit_currency)}</span>
+              {headroom === null ? (
+                <span className="text-destructive">Unavailable</span>
+              ) : (
+                <span className={headroom <= 0 ? 'text-destructive' : ''}>
+                  {money(headroom, res.limit_currency)} {res.limit_currency}
+                </span>
+              )}
             </Row>
           </div>
+          <p className="text-xs text-muted-foreground">
+            {BASIS_COPY[res.limit_basis] ?? BASIS_COPY.gross_face_value}
+          </p>
+          {headroomError && (
+            <p className="text-xs text-destructive">Headroom could not be calculated: {headroomError}</p>
+          )}
+
           <div>
             <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Named signatories</div>
             {sigs.length === 0 ? (
