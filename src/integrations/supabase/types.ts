@@ -90,6 +90,114 @@ export type Database = {
           },
         ]
       }
+      authorised_signatories: {
+        Row: {
+          board_resolution_id: string
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          id_document_path: string | null
+          position: string | null
+          updated_at: string
+        }
+        Insert: {
+          board_resolution_id: string
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          id_document_path?: string | null
+          position?: string | null
+          updated_at?: string
+        }
+        Update: {
+          board_resolution_id?: string
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          id_document_path?: string | null
+          position?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "authorised_signatories_board_resolution_id_fkey"
+            columns: ["board_resolution_id"]
+            isOneToOne: false
+            referencedRelation: "board_resolutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      board_resolutions: {
+        Row: {
+          authorised_limit: number | null
+          company_document_id: string | null
+          created_at: string
+          exporter_id: string
+          id: string
+          limit_currency: string
+          linked_invoice_id: string | null
+          notes: string | null
+          resolution_type: string
+          updated_at: string
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          authorised_limit?: number | null
+          company_document_id?: string | null
+          created_at?: string
+          exporter_id: string
+          id?: string
+          limit_currency?: string
+          linked_invoice_id?: string | null
+          notes?: string | null
+          resolution_type: string
+          updated_at?: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          authorised_limit?: number | null
+          company_document_id?: string | null
+          created_at?: string
+          exporter_id?: string
+          id?: string
+          limit_currency?: string
+          linked_invoice_id?: string | null
+          notes?: string | null
+          resolution_type?: string
+          updated_at?: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_resolutions_company_document_id_fkey"
+            columns: ["company_document_id"]
+            isOneToOne: false
+            referencedRelation: "company_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_resolutions_exporter_id_fkey"
+            columns: ["exporter_id"]
+            isOneToOne: false
+            referencedRelation: "v2_exporters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_resolutions_linked_invoice_id_fkey"
+            columns: ["linked_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v2_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       capital_pool_history: {
         Row: {
           action_type: string
@@ -152,6 +260,105 @@ export type Database = {
           source_name?: string
         }
         Relationships: []
+      }
+      commodities: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      company_documents: {
+        Row: {
+          created_at: string
+          document_type_id: string
+          exporter_id: string
+          file_size_bytes: number | null
+          id: string
+          original_filename: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          storage_path: string
+          updated_at: string
+          uploaded_at: string
+          uploaded_by: string | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          document_type_id: string
+          exporter_id: string
+          file_size_bytes?: number | null
+          id?: string
+          original_filename?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path: string
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          document_type_id?: string
+          exporter_id?: string
+          file_size_bytes?: number | null
+          id?: string
+          original_filename?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path?: string
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_documents_document_type_id_fkey"
+            columns: ["document_type_id"]
+            isOneToOne: false
+            referencedRelation: "document_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_documents_exporter_id_fkey"
+            columns: ["exporter_id"]
+            isOneToOne: false
+            referencedRelation: "v2_exporters"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cron_log: {
         Row: {
@@ -852,6 +1059,48 @@ export type Database = {
           },
         ]
       }
+      document_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_role: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          exporter_id: string | null
+          id: string
+          invoice_id: string | null
+          metadata: Json
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          exporter_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          metadata?: Json
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          exporter_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          metadata?: Json
+          reason?: string | null
+        }
+        Relationships: []
+      }
       document_requests: {
         Row: {
           created_at: string
@@ -912,6 +1161,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      document_types: {
+        Row: {
+          accepts: string[]
+          active: boolean
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          label: string
+          level: string
+          requirement: string
+          sort_order: number
+          stage: number | null
+          updated_at: string
+        }
+        Insert: {
+          accepts?: string[]
+          active?: boolean
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          label: string
+          level?: string
+          requirement?: string
+          sort_order?: number
+          stage?: number | null
+          updated_at?: string
+        }
+        Update: {
+          accepts?: string[]
+          active?: boolean
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          label?: string
+          level?: string
+          requirement?: string
+          sort_order?: number
+          stage?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       email_send_log: {
         Row: {
@@ -1493,6 +1787,155 @@ export type Database = {
             columns: ["deal_id"]
             isOneToOne: false
             referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_document_requests: {
+        Row: {
+          created_at: string
+          document_type_id: string
+          due_date: string | null
+          fulfilled_by_document_id: string | null
+          id: string
+          invoice_id: string
+          reason: string
+          requested_at: string
+          requested_by: string | null
+          status: string
+          updated_at: string
+          withdrawn_at: string | null
+          withdrawn_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          document_type_id: string
+          due_date?: string | null
+          fulfilled_by_document_id?: string | null
+          id?: string
+          invoice_id: string
+          reason: string
+          requested_at?: string
+          requested_by?: string | null
+          status?: string
+          updated_at?: string
+          withdrawn_at?: string | null
+          withdrawn_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          document_type_id?: string
+          due_date?: string | null
+          fulfilled_by_document_id?: string | null
+          id?: string
+          invoice_id?: string
+          reason?: string
+          requested_at?: string
+          requested_by?: string | null
+          status?: string
+          updated_at?: string
+          withdrawn_at?: string | null
+          withdrawn_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_document_requests_document_type_id_fkey"
+            columns: ["document_type_id"]
+            isOneToOne: false
+            referencedRelation: "document_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_document_requests_fulfilled_by_document_id_fkey"
+            columns: ["fulfilled_by_document_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_document_requests_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v2_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_documents: {
+        Row: {
+          created_at: string
+          document_type_id: string
+          file_size_bytes: number | null
+          id: string
+          invoice_id: string
+          original_filename: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          storage_path: string
+          superseded_by: string | null
+          updated_at: string
+          uploaded_at: string
+          uploaded_by: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          document_type_id: string
+          file_size_bytes?: number | null
+          id?: string
+          invoice_id: string
+          original_filename?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path: string
+          superseded_by?: string | null
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          document_type_id?: string
+          file_size_bytes?: number | null
+          id?: string
+          invoice_id?: string
+          original_filename?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path?: string
+          superseded_by?: string | null
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_documents_document_type_id_fkey"
+            columns: ["document_type_id"]
+            isOneToOne: false
+            referencedRelation: "document_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_documents_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v2_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_documents_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "invoice_documents"
             referencedColumns: ["id"]
           },
         ]
@@ -2203,6 +2646,36 @@ export type Database = {
         }
         Relationships: []
       }
+      regulated_commodities: {
+        Row: {
+          active: boolean
+          category: string | null
+          created_at: string
+          id: string
+          name: string
+          requires_inspection: boolean
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          requires_inspection?: boolean
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          requires_inspection?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
@@ -2828,74 +3301,144 @@ export type Database = {
       v2_invoices: {
         Row: {
           advance_rate: number
+          agreed_deductions: number
           approved_by: string | null
+          bl_date: string | null
+          bl_number: string | null
+          board_resolution_id: string | null
           buyer_id: string | null
           commodity: string | null
+          commodity_id: string | null
           created_at: string
           created_by: string | null
+          decision_due_at: string | null
+          estimated_arrival_date: string | null
           exporter_id: string
           fee_percent: number
           funded_date: string | null
+          gross_invoice_value: number | null
           id: string
+          incoterm: string | null
+          inspection_override_by: string | null
+          inspection_override_reason: string | null
+          inspection_required: boolean
           invoice_amount: number
           invoice_currency: Database["public"]["Enums"]["v2_invoice_currency"]
           invoice_number: string
           maturity_date: string | null
+          port_of_discharge: string | null
+          port_of_loading: string | null
+          reference: string | null
           settled_date: string | null
           shipment_date: string | null
+          signatory_id: string | null
+          sla_clock_started_at: string | null
+          sla_elapsed_seconds: number
+          sla_paused_at: string | null
           status: Database["public"]["Enums"]["v2_invoice_status"]
           submitted_by: string | null
           terms_days: number
           updated_at: string
           verified_by: string | null
+          warranties_accepted_at: string | null
+          warranties_accepted_by: string | null
         }
         Insert: {
           advance_rate?: number
+          agreed_deductions?: number
           approved_by?: string | null
+          bl_date?: string | null
+          bl_number?: string | null
+          board_resolution_id?: string | null
           buyer_id?: string | null
           commodity?: string | null
+          commodity_id?: string | null
           created_at?: string
           created_by?: string | null
+          decision_due_at?: string | null
+          estimated_arrival_date?: string | null
           exporter_id: string
           fee_percent?: number
           funded_date?: string | null
+          gross_invoice_value?: number | null
           id?: string
+          incoterm?: string | null
+          inspection_override_by?: string | null
+          inspection_override_reason?: string | null
+          inspection_required?: boolean
           invoice_amount: number
           invoice_currency?: Database["public"]["Enums"]["v2_invoice_currency"]
           invoice_number: string
           maturity_date?: string | null
+          port_of_discharge?: string | null
+          port_of_loading?: string | null
+          reference?: string | null
           settled_date?: string | null
           shipment_date?: string | null
+          signatory_id?: string | null
+          sla_clock_started_at?: string | null
+          sla_elapsed_seconds?: number
+          sla_paused_at?: string | null
           status?: Database["public"]["Enums"]["v2_invoice_status"]
           submitted_by?: string | null
           terms_days?: number
           updated_at?: string
           verified_by?: string | null
+          warranties_accepted_at?: string | null
+          warranties_accepted_by?: string | null
         }
         Update: {
           advance_rate?: number
+          agreed_deductions?: number
           approved_by?: string | null
+          bl_date?: string | null
+          bl_number?: string | null
+          board_resolution_id?: string | null
           buyer_id?: string | null
           commodity?: string | null
+          commodity_id?: string | null
           created_at?: string
           created_by?: string | null
+          decision_due_at?: string | null
+          estimated_arrival_date?: string | null
           exporter_id?: string
           fee_percent?: number
           funded_date?: string | null
+          gross_invoice_value?: number | null
           id?: string
+          incoterm?: string | null
+          inspection_override_by?: string | null
+          inspection_override_reason?: string | null
+          inspection_required?: boolean
           invoice_amount?: number
           invoice_currency?: Database["public"]["Enums"]["v2_invoice_currency"]
           invoice_number?: string
           maturity_date?: string | null
+          port_of_discharge?: string | null
+          port_of_loading?: string | null
+          reference?: string | null
           settled_date?: string | null
           shipment_date?: string | null
+          signatory_id?: string | null
+          sla_clock_started_at?: string | null
+          sla_elapsed_seconds?: number
+          sla_paused_at?: string | null
           status?: Database["public"]["Enums"]["v2_invoice_status"]
           submitted_by?: string | null
           terms_days?: number
           updated_at?: string
           verified_by?: string | null
+          warranties_accepted_at?: string | null
+          warranties_accepted_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "v2_invoices_board_resolution_id_fkey"
+            columns: ["board_resolution_id"]
+            isOneToOne: false
+            referencedRelation: "board_resolutions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "v2_invoices_buyer_id_fkey"
             columns: ["buyer_id"]
@@ -2904,10 +3447,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "v2_invoices_commodity_id_fkey"
+            columns: ["commodity_id"]
+            isOneToOne: false
+            referencedRelation: "commodities"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "v2_invoices_exporter_id_fkey"
             columns: ["exporter_id"]
             isOneToOne: false
             referencedRelation: "v2_exporters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "v2_invoices_signatory_id_fkey"
+            columns: ["signatory_id"]
+            isOneToOne: false
+            referencedRelation: "authorised_signatories"
             referencedColumns: ["id"]
           },
         ]
@@ -3331,6 +3888,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      v2_can_review_documents: { Args: { _user_id: string }; Returns: boolean }
       v2_exporter_can_see_buyer: {
         Args: { _buyer_id: string; _user_id: string }
         Returns: boolean
