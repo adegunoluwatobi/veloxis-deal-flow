@@ -23,17 +23,20 @@ export default function StaffExporterDetail() {
   const [exp, setExp] = useState<any>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [docs, setDocs] = useState<any[]>([]);
+  const [directors, setDirectors] = useState<any[]>([]);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const [{ data: e }, { data: iv }, { data: d }] = await Promise.all([
+    const [{ data: e }, { data: iv }, { data: d }, { data: dir }] = await Promise.all([
       supabase.from('v2_exporters').select('*').eq('id', id!).maybeSingle(),
       supabase.from('v2_invoices').select('id, invoice_number, invoice_amount, invoice_currency, status, maturity_date').eq('exporter_id', id!).order('created_at', { ascending: false }),
       supabase.from('v2_exporter_documents').select('*').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
+      supabase.from('v2_exporter_directors').select('*').eq('exporter_id', id!).order('created_at', { ascending: true }),
     ]);
-    setExp(e); setInvoices(iv ?? []); setDocs(d ?? []);
+    setExp(e); setInvoices(iv ?? []); setDocs(d ?? []); setDirectors(dir ?? []);
   }, [id]);
+
 
   useEffect(() => { load(); }, [load]);
   if (!exp) return <div className="text-muted-foreground">Loading…</div>;
@@ -147,13 +150,29 @@ export default function StaffExporterDetail() {
           <Row label="Phone">{exp.phone ?? '—'}</Row>
           <Row label="Address">{exp.address ?? '—'}</Row>
           <div className="border-t border-border my-2" />
-          <h3 className="text-sm uppercase tracking-wider text-muted-foreground mt-3 mb-2">Director</h3>
+          <h3 className="text-sm uppercase tracking-wider text-muted-foreground mt-3 mb-2">Director 1</h3>
           <Row label="Name">{exp.director_name ?? '—'}</Row>
           <Row label="ID">{[exp.director_id_type, exp.director_id_number].filter(Boolean).join(' · ') || '—'}</Row>
           <Row label="DOB">{exp.director_dob ?? '—'}</Row>
           <Row label="Nationality">{exp.director_nationality ?? '—'}</Row>
           <Row label="Address">{exp.director_address ?? '—'}</Row>
+          {directors.map((d, i) => (
+            <div key={d.id}>
+              <div className="border-t border-border my-2" />
+              <h3 className="text-sm uppercase tracking-wider text-muted-foreground mt-3 mb-2">
+                Director {i + 2}{d.position ? ` · ${d.position}` : ''}
+              </h3>
+              <Row label="Name">{d.full_name}</Row>
+              <Row label="ID">{[d.id_type, d.id_number].filter(Boolean).join(' · ') || '—'}</Row>
+              <Row label="DOB">{d.dob ?? '—'}</Row>
+              <Row label="Nationality">{d.nationality ?? '—'}</Row>
+              <Row label="Email">{d.email ?? '—'}</Row>
+              <Row label="Phone">{d.phone ?? '—'}</Row>
+              <Row label="Address">{d.address ?? '—'}</Row>
+            </div>
+          ))}
         </section>
+
 
         <section className="card-elevated p-5">
           <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-3">Onboarding documents</h3>

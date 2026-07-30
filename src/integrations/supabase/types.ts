@@ -2531,6 +2531,68 @@ export type Database = {
           },
         ]
       }
+      v2_exporter_directors: {
+        Row: {
+          address: string | null
+          created_at: string
+          dob: string | null
+          email: string | null
+          exporter_id: string
+          full_name: string
+          id: string
+          id_number: string | null
+          id_type: string | null
+          is_primary: boolean
+          nationality: string | null
+          phone: string | null
+          position: string | null
+          updated_at: string
+          verified: boolean
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          dob?: string | null
+          email?: string | null
+          exporter_id: string
+          full_name: string
+          id?: string
+          id_number?: string | null
+          id_type?: string | null
+          is_primary?: boolean
+          nationality?: string | null
+          phone?: string | null
+          position?: string | null
+          updated_at?: string
+          verified?: boolean
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          dob?: string | null
+          email?: string | null
+          exporter_id?: string
+          full_name?: string
+          id?: string
+          id_number?: string | null
+          id_type?: string | null
+          is_primary?: boolean
+          nationality?: string | null
+          phone?: string | null
+          position?: string | null
+          updated_at?: string
+          verified?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "v2_exporter_directors_exporter_id_fkey"
+            columns: ["exporter_id"]
+            isOneToOne: false
+            referencedRelation: "v2_exporters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v2_exporter_documents: {
         Row: {
           doc_type: Database["public"]["Enums"]["v2_exporter_doc_type"]

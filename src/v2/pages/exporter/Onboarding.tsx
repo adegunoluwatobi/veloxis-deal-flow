@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { OptionSelect, ID_TYPES, COUNTRIES, NIGERIAN_BANKS } from '@/v2/lib/formOptions';
 import { CheckCircle2, Upload, Clock, AlertCircle } from 'lucide-react';
+import AdditionalDirectors from '@/v2/components/AdditionalDirectors';
+
 
 type DocType = 'cac_certificate' | 'director_id' | 'proof_of_address' | 'bank_proof';
 
@@ -237,6 +239,9 @@ export default function ExporterOnboarding() {
             <div className="col-span-2"><Field label="Director residential address"><Input value={f.director_address ?? ''} onChange={(e) => set('director_address', e.target.value)} /></Field></div>
           </div>
         </section>
+
+        <AdditionalDirectors exporterId={exp?.id} />
+
 
         <section className="card-elevated p-6 space-y-4">
           <h2 className="text-sm uppercase tracking-wider text-muted-foreground">3 · Bank details</h2>
