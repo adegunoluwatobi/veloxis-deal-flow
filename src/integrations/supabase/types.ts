@@ -138,6 +138,7 @@ export type Database = {
           created_at: string
           exporter_id: string
           id: string
+          limit_basis: string
           limit_currency: string
           notes: string | null
           rejection_reason: string | null
@@ -155,6 +156,7 @@ export type Database = {
           created_at?: string
           exporter_id: string
           id?: string
+          limit_basis?: string
           limit_currency?: string
           notes?: string | null
           rejection_reason?: string | null
@@ -172,6 +174,7 @@ export type Database = {
           created_at?: string
           exporter_id?: string
           id?: string
+          limit_basis?: string
           limit_currency?: string
           notes?: string | null
           rejection_reason?: string | null
@@ -3325,6 +3328,9 @@ export type Database = {
           exporter_id: string
           fee_percent: number
           funded_date: string | null
+          fx_rate_captured_at: string | null
+          fx_rate_source: string | null
+          fx_rate_to_gbp: number | null
           gross_invoice_value: number | null
           id: string
           incoterm: string | null
@@ -3369,6 +3375,9 @@ export type Database = {
           exporter_id: string
           fee_percent?: number
           funded_date?: string | null
+          fx_rate_captured_at?: string | null
+          fx_rate_source?: string | null
+          fx_rate_to_gbp?: number | null
           gross_invoice_value?: number | null
           id?: string
           incoterm?: string | null
@@ -3413,6 +3422,9 @@ export type Database = {
           exporter_id?: string
           fee_percent?: number
           funded_date?: string | null
+          fx_rate_captured_at?: string | null
+          fx_rate_source?: string | null
+          fx_rate_to_gbp?: number | null
           gross_invoice_value?: number | null
           id?: string
           incoterm?: string | null
@@ -3820,6 +3832,16 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      exporter_headroom: {
+        Args: { p_exporter_id: string }
+        Returns: {
+          authorised_limit: number
+          committed_exposure: number
+          headroom: number
+          limit_basis: string
+          limit_currency: string
+        }[]
+      }
       get_notification_recipient_admin: { Args: never; Returns: string }
       get_partner_admin_email: {
         Args: { p_org_id: string }
@@ -3900,6 +3922,7 @@ export type Database = {
       supersede_board_resolution: {
         Args: {
           p_authorised_limit: number
+          p_limit_basis?: string
           p_limit_currency: string
           p_new_company_document_id: string
           p_old_id: string
