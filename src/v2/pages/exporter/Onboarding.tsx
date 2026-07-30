@@ -273,19 +273,33 @@ export default function ExporterOnboarding() {
                     <div className="text-sm font-medium">{r.label}</div>
                     <div className="text-xs text-muted-foreground">{r.hint}</div>
                     {d && !uploading && (
-                      <div className="mt-1 text-xs text-accent flex items-center gap-2">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> {d.file_name || 'Uploaded'}
-                        {d.verified && <span className="ml-2 px-2 py-0.5 rounded bg-primary/20 text-accent">Verified</span>}
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
+                        <span className="inline-flex items-center gap-1.5 max-w-full px-2 py-1 rounded bg-primary/15 text-accent">
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate max-w-[16rem]" title={d.file_name || 'Uploaded'}>{d.file_name || 'Uploaded'}</span>
+                        </span>
+                        {d.uploaded_at && (
+                          <span className="text-muted-foreground">
+                            Uploaded {new Date(d.uploaded_at).toLocaleDateString()}
+                          </span>
+                        )}
+                        {d.verified && <span className="px-2 py-0.5 rounded bg-primary/20 text-accent">Verified</span>}
                       </div>
                     )}
                     {uploading && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <div className="h-1.5 flex-1 rounded-full bg-muted/40 overflow-hidden">
-                          <div className="h-full bg-accent transition-all duration-200" style={{ width: `${pct}%` }} />
+                      <div className="mt-2 space-y-1">
+                        <div className="text-xs text-muted-foreground truncate" title={uploadingName[r.key]}>
+                          Uploading {uploadingName[r.key]}
                         </div>
-                        <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">{pct}%</span>
+                        <div className="flex items-center gap-2">
+                          <div className="h-1.5 flex-1 rounded-full bg-muted/40 overflow-hidden">
+                            <div className="h-full bg-accent transition-all duration-200" style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">{pct}%</span>
+                        </div>
                       </div>
                     )}
+
                   </div>
                   <label className={`text-xs px-3 py-2 border border-border rounded inline-flex items-center gap-2 ${busy ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:bg-muted/20'}`}>
                     <Upload className="h-3.5 w-3.5" /> {uploading ? 'Uploading…' : d ? 'Replace' : 'Upload'}
