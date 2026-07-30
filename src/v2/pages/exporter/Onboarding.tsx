@@ -121,8 +121,9 @@ export default function ExporterOnboarding() {
     setProgress((p) => ({ ...p, [doc_type]: 0 }));
     setUploadingName((n) => ({ ...n, [doc_type]: file.name }));
     try {
-
+      const expId = await saveProfile();
       if (!expId) return;
+
       const { data: sess } = await supabase.auth.getSession();
       const token = sess.session?.access_token;
       if (!token) throw new Error('Session expired — please sign in again.');
