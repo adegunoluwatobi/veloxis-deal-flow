@@ -2540,6 +2540,8 @@ export type Database = {
           exporter_id: string
           full_name: string
           id: string
+          id_document_name: string | null
+          id_document_url: string | null
           id_number: string | null
           id_type: string | null
           is_primary: boolean
@@ -2557,6 +2559,8 @@ export type Database = {
           exporter_id: string
           full_name: string
           id?: string
+          id_document_name?: string | null
+          id_document_url?: string | null
           id_number?: string | null
           id_type?: string | null
           is_primary?: boolean
@@ -2574,6 +2578,8 @@ export type Database = {
           exporter_id?: string
           full_name?: string
           id?: string
+          id_document_name?: string | null
+          id_document_url?: string | null
           id_number?: string | null
           id_type?: string | null
           is_primary?: boolean
