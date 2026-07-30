@@ -10,6 +10,7 @@ type Resolution = {
   id: string;
   authorised_limit: number;
   limit_currency: string;
+  limit_basis: string;
   valid_from: string;
   valid_until: string;
   verification_status: 'pending' | 'verified' | 'rejected';
@@ -30,14 +31,20 @@ const PILL: Record<string, string> = {
 const money = (n: number, cur: string) =>
   new Intl.NumberFormat('en-GB', { style: 'currency', currency: cur || 'GBP', maximumFractionDigits: 0 }).format(n);
 
-const HEADROOM_STATUSES = ['submitted', 'verified', 'approved', 'funded', 'monitoring'];
+const BASIS_COPY: Record<string, string> = {
+  gross_face_value: 'Limit applies to invoice face value',
+  advance_outstanding: 'Limit applies to funds advanced',
+};
+
 
 export default function BoardResolutionCard({ exporterId }: { exporterId?: string }) {
   const { user } = useAuth();
   const [res, setRes] = useState<Resolution | null>(null);
   const [doc, setDoc] = useState<Doc | null>(null);
   const [sigs, setSigs] = useState<Signatory[]>([]);
-  const [committed, setCommitted] = useState(0);
+  const [committed, setCommitted] = useState<number | null>(0);
+  const [headroomError, setHeadroomError] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
 
@@ -47,7 +54,7 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
 
     const { data: r } = await supabase
       .from('board_resolutions')
-      .select('id, authorised_limit, limit_currency, valid_from, valid_until, verification_status, rejection_reason, company_document_id')
+      .select('id, authorised_limit, limit_currency, limit_basis, valid_from, valid_until, verification_status, rejection_reason, company_document_id')
       .eq('exporter_id', exporterId)
       .is('superseded_by', null)
       .maybeSingle();
@@ -87,12 +94,16 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
       setSigs([]);
     }
 
-    const { data: inv } = await supabase
-      .from('v2_invoices')
-      .select('invoice_amount, status')
-      .eq('exporter_id', exporterId)
-      .in('status', HEADROOM_STATUSES as any);
-    setCommitted((inv ?? []).reduce((t, i: any) => t + Number(i.invoice_amount ?? 0), 0));
+    const { data: hr, error: hrErr } = await supabase.rpc('exporter_headroom', { p_exporter_id: exporterId });
+    if (hrErr) {
+      setHeadroomError(hrErr.message);
+      setCommitted(null);
+    } else {
+      setHeadroomError(null);
+      const row: any = Array.isArray(hr) ? hr[0] : hr;
+      setCommitted(row ? Number(row.committed_exposure ?? 0) : null);
+    }
+
 
     setLoading(false);
   }, [exporterId]);
@@ -139,7 +150,7 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
 
   const expired = res?.verification_status === 'verified' && new Date(res.valid_until) < new Date();
   const status = expired ? 'expired' : res?.verification_status ?? doc?.status ?? null;
-  const headroom = res ? Number(res.authorised_limit) - committed : 0;
+  const headroom = res && committed !== null ? Number(res.authorised_limit) - committed : null;
 
   const uploadControl = (
     <label className={`inline-flex items-center gap-2 text-sm px-3 py-2 rounded border border-border cursor-pointer hover:bg-muted/20 ${uploading ? 'opacity-60 pointer-events-none' : ''}`}>
@@ -177,14 +188,28 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
       {res?.verification_status === 'verified' && (
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <Row label="Authorised limit">{money(Number(res.authorised_limit), res.limit_currency)}</Row>
-            <Row label="Currency">{res.limit_currency}</Row>
+            <Row label="Authorised limit">
+              {money(Number(res.authorised_limit), res.limit_currency)} {res.limit_currency}
+            </Row>
             <Row label="Valid from">{res.valid_from}</Row>
             <Row label="Valid until">{res.valid_until}</Row>
             <Row label="Headroom remaining">
-              <span className={headroom <= 0 ? 'text-destructive' : ''}>{money(headroom, res.limit_currency)}</span>
+              {headroom === null ? (
+                <span className="text-destructive">Unavailable</span>
+              ) : (
+                <span className={headroom <= 0 ? 'text-destructive' : ''}>
+                  {money(headroom, res.limit_currency)} {res.limit_currency}
+                </span>
+              )}
             </Row>
           </div>
+          <p className="text-xs text-muted-foreground">
+            {BASIS_COPY[res.limit_basis] ?? BASIS_COPY.gross_face_value}
+          </p>
+          {headroomError && (
+            <p className="text-xs text-destructive">Headroom could not be calculated: {headroomError}</p>
+          )}
+
           <div>
             <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Named signatories</div>
             {sigs.length === 0 ? (
