@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { toast } from '@/hooks/use-toast';
 import type { AppRole } from '@/v2/roles';
 import { ROLE_LABEL } from '@/v2/roles';
-import { Copy, Send, Check, Clock } from 'lucide-react';
+import { Copy, Send, Check, Clock, KeyRound } from 'lucide-react';
 
 type Row = {
   user_id: string; email: string; name: string | null; active: boolean; roles: AppRole[];
@@ -93,7 +93,16 @@ export default function StaffUsers() {
     load();
   };
 
+  const sendReset = async (row: Row) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(row.email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) return toast({ title: 'Reset failed', description: error.message, variant: 'destructive' });
+    toast({ title: 'Password reset sent', description: `${row.email} can now set a new password.` });
+  };
+
   const fmt = (d: string | null) => d ? new Date(d).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : null;
+
 
   return (
     <div className="space-y-6">
@@ -209,9 +218,21 @@ export default function StaffUsers() {
                           </SelectContent>
                         </Select>
                       )}
-                      <Button size="sm" variant="outline" onClick={() => resendMagic(r)}>
-                        <Send className="h-3 w-3 mr-1" />Magic link
-                      </Button>
+                      {r.password_set_at ? (
+                        <>
+                          <Button size="sm" variant="outline" disabled title="This user has already signed in and set a password">
+                            <Send className="h-3 w-3 mr-1" />Magic link
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => sendReset(r)}>
+                            <KeyRound className="h-3 w-3 mr-1" />Send password reset
+                          </Button>
+                        </>
+                      ) : (
+                        <Button size="sm" variant="outline" onClick={() => resendMagic(r)}>
+                          <Send className="h-3 w-3 mr-1" />Magic link
+                        </Button>
+                      )}
+
                     </div>
                   </td>
                 </tr>
