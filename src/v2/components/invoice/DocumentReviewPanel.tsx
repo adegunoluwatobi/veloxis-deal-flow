@@ -227,11 +227,51 @@ export default function DocumentReviewPanel({
     return types.filter((t) => !stageIds.has(t.id) && (requestedIds.has(t.id) || uploadedIds.has(t.id)));
   }, [types, requests, docs, stage1Required, stage2Required]);
 
+  const AccessHistory = ({ documentId }: { documentId: string }) => {
+    const [views, setViews] = useState<any[] | null>(null);
+    const [show, setShow] = useState(false);
+
+    const toggle = async () => {
+      setShow((s) => !s);
+      if (views === null) {
+        const { data } = await supabase
+          .from('document_audit_log')
+          .select('id, actor_id, actor_role, created_at, metadata')
+          .eq('entity_id', documentId)
+          .eq('action', 'viewed')
+          .order('created_at', { ascending: false })
+          .limit(50);
+        setViews(data ?? []);
+      }
+    };
+
+    return (
+      <div className="mt-2">
+        <button type="button" onClick={toggle} className="text-xs text-muted-foreground hover:text-foreground underline">
+          Access history
+        </button>
+        {show && (
+          <div className="mt-1 rounded border border-border bg-muted/10 p-2 space-y-1">
+            {views === null && <div className="text-xs text-muted-foreground">Loading…</div>}
+            {views?.length === 0 && <div className="text-xs text-muted-foreground">Never opened.</div>}
+            {views?.map((v) => (
+              <div key={v.id} className="text-xs text-muted-foreground">
+                {people[v.actor_id ?? ''] ?? v.actor_id?.slice(0, 8) ?? 'Unknown'} ({v.actor_role ?? 'unknown'}) opened this on {fmtDateTime(v.created_at)}
+                {v.metadata?.ip ? ` · ${v.metadata.ip}` : ''}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const Row = ({ type }: { type: DocType }) => {
     const doc = currentFor(type.id);
     const versions = docs.filter((d) => d.document_type_id === type.id).sort((a, b) => (b.version ?? 0) - (a.version ?? 0));
     const request = requests.find((r) => r.document_type_id === type.id && r.status === 'outstanding');
     const [open, setOpen] = useState(false);
+
 
     return (
       <div className="border-t border-border py-3 first:border-t-0">
@@ -250,8 +290,9 @@ export default function DocumentReviewPanel({
               <div className="text-xs text-amber-400 mt-1">
                 Requested {fmtDateTime(request.requested_at)}{request.due_date ? ` · due ${request.due_date}` : ''} · {request.reason}
               </div>
-            )}
+            {doc && <AccessHistory documentId={doc.id} />}
           </div>
+
           <div className="flex items-center gap-2">
             <StatusPill status={doc ? doc.status : 'pending'} />
             {doc && (
