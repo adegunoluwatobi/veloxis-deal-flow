@@ -309,6 +309,7 @@ export type Database = {
           id: string
           original_filename: string | null
           rejection_reason: string | null
+          retention_expires_at: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
@@ -327,6 +328,7 @@ export type Database = {
           id?: string
           original_filename?: string | null
           rejection_reason?: string | null
+          retention_expires_at?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
@@ -345,6 +347,7 @@ export type Database = {
           id?: string
           original_filename?: string | null
           rejection_reason?: string | null
+          retention_expires_at?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
@@ -1925,6 +1928,7 @@ export type Database = {
           invoice_id: string
           original_filename: string | null
           rejection_reason: string | null
+          retention_expires_at: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
@@ -1943,6 +1947,7 @@ export type Database = {
           invoice_id: string
           original_filename?: string | null
           rejection_reason?: string | null
+          retention_expires_at?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
@@ -1961,6 +1966,7 @@ export type Database = {
           invoice_id?: string
           original_filename?: string | null
           rejection_reason?: string | null
+          retention_expires_at?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
@@ -2129,6 +2135,45 @@ export type Database = {
           full_name?: string
           id?: string
           whatsapp_number?: string
+        }
+        Relationships: []
+      }
+      notification_templates: {
+        Row: {
+          active: boolean
+          audience: string
+          body: string
+          channel: string
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          audience?: string
+          body: string
+          channel: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          audience?: string
+          body?: string
+          channel?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          subject?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -4269,6 +4314,8 @@ export type Database = {
           read_ct: number
         }[]
       }
+      run_document_expiry_job: { Args: never; Returns: Json }
+      run_sla_at_risk_job: { Args: never; Returns: number }
       set_invoice_maturity_date: {
         Args: {
           p_invoice_id: string
@@ -4290,8 +4337,26 @@ export type Database = {
         }
         Returns: string
       }
+      v2_actor_role: { Args: { _user_id: string }; Returns: string }
       v2_advance_rate: { Args: never; Returns: number }
+      v2_audit_write: {
+        Args: {
+          p_action: string
+          p_actor?: string
+          p_entity_id: string
+          p_entity_type: string
+          p_exporter_id?: string
+          p_invoice_id?: string
+          p_metadata?: Json
+          p_reason?: string
+        }
+        Returns: string
+      }
       v2_can_review_documents: { Args: { _user_id: string }; Returns: boolean }
+      v2_email_shell: {
+        Args: { p_body_html: string; p_title: string }
+        Returns: string
+      }
       v2_exporter_can_see_buyer: {
         Args: { _buyer_id: string; _user_id: string }
         Returns: boolean
@@ -4305,6 +4370,18 @@ export type Database = {
         }
         Returns: undefined
       }
+      v2_notify_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["v2_app_role"]
+          p_exporter_id?: string
+          p_invoice_id?: string
+          p_key: string
+          p_link?: string
+          p_type?: string
+          p_vars: Json
+        }
+        Returns: undefined
+      }
       v2_owns_exporter: {
         Args: { _exporter_id: string; _user_id: string }
         Returns: boolean
@@ -4312,6 +4389,10 @@ export type Database = {
       v2_owns_invoice: {
         Args: { _invoice_id: string; _user_id: string }
         Returns: boolean
+      }
+      v2_render_template: {
+        Args: { p_text: string; p_vars: Json }
+        Returns: string
       }
       v2_request_documents: {
         Args: {
@@ -4322,12 +4403,28 @@ export type Database = {
         }
         Returns: number
       }
+      v2_send_notification: {
+        Args: {
+          p_exporter_id?: string
+          p_invoice_id?: string
+          p_key: string
+          p_link?: string
+          p_type?: string
+          p_user_id: string
+          p_vars?: Json
+        }
+        Returns: undefined
+      }
       v2_set_inspection_required: {
         Args: { p_invoice_id: string; p_reason: string; p_required: boolean }
         Returns: boolean
       }
       v2_sla_pause: { Args: { p_invoice_id: string }; Returns: undefined }
       v2_sla_resume: { Args: { p_invoice_id: string }; Returns: string }
+      v2_users_with_role: {
+        Args: { _role: Database["public"]["Enums"]["v2_app_role"] }
+        Returns: string[]
+      }
       v2_withdraw_document_request: {
         Args: { p_reason: string; p_request_id: string }
         Returns: undefined
