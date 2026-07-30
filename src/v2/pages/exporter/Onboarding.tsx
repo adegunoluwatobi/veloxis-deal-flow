@@ -213,7 +213,9 @@ export default function ExporterOnboarding() {
               <div className="font-medium text-amber-400">
                 {bdApproved ? 'Awaiting Credit & Compliance approval' : 'Awaiting Business Developer review'}
               </div>
-              <div className="text-muted-foreground">You’ll be able to access the portal once approved. You can still update your details below.</div>
+              <div className="text-muted-foreground">
+                Your application has been submitted. You won’t have access to the exporter portal until it is approved or rejected. We’ll notify you by email once a decision is made. You can still update your details below.
+              </div>
             </div>
           </div>
         )}
