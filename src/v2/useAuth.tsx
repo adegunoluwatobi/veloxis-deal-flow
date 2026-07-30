@@ -72,9 +72,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    // Signing in with a password proves one exists — clear the "set password first" gate.
+    if (!error && data.user) {
+      await supabase.from('profiles')
+        .update({ password_set_at: new Date().toISOString() })
+        .eq('user_id', data.user.id)
+        .is('password_set_at', null);
+    }
     return { error: error ? new Error(error.message) : null };
   };
+
   const signOut = async () => { await supabase.auth.signOut(); setRoles([]); setProfile(null); setExporterOnboarding(null); };
   const refresh = async () => { if (user) await load(user.id); };
 
