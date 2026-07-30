@@ -3,6 +3,7 @@ import { useAuth } from './useAuth';
 import type { AppRole } from './roles';
 import { isStaff } from './roles';
 import { AuthLoading, AuthError } from './components/AuthStates';
+import SignOutButton from './components/SignOutButton';
 
 export function RequireAuth({ children, allow }: { children: React.ReactNode; allow?: AppRole[] | 'staff' | 'exporter' }) {
   const { user, roles, profile, exporterOnboarding, ready, error, refresh } = useAuth();
