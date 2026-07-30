@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import { OptionSelect, ID_TYPES, COUNTRIES, NIGERIAN_BANKS } from '@/v2/lib/formOptions';
 import { CheckCircle2, Upload, Clock, AlertCircle, Lock } from 'lucide-react';
 import AdditionalDirectors from '@/v2/components/AdditionalDirectors';
+import SignOutButton from '@/v2/components/SignOutButton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 
