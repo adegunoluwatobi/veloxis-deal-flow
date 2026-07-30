@@ -133,46 +133,43 @@ export type Database = {
       }
       board_resolutions: {
         Row: {
-          authorised_limit: number | null
+          authorised_limit: number
           company_document_id: string | null
           created_at: string
           exporter_id: string
           id: string
           limit_currency: string
-          linked_invoice_id: string | null
           notes: string | null
-          resolution_type: string
+          superseded_by: string | null
           updated_at: string
-          valid_from: string | null
-          valid_until: string | null
+          valid_from: string
+          valid_until: string
         }
         Insert: {
-          authorised_limit?: number | null
+          authorised_limit: number
           company_document_id?: string | null
           created_at?: string
           exporter_id: string
           id?: string
           limit_currency?: string
-          linked_invoice_id?: string | null
           notes?: string | null
-          resolution_type: string
+          superseded_by?: string | null
           updated_at?: string
-          valid_from?: string | null
-          valid_until?: string | null
+          valid_from: string
+          valid_until: string
         }
         Update: {
-          authorised_limit?: number | null
+          authorised_limit?: number
           company_document_id?: string | null
           created_at?: string
           exporter_id?: string
           id?: string
           limit_currency?: string
-          linked_invoice_id?: string | null
           notes?: string | null
-          resolution_type?: string
+          superseded_by?: string | null
           updated_at?: string
-          valid_from?: string | null
-          valid_until?: string | null
+          valid_from?: string
+          valid_until?: string
         }
         Relationships: [
           {
@@ -190,10 +187,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "board_resolutions_linked_invoice_id_fkey"
-            columns: ["linked_invoice_id"]
+            foreignKeyName: "board_resolutions_superseded_by_fkey"
+            columns: ["superseded_by"]
             isOneToOne: false
-            referencedRelation: "v2_invoices"
+            referencedRelation: "board_resolutions"
             referencedColumns: ["id"]
           },
         ]
