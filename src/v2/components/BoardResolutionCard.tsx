@@ -150,7 +150,7 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
 
   const expired = res?.verification_status === 'verified' && new Date(res.valid_until) < new Date();
   const status = expired ? 'expired' : res?.verification_status ?? doc?.status ?? null;
-  const headroom = res ? Number(res.authorised_limit) - committed : 0;
+  const headroom = res && committed !== null ? Number(res.authorised_limit) - committed : null;
 
   const uploadControl = (
     <label className={`inline-flex items-center gap-2 text-sm px-3 py-2 rounded border border-border cursor-pointer hover:bg-muted/20 ${uploading ? 'opacity-60 pointer-events-none' : ''}`}>
