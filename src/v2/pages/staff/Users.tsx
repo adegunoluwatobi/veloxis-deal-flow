@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { toast } from '@/hooks/use-toast';
 import type { AppRole } from '@/v2/roles';
 import { ROLE_LABEL } from '@/v2/roles';
-import { Copy, Send, Check, Clock } from 'lucide-react';
+import { Copy, Send, Check, Clock, KeyRound } from 'lucide-react';
 
 type Row = {
   user_id: string; email: string; name: string | null; active: boolean; roles: AppRole[];
