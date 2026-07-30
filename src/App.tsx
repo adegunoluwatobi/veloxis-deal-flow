@@ -34,6 +34,10 @@ import Account from '@/v2/pages/Account';
 import SetPasswordFirst from '@/v2/pages/SetPasswordFirst';
 import ResetPassword from '@/v2/pages/ResetPassword';
 import StaffReferenceData from '@/v2/pages/staff/ReferenceData';
+import StaffNotifications from '@/v2/pages/staff/Notifications';
+import StaffAccessLog from '@/v2/pages/staff/AccessLog';
+import StaffRetention from '@/v2/pages/staff/Retention';
+
 
 const qc = new QueryClient();
 
@@ -74,6 +78,10 @@ export default function App() {
               <Route path="/app/settings" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffSettings /></StaffLayout></RequireAuth>} />
               <Route path="/admin/reference-data" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffReferenceData /></StaffLayout></RequireAuth>} />
               <Route path="/app/reference-data" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffReferenceData /></StaffLayout></RequireAuth>} />
+              <Route path="/admin/notifications" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffNotifications /></StaffLayout></RequireAuth>} />
+              <Route path="/admin/access-log" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffAccessLog /></StaffLayout></RequireAuth>} />
+              <Route path="/admin/retention" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffRetention /></StaffLayout></RequireAuth>} />
+
               <Route path="/app/account" element={<Staff><Account /></Staff>} />
 
               <Route path="/portal/onboarding" element={<RequireAuth allow="exporter"><ExporterOnboarding /></RequireAuth>} />

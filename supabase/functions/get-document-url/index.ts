@@ -101,6 +101,10 @@ Deno.serve(async (req) => {
     .from(BUCKET).createSignedUrl(path, EXPIRES_IN);
   if (signErr || !signed?.signedUrl) return json({ error: 'Unable to sign document' }, 500);
 
+  const forwarded = req.headers.get('x-forwarded-for') ?? '';
+  const ip = forwarded.split(',')[0].trim() || req.headers.get('cf-connecting-ip') || null;
+  const userAgent = req.headers.get('user-agent') ?? null;
+
   await admin.from('document_audit_log').insert({
     entity_type: kind === 'invoice' ? 'invoice_document' : 'company_document',
     entity_id: documentId,
@@ -109,8 +113,9 @@ Deno.serve(async (req) => {
     action: 'viewed',
     actor_id: user.id,
     actor_role: isStaff ? roles.join(',') : 'exporter',
-    metadata: { at: new Date().toISOString() },
+    metadata: { at: new Date().toISOString(), ip, user_agent: userAgent },
   });
+
 
   return json({ url: signed.signedUrl });
 });
