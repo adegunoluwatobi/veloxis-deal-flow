@@ -28,6 +28,7 @@ export default function ExporterOnboarding() {
   const [docs, setDocs] = useState<any[]>([]);
   const [f, setF] = useState<any>(null);
   const [busy, setBusy] = useState(false);
+  const [submittedOpen, setSubmittedOpen] = useState(false);
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [uploadingName, setUploadingName] = useState<Record<string, string>>({});
   const [uploadError, setUploadError] = useState<Record<string, { file: File; message: string }>>({});
