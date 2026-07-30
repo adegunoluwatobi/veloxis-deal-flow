@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { OptionSelect, ID_TYPES } from '@/v2/lib/formOptions';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Upload, CheckCircle2 } from 'lucide-react';
 
 export type DirectorRow = {
   id: string;
@@ -19,16 +19,20 @@ export type DirectorRow = {
   id_number: string | null;
   address: string | null;
   position: string | null;
+  id_document_url: string | null;
+  id_document_name: string | null;
 };
 
 const BLANK = {
   full_name: '', email: '', phone: '', dob: '', nationality: '',
   id_type: '', id_number: '', address: '', position: '',
+  id_document_url: '', id_document_name: '',
 };
 
 export default function AdditionalDirectors({ exporterId }: { exporterId?: string | null }) {
   const [rows, setRows] = useState<any[]>([]);
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState<Record<number, string>>({});
 
   const load = useCallback(async () => {
     if (!exporterId) { setRows([]); return; }
@@ -79,6 +83,8 @@ export default function AdditionalDirectors({ exporterId }: { exporterId?: strin
         id_number: r.id_number || null,
         address: r.address || null,
         position: r.position || null,
+        id_document_url: r.id_document_url || null,
+        id_document_name: r.id_document_name || null,
       };
       const { error } = r.id
         ? await supabase.from('v2_exporter_directors').update(payload).eq('id', r.id)
@@ -92,6 +98,23 @@ export default function AdditionalDirectors({ exporterId }: { exporterId?: strin
     setBusy(false);
     toast({ title: 'Directors saved' });
     load();
+  };
+
+  const uploadId = async (idx: number, file: File) => {
+    if (!exporterId) { toast({ title: 'Save your company profile first', variant: 'destructive' }); return; }
+    setUploading((u) => ({ ...u, [idx]: file.name }));
+    try {
+      const safe = file.name.replace(/[^a-z0-9._-]+/gi, '_');
+      const path = `v2/exporters/${exporterId}/directors/id-${Date.now()}-${safe}`;
+      const { error } = await supabase.storage.from('veloxis-documents').upload(path, file, { upsert: true });
+      if (error) throw error;
+      setRows((rs) => rs.map((r, i) => (i === idx ? { ...r, id_document_url: path, id_document_name: file.name, _dirty: true } : r)));
+      toast({ title: 'ID uploaded', description: `${file.name} — remember to save directors.` });
+    } catch (err: any) {
+      toast({ title: 'Upload failed', description: err?.message ?? 'Please try again.', variant: 'destructive' });
+    } finally {
+      setUploading((u) => { const n = { ...u }; delete n[idx]; return n; });
+    }
   };
 
   return (
@@ -135,6 +158,28 @@ export default function AdditionalDirectors({ exporterId }: { exporterId?: strin
                 <Field label="ID number"><Input value={r.id_number ?? ''} onChange={(e) => setField(idx, 'id_number', e.target.value)} /></Field>
                 <div className="col-span-2">
                   <Field label="Residential address"><Input value={r.address ?? ''} onChange={(e) => setField(idx, 'address', e.target.value)} /></Field>
+                </div>
+                <div className="col-span-2 space-y-1">
+                  <Label className="text-xs">Government ID document</Label>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <label className="inline-flex items-center gap-2 text-xs px-3 py-2 rounded border border-border cursor-pointer hover:bg-muted/40">
+                      <Upload className="h-3.5 w-3.5" />
+                      {r.id_document_name ? 'Replace file' : 'Upload ID'}
+                      <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        className="hidden"
+                        disabled={!exporterId || !!uploading[idx]}
+                        onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ''; if (file) uploadId(idx, file); }}
+                      />
+                    </label>
+                    {uploading[idx] && <span className="text-xs text-muted-foreground">Uploading {uploading[idx]}…</span>}
+                    {!uploading[idx] && r.id_document_name && (
+                      <span className="inline-flex items-center gap-1.5 text-xs text-accent">
+                        <CheckCircle2 className="h-3.5 w-3.5" /> {r.id_document_name}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
