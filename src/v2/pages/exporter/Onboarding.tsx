@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { OptionSelect, ID_TYPES, COUNTRIES, NIGERIAN_BANKS } from '@/v2/lib/formOptions';
-import { CheckCircle2, Upload, Clock, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Upload, Clock, AlertCircle, Lock } from 'lucide-react';
 import AdditionalDirectors from '@/v2/components/AdditionalDirectors';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 
 type DocType = 'cac_certificate' | 'director_id' | 'proof_of_address' | 'bank_proof';
