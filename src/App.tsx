@@ -72,6 +72,8 @@ export default function App() {
               <Route path="/app/users" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffUsers /></StaffLayout></RequireAuth>} />
               <Route path="/app/audit" element={<Staff><StaffAudit /></Staff>} />
               <Route path="/app/settings" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffSettings /></StaffLayout></RequireAuth>} />
+              <Route path="/admin/reference-data" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffReferenceData /></StaffLayout></RequireAuth>} />
+              <Route path="/app/reference-data" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffReferenceData /></StaffLayout></RequireAuth>} />
               <Route path="/app/account" element={<Staff><Account /></Staff>} />
 
               <Route path="/portal/onboarding" element={<RequireAuth allow="exporter"><ExporterOnboarding /></RequireAuth>} />
