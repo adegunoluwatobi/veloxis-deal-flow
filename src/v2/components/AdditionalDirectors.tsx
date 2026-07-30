@@ -105,7 +105,7 @@ export default function AdditionalDirectors({ exporterId }: { exporterId?: strin
     setUploading((u) => ({ ...u, [idx]: file.name }));
     try {
       const safe = file.name.replace(/[^a-z0-9._-]+/gi, '_');
-      const path = `v2/exporters/${exporterId}/directors/id-${Date.now()}-${safe}`;
+      const path = `${exporterId}/company/directors/id-${Date.now()}-${safe}`;
       const { error } = await supabase.storage.from('veloxis-documents').upload(path, file, { upsert: true });
       if (error) throw error;
       setRows((rs) => rs.map((r, i) => (i === idx ? { ...r, id_document_url: path, id_document_name: file.name, _dirty: true } : r)));
