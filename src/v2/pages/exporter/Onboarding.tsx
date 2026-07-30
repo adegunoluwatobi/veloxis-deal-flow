@@ -179,7 +179,7 @@ export default function ExporterOnboarding() {
           <div className="grid grid-cols-2 gap-4">
             <Field label="Company name *"><Input value={f.company_name ?? ''} onChange={(e) => set('company_name', e.target.value)} /></Field>
             <Field label="Registration number (RC / CAC) *"><Input value={f.company_registration_number ?? ''} onChange={(e) => set('company_registration_number', e.target.value)} /></Field>
-            <Field label="Country of incorporation *"><Input value={f.country_of_incorporation ?? ''} onChange={(e) => set('country_of_incorporation', e.target.value)} /></Field>
+            <Field label="Country of incorporation *"><OptionSelect value={f.country_of_incorporation} onChange={(v) => set('country_of_incorporation', v)} options={COUNTRIES} placeholder="Select country" /></Field>
             <Field label="Incorporation date"><Input type="date" value={f.incorporation_date ?? ''} onChange={(e) => set('incorporation_date', e.target.value)} /></Field>
             <Field label="Tax ID / TIN"><Input value={f.tax_id ?? ''} onChange={(e) => set('tax_id', e.target.value)} /></Field>
             <Field label="Industry / commodity"><Input value={f.commodity ?? ''} onChange={(e) => set('commodity', e.target.value)} /></Field>
@@ -197,7 +197,7 @@ export default function ExporterOnboarding() {
             <Field label="Director phone"><Input value={f.director_phone ?? ''} onChange={(e) => set('director_phone', e.target.value)} /></Field>
             <Field label="Date of birth"><Input type="date" value={f.director_dob ?? ''} onChange={(e) => set('director_dob', e.target.value)} /></Field>
             <Field label="Nationality"><Input value={f.director_nationality ?? ''} onChange={(e) => set('director_nationality', e.target.value)} /></Field>
-            <Field label="ID type * (passport / national ID / driver’s licence)"><Input value={f.director_id_type ?? ''} onChange={(e) => set('director_id_type', e.target.value)} /></Field>
+            <Field label="ID type *"><OptionSelect value={f.director_id_type} onChange={(v) => set('director_id_type', v)} options={ID_TYPES} placeholder="Select ID type" /></Field>
             <Field label="ID number *"><Input value={f.director_id_number ?? ''} onChange={(e) => set('director_id_number', e.target.value)} /></Field>
             <div className="col-span-2"><Field label="Director residential address"><Input value={f.director_address ?? ''} onChange={(e) => set('director_address', e.target.value)} /></Field></div>
           </div>
@@ -206,7 +206,7 @@ export default function ExporterOnboarding() {
         <section className="card-elevated p-6 space-y-4">
           <h2 className="text-sm uppercase tracking-wider text-muted-foreground">3 · Bank details</h2>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Bank name *"><Input value={f.bank_details?.bank_name ?? ''} onChange={(e) => setBank('bank_name', e.target.value)} /></Field>
+            <Field label="Bank name *"><OptionSelect value={f.bank_details?.bank_name} onChange={(v) => setBank('bank_name', v)} options={NIGERIAN_BANKS} placeholder="Select bank" /></Field>
             <Field label="Account name"><Input value={f.bank_details?.account_name ?? ''} onChange={(e) => setBank('account_name', e.target.value)} /></Field>
             <Field label="Account number / IBAN *"><Input value={f.bank_details?.account_number ?? ''} onChange={(e) => setBank('account_number', e.target.value)} /></Field>
             <Field label="SWIFT / BIC"><Input value={f.bank_details?.swift ?? ''} onChange={(e) => setBank('swift', e.target.value)} /></Field>
