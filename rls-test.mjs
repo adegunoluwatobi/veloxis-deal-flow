@@ -79,7 +79,8 @@ async function main() {
   // 6
   {
     const ins = await BD.client.from('invoice_document_requests').insert({ invoice_id: invA.id, document_type_id: dt.id, reason: 'bd request' }).select();
-    const { data: rc } = await admin.from('regulated_commodities').select('id, active').limit(1).single();
+    let { data: rc } = await admin.from('regulated_commodities').select('id, active').limit(1).maybeSingle();
+    if (!rc) { const r = await admin.from('regulated_commodities').insert({ name: 'RLS Test Commodity' }).select('id, active').single(); rc = r.data; ids.rc = rc; }
     const upd = await BD.client.from('regulated_commodities').update({ active: !rc.active }).eq('id', rc.id).select();
     const after = await admin.from('regulated_commodities').select('active').eq('id', rc.id).single();
     rec('6. BD (originator) CAN insert invoice_document_requests', !ins.error && (ins.data ?? []).length === 1, `error=${ins.error?.message ?? 'none'} rows=${(ins.data ?? []).length}`);
@@ -109,6 +110,7 @@ async function main() {
 main().catch(e => { console.error('SCRIPT ERROR', e); }).finally(async () => {
   // cleanup
   try {
+    if (ids.rc) await admin.from('regulated_commodities').delete().eq('id', ids.rc.id);
     if (ids.path) await admin.storage.from('veloxis-documents').remove([ids.path]);
     if (ids.aud) await admin.from('document_audit_log').delete().eq('id', ids.aud.id);
     if (ids.invA) await admin.from('invoice_document_requests').delete().in('invoice_id', [ids.invA.id, ids.invB.id]);
