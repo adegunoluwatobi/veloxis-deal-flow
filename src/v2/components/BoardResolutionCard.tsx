@@ -42,7 +42,9 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
   const [res, setRes] = useState<Resolution | null>(null);
   const [doc, setDoc] = useState<Doc | null>(null);
   const [sigs, setSigs] = useState<Signatory[]>([]);
-  const [committed, setCommitted] = useState(0);
+  const [committed, setCommitted] = useState<number | null>(0);
+  const [headroomError, setHeadroomError] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
 
