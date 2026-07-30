@@ -433,11 +433,13 @@ function SystemConfigTab() {
 
 /* ------------------------------------------------------------------ */
 export default function ReferenceData() {
+  const { roles } = useAuth();
+  const isSuperAdmin = roles.includes('super_admin' as any);
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl">Reference data</h1>
-        <p className="text-sm text-muted-foreground">Document types, commodities and system configuration used across the platform.</p>
+        <p className="text-sm text-muted-foreground">Document types, commodities, exchange rates and system configuration used across the platform.</p>
       </div>
       <Tabs defaultValue="documents">
         <TabsList>
@@ -445,12 +447,15 @@ export default function ReferenceData() {
           <TabsTrigger value="commodities">Commodities</TabsTrigger>
           <TabsTrigger value="regulated">Regulated commodities</TabsTrigger>
           <TabsTrigger value="config">System config</TabsTrigger>
+          {isSuperAdmin && <TabsTrigger value="fx">Exchange rates</TabsTrigger>}
         </TabsList>
         <TabsContent value="documents" className="mt-6"><DocumentTypesTab /></TabsContent>
         <TabsContent value="commodities" className="mt-6"><CommoditiesTab regulated={false} /></TabsContent>
         <TabsContent value="regulated" className="mt-6"><CommoditiesTab regulated /></TabsContent>
         <TabsContent value="config" className="mt-6"><SystemConfigTab /></TabsContent>
+        {isSuperAdmin && <TabsContent value="fx" className="mt-6"><FxRatesTab /></TabsContent>}
       </Tabs>
     </div>
   );
 }
+
