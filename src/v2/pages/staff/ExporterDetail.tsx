@@ -23,17 +23,20 @@ export default function StaffExporterDetail() {
   const [exp, setExp] = useState<any>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [docs, setDocs] = useState<any[]>([]);
+  const [directors, setDirectors] = useState<any[]>([]);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const [{ data: e }, { data: iv }, { data: d }] = await Promise.all([
+    const [{ data: e }, { data: iv }, { data: d }, { data: dir }] = await Promise.all([
       supabase.from('v2_exporters').select('*').eq('id', id!).maybeSingle(),
       supabase.from('v2_invoices').select('id, invoice_number, invoice_amount, invoice_currency, status, maturity_date').eq('exporter_id', id!).order('created_at', { ascending: false }),
       supabase.from('v2_exporter_documents').select('*').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
+      supabase.from('v2_exporter_directors').select('*').eq('exporter_id', id!).order('created_at', { ascending: true }),
     ]);
-    setExp(e); setInvoices(iv ?? []); setDocs(d ?? []);
+    setExp(e); setInvoices(iv ?? []); setDocs(d ?? []); setDirectors(dir ?? []);
   }, [id]);
+
 
   useEffect(() => { load(); }, [load]);
   if (!exp) return <div className="text-muted-foreground">Loading…</div>;
