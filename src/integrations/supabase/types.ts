@@ -4296,6 +4296,15 @@ export type Database = {
         Args: { _buyer_id: string; _user_id: string }
         Returns: boolean
       }
+      v2_notify_exporter: {
+        Args: {
+          p_invoice_id: string
+          p_message: string
+          p_title: string
+          p_type: string
+        }
+        Returns: undefined
+      }
       v2_owns_exporter: {
         Args: { _exporter_id: string; _user_id: string }
         Returns: boolean
@@ -4304,6 +4313,26 @@ export type Database = {
         Args: { _invoice_id: string; _user_id: string }
         Returns: boolean
       }
+      v2_request_documents: {
+        Args: {
+          p_document_type_ids: string[]
+          p_due_date?: string
+          p_invoice_id: string
+          p_reason: string
+        }
+        Returns: number
+      }
+      v2_set_inspection_required: {
+        Args: { p_invoice_id: string; p_reason: string; p_required: boolean }
+        Returns: boolean
+      }
+      v2_sla_pause: { Args: { p_invoice_id: string }; Returns: undefined }
+      v2_sla_resume: { Args: { p_invoice_id: string }; Returns: string }
+      v2_withdraw_document_request: {
+        Args: { p_reason: string; p_request_id: string }
+        Returns: undefined
+      }
+      v2_working_day_seconds: { Args: never; Returns: number }
       validate_status_transition: {
         Args: {
           p_current_status: Database["public"]["Enums"]["deal_status"]
@@ -4553,6 +4582,7 @@ export type Database = {
         | "overdue"
         | "in_recovery"
         | "written_off"
+        | "information_requested"
       v2_kyc_status: "not_started" | "pending" | "verified" | "rejected"
       v2_movement_type: "advance_out" | "settlement_in" | "residual_out"
       v2_nepc_status: "valid" | "expired" | "none"
@@ -4959,6 +4989,7 @@ export const Constants = {
         "overdue",
         "in_recovery",
         "written_off",
+        "information_requested",
       ],
       v2_kyc_status: ["not_started", "pending", "verified", "rejected"],
       v2_movement_type: ["advance_out", "settlement_in", "residual_out"],

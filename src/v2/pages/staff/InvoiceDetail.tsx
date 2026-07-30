@@ -6,11 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/v2/useAuth';
-import { INVOICE_STATUS_LABEL, canApprove, canVerify } from '@/v2/roles';
+import { INVOICE_STATUS_LABEL, canApprove, canVerify, has } from '@/v2/roles';
 import { logAudit } from '@/v2/audit';
 import { openDocument, invoiceDocPath } from '@/v2/lib/documents';
+import DocumentReviewPanel, { InspectionOverrideCard, useInvoiceDocuments } from '@/v2/components/invoice/DocumentReviewPanel';
+import CompanyAuthorityPanel, { AuthorityFlags } from '@/v2/components/invoice/CompanyAuthorityPanel';
+import MaturityDateCard from '@/v2/components/invoice/MaturityDateCard';
 import { CheckCircle2, XCircle, ArrowLeft } from 'lucide-react';
 
 type Doc = { id: string; doc_type: string; file_url: string; file_name: string | null; verified: boolean; uploaded_by: string | null; uploaded_at: string };
@@ -21,7 +25,7 @@ const DOC_TYPES = [
 ];
 
 const DOC_LABEL: Record<string, string> = {
-  pro_forma: 'Pro-forma invoice', commercial_invoice: 'Commercial invoice',
+  pro_forma: 'Pro forma invoice', commercial_invoice: 'Commercial invoice',
   bill_of_lading: 'Bill of lading', quality_cert: 'Quality certificate',
   deed_of_assignment: 'Deed of Assignment', notice_of_assignment: 'Notice of Assignment',
   tripartite: 'Tripartite Domiciliation Agreement', kyc: 'KYC', other: 'Other',
@@ -41,6 +45,7 @@ export default function StaffInvoiceDetail() {
   const [buyer, setBuyer] = useState<any>(null);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
+  const [authority, setAuthority] = useState<AuthorityFlags | null>(null);
 
   const load = useCallback(async () => {
     const { data: i } = await supabase.from('v2_invoices').select('*, v2_exporters(id, company_name), v2_buyers(*)').eq('id', id!).maybeSingle();
@@ -55,6 +60,8 @@ export default function StaffInvoiceDetail() {
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+
+  const docState = useInvoiceDocuments(id, !!inv?.inspection_required);
 
   if (!inv) return <div className="text-muted-foreground">Loading…</div>;
 
@@ -72,14 +79,33 @@ export default function StaffInvoiceDetail() {
   };
   const allGatesPass = Object.values(gate).every(Boolean);
 
+  const noOutstandingRequests = docState.outstandingRequests.length === 0;
+  const authorityOk = !!authority && authority.resolutionVerified && authority.inDate && authority.withinHeadroom;
+  const reviewGatePass = docState.stage1Complete && authorityOk && noOutstandingRequests;
+  const disbursementGatePass = docState.stage2Complete;
+
+  const reviewBlockers = [
+    !docState.stage1Complete && `Stage 1 documents ${docState.stage1Verified} of ${docState.stage1Required.length} verified`,
+    !noOutstandingRequests && `${docState.outstandingRequests.length} document request outstanding`,
+    !authorityOk && 'Board resolution must be verified, in date and within headroom',
+  ].filter(Boolean) as string[];
+
   const isCreator = inv.created_by === user?.id || inv.submitted_by === user?.id;
   const status = inv.status as string;
+  const canReview = canVerify(roles);
+  const isSuperAdmin = has(roles, 'super_admin');
 
   const transition = async (to: string, action: string, decisionType?: string) => {
     if (['returned_for_revision', 'rejected'].includes(to) && !reason.trim()) {
       toast({ title: 'Reason required', variant: 'destructive' }); return;
     }
-    if (to === 'approved' && isCreator && !window.confirm('You created this invoice. Approving requires an override — proceed?')) return;
+    if (to === 'verified' && !reviewGatePass) {
+      toast({ title: 'Cannot advance yet', description: reviewBlockers.join('. '), variant: 'destructive' }); return;
+    }
+    if (to === 'funded' && !disbursementGatePass) {
+      toast({ title: 'Cannot disburse yet', description: `Stage 2 documents ${docState.stage2Verified} of ${docState.stage2Required.length} verified`, variant: 'destructive' }); return;
+    }
+    if (to === 'approved' && isCreator && !window.confirm('You created this invoice. Approving requires an override. Proceed?')) return;
     setBusy(true);
     const patch: any = { status: to };
     if (to === 'verified') patch.verified_by = user?.id;
@@ -113,7 +139,6 @@ export default function StaffInvoiceDetail() {
     load();
   };
 
-
   const recordMovement = async (type: string, amount: number, note?: string) => {
     if (!amount) return;
     await supabase.from('v2_money_movements').insert({ invoice_id: id!, type: type as any, amount, currency: inv.invoice_currency, recorded_by: user?.id, note: note ?? null });
@@ -129,10 +154,17 @@ export default function StaffInvoiceDetail() {
         <div>
           <h1 className="text-2xl">Invoice {inv.invoice_number}</h1>
           <p className="text-sm text-muted-foreground">
-            {inv.v2_exporters?.company_name} → {buyer?.company_name ?? '—'} · Status: <span className="text-accent">{INVOICE_STATUS_LABEL[status]}</span>
+            {inv.v2_exporters?.company_name} → {buyer?.company_name ?? '—'} · Status: <span className="text-accent">{INVOICE_STATUS_LABEL[status] ?? status}</span>
           </p>
         </div>
       </div>
+
+      {status === 'information_requested' && (
+        <div className="card-elevated p-4 border-amber-500/50 bg-amber-500/10 text-sm">
+          The decision clock is paused while we wait for {docState.outstandingRequests.length} requested document{docState.outstandingRequests.length === 1 ? '' : 's'}.
+          It resumes automatically when the last one arrives.
+        </div>
+      )}
 
       {['returned_for_revision', 'rejected'].includes(status) && decisions[0] && (
         <div className="card-elevated p-4 border-destructive/60 bg-destructive/10">
@@ -143,83 +175,118 @@ export default function StaffInvoiceDetail() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <section className="card-elevated p-5">
-            <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-3">Five-point funding gate</h3>
-            <ul className="space-y-2 text-sm">
-              {[
-                ['Deed of Assignment uploaded & verified', gate.deed],
-                ['Tripartite Domiciliation Agreement uploaded & verified', gate.tripartite],
-                ['Notice of Assignment uploaded & verified', gate.noa],
-                ['Buyer credit clear & sanctions clear', gate.buyerClear],
-                ['Bill of Lading uploaded & verified', gate.bol],
-              ].map(([label, ok]) => (
-                <li key={label as string} className="flex items-center gap-2">
-                  {ok ? <CheckCircle2 className="h-4 w-4 text-success" /> : <XCircle className="h-4 w-4 text-destructive" />}
-                  <span className={ok ? '' : 'text-muted-foreground'}>{label as string}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <Tabs defaultValue="overview">
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="documents">Documents</TabsTrigger>
+            </TabsList>
 
-          <section className="card-elevated p-5 space-y-3">
-            <h3 className="text-sm uppercase tracking-wider text-muted-foreground">Documents</h3>
-            {docs.length === 0 && <p className="text-sm text-muted-foreground">No documents yet.</p>}
-            {docs.map((d) => (
-              <div key={d.id} className="flex items-center justify-between border-t border-border pt-3">
-                <div>
-                  <button onClick={() => openDocument(d.id, 'invoice')} className="text-sm text-accent hover:underline">{d.file_name || d.doc_type}</button>
-                  <div className="text-xs text-muted-foreground">{DOC_LABEL[d.doc_type] ?? d.doc_type}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs px-2 py-1 rounded ${d.verified ? 'bg-success/20 text-success' : 'bg-muted text-muted-foreground'}`}>{d.verified ? 'Verified' : 'Unverified'}</span>
-                  {canVerify(roles) && (
-                    d.verified
-                      ? <Button size="sm" variant="ghost" onClick={() => verifyDoc(d.id, false)}>Unverify</Button>
-                      : <Button size="sm" onClick={() => verifyDoc(d.id, true)}>Verify</Button>
-                  )}
-                </div>
-              </div>
-            ))}
-            <div className="pt-3 border-t border-border">
-              <Label>Upload document</Label>
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {DOC_TYPES.map((t) => (
-                  <label key={t} className="text-xs px-3 py-2 border border-border rounded cursor-pointer hover:bg-muted/20">
-                    {DOC_LABEL[t]}
-                    <input type="file" className="hidden" onChange={(e) => upload(e, t)} />
-                  </label>
+            <TabsContent value="overview" className="space-y-6 mt-4">
+              <section className="card-elevated p-5">
+                <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-3">Five point funding gate</h3>
+                <ul className="space-y-2 text-sm">
+                  {[
+                    ['Deed of Assignment uploaded and verified', gate.deed],
+                    ['Tripartite Domiciliation Agreement uploaded and verified', gate.tripartite],
+                    ['Notice of Assignment uploaded and verified', gate.noa],
+                    ['Buyer credit clear and sanctions clear', gate.buyerClear],
+                    ['Bill of Lading uploaded and verified', gate.bol],
+                  ].map(([label, ok]) => (
+                    <li key={label as string} className="flex items-center gap-2">
+                      {ok ? <CheckCircle2 className="h-4 w-4 text-success" /> : <XCircle className="h-4 w-4 text-destructive" />}
+                      <span className={ok ? '' : 'text-muted-foreground'}>{label as string}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              <CompanyAuthorityPanel
+                exporterId={inv.exporter_id}
+                signatoryId={inv.signatory_id ?? null}
+                invoiceExposure={Number(inv.gross_invoice_value ?? inv.invoice_amount ?? 0)}
+                onFlags={setAuthority}
+              />
+
+              <section className="card-elevated p-5 space-y-3">
+                <h3 className="text-sm uppercase tracking-wider text-muted-foreground">Legacy documents</h3>
+                {docs.length === 0 && <p className="text-sm text-muted-foreground">No documents yet.</p>}
+                {docs.map((d) => (
+                  <div key={d.id} className="flex items-center justify-between border-t border-border pt-3">
+                    <div>
+                      <button onClick={() => openDocument(d.id, 'invoice')} className="text-sm text-accent hover:underline">{d.file_name || d.doc_type}</button>
+                      <div className="text-xs text-muted-foreground">{DOC_LABEL[d.doc_type] ?? d.doc_type}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-1 rounded ${d.verified ? 'bg-success/20 text-success' : 'bg-muted text-muted-foreground'}`}>{d.verified ? 'Verified' : 'Unverified'}</span>
+                      {canReview && (
+                        d.verified
+                          ? <Button size="sm" variant="ghost" onClick={() => verifyDoc(d.id, false)}>Unverify</Button>
+                          : <Button size="sm" onClick={() => verifyDoc(d.id, true)}>Verify</Button>
+                      )}
+                    </div>
+                  </div>
                 ))}
-              </div>
-            </div>
-          </section>
-
-          <section className="card-elevated p-5 space-y-3">
-            <h3 className="text-sm uppercase tracking-wider text-muted-foreground">Money movements</h3>
-            {movements.length === 0 && <p className="text-sm text-muted-foreground">None yet.</p>}
-            {movements.map((m) => (
-              <div key={m.id} className="flex justify-between text-sm border-t border-border pt-2">
-                <span>{m.type.replace('_', ' ')}</span>
-                <span className="tabular-nums">{m.currency} {Number(m.amount).toLocaleString()}</span>
-                <span className="text-muted-foreground">{new Date(m.recorded_at).toLocaleDateString()}</span>
-              </div>
-            ))}
-            {canApprove(roles) && (status === 'approved' || status === 'funded' || status === 'monitoring') && (
-              <MovementForm onSubmit={recordMovement} advance={advance} residual={residual} amount={Number(inv.invoice_amount)} />
-            )}
-          </section>
-
-          <section className="card-elevated p-5">
-            <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-3">Audit log</h3>
-            <div className="space-y-2 text-xs">
-              {audit.map((a) => (
-                <div key={a.id} className="flex justify-between border-t border-border pt-2">
-                  <span>{a.action} {a.from_status && `· ${a.from_status} → ${a.to_status}`} {a.metadata?.override && <span className="text-warning">[override]</span>}</span>
-                  <span className="text-muted-foreground">{new Date(a.created_at).toLocaleString()}</span>
+                <div className="pt-3 border-t border-border">
+                  <Label>Upload document</Label>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    {DOC_TYPES.map((t) => (
+                      <label key={t} className="text-xs px-3 py-2 border border-border rounded cursor-pointer hover:bg-muted/20">
+                        {DOC_LABEL[t]}
+                        <input type="file" className="hidden" onChange={(e) => upload(e, t)} />
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              ))}
-              {audit.length === 0 && <p className="text-muted-foreground">No entries.</p>}
-            </div>
-          </section>
+              </section>
+
+              <section className="card-elevated p-5 space-y-3">
+                <h3 className="text-sm uppercase tracking-wider text-muted-foreground">Money movements</h3>
+                {movements.length === 0 && <p className="text-sm text-muted-foreground">None yet.</p>}
+                {movements.map((m) => (
+                  <div key={m.id} className="flex justify-between text-sm border-t border-border pt-2">
+                    <span>{m.type.replace('_', ' ')}</span>
+                    <span className="tabular-nums">{m.currency} {Number(m.amount).toLocaleString()}</span>
+                    <span className="text-muted-foreground">{new Date(m.recorded_at).toLocaleDateString()}</span>
+                  </div>
+                ))}
+                {canApprove(roles) && (status === 'approved' || status === 'funded' || status === 'monitoring') && (
+                  <MovementForm onSubmit={recordMovement} advance={advance} residual={residual} amount={Number(inv.invoice_amount)} />
+                )}
+              </section>
+
+              <section className="card-elevated p-5">
+                <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-3">Audit log</h3>
+                <div className="space-y-2 text-xs">
+                  {audit.map((a) => (
+                    <div key={a.id} className="flex justify-between border-t border-border pt-2">
+                      <span>{a.action} {a.from_status && `· ${a.from_status} → ${a.to_status}`} {a.metadata?.override && <span className="text-warning">[override]</span>}</span>
+                      <span className="text-muted-foreground">{new Date(a.created_at).toLocaleString()}</span>
+                    </div>
+                  ))}
+                  {audit.length === 0 && <p className="text-muted-foreground">No entries.</p>}
+                </div>
+              </section>
+            </TabsContent>
+
+            <TabsContent value="documents" className="space-y-6 mt-4">
+              <InspectionOverrideCard
+                invoiceId={id!}
+                required={!!inv.inspection_required}
+                reason={inv.inspection_override_reason ?? null}
+                canOverride={canReview}
+                onChanged={load}
+              />
+              <DocumentReviewPanel
+                invoiceId={id!}
+                exporterId={inv.exporter_id}
+                state={docState}
+                canReview={canReview}
+                isSuperAdmin={isSuperAdmin}
+                currentUserId={user?.id}
+                onChanged={load}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
 
         <aside className="space-y-6">
@@ -235,14 +302,32 @@ export default function StaffInvoiceDetail() {
             <Row label="Residual">{fmt(residual, inv.invoice_currency)}</Row>
             <div className="border-t border-border my-2" />
             <Row label="Shipment">{inv.shipment_date ?? '—'}</Row>
-            <Row label="Maturity">{inv.maturity_date ?? '—'}</Row>
+            <Row label="Decision due">{inv.decision_due_at ? new Date(inv.decision_due_at).toLocaleString('en-GB') : '—'}</Row>
           </section>
+
+          <MaturityDateCard
+            invoiceId={id!}
+            maturityDate={inv.maturity_date}
+            overrideBy={inv.maturity_date_overridden_by}
+            overrideAt={inv.maturity_date_overridden_at}
+            overrideReason={inv.maturity_date_override_reason}
+            canAdjust={canReview}
+            people={docState.people}
+            onChanged={load}
+          />
 
           <section className="card-elevated p-5 space-y-3">
             <h3 className="text-sm uppercase tracking-wider text-muted-foreground">Actions</h3>
-            {status === 'submitted' && canVerify(roles) && (
+            {(status === 'submitted' || status === 'information_requested') && canReview && (
               <>
-                <Button className="w-full" disabled={busy} onClick={() => transition('verified', 'verified', 'verified')}>Mark verified</Button>
+                {reviewBlockers.length > 0 && (
+                  <ul className="text-xs text-muted-foreground space-y-1">
+                    {reviewBlockers.map((b) => <li key={b}>· {b}</li>)}
+                  </ul>
+                )}
+                <Button className="w-full" disabled={busy || !reviewGatePass} onClick={() => transition('verified', 'verified', 'verified')}>
+                  {reviewGatePass ? 'Mark verified' : 'Review checks not met'}
+                </Button>
                 <Textarea placeholder="Reason to return" value={reason} onChange={(e) => setReason(e.target.value)} />
                 <Button variant="outline" className="w-full" disabled={busy} onClick={() => transition('returned_for_revision', 'returned_for_revision', 'returned')}>Return for revision</Button>
               </>
@@ -257,7 +342,14 @@ export default function StaffInvoiceDetail() {
               </>
             )}
             {status === 'approved' && canApprove(roles) && (
-              <Button className="w-full" disabled={busy} onClick={() => transition('funded', 'funded', 'funded')}>Mark funded</Button>
+              <>
+                {!disbursementGatePass && (
+                  <p className="text-xs text-muted-foreground">Stage 2 documents {docState.stage2Verified} of {docState.stage2Required.length} verified</p>
+                )}
+                <Button className="w-full" disabled={busy || !disbursementGatePass} onClick={() => transition('funded', 'funded', 'funded')}>
+                  {disbursementGatePass ? 'Mark funded' : 'Stage 2 not complete'}
+                </Button>
+              </>
             )}
             {status === 'funded' && canApprove(roles) && (
               <Button className="w-full" disabled={busy} onClick={() => transition('monitoring', 'monitoring')}>Move to monitoring</Button>

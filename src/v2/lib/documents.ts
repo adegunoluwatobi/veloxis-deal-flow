@@ -1,12 +1,14 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
+export type DocumentKind = 'invoice' | 'company';
+
 /**
  * The only sanctioned way to obtain a download link for a stored document.
  * Signing happens server-side in the `get-document-url` edge function with a
  * hardcoded 900s expiry; clients never call createSignedUrl directly.
  */
-export async function openDocument(documentId: string, kind: 'invoice' | 'company') {
+export async function getDocumentUrl(documentId: string, kind: DocumentKind): Promise<string | null> {
   const { data, error } = await supabase.functions.invoke('get-document-url', {
     body: { document_id: documentId, document_kind: kind },
   });
@@ -16,9 +18,14 @@ export async function openDocument(documentId: string, kind: 'invoice' | 'compan
       description: error?.message ?? 'You do not have access to this document.',
       variant: 'destructive',
     });
-    return;
+    return null;
   }
-  window.open(data.url, '_blank');
+  return data.url as string;
+}
+
+export async function openDocument(documentId: string, kind: DocumentKind) {
+  const url = await getDocumentUrl(documentId, kind);
+  if (url) window.open(url, '_blank');
 }
 
 /** Canonical v2 storage path shapes. */

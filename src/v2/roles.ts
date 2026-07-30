@@ -29,6 +29,7 @@ export function canCreateInvoice(roles: AppRole[]) {
 export const INVOICE_STATUS_LABEL: Record<string, string> = {
   draft: 'Draft',
   submitted: 'Submitted for Review',
+  information_requested: 'Information Requested',
   verified: 'Verified',
   approved: 'Approved for Funding',
   funded: 'Funded',
