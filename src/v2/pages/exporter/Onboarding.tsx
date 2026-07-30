@@ -358,6 +358,29 @@ export default function ExporterOnboarding() {
           </Button>
         </div>
       </main>
+
+      <Dialog open={submittedOpen} onOpenChange={setSubmittedOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 text-accent">
+              <CheckCircle2 className="h-5 w-5" />
+              <DialogTitle>Application submitted</DialogTitle>
+            </div>
+            <DialogDescription className="pt-2">
+              Thanks — your onboarding has been submitted for review. Your Business Developer reviews first, then Credit &amp; Compliance gives final approval.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-start gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+            <Lock className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="text-muted-foreground">
+              You will <span className="text-amber-400 font-medium">not have access to the exporter portal</span> until your application is approved or rejected. We’ll email you as soon as there’s a decision.
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setSubmittedOpen(false)}>Got it</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
