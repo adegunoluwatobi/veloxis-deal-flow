@@ -3927,6 +3927,9 @@ export type Database = {
             | null
           invoice_number: string | null
           maturity_date: string | null
+          maturity_date_overridden_at: string | null
+          maturity_date_overridden_by: string | null
+          maturity_date_override_reason: string | null
           port_of_discharge: string | null
           port_of_loading: string | null
           reference: string | null
@@ -3978,6 +3981,9 @@ export type Database = {
             | null
           invoice_number?: string | null
           maturity_date?: string | null
+          maturity_date_overridden_at?: string | null
+          maturity_date_overridden_by?: string | null
+          maturity_date_override_reason?: string | null
           port_of_discharge?: string | null
           port_of_loading?: string | null
           reference?: string | null
@@ -4029,6 +4035,9 @@ export type Database = {
             | null
           invoice_number?: string | null
           maturity_date?: string | null
+          maturity_date_overridden_at?: string | null
+          maturity_date_overridden_by?: string | null
+          maturity_date_override_reason?: string | null
           port_of_discharge?: string | null
           port_of_loading?: string | null
           reference?: string | null
