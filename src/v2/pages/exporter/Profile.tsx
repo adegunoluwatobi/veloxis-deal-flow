@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { OptionSelect, ID_TYPES, COUNTRIES, NIGERIAN_BANKS } from '@/v2/lib/formOptions';
 import AdditionalDirectors from '@/v2/components/AdditionalDirectors';
+import BoardResolutionCard from '@/v2/components/BoardResolutionCard';
+
 
 
 const KYC_BADGE: Record<string, string> = {
@@ -128,6 +130,10 @@ export default function ExporterProfile() {
       </section>
 
       <AdditionalDirectors exporterId={exp?.id} />
+
+      <BoardResolutionCard exporterId={exp?.id} />
+
+
 
 
 
