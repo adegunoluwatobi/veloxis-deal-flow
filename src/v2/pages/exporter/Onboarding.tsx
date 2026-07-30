@@ -89,6 +89,7 @@ export default function ExporterOnboarding() {
       onboarding_status: 'pending', kyb_status: 'pending', kyc_status: 'pending',
     }).select('id').single();
     if (error) { toast({ title: 'Save failed', description: error.message, variant: 'destructive' }); return null; }
+    setExp((prev: any) => prev ?? { id: data.id });
     return data.id;
   };
 
