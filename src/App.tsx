@@ -33,6 +33,7 @@ import StaffSettlements from '@/v2/pages/staff/Settlements';
 import Account from '@/v2/pages/Account';
 import SetPasswordFirst from '@/v2/pages/SetPasswordFirst';
 import ResetPassword from '@/v2/pages/ResetPassword';
+import StaffReferenceData from '@/v2/pages/staff/ReferenceData';
 
 const qc = new QueryClient();
 
