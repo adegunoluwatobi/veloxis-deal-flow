@@ -3,6 +3,7 @@ import { useAuth } from './useAuth';
 import type { AppRole } from './roles';
 import { isStaff } from './roles';
 import { AuthLoading, AuthError } from './components/AuthStates';
+import SignOutButton from './components/SignOutButton';
 
 export function RequireAuth({ children, allow }: { children: React.ReactNode; allow?: AppRole[] | 'staff' | 'exporter' }) {
   const { user, roles, profile, exporterOnboarding, ready, error, refresh } = useAuth();
@@ -35,8 +36,14 @@ export function RequireAuth({ children, allow }: { children: React.ReactNode; al
 
 
   if (roles.length === 0) {
-    return <div className="flex min-h-screen items-center justify-center p-6 text-center text-sm text-muted-foreground">Your account has no role assigned yet. Please contact an administrator.</div>;
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center text-sm text-muted-foreground">
+        <div>Your account has no role assigned yet. Please contact an administrator.</div>
+        <SignOutButton />
+      </div>
+    );
   }
+
 
   // Exporter must complete KYB/KYC and be approved before entering the portal.
   // Staff roles take precedence — never trap a staff user in the exporter onboarding flow.
