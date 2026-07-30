@@ -3897,6 +3897,18 @@ export type Database = {
           read_ct: number
         }[]
       }
+      supersede_board_resolution: {
+        Args: {
+          p_authorised_limit: number
+          p_limit_currency: string
+          p_new_company_document_id: string
+          p_old_id: string
+          p_signatories?: Json
+          p_valid_from: string
+          p_valid_until: string
+        }
+        Returns: string
+      }
       v2_can_review_documents: { Args: { _user_id: string }; Returns: boolean }
       v2_exporter_can_see_buyer: {
         Args: { _buyer_id: string; _user_id: string }
