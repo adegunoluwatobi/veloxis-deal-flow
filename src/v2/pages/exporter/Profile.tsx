@@ -125,6 +125,10 @@ export default function ExporterProfile() {
         </div>
       </section>
 
+      <AdditionalDirectors exporterId={exp?.id} />
+
+
+
       <section className="card-elevated p-6 space-y-4">
         <h2 className="text-sm uppercase tracking-wider text-muted-foreground">Bank details</h2>
         <div className="grid grid-cols-2 gap-4">
