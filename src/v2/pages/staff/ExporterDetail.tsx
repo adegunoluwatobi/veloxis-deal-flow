@@ -210,7 +210,15 @@ export default function StaffExporterDetail() {
           {invoices.length === 0 && <p className="text-muted-foreground">No invoices</p>}
         </div>
       </section>
+
+      <AuditLogTable
+        exporterId={id}
+        entityTypes={['company_document', 'board_resolution', 'exporter']}
+        title="Company audit trail"
+        csvName="company-audit"
+      />
     </div>
+
   );
 }
 
