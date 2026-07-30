@@ -134,42 +134,54 @@ export type Database = {
       board_resolutions: {
         Row: {
           authorised_limit: number
-          company_document_id: string | null
+          company_document_id: string
           created_at: string
           exporter_id: string
           id: string
           limit_currency: string
           notes: string | null
+          rejection_reason: string | null
           superseded_by: string | null
           updated_at: string
           valid_from: string
           valid_until: string
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           authorised_limit: number
-          company_document_id?: string | null
+          company_document_id: string
           created_at?: string
           exporter_id: string
           id?: string
           limit_currency?: string
           notes?: string | null
+          rejection_reason?: string | null
           superseded_by?: string | null
           updated_at?: string
           valid_from: string
           valid_until: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           authorised_limit?: number
-          company_document_id?: string | null
+          company_document_id?: string
           created_at?: string
           exporter_id?: string
           id?: string
           limit_currency?: string
           notes?: string | null
+          rejection_reason?: string | null
           superseded_by?: string | null
           updated_at?: string
           valid_from?: string
           valid_until?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {
