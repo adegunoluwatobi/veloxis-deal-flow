@@ -11,8 +11,23 @@ export function RequireAuth({ children, allow }: { children: React.ReactNode; al
 
   // Force first-time users (signed in via magic link) to set a password before anything else.
   if (profile && !(profile as any).password_set_at && loc.pathname !== '/set-password') {
+    // Non-sensitive diagnostics: explains exactly why the gate triggered.
+    console.info('[auth-gate] redirect to /set-password', {
+      user_id: user.id,
+      password_set_at: null,
+      first_signed_in_at: (profile as any).first_signed_in_at ?? null,
+      last_login: (profile as any).last_login ?? null,
+      from: loc.pathname,
+    });
     return <Navigate to="/set-password" replace />;
   }
+  if (profile && (profile as any).password_set_at) {
+    console.info('[auth-gate] password present, no redirect', {
+      user_id: user.id,
+      password_set_at: (profile as any).password_set_at,
+    });
+  }
+
 
   if (roles.length === 0) {
     return <div className="flex min-h-screen items-center justify-center p-6 text-center text-sm text-muted-foreground">Your account has no role assigned yet. Please contact an administrator.</div>;
