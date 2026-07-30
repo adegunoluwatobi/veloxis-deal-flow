@@ -207,10 +207,10 @@ export default function StaffUsers() {
                     </Button>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2 justify-end">
+                    <div className="flex flex-wrap items-center gap-2 justify-end">
                       {availableRoles.length > 0 && (
                         <Select onValueChange={(v) => addRole(r.user_id, v as AppRole, r.roles)}>
-                          <SelectTrigger className="w-40"><SelectValue placeholder="+ add role" /></SelectTrigger>
+                          <SelectTrigger className="w-36 shrink-0"><SelectValue placeholder="+ add role" /></SelectTrigger>
                           <SelectContent>
                             {availableRoles.map((x) => (
                               <SelectItem key={x} value={x}>{ROLE_LABEL[x]}</SelectItem>
@@ -219,22 +219,23 @@ export default function StaffUsers() {
                         </Select>
                       )}
                       {r.password_set_at ? (
-                        <>
-                          <Button size="sm" variant="outline" disabled title="This user has already signed in and set a password">
-                            <Send className="h-3 w-3 mr-1" />Magic link
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => sendReset(r)}>
-                            <KeyRound className="h-3 w-3 mr-1" />Send password reset
-                          </Button>
-                        </>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="shrink-0 whitespace-nowrap"
+                          onClick={() => sendReset(r)}
+                          title="Send a password reset email to this user"
+                        >
+                          <KeyRound className="h-3 w-3 mr-1.5" />Send password reset
+                        </Button>
                       ) : (
-                        <Button size="sm" variant="outline" onClick={() => resendMagic(r)}>
-                          <Send className="h-3 w-3 mr-1" />Magic link
+                        <Button size="sm" variant="outline" className="shrink-0 whitespace-nowrap" onClick={() => resendMagic(r)}>
+                          <Send className="h-3 w-3 mr-1.5" />Magic link
                         </Button>
                       )}
-
                     </div>
                   </td>
+
                 </tr>
               );
             })}
