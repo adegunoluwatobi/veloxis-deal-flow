@@ -19,10 +19,11 @@ type FxRate = {
   source: string | null;
   effective_from: string;
   captured_by: string | null;
+  is_placeholder: boolean;
 };
 
 const CURRENCIES = ['GBP', 'USD', 'EUR'];
-const PLACEHOLDER = 'placeholder, replace before first live invoice';
+
 
 export default function FxRatesTab() {
   const { user } = useAuth();
