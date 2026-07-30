@@ -54,7 +54,7 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
 
     const { data: r } = await supabase
       .from('board_resolutions')
-      .select('id, authorised_limit, limit_currency, valid_from, valid_until, verification_status, rejection_reason, company_document_id')
+      .select('id, authorised_limit, limit_currency, limit_basis, valid_from, valid_until, verification_status, rejection_reason, company_document_id')
       .eq('exporter_id', exporterId)
       .is('superseded_by', null)
       .maybeSingle();
