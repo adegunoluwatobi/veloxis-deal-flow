@@ -185,7 +185,13 @@ export default function StaffUsers() {
                     <StatusLine ok={!!r.first_signed_in_at} label="Signed in" ts={r.first_signed_in_at} />
                     <StatusLine ok={!!r.password_set_at} label="Password set" ts={r.password_set_at} />
                     {r.last_login && <div className="text-muted-foreground pt-0.5">Last: {fmt(r.last_login)}</div>}
+                    <div className={r.password_set_at ? 'text-muted-foreground pt-0.5' : 'text-warning pt-0.5'}>
+                      {r.password_set_at
+                        ? 'Auth gate: passes — goes straight to dashboard'
+                        : 'Auth gate: blocked — will be sent to /set-password (no password_set_at)'}
+                    </div>
                   </td>
+
                   <td className="px-4 py-3">
                     <Button size="sm" variant={r.active ? 'outline' : 'destructive'} onClick={() => setActive(r.user_id, !r.active)}>
                       {r.active ? 'Active' : 'Inactive'}
