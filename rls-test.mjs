@@ -91,7 +91,10 @@ async function main() {
   {
     const path = `${expA.id}/signed-test.txt`;
     const up = await admin.storage.from('veloxis-documents').upload(path, new Blob(['secret-A']), { upsert: true });
-    const { data: signed } = await admin.storage.from('veloxis-documents').createSignedUrl(path, 900);
+    if (up.error) console.log('UPLOAD ERROR', JSON.stringify(up.error));
+    const sg = await admin.storage.from('veloxis-documents').createSignedUrl(path, 900);
+    if (sg.error) console.log('SIGN ERROR', JSON.stringify(sg.error));
+    const signed = sg.data || { signedUrl: 'about:blank' };
     const pubUrl = `${URL}/storage/v1/object/public/veloxis-documents/${path}`;
     const pub = await fetch(pubUrl);
     const anonSigned = await fetch(signed.signedUrl);
