@@ -206,6 +206,11 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
           <p className="text-xs text-muted-foreground">
             {BASIS_COPY[res.limit_basis] ?? BASIS_COPY.gross_face_value}
           </p>
+          <p className="text-xs text-muted-foreground">
+            Limits are recorded in GBP. If the board resolution is denominated in another currency, the reviewer
+            converts at the rate in force on the resolution date and records the original wording and rate in the notes.
+          </p>
+
           {headroomError && (
             <p className="text-xs text-destructive">Headroom could not be calculated: {headroomError}</p>
           )}
