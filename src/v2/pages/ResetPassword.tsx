@@ -86,13 +86,19 @@ export default function ResetPassword() {
     }
     setBusy(true);
     const { error: updateErr } = await supabase.auth.updateUser({ password: pw });
-    setBusy(false);
     if (updateErr) {
+      setBusy(false);
       toast({ title: 'Could not update password', description: updateErr.message, variant: 'destructive' });
       return;
     }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from('profiles').update({ password_set_at: new Date().toISOString() }).eq('user_id', user.id);
+    }
+    setBusy(false);
     setDone(true);
   };
+
 
   if (checking) {
     return (
