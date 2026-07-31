@@ -160,20 +160,39 @@ export default function DocumentUploadRow({
 
       {docs.length > 0 && (
         <ul className="mt-3 space-y-1.5">
-          {docs.map((d) => (
-            <li key={d.id} className="flex flex-wrap items-center gap-2 text-xs">
-              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-              <button type="button" className="text-accent hover:underline" onClick={() => openDocument(d.id, 'invoice')}>
-                {d.original_filename}
-              </button>
-              <span className="text-muted-foreground">{humanSize(d.file_size_bytes)}</span>
-              <Badge variant={d.status === 'verified' ? 'default' : d.status === 'rejected' ? 'destructive' : 'secondary'}>
-                {d.status}
-              </Badge>
-            </li>
-          ))}
+          {docs.map((d) => {
+            const scan = d.scan_status ?? 'clean';
+            return (
+              <li key={d.id} className="flex flex-wrap items-center gap-2 text-xs">
+                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                {scan === 'clean' ? (
+                  <button type="button" className="text-accent hover:underline" onClick={() => openDocument(d.id, 'invoice')}>
+                    {d.original_filename}
+                  </button>
+                ) : (
+                  <span className="text-muted-foreground">{d.original_filename}</span>
+                )}
+                <span className="text-muted-foreground">{humanSize(d.file_size_bytes)}</span>
+                {scan === 'pending_scan' ? (
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" />{SCAN_PENDING_MESSAGE}
+                  </span>
+                ) : scan === 'clean' ? (
+                  <Badge variant={d.status === 'verified' ? 'default' : d.status === 'rejected' ? 'destructive' : 'secondary'}>
+                    {d.status}
+                  </Badge>
+                ) : (
+                  <span className="flex items-center gap-1 text-destructive">
+                    <ShieldAlert className="h-3 w-3" />
+                    {scan === 'flagged' ? 'File check failed, please upload it again' : 'We could not check this file, please upload it again'}
+                  </span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
+
 
       {!readOnly && (
         <>
