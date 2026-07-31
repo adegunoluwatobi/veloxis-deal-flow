@@ -89,7 +89,7 @@ export default function ExporterInvoiceNew() {
   const refreshInvoiceState = useCallback(async (id: string) => {
     const [{ data: inv }, { data: d }, { data: r }] = await Promise.all([
       supabase.from('v2_invoices').select('*').eq('id', id).maybeSingle(),
-      supabase.from('invoice_documents').select('id, document_type_id, original_filename, file_size_bytes, status, uploaded_at, storage_path')
+      supabase.from('invoice_documents').select('id, document_type_id, original_filename, file_size_bytes, status, uploaded_at, storage_path, scan_status')
         .eq('invoice_id', id).is('superseded_by', null).order('uploaded_at', { ascending: false }),
       supabase.from('invoice_document_requests').select('id, document_type_id, reason, due_date, status')
         .eq('invoice_id', id).eq('status', 'outstanding'),

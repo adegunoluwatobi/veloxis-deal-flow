@@ -5,12 +5,13 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { UploadCloud, FileText, RefreshCw, AlertTriangle } from 'lucide-react';
+import { UploadCloud, FileText, RefreshCw, AlertTriangle, ShieldAlert, Loader2 } from 'lucide-react';
+import { sniffFileType, contentTypeFor, MISMATCH_MESSAGE, SCAN_PENDING_MESSAGE } from '@/v2/lib/fileSniff';
 
-export const ACCEPTED = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
 export const ACCEPT_ATTR = '.pdf,.jpg,.jpeg,.png,.webp';
 export const MAX_BYTES = 20 * 1024 * 1024;
 const BUCKET = 'veloxis-documents';
+
 
 export type UploadedDoc = {
   id: string;
@@ -20,7 +21,9 @@ export type UploadedDoc = {
   status: string;
   uploaded_at: string;
   storage_path: string;
+  scan_status?: string | null;
 };
+
 
 export const humanSize = (b?: number | null) =>
   !b ? '' : b > 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`;
@@ -29,7 +32,7 @@ const sanitize = (name: string) =>
   name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, '');
 
 /** Upload with real progress via XHR against the Storage REST endpoint. */
-async function uploadWithProgress(path: string, file: File, onProgress: (pct: number) => void) {
+async function uploadWithProgress(path: string, file: File, onProgress: (pct: number) => void, contentType: string) {
   const { data: sess } = await supabase.auth.getSession();
   const token = sess.session?.access_token;
   if (!token) throw new Error('Your session has expired. Please sign in again.');
@@ -39,7 +42,8 @@ async function uploadWithProgress(path: string, file: File, onProgress: (pct: nu
     xhr.open('POST', url, true);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     xhr.setRequestHeader('x-upsert', 'false');
-    if (file.type) xhr.setRequestHeader('Content-Type', file.type);
+    xhr.setRequestHeader('Content-Type', contentType);
+
     xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(Math.round((e.loaded / e.total) * 100));
     xhr.onload = () => (xhr.status >= 200 && xhr.status < 300
       ? resolve()
@@ -89,30 +93,43 @@ export default function DocumentUploadRow({
     setError(null);
     setLastFile(file);
     if (!invoiceId) { setError('Save your invoice details first, then upload.'); return; }
-    if (!ACCEPTED.includes(file.type)) { setError('That file type is not accepted. Use PDF, JPG, PNG or WEBP.'); return; }
     if (file.size > MAX_BYTES) { setError('That file is larger than 20 MB. Please upload a smaller file.'); return; }
+
+    // Type is decided by the leading bytes of the file, not by its extension
+    // or the MIME type the browser reports.
+    const sniffed = await sniffFileType(file);
+    if (!sniffed) { setError(MISMATCH_MESSAGE); return; }
 
     setProgress(1);
     const path = `${exporterId}/invoices/${invoiceId}/${Date.now()}_${sanitize(file.name)}`;
     try {
-      await uploadWithProgress(path, file, setProgress);
-      const { error: insErr } = await supabase.from('invoice_documents').insert({
+      await uploadWithProgress(path, file, setProgress, contentTypeFor(sniffed));
+      const { data: inserted, error: insErr } = await supabase.from('invoice_documents').insert({
         invoice_id: invoiceId,
         document_type_id: documentTypeId,
         storage_path: path,
         original_filename: file.name,
         file_size_bytes: file.size,
-      });
+      }).select('id').single();
       if (insErr) throw new Error(insErr.message);
+
+      const { data: scan } = await supabase.functions.invoke('scan-document', {
+        body: { document_id: inserted.id, document_kind: 'invoice' },
+      });
       setProgress(null);
       setLastFile(null);
-      toast({ title: 'Uploaded', description: `${file.name} added to ${label}.` });
+      if ((scan as any)?.scan_status && (scan as any).scan_status !== 'clean') {
+        setError((scan as any).message ?? MISMATCH_MESSAGE);
+      } else {
+        toast({ title: 'Uploaded', description: `${file.name} added to ${label}.` });
+      }
       onUploaded();
     } catch (e: any) {
       setProgress(null);
       setError(e?.message ?? 'Upload failed. Please try again.');
     }
   }, [invoiceId, exporterId, documentTypeId, label, onUploaded]);
+
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -143,20 +160,39 @@ export default function DocumentUploadRow({
 
       {docs.length > 0 && (
         <ul className="mt-3 space-y-1.5">
-          {docs.map((d) => (
-            <li key={d.id} className="flex flex-wrap items-center gap-2 text-xs">
-              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-              <button type="button" className="text-accent hover:underline" onClick={() => openDocument(d.id, 'invoice')}>
-                {d.original_filename}
-              </button>
-              <span className="text-muted-foreground">{humanSize(d.file_size_bytes)}</span>
-              <Badge variant={d.status === 'verified' ? 'default' : d.status === 'rejected' ? 'destructive' : 'secondary'}>
-                {d.status}
-              </Badge>
-            </li>
-          ))}
+          {docs.map((d) => {
+            const scan = d.scan_status ?? 'clean';
+            return (
+              <li key={d.id} className="flex flex-wrap items-center gap-2 text-xs">
+                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                {scan === 'clean' ? (
+                  <button type="button" className="text-accent hover:underline" onClick={() => openDocument(d.id, 'invoice')}>
+                    {d.original_filename}
+                  </button>
+                ) : (
+                  <span className="text-muted-foreground">{d.original_filename}</span>
+                )}
+                <span className="text-muted-foreground">{humanSize(d.file_size_bytes)}</span>
+                {scan === 'pending_scan' ? (
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" />{SCAN_PENDING_MESSAGE}
+                  </span>
+                ) : scan === 'clean' ? (
+                  <Badge variant={d.status === 'verified' ? 'default' : d.status === 'rejected' ? 'destructive' : 'secondary'}>
+                    {d.status}
+                  </Badge>
+                ) : (
+                  <span className="flex items-center gap-1 text-destructive">
+                    <ShieldAlert className="h-3 w-3" />
+                    {scan === 'flagged' ? 'File check failed, please upload it again' : 'We could not check this file, please upload it again'}
+                  </span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
+
 
       {!readOnly && (
         <>

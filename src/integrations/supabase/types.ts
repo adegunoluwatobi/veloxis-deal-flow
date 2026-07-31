@@ -312,6 +312,9 @@ export type Database = {
           retention_expires_at: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          scan_detail: string | null
+          scan_status: string
+          scanned_at: string | null
           status: string
           storage_path: string
           updated_at: string
@@ -331,6 +334,9 @@ export type Database = {
           retention_expires_at?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          scan_detail?: string | null
+          scan_status?: string
+          scanned_at?: string | null
           status?: string
           storage_path: string
           updated_at?: string
@@ -350,6 +356,9 @@ export type Database = {
           retention_expires_at?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          scan_detail?: string | null
+          scan_status?: string
+          scanned_at?: string | null
           status?: string
           storage_path?: string
           updated_at?: string
@@ -1931,6 +1940,9 @@ export type Database = {
           retention_expires_at: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          scan_detail: string | null
+          scan_status: string
+          scanned_at: string | null
           status: string
           storage_path: string
           superseded_by: string | null
@@ -1950,6 +1962,9 @@ export type Database = {
           retention_expires_at?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          scan_detail?: string | null
+          scan_status?: string
+          scanned_at?: string | null
           status?: string
           storage_path: string
           superseded_by?: string | null
@@ -1969,6 +1984,9 @@ export type Database = {
           retention_expires_at?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          scan_detail?: string | null
+          scan_status?: string
+          scanned_at?: string | null
           status?: string
           storage_path?: string
           superseded_by?: string | null
@@ -2135,6 +2153,60 @@ export type Database = {
           full_name?: string
           id?: string
           whatsapp_number?: string
+        }
+        Relationships: []
+      }
+      notification_deliveries: {
+        Row: {
+          attempts: number
+          channel: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          message_id: string | null
+          next_attempt_at: string | null
+          payload: Json
+          provider_response: string | null
+          recipient: string
+          recipient_user_id: string | null
+          sent_at: string | null
+          status: string
+          template_key: string
+        }
+        Insert: {
+          attempts?: number
+          channel: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          message_id?: string | null
+          next_attempt_at?: string | null
+          payload?: Json
+          provider_response?: string | null
+          recipient: string
+          recipient_user_id?: string | null
+          sent_at?: string | null
+          status?: string
+          template_key: string
+        }
+        Update: {
+          attempts?: number
+          channel?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          message_id?: string | null
+          next_attempt_at?: string | null
+          payload?: Json
+          provider_response?: string | null
+          recipient?: string
+          recipient_user_id?: string | null
+          sent_at?: string | null
+          status?: string
+          template_key?: string
         }
         Relationships: []
       }
@@ -4296,6 +4368,10 @@ export type Database = {
         }
         Returns: number
       }
+      notification_delivery_failure_alert: {
+        Args: { p_delivery_id: string }
+        Returns: undefined
+      }
       notify_partner_org: {
         Args: {
           p_link: string
@@ -4314,6 +4390,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      retry_failed_notifications: { Args: never; Returns: number }
       run_document_expiry_job: { Args: never; Returns: Json }
       run_sla_at_risk_job: { Args: never; Returns: number }
       set_invoice_maturity_date: {

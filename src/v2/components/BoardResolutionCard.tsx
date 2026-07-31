@@ -5,6 +5,8 @@ import { toast } from '@/hooks/use-toast';
 import { openDocument, companyDocPath } from '@/v2/lib/documents';
 import { useAuth } from '@/v2/useAuth';
 import { FileText, Upload } from 'lucide-react';
+import { sniffFileType, contentTypeFor, MISMATCH_MESSAGE } from '@/v2/lib/fileSniff';
+
 
 type Resolution = {
   id: string;
@@ -116,20 +118,31 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
     if (!file || !exporterId) return;
     setUploading(true);
     try {
+      // Type comes from the file's own leading bytes, not its extension.
+      const sniffed = await sniffFileType(file);
+      if (!sniffed) throw new Error(MISMATCH_MESSAGE);
       const { data: dt } = await supabase.from('document_types').select('id').eq('code', 'board_resolution').maybeSingle();
       if (!dt) throw new Error('Board resolution document type is not configured.');
       const path = companyDocPath(exporterId, 'board-resolution', file.name);
-      const { error: upErr } = await supabase.storage.from('veloxis-documents').upload(path, file);
+      const { error: upErr } = await supabase.storage.from('veloxis-documents')
+        .upload(path, file, { contentType: contentTypeFor(sniffed) });
       if (upErr) throw upErr;
-      const { error: insErr } = await supabase.from('company_documents').insert({
+      const { data: inserted, error: insErr } = await supabase.from('company_documents').insert({
         exporter_id: exporterId,
         document_type_id: dt.id,
         storage_path: path,
         original_filename: file.name,
         file_size_bytes: file.size,
         uploaded_by: user?.id ?? null,
-      });
+      }).select('id').single();
       if (insErr) throw insErr;
+
+      const { data: scan } = await supabase.functions.invoke('scan-document', {
+        body: { document_id: inserted.id, document_kind: 'company' },
+      });
+      if ((scan as any)?.scan_status && (scan as any).scan_status !== 'clean') {
+        throw new Error((scan as any).message ?? MISMATCH_MESSAGE);
+      }
       toast({ title: 'Board resolution uploaded', description: 'It will appear as verified once a reviewer signs it off.' });
       load();
     } catch (err: any) {
@@ -138,6 +151,7 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
       setUploading(false);
     }
   };
+
 
   if (loading) {
     return (
