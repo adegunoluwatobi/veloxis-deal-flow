@@ -5,8 +5,9 @@ import { INSTRUMENT_CODES, SIGNER_PLAN, InstrumentCode } from '../_shared/instru
 const url = Deno.env.get('SUPABASE_URL')!;
 const anon = Deno.env.get('SUPABASE_ANON_KEY')!;
 const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const HS_KEY = Deno.env.get('HELLOSIGN_API_KEY') ?? '';
-const HS_TEST = (Deno.env.get('HELLOSIGN_TEST_MODE') ?? '1') === '1';
+// Read only inside the edge function. Never logged, never returned in a response.
+const HS_KEY = Deno.env.get('DROPBOX_SIGN_API_KEY') ?? Deno.env.get('HELLOSIGN_API_KEY') ?? '';
+
 
 const basic = () => 'Basic ' + btoa(`${HS_KEY}:`);
 
