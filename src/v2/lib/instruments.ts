@@ -73,3 +73,25 @@ export function useInstruments(invoiceId: string | undefined) {
 
   return { loading, rows, reload, allSigned };
 }
+
+export function useEsignatureMode() {
+  const [mode, setMode] = useState<'test' | 'production'>('test');
+  const [testEmail, setTestEmail] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const reload = useCallback(async () => {
+    const { data } = await supabase.from('v2_system_config').select('key, value')
+      .in('key', ['esignature_mode', 'esignature_test_email']);
+    const map: Record<string, string> = {};
+    (data ?? []).forEach((c: any) => { map[c.key] = String(c.value).replace(/^"|"$/g, ''); });
+    setMode(map.esignature_mode === 'production' ? 'production' : 'test');
+    setTestEmail(map.esignature_test_email ?? '');
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { reload(); }, [reload]);
+
+  return { mode, testEmail, isTest: mode !== 'production', loading, reload };
+}
+
+export const TEST_MODE_LABEL = 'Test mode. Not a binding signature.';
