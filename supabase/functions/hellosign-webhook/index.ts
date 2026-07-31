@@ -206,7 +206,7 @@ Deno.serve(async (req) => {
       action: status === 'declined' ? 'signature_declined' : allSigned ? 'signature_completed' : 'signature_requested',
       actor_role: 'system',
       metadata: {
-        provider_request_id: requestId, event: eventType,
+        provider_request_id: requestId, event: eventType, mode: isTest ? 'test' : 'production',
         after: { status, certificate_path: certificatePath },
       },
     });
