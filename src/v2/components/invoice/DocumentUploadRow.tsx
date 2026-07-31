@@ -32,7 +32,7 @@ const sanitize = (name: string) =>
   name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, '');
 
 /** Upload with real progress via XHR against the Storage REST endpoint. */
-async function uploadWithProgress(path: string, file: File, onProgress: (pct: number) => void) {
+async function uploadWithProgress(path: string, file: File, onProgress: (pct: number) => void, contentType: string) {
   const { data: sess } = await supabase.auth.getSession();
   const token = sess.session?.access_token;
   if (!token) throw new Error('Your session has expired. Please sign in again.');
@@ -42,7 +42,8 @@ async function uploadWithProgress(path: string, file: File, onProgress: (pct: nu
     xhr.open('POST', url, true);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     xhr.setRequestHeader('x-upsert', 'false');
-    if (file.type) xhr.setRequestHeader('Content-Type', file.type);
+    xhr.setRequestHeader('Content-Type', contentType);
+
     xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(Math.round((e.loaded / e.total) * 100));
     xhr.onload = () => (xhr.status >= 200 && xhr.status < 300
       ? resolve()
