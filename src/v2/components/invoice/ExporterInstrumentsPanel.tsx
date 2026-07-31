@@ -1,4 +1,4 @@
-import { useInstruments, SIGNER_ROLE_LABEL } from '@/v2/lib/instruments';
+import { useInstruments, SIGNER_ROLE_LABEL, TEST_MODE_LABEL, useEsignatureMode } from '@/v2/lib/instruments';
 import { cn } from '@/lib/utils';
 import { ExternalLink, FileSignature } from 'lucide-react';
 
@@ -18,6 +18,7 @@ const STATE_CLASS = {
 
 export default function ExporterInstrumentsPanel({ invoiceId }: { invoiceId: string | undefined }) {
   const { rows, loading } = useInstruments(invoiceId);
+  const { isTest } = useEsignatureMode();
 
   return (
     <div className="space-y-2">
@@ -32,6 +33,11 @@ export default function ExporterInstrumentsPanel({ invoiceId }: { invoiceId: str
               <div className="text-sm font-medium flex items-center gap-2">
                 <FileSignature className="h-4 w-4 text-muted-foreground" /> {r.label}
               </div>
+              {isTest && (
+                <div className="mt-1 mb-1 text-xs px-2 py-0.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 inline-block">
+                  {TEST_MODE_LABEL}
+                </div>
+              )}
               <div className="text-xs text-muted-foreground">
                 {state === 'signed' && r.signedAt
                   ? `Signed on ${new Date(r.signedAt).toLocaleDateString('en-GB')}`

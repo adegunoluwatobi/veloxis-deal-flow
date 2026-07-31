@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { openDocument } from '@/v2/lib/documents';
-import { InstrumentRow, SIGNER_ROLE_LABEL, useInstruments } from '@/v2/lib/instruments';
+import { InstrumentRow, SIGNER_ROLE_LABEL, TEST_MODE_LABEL, useInstruments, useEsignatureMode } from '@/v2/lib/instruments';
 import { cn } from '@/lib/utils';
 import { FileSignature, RefreshCw, Send, Stamp } from 'lucide-react';
 
@@ -33,6 +33,7 @@ export default function GeneratedInstrumentsPanel({
   onChanged: () => void;
 }) {
   const { rows, reload, loading } = useInstruments(invoiceId);
+  const { isTest } = useEsignatureMode();
   const [busy, setBusy] = useState(false);
   const [serveOpen, setServeOpen] = useState(false);
   const [method, setMethod] = useState('');
@@ -114,6 +115,11 @@ export default function GeneratedInstrumentsPanel({
               <div className="text-sm font-medium flex items-center gap-2">
                 <FileSignature className="h-4 w-4 text-muted-foreground" /> {r.label}
               </div>
+              {isTest && (
+                <div className="mt-1 text-xs px-2 py-0.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 inline-block">
+                  {TEST_MODE_LABEL}
+                </div>
+              )}
               <div className="text-xs text-muted-foreground">
                 v{r.document.version} · template version {r.document.template_version ?? '—'} ·{' '}
                 {new Date(r.document.uploaded_at).toLocaleString('en-GB')}

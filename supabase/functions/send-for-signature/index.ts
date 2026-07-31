@@ -5,8 +5,9 @@ import { INSTRUMENT_CODES, SIGNER_PLAN, InstrumentCode } from '../_shared/instru
 const url = Deno.env.get('SUPABASE_URL')!;
 const anon = Deno.env.get('SUPABASE_ANON_KEY')!;
 const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const HS_KEY = Deno.env.get('HELLOSIGN_API_KEY') ?? '';
-const HS_TEST = (Deno.env.get('HELLOSIGN_TEST_MODE') ?? '1') === '1';
+// Read only inside the edge function. Never logged, never returned in a response.
+const HS_KEY = Deno.env.get('DROPBOX_SIGN_API_KEY') ?? Deno.env.get('HELLOSIGN_API_KEY') ?? '';
+
 
 const basic = () => 'Basic ' + btoa(`${HS_KEY}:`);
 
@@ -48,20 +49,39 @@ Deno.serve(async (req) => {
       return json({ error: 'The signatory is not named on the board resolution relied upon. Correct this before sending.' }, 400);
     }
 
-    // Veloxis counterparty
+    // Veloxis counterparty and signing mode
     const { data: cfg } = await admin.from('v2_system_config').select('key, value')
-      .in('key', ['veloxis_signatory_name', 'veloxis_signatory_email']);
+      .in('key', ['veloxis_signatory_name', 'veloxis_signatory_email', 'esignature_mode', 'esignature_test_email']);
     const cfgMap: Record<string, string> = {};
     (cfg ?? []).forEach((c: any) => { cfgMap[c.key] = String(c.value).replace(/^"|"$/g, ''); });
     const veloxisName = cfgMap.veloxis_signatory_name || 'Veloxis approver';
     const veloxisEmail = cfgMap.veloxis_signatory_email || u.user.email || '';
     if (!veloxisEmail) return json({ error: 'No Veloxis countersignatory email is configured' }, 400);
 
+    const testMode = (cfgMap.esignature_mode || 'test') !== 'production';
+    const testEmail = (cfgMap.esignature_test_email || '').trim();
+    if (testMode && !testEmail) {
+      return json({ error: 'Test mode is on but no internal test email address is configured. Set it in Document templates.' }, 400);
+    }
+
     const { data: types } = await admin.from('document_types')
       .select('id, code, label').in('code', INSTRUMENT_CODES as unknown as string[]).eq('level', 'invoice');
     const { data: docs } = await admin.from('invoice_documents')
-      .select('id, document_type_id, storage_path, original_filename, version')
+      .select('id, document_type_id, storage_path, original_filename, version, template_id')
       .eq('invoice_id', invoiceId).is('superseded_by', null).eq('source', 'veloxis_generated');
+
+    // Counsel approval gate: nothing goes out for signature on unapproved wording.
+    const { data: tpls } = await admin.from('document_templates')
+      .select('id, code, label, counsel_approved')
+      .in('code', INSTRUMENT_CODES as unknown as string[]).eq('active', true);
+    const unapproved = (tpls ?? []).filter((t: any) => !t.counsel_approved).map((t: any) => t.label ?? t.code);
+    if (unapproved.length) {
+      return json({
+        error: 'This document cannot be generated until the template has been approved by counsel.',
+        templates: unapproved,
+      }, 400);
+    }
+
 
     const results: any[] = [];
     for (const code of INSTRUMENT_CODES) {
@@ -73,22 +93,29 @@ Deno.serve(async (req) => {
       if (dlErr || !file) return json({ error: `Could not read the generated ${code}` }, 500);
 
       const form = new FormData();
-      form.append('title', `${type.label} · ${inv.reference ?? inv.invoice_number}`);
-      form.append('subject', `${type.label} for ${inv.reference ?? inv.invoice_number}`);
-      form.append('message', 'Please review and sign this document electronically.');
-      form.append('test_mode', HS_TEST ? '1' : '0');
+      const titlePrefix = testMode ? 'TEST MODE · ' : '';
+      form.append('title', `${titlePrefix}${type.label} · ${inv.reference ?? inv.invoice_number}`);
+      form.append('subject', `${titlePrefix}${type.label} for ${inv.reference ?? inv.invoice_number}`);
+      form.append('message', testMode
+        ? 'Test mode. This is not a binding signature and is routed to the internal test address only.'
+        : 'Please review and sign this document electronically.');
+      form.append('test_mode', testMode ? '1' : '0');
       form.append('file[0]', file, doc.original_filename ?? `${code}.pdf`);
 
       const plan = SIGNER_PLAN[code as InstrumentCode];
       plan.forEach((role, idx) => {
         const isExporter = role === 'exporter_signatory';
+        const realEmail = isExporter ? sig.email! : veloxisEmail;
         form.append(`signers[${idx}][name]`, isExporter ? (sig.full_name ?? 'Authorised signatory') : veloxisName);
-        form.append(`signers[${idx}][email_address]`, isExporter ? sig.email! : veloxisEmail);
+        // In test mode every signature request goes to the internal test address only.
+        form.append(`signers[${idx}][email_address]`, testMode ? testEmail : realEmail);
         form.append(`signers[${idx}][order]`, String(idx));
       });
       form.append('metadata[invoice_id]', invoiceId);
       form.append('metadata[document_id]', doc.id);
       form.append('metadata[code]', code);
+      form.append('metadata[mode]', testMode ? 'test' : 'production');
+
 
       const res = await fetch('https://api.hellosign.com/v3/signature_request/send', {
         method: 'POST', headers: { Authorization: basic() }, body: form,
@@ -103,6 +130,7 @@ Deno.serve(async (req) => {
       for (let idx = 0; idx < plan.length; idx++) {
         const role = plan[idx];
         const isExporter = role === 'exporter_signatory';
+        const realEmail = isExporter ? sig.email : veloxisEmail;
         await admin.from('invoice_signature_requests').insert({
           invoice_id: invoiceId,
           document_id: doc.id,
@@ -110,7 +138,8 @@ Deno.serve(async (req) => {
           provider_request_id: requestId,
           signer_role: role,
           signer_name: isExporter ? sig.full_name : veloxisName,
-          signer_email: isExporter ? sig.email : veloxisEmail,
+          // Record the address the request was actually delivered to so callbacks reconcile.
+          signer_email: testMode ? testEmail : realEmail,
           status: 'sent',
           sent_at: new Date().toISOString(),
         });
@@ -120,20 +149,26 @@ Deno.serve(async (req) => {
         entity_type: 'invoice_document', entity_id: doc.id, invoice_id: invoiceId,
         exporter_id: inv.exporter_id, action: 'signature_requested', actor_id: actorId,
         actor_role: list.join(','),
-        metadata: { code, provider: 'hellosign', provider_request_id: requestId, signers: plan, signer_count: providerSigners.length },
+        metadata: {
+          code, provider: 'hellosign', provider_request_id: requestId, signers: plan,
+          signer_count: providerSigners.length, mode: testMode ? 'test' : 'production',
+        },
       });
 
-      results.push({ code, provider_request_id: requestId, signers: plan.length });
+      results.push({ code, provider_request_id: requestId, signers: plan.length, mode: testMode ? 'test' : 'production' });
     }
 
-    await admin.rpc('v2_notify_exporter', {
-      p_invoice_id: invoiceId,
-      p_title: 'Documents ready for your signature',
-      p_message: 'We have prepared your assignment documents. You will receive an email asking you to sign them electronically.',
-      p_type: 'action_required',
-    });
+    if (!testMode) {
+      await admin.rpc('v2_notify_exporter', {
+        p_invoice_id: invoiceId,
+        p_title: 'Documents ready for your signature',
+        p_message: 'We have prepared your assignment documents. You will receive an email asking you to sign them electronically.',
+        p_type: 'action_required',
+      });
+    }
 
-    return json({ sent: results });
+    return json({ sent: results, mode: testMode ? 'test' : 'production' });
+
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }
