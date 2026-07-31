@@ -5,12 +5,13 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { UploadCloud, FileText, RefreshCw, AlertTriangle } from 'lucide-react';
+import { UploadCloud, FileText, RefreshCw, AlertTriangle, ShieldAlert, Loader2 } from 'lucide-react';
+import { sniffFileType, contentTypeFor, MISMATCH_MESSAGE, SCAN_PENDING_MESSAGE } from '@/v2/lib/fileSniff';
 
-export const ACCEPTED = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
 export const ACCEPT_ATTR = '.pdf,.jpg,.jpeg,.png,.webp';
 export const MAX_BYTES = 20 * 1024 * 1024;
 const BUCKET = 'veloxis-documents';
+
 
 export type UploadedDoc = {
   id: string;
