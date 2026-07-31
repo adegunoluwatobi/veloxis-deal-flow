@@ -1191,6 +1191,10 @@ export type Database = {
           active: boolean
           body: string
           code: string
+          counsel_approved: boolean
+          counsel_approved_at: string | null
+          counsel_approved_by: string | null
+          counsel_reference: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -1203,6 +1207,10 @@ export type Database = {
           active?: boolean
           body: string
           code: string
+          counsel_approved?: boolean
+          counsel_approved_at?: string | null
+          counsel_approved_by?: string | null
+          counsel_reference?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -1215,6 +1223,10 @@ export type Database = {
           active?: boolean
           body?: string
           code?: string
+          counsel_approved?: boolean
+          counsel_approved_at?: string | null
+          counsel_approved_by?: string | null
+          counsel_reference?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -4394,6 +4406,10 @@ export type Database = {
         Returns: string
       }
       advance_escalation_ladder: { Args: never; Returns: undefined }
+      approve_template_counsel: {
+        Args: { p_counsel_reference: string; p_template_id: string }
+        Returns: undefined
+      }
       calculate_deal_pricing: {
         Args: {
           p_advance_percentage?: number
@@ -4542,6 +4558,7 @@ export type Database = {
       retry_failed_notifications: { Args: never; Returns: number }
       run_document_expiry_job: { Args: never; Returns: Json }
       run_sla_at_risk_job: { Args: never; Returns: number }
+      set_esignature_mode: { Args: { p_mode: string }; Returns: undefined }
       set_invoice_maturity_date: {
         Args: {
           p_invoice_id: string
