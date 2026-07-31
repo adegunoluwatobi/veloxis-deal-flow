@@ -54,7 +54,12 @@ export default function ExporterOnboarding() {
 
   useEffect(() => { load(); }, [load]);
 
-  if (!f) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
+  if (!f) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-muted-foreground">
+      <span>Loading…</span>
+      <SignOutButton />
+    </div>
+  );
 
   const set = (k: string, v: any) => setF((x: any) => ({ ...x, [k]: v }));
   const setBank = (k: string, v: string) => setF((x: any) => ({ ...x, bank_details: { ...(x.bank_details ?? {}), [k]: v } }));
