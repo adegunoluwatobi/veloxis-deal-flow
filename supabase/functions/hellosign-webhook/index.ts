@@ -144,6 +144,12 @@ Deno.serve(async (req) => {
 
     const allSigned = eventType === 'signature_request_all_signed' || (sr.is_complete === true);
 
+    // A test-mode envelope is not a binding execution. It must never look like a
+    // verified Stage 2 document, and must never store a certificate of completion,
+    // because the disbursement gate reads that certificate.
+    const isTest = sr.test_mode === true || sr.test_mode === 1 || sr.test_mode === '1'
+      || String(sr.metadata?.mode ?? '') === 'test';
+
     let certificatePath: string | null = null;
 
     if (allSigned && documentId) {
@@ -158,12 +164,13 @@ Deno.serve(async (req) => {
           .eq('id', documentId).maybeSingle();
         if (doc) {
           const nextVersion = (doc.version ?? 1) + 1;
-          const name = (doc.original_filename ?? 'document.pdf').replace(/\.pdf$/i, '') + `-signed-v${nextVersion}.pdf`;
+          const base = (doc.original_filename ?? 'document.pdf').replace(/\.pdf$/i, '');
+          const name = `${isTest ? 'TEST-' : ''}${base}-signed-v${nextVersion}.pdf`;
           const path = `${inv?.exporter_id}/invoices/${invoiceId}/generated/${Date.now()}-${name}`;
           const up = await admin.storage.from('veloxis-documents')
             .upload(path, bytes, { contentType: 'application/pdf' });
           if (!up.error) {
-            certificatePath = path;
+            certificatePath = isTest ? null : path;
             const { data: newDoc } = await admin.from('invoice_documents').insert({
               invoice_id: invoiceId,
               document_type_id: doc.document_type_id,
@@ -171,18 +178,20 @@ Deno.serve(async (req) => {
               original_filename: name,
               file_size_bytes: bytes.byteLength,
               version: nextVersion,
-              status: 'verified',
-              reviewed_at: new Date().toISOString(),
+              status: isTest ? 'pending' : 'verified',
+              reviewed_at: isTest ? null : new Date().toISOString(),
               source: 'veloxis_generated',
               template_id: doc.template_id,
               template_version: doc.template_version,
               scan_status: 'clean',
               scanned_at: new Date().toISOString(),
-              scan_detail: 'Executed copy returned by the signing provider',
+              scan_detail: isTest
+                ? 'Test mode copy returned by the signing provider. Not a binding signature.'
+                : 'Executed copy returned by the signing provider',
             }).select('id').single();
             await admin.from('invoice_documents').update({ superseded_by: newDoc?.id }).eq('id', documentId);
             await admin.from('invoice_signature_requests')
-              .update({ certificate_path: path, document_id: newDoc?.id ?? documentId })
+              .update({ certificate_path: certificatePath, document_id: newDoc?.id ?? documentId })
               .eq('provider_request_id', requestId);
           }
         }
