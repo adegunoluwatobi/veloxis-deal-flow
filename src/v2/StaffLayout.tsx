@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard, Users, FileText, Building2, ShieldCheck,
   Landmark, ScrollText, UserCog, Settings, LogOut, UserCircle, Database,
-  Bell, Eye, Archive,
+  Bell, BellOff, Eye, Archive,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -19,7 +19,7 @@ const NAV = [
   { to: '/app/audit', label: 'Audit Log', icon: ScrollText },
   { to: '/admin/access-log', label: 'Access Log', icon: Eye, superOnly: true },
   { to: '/admin/retention', label: 'Retention', icon: Archive, superOnly: true },
-  { to: '/admin/notifications', label: 'Notifications', icon: Bell, superOnly: true },
+  { to: '/admin/notifications', label: 'Notifications', icon: Bell, BellOff, superOnly: true },
   { to: '/admin/notifications/failures', label: 'Undelivered', icon: BellOff, superOnly: true },
 
   { to: '/app/users', label: 'User Management', icon: UserCog, superOnly: true },
