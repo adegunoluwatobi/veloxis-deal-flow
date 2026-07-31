@@ -93,22 +93,29 @@ Deno.serve(async (req) => {
       if (dlErr || !file) return json({ error: `Could not read the generated ${code}` }, 500);
 
       const form = new FormData();
-      form.append('title', `${type.label} · ${inv.reference ?? inv.invoice_number}`);
-      form.append('subject', `${type.label} for ${inv.reference ?? inv.invoice_number}`);
-      form.append('message', 'Please review and sign this document electronically.');
-      form.append('test_mode', HS_TEST ? '1' : '0');
+      const titlePrefix = testMode ? 'TEST MODE · ' : '';
+      form.append('title', `${titlePrefix}${type.label} · ${inv.reference ?? inv.invoice_number}`);
+      form.append('subject', `${titlePrefix}${type.label} for ${inv.reference ?? inv.invoice_number}`);
+      form.append('message', testMode
+        ? 'Test mode. This is not a binding signature and is routed to the internal test address only.'
+        : 'Please review and sign this document electronically.');
+      form.append('test_mode', testMode ? '1' : '0');
       form.append('file[0]', file, doc.original_filename ?? `${code}.pdf`);
 
       const plan = SIGNER_PLAN[code as InstrumentCode];
       plan.forEach((role, idx) => {
         const isExporter = role === 'exporter_signatory';
+        const realEmail = isExporter ? sig.email! : veloxisEmail;
         form.append(`signers[${idx}][name]`, isExporter ? (sig.full_name ?? 'Authorised signatory') : veloxisName);
-        form.append(`signers[${idx}][email_address]`, isExporter ? sig.email! : veloxisEmail);
+        // In test mode every signature request goes to the internal test address only.
+        form.append(`signers[${idx}][email_address]`, testMode ? testEmail : realEmail);
         form.append(`signers[${idx}][order]`, String(idx));
       });
       form.append('metadata[invoice_id]', invoiceId);
       form.append('metadata[document_id]', doc.id);
       form.append('metadata[code]', code);
+      form.append('metadata[mode]', testMode ? 'test' : 'production');
+
 
       const res = await fetch('https://api.hellosign.com/v3/signature_request/send', {
         method: 'POST', headers: { Authorization: basic() }, body: form,
