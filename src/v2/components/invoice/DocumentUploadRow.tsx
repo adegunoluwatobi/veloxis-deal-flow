@@ -92,30 +92,43 @@ export default function DocumentUploadRow({
     setError(null);
     setLastFile(file);
     if (!invoiceId) { setError('Save your invoice details first, then upload.'); return; }
-    if (!ACCEPTED.includes(file.type)) { setError('That file type is not accepted. Use PDF, JPG, PNG or WEBP.'); return; }
     if (file.size > MAX_BYTES) { setError('That file is larger than 20 MB. Please upload a smaller file.'); return; }
+
+    // Type is decided by the leading bytes of the file, not by its extension
+    // or the MIME type the browser reports.
+    const sniffed = await sniffFileType(file);
+    if (!sniffed) { setError(MISMATCH_MESSAGE); return; }
 
     setProgress(1);
     const path = `${exporterId}/invoices/${invoiceId}/${Date.now()}_${sanitize(file.name)}`;
     try {
-      await uploadWithProgress(path, file, setProgress);
-      const { error: insErr } = await supabase.from('invoice_documents').insert({
+      await uploadWithProgress(path, file, setProgress, contentTypeFor(sniffed));
+      const { data: inserted, error: insErr } = await supabase.from('invoice_documents').insert({
         invoice_id: invoiceId,
         document_type_id: documentTypeId,
         storage_path: path,
         original_filename: file.name,
         file_size_bytes: file.size,
-      });
+      }).select('id').single();
       if (insErr) throw new Error(insErr.message);
+
+      const { data: scan } = await supabase.functions.invoke('scan-document', {
+        body: { document_id: inserted.id, document_kind: 'invoice' },
+      });
       setProgress(null);
       setLastFile(null);
-      toast({ title: 'Uploaded', description: `${file.name} added to ${label}.` });
+      if ((scan as any)?.scan_status && (scan as any).scan_status !== 'clean') {
+        setError((scan as any).message ?? MISMATCH_MESSAGE);
+      } else {
+        toast({ title: 'Uploaded', description: `${file.name} added to ${label}.` });
+      }
       onUploaded();
     } catch (e: any) {
       setProgress(null);
       setError(e?.message ?? 'Upload failed. Please try again.');
     }
   }, [invoiceId, exporterId, documentTypeId, label, onUploaded]);
+
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
