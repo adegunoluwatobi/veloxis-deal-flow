@@ -29,7 +29,10 @@ export function AuthError({ message, onRetry }: { message: string; onRetry: () =
         </p>
         <p className="text-xs text-muted-foreground/80 pt-1">{message}</p>
       </div>
-      <Button size="sm" onClick={onRetry}>Try again</Button>
+      <div className="flex items-center gap-2">
+        <Button size="sm" onClick={onRetry}>Try again</Button>
+        <SignOutButton variant="outline" />
+      </div>
     </div>
   );
 }
