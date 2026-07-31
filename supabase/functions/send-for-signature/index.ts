@@ -49,20 +49,39 @@ Deno.serve(async (req) => {
       return json({ error: 'The signatory is not named on the board resolution relied upon. Correct this before sending.' }, 400);
     }
 
-    // Veloxis counterparty
+    // Veloxis counterparty and signing mode
     const { data: cfg } = await admin.from('v2_system_config').select('key, value')
-      .in('key', ['veloxis_signatory_name', 'veloxis_signatory_email']);
+      .in('key', ['veloxis_signatory_name', 'veloxis_signatory_email', 'esignature_mode', 'esignature_test_email']);
     const cfgMap: Record<string, string> = {};
     (cfg ?? []).forEach((c: any) => { cfgMap[c.key] = String(c.value).replace(/^"|"$/g, ''); });
     const veloxisName = cfgMap.veloxis_signatory_name || 'Veloxis approver';
     const veloxisEmail = cfgMap.veloxis_signatory_email || u.user.email || '';
     if (!veloxisEmail) return json({ error: 'No Veloxis countersignatory email is configured' }, 400);
 
+    const testMode = (cfgMap.esignature_mode || 'test') !== 'production';
+    const testEmail = (cfgMap.esignature_test_email || '').trim();
+    if (testMode && !testEmail) {
+      return json({ error: 'Test mode is on but no internal test email address is configured. Set it in Document templates.' }, 400);
+    }
+
     const { data: types } = await admin.from('document_types')
       .select('id, code, label').in('code', INSTRUMENT_CODES as unknown as string[]).eq('level', 'invoice');
     const { data: docs } = await admin.from('invoice_documents')
-      .select('id, document_type_id, storage_path, original_filename, version')
+      .select('id, document_type_id, storage_path, original_filename, version, template_id')
       .eq('invoice_id', invoiceId).is('superseded_by', null).eq('source', 'veloxis_generated');
+
+    // Counsel approval gate: nothing goes out for signature on unapproved wording.
+    const { data: tpls } = await admin.from('document_templates')
+      .select('id, code, label, counsel_approved')
+      .in('code', INSTRUMENT_CODES as unknown as string[]).eq('active', true);
+    const unapproved = (tpls ?? []).filter((t: any) => !t.counsel_approved).map((t: any) => t.label ?? t.code);
+    if (unapproved.length) {
+      return json({
+        error: 'This document cannot be generated until the template has been approved by counsel.',
+        templates: unapproved,
+      }, 400);
+    }
+
 
     const results: any[] = [];
     for (const code of INSTRUMENT_CODES) {
