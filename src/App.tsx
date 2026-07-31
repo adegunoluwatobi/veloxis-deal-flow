@@ -36,6 +36,8 @@ import ResetPassword from '@/v2/pages/ResetPassword';
 import StaffReferenceData from '@/v2/pages/staff/ReferenceData';
 import StaffNotifications from '@/v2/pages/staff/Notifications';
 import StaffAccessLog from '@/v2/pages/staff/AccessLog';
+import StaffNotificationFailures from '@/v2/pages/staff/NotificationFailures';
+
 import StaffRetention from '@/v2/pages/staff/Retention';
 
 
