@@ -97,6 +97,17 @@ Deno.serve(async (req) => {
     const { data: types } = await admin.from('document_types')
       .select('id, code, label').in('code', INSTRUMENT_CODES as unknown as string[]).eq('level', 'invoice');
 
+    // Counsel approval gate: no instrument may be generated from unapproved wording.
+    const unapproved = (templates ?? []).filter((t: any) => !t.counsel_approved).map((t: any) => t.label ?? t.code);
+    if (unapproved.length) {
+      return json({
+        error: 'This document cannot be generated until the template has been approved by counsel.',
+        templates: unapproved,
+      }, 400);
+    }
+
+
+
     const created: any[] = [];
     const unresolved: string[] = [];
 
