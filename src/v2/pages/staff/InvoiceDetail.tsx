@@ -17,6 +17,8 @@ import { openDocument, invoiceDocPath } from '@/v2/lib/documents';
 import DocumentReviewPanel, { InspectionOverrideCard, useInvoiceDocuments } from '@/v2/components/invoice/DocumentReviewPanel';
 import CompanyAuthorityPanel, { AuthorityFlags } from '@/v2/components/invoice/CompanyAuthorityPanel';
 import MaturityDateCard from '@/v2/components/invoice/MaturityDateCard';
+import GeneratedInstrumentsPanel from '@/v2/components/invoice/GeneratedInstrumentsPanel';
+import { useInstruments } from '@/v2/lib/instruments';
 import { CheckCircle2, XCircle, ArrowLeft } from 'lucide-react';
 
 type Doc = { id: string; doc_type: string; file_url: string; file_name: string | null; verified: boolean; uploaded_by: string | null; uploaded_at: string };
@@ -64,6 +66,7 @@ export default function StaffInvoiceDetail() {
   useEffect(() => { load(); }, [load]);
 
   const docState = useInvoiceDocuments(id, !!inv?.inspection_required);
+  const instruments = useInstruments(id);
 
   if (!inv) return <div className="text-muted-foreground">Loading…</div>;
 
@@ -72,19 +75,28 @@ export default function StaffInvoiceDetail() {
   const residual = Number(inv.invoice_amount) - advance - fee;
 
   const hasVerifiedDoc = (t: string) => docs.some((d) => d.doc_type === t && d.verified);
+  const instrumentSigned = (code: string) => instruments.rows.find((r) => r.code === code)?.state === 'signed';
   const gate = {
-    deed: hasVerifiedDoc('deed_of_assignment'),
-    tripartite: hasVerifiedDoc('tripartite'),
-    noa: hasVerifiedDoc('notice_of_assignment'),
+    deed: instrumentSigned('deed_of_assignment'),
+    tripartite: instrumentSigned('domiciliation_instruction'),
+    noa: instrumentSigned('notice_of_assignment'),
     buyerClear: buyer?.credit_status === 'clear' && buyer?.sanctions_status === 'clear',
-    bol: hasVerifiedDoc('bill_of_lading'),
+    bol: hasVerifiedDoc('bill_of_lading') || docState.stage1Complete,
   };
   const allGatesPass = Object.values(gate).every(Boolean);
+
+  const originType = docState.types.find((t) => t.code === 'certificate_of_origin');
+  const originVerified = !!originType && docState.currentFor(originType.id)?.status === 'verified';
 
   const noOutstandingRequests = docState.outstandingRequests.length === 0;
   const authorityOk = !!authority && authority.resolutionVerified && authority.inDate && authority.withinHeadroom;
   const reviewGatePass = docState.stage1Complete && authorityOk && noOutstandingRequests;
-  const disbursementGatePass = docState.stage2Complete;
+  const disbursementGatePass = originVerified && instruments.allSigned && allGatesPass;
+  const disbursementBlockers = [
+    !originVerified && 'Certificate of origin must be verified',
+    !instruments.allSigned && 'All three instruments must be signed with certificates of completion stored',
+    !allGatesPass && 'The five point funding control gate is not satisfied',
+  ].filter(Boolean) as string[];
 
   const reviewBlockers = [
     !docState.stage1Complete && `Stage 1 documents ${docState.stage1Verified} of ${docState.stage1Required.length} verified`,
@@ -105,7 +117,7 @@ export default function StaffInvoiceDetail() {
       toast({ title: 'Cannot advance yet', description: reviewBlockers.join('. '), variant: 'destructive' }); return;
     }
     if (to === 'funded' && !disbursementGatePass) {
-      toast({ title: 'Cannot disburse yet', description: `Stage 2 documents ${docState.stage2Verified} of ${docState.stage2Required.length} verified`, variant: 'destructive' }); return;
+      toast({ title: 'Cannot disburse yet', description: disbursementBlockers.join('. '), variant: 'destructive' }); return;
     }
     if (to === 'approved' && isCreator && !window.confirm('You created this invoice. Approving requires an override. Proceed?')) return;
     setBusy(true);
@@ -194,11 +206,12 @@ export default function StaffInvoiceDetail() {
                 <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-3">Five point funding gate</h3>
                 <ul className="space-y-2 text-sm">
                   {[
-                    ['Deed of Assignment uploaded and verified', gate.deed],
-                    ['Tripartite Domiciliation Agreement uploaded and verified', gate.tripartite],
-                    ['Notice of Assignment uploaded and verified', gate.noa],
+                    ['Deed of assignment signed by both parties', gate.deed],
+                    ['Domiciliation instruction signed', gate.tripartite],
+                    ['Notice of assignment signed', gate.noa],
                     ['Buyer credit clear and sanctions clear', gate.buyerClear],
-                    ['Bill of Lading uploaded and verified', gate.bol],
+                    ['Stage 1 shipping documents verified', gate.bol],
+                    ['Certificate of origin verified', originVerified],
                   ].map(([label, ok]) => (
                     <li key={label as string} className="flex items-center gap-2">
                       {ok ? <CheckCircle2 className="h-4 w-4 text-success" /> : <XCircle className="h-4 w-4 text-destructive" />}
@@ -282,6 +295,13 @@ export default function StaffInvoiceDetail() {
                 required={!!inv.inspection_required}
                 reason={inv.inspection_override_reason ?? null}
                 canOverride={canReview}
+                onChanged={load}
+              />
+              <GeneratedInstrumentsPanel
+                invoiceId={id!}
+                invoice={inv}
+                canGenerate={canReview}
+                canSend={canApprove(roles) || isSuperAdmin}
                 onChanged={load}
               />
               <DocumentReviewPanel
