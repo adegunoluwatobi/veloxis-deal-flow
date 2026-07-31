@@ -24,6 +24,8 @@ const NAV = [
 
   { to: '/app/users', label: 'User Management', icon: UserCog, superOnly: true },
   { to: '/admin/reference-data', label: 'Reference Data', icon: Database, superOnly: true },
+  { to: '/admin/templates', label: 'Document Templates', icon: ScrollText, superOnly: true },
+
   { to: '/app/account', label: 'My Account', icon: UserCircle },
   { to: '/app/settings', label: 'Settings', icon: Settings, superOnly: true },
 ];

@@ -16,7 +16,7 @@ import { AlertTriangle, CheckCircle2, ChevronDown, Eye, FilePlus2, History, Shie
 
 export type DocType = {
   id: string; code: string; label: string; stage: number | null;
-  requirement: string; level: string; sort_order: number | null;
+  requirement: string; level: string; sort_order: number | null; generated?: boolean | null;
 };
 export type InvoiceDoc = {
   id: string; invoice_id: string; document_type_id: string; storage_path: string;
@@ -73,7 +73,7 @@ export function useInvoiceDocuments(invoiceId: string | undefined, inspectionReq
   const reload = useCallback(async () => {
     if (!invoiceId) return;
     const [{ data: t }, { data: d }, { data: r }] = await Promise.all([
-      supabase.from('document_types').select('id, code, label, stage, requirement, level, sort_order').eq('active', true).order('sort_order'),
+      supabase.from('document_types').select('id, code, label, stage, requirement, level, sort_order, generated').eq('active', true).order('sort_order'),
       supabase.from('invoice_documents').select('*').eq('invoice_id', invoiceId).order('version', { ascending: false }),
       supabase.from('invoice_document_requests').select('*').eq('invoice_id', invoiceId).order('requested_at', { ascending: false }),
     ]);
@@ -101,7 +101,7 @@ export function useInvoiceDocuments(invoiceId: string | undefined, inspectionReq
     const invoiceTypes = types.filter((t) => t.level === 'invoice');
     const stage1Required = invoiceTypes.filter((t) =>
       t.stage === 1 && (t.requirement === 'mandatory' || (t.code === 'inspection_certificate' && inspectionRequired)));
-    const stage2Required = invoiceTypes.filter((t) => t.stage === 2 && t.requirement === 'mandatory');
+    const stage2Required = invoiceTypes.filter((t) => t.stage === 2 && t.requirement === 'mandatory' && !t.generated);
 
     const currentFor = (typeId: string) => {
       const rows = docs.filter((d) => d.document_type_id === typeId && !d.superseded_by);
@@ -360,7 +360,7 @@ export default function DocumentReviewPanel({
       </div>
 
       <Group title="Stage 1" list={stage1Required} empty="No Stage 1 documents configured." />
-      <Group title="Stage 2" list={stage2Required} empty="No Stage 2 documents configured." />
+      <Group title="Stage 2 exporter uploads" list={stage2Required} empty="No Stage 2 documents configured." />
       <Group title="Optional and requested" list={optionalAndRequested} empty="Nothing optional uploaded or requested." />
 
       <Sheet open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
