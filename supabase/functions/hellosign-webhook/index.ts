@@ -4,7 +4,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 const url = Deno.env.get('SUPABASE_URL')!;
 const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 // Read only inside the edge function. Never logged, never returned in a response.
-const HS_KEY = Deno.env.get('DROPBOX_SIGN_API_KEY') ?? Deno.env.get('HELLOSIGN_API_KEY') ?? '';
+const HS_KEY = Deno.env.get('DROPBOX_SIGN_API_KEY') ?? '';
 
 const basic = () => 'Basic ' + btoa(`${HS_KEY}:`);
 
