@@ -130,6 +130,7 @@ Deno.serve(async (req) => {
       for (let idx = 0; idx < plan.length; idx++) {
         const role = plan[idx];
         const isExporter = role === 'exporter_signatory';
+        const realEmail = isExporter ? sig.email : veloxisEmail;
         await admin.from('invoice_signature_requests').insert({
           invoice_id: invoiceId,
           document_id: doc.id,
@@ -137,7 +138,8 @@ Deno.serve(async (req) => {
           provider_request_id: requestId,
           signer_role: role,
           signer_name: isExporter ? sig.full_name : veloxisName,
-          signer_email: isExporter ? sig.email : veloxisEmail,
+          // Record the address the request was actually delivered to so callbacks reconcile.
+          signer_email: testMode ? testEmail : realEmail,
           status: 'sent',
           sent_at: new Date().toISOString(),
         });
@@ -147,20 +149,26 @@ Deno.serve(async (req) => {
         entity_type: 'invoice_document', entity_id: doc.id, invoice_id: invoiceId,
         exporter_id: inv.exporter_id, action: 'signature_requested', actor_id: actorId,
         actor_role: list.join(','),
-        metadata: { code, provider: 'hellosign', provider_request_id: requestId, signers: plan, signer_count: providerSigners.length },
+        metadata: {
+          code, provider: 'hellosign', provider_request_id: requestId, signers: plan,
+          signer_count: providerSigners.length, mode: testMode ? 'test' : 'production',
+        },
       });
 
-      results.push({ code, provider_request_id: requestId, signers: plan.length });
+      results.push({ code, provider_request_id: requestId, signers: plan.length, mode: testMode ? 'test' : 'production' });
     }
 
-    await admin.rpc('v2_notify_exporter', {
-      p_invoice_id: invoiceId,
-      p_title: 'Documents ready for your signature',
-      p_message: 'We have prepared your assignment documents. You will receive an email asking you to sign them electronically.',
-      p_type: 'action_required',
-    });
+    if (!testMode) {
+      await admin.rpc('v2_notify_exporter', {
+        p_invoice_id: invoiceId,
+        p_title: 'Documents ready for your signature',
+        p_message: 'We have prepared your assignment documents. You will receive an email asking you to sign them electronically.',
+        p_type: 'action_required',
+      });
+    }
 
-    return json({ sent: results });
+    return json({ sent: results, mode: testMode ? 'test' : 'production' });
+
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }
