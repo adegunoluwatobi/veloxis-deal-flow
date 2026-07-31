@@ -5,6 +5,8 @@ import { toast } from '@/hooks/use-toast';
 import { openDocument, companyDocPath } from '@/v2/lib/documents';
 import { useAuth } from '@/v2/useAuth';
 import { FileText, Upload } from 'lucide-react';
+import { sniffFileType, contentTypeFor, MISMATCH_MESSAGE } from '@/v2/lib/fileSniff';
+
 
 type Resolution = {
   id: string;
