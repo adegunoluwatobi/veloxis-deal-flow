@@ -1,5 +1,6 @@
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import SignOutButton from './SignOutButton';
 
 /** Consistent full-screen loading state used everywhere auth readiness is pending. */
 export function AuthLoading({ label = 'Loading your workspace…' }: { label?: string }) {
