@@ -1186,6 +1186,45 @@ export type Database = {
           },
         ]
       }
+      document_templates: {
+        Row: {
+          active: boolean
+          body: string
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          label: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          active?: boolean
+          body: string
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          label: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          active?: boolean
+          body?: string
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          label?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       document_types: {
         Row: {
           accepts: string[]
@@ -1193,6 +1232,7 @@ export type Database = {
           code: string
           created_at: string
           description: string | null
+          generated: boolean
           id: string
           label: string
           level: string
@@ -1207,6 +1247,7 @@ export type Database = {
           code: string
           created_at?: string
           description?: string | null
+          generated?: boolean
           id?: string
           label: string
           level?: string
@@ -1221,6 +1262,7 @@ export type Database = {
           code?: string
           created_at?: string
           description?: string | null
+          generated?: boolean
           id?: string
           label?: string
           level?: string
@@ -1943,9 +1985,12 @@ export type Database = {
           scan_detail: string | null
           scan_status: string
           scanned_at: string | null
+          source: string
           status: string
           storage_path: string
           superseded_by: string | null
+          template_id: string | null
+          template_version: number | null
           updated_at: string
           uploaded_at: string
           uploaded_by: string | null
@@ -1965,9 +2010,12 @@ export type Database = {
           scan_detail?: string | null
           scan_status?: string
           scanned_at?: string | null
+          source?: string
           status?: string
           storage_path: string
           superseded_by?: string | null
+          template_id?: string | null
+          template_version?: number | null
           updated_at?: string
           uploaded_at?: string
           uploaded_by?: string | null
@@ -1987,9 +2035,12 @@ export type Database = {
           scan_detail?: string | null
           scan_status?: string
           scanned_at?: string | null
+          source?: string
           status?: string
           storage_path?: string
           superseded_by?: string | null
+          template_id?: string | null
+          template_version?: number | null
           updated_at?: string
           uploaded_at?: string
           uploaded_by?: string | null
@@ -2022,6 +2073,86 @@ export type Database = {
             columns: ["superseded_by"]
             isOneToOne: false
             referencedRelation: "invoice_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_documents_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "document_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_signature_requests: {
+        Row: {
+          certificate_path: string | null
+          completed_at: string | null
+          created_at: string
+          document_id: string | null
+          id: string
+          invoice_id: string
+          provider: string
+          provider_request_id: string | null
+          sent_at: string | null
+          signer_email: string | null
+          signer_name: string | null
+          signer_role: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          certificate_path?: string | null
+          completed_at?: string | null
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          invoice_id: string
+          provider?: string
+          provider_request_id?: string | null
+          sent_at?: string | null
+          signer_email?: string | null
+          signer_name?: string | null
+          signer_role: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          certificate_path?: string | null
+          completed_at?: string | null
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          invoice_id?: string
+          provider?: string
+          provider_request_id?: string | null
+          sent_at?: string | null
+          signer_email?: string | null
+          signer_name?: string | null
+          signer_role?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_signature_requests_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_signature_requests_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v2_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_signature_requests_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v2_invoices_with_ageing"
             referencedColumns: ["id"]
           },
         ]
@@ -3563,6 +3694,9 @@ export type Database = {
           maturity_date_overridden_at: string | null
           maturity_date_overridden_by: string | null
           maturity_date_override_reason: string | null
+          notice_served_at: string | null
+          notice_served_by: string | null
+          notice_served_method: string | null
           port_of_discharge: string | null
           port_of_loading: string | null
           reference: string | null
@@ -3614,6 +3748,9 @@ export type Database = {
           maturity_date_overridden_at?: string | null
           maturity_date_overridden_by?: string | null
           maturity_date_override_reason?: string | null
+          notice_served_at?: string | null
+          notice_served_by?: string | null
+          notice_served_method?: string | null
           port_of_discharge?: string | null
           port_of_loading?: string | null
           reference?: string | null
@@ -3665,6 +3802,9 @@ export type Database = {
           maturity_date_overridden_at?: string | null
           maturity_date_overridden_by?: string | null
           maturity_date_override_reason?: string | null
+          notice_served_at?: string | null
+          notice_served_by?: string | null
+          notice_served_method?: string | null
           port_of_discharge?: string | null
           port_of_loading?: string | null
           reference?: string | null
@@ -4286,6 +4426,15 @@ export type Database = {
         Args: { _exporter: Database["public"]["Tables"]["exporters"]["Row"] }
         Returns: Database["public"]["Enums"]["pipeline_status"]
       }
+      create_template_version: {
+        Args: {
+          p_body: string
+          p_code: string
+          p_description?: string
+          p_label?: string
+        }
+        Returns: string
+      }
       default_originator_for_partner_org: {
         Args: { p_org_id: string }
         Returns: string
@@ -4437,6 +4586,10 @@ export type Database = {
       v2_exporter_can_see_buyer: {
         Args: { _buyer_id: string; _user_id: string }
         Returns: boolean
+      }
+      v2_mark_notice_served: {
+        Args: { p_invoice_id: string; p_method: string }
+        Returns: undefined
       }
       v2_notify_exporter: {
         Args: {
