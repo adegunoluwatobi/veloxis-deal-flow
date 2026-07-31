@@ -49,9 +49,13 @@ export function RequireAuth({ children, allow }: { children: React.ReactNode; al
   // Staff roles take precedence — never trap a staff user in the exporter onboarding flow.
   const isExporter = roles.includes('exporter') && !isStaff(roles);
   const onboardingComplete = exporterOnboarding?.onboarding_status === 'active';
-  if (isExporter && !onboardingComplete && loc.pathname !== '/portal/onboarding' && loc.pathname !== '/portal/account') {
+  // Pages that must never bounce to onboarding, otherwise the password gate above
+  // and this gate ping-pong forever and the app renders a blank screen.
+  const ONBOARDING_EXEMPT = ['/portal/onboarding', '/portal/account', '/set-password'];
+  if (isExporter && !onboardingComplete && !ONBOARDING_EXEMPT.includes(loc.pathname)) {
     return <Navigate to="/portal/onboarding" replace />;
   }
+
 
   if (allow === 'staff') {
     if (!isStaff(roles)) return <Navigate to="/portal" replace />;
