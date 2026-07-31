@@ -372,11 +372,14 @@ export default function StaffInvoiceDetail() {
             {status === 'approved' && canApprove(roles) && (
               <>
                 {!disbursementGatePass && (
-                  <p className="text-xs text-muted-foreground">Stage 2 documents {docState.stage2Verified} of {docState.stage2Required.length} verified</p>
+                  <ul className="text-xs text-muted-foreground space-y-1">
+                    {disbursementBlockers.map((b) => <li key={b}>{b}</li>)}
+                  </ul>
                 )}
                 <Button className="w-full" disabled={busy || !disbursementGatePass} onClick={() => transition('funded', 'funded', 'funded')}>
-                  {disbursementGatePass ? 'Mark funded' : 'Stage 2 not complete'}
+                  {disbursementGatePass ? 'Mark funded' : 'Disbursement gate not satisfied'}
                 </Button>
+
               </>
             )}
             {status === 'funded' && canApprove(roles) && (
