@@ -21,7 +21,9 @@ export type UploadedDoc = {
   status: string;
   uploaded_at: string;
   storage_path: string;
+  scan_status?: string | null;
 };
+
 
 export const humanSize = (b?: number | null) =>
   !b ? '' : b > 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`;
