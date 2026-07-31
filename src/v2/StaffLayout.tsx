@@ -20,6 +20,8 @@ const NAV = [
   { to: '/admin/access-log', label: 'Access Log', icon: Eye, superOnly: true },
   { to: '/admin/retention', label: 'Retention', icon: Archive, superOnly: true },
   { to: '/admin/notifications', label: 'Notifications', icon: Bell, superOnly: true },
+  { to: '/admin/notifications/failures', label: 'Undelivered', icon: BellOff, superOnly: true },
+
   { to: '/app/users', label: 'User Management', icon: UserCog, superOnly: true },
   { to: '/admin/reference-data', label: 'Reference Data', icon: Database, superOnly: true },
   { to: '/app/account', label: 'My Account', icon: UserCircle },
