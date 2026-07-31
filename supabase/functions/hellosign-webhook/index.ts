@@ -211,7 +211,7 @@ Deno.serve(async (req) => {
       },
     });
 
-    if (allSigned || status === 'declined') {
+    if (!isTest && (allSigned || status === 'declined')) {
       await admin.rpc('v2_notify_exporter', {
         p_invoice_id: invoiceId,
         p_title: status === 'declined' ? 'A document was declined' : 'Your documents are signed',
