@@ -3,18 +3,25 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const url = Deno.env.get('SUPABASE_URL')!;
 const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const HS_KEY = Deno.env.get('HELLOSIGN_API_KEY') ?? '';
+// Read only inside the edge function. Never logged, never returned in a response.
+const HS_KEY = Deno.env.get('DROPBOX_SIGN_API_KEY') ?? Deno.env.get('HELLOSIGN_API_KEY') ?? '';
 
 const basic = () => 'Basic ' + btoa(`${HS_KEY}:`);
 
-async function verify(eventTime: string, eventType: string, hash: string) {
+async function eventHash(eventTime: string, eventType: string) {
   const key = await crypto.subtle.importKey(
     'raw', new TextEncoder().encode(HS_KEY),
     { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
   );
   const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${eventTime}${eventType}`));
-  const hex = Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, '0')).join('');
-  return hex === hash;
+  return Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+function timingSafeEqual(a: string, b: string) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
 }
 
 const STATUS_BY_EVENT: Record<string, string> = {
@@ -30,28 +37,89 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   const ok = () => new Response('Hello API Event Received', { status: 200, headers: corsHeaders });
+  const admin = createClient(url, service);
+
+  const security = async (reason: string, metadata: Record<string, unknown>) => {
+    await admin.from('document_audit_log').insert({
+      entity_type: 'security_event',
+      entity_id: crypto.randomUUID(),
+      action: 'webhook_rejected',
+      actor_role: 'system',
+      reason,
+      metadata: { source: 'dropbox_sign_webhook', ...metadata },
+    });
+  };
 
   try {
-    const form = await req.formData();
-    const raw = String(form.get('json') ?? '');
-    if (!raw) return ok();
-    const payload = JSON.parse(raw);
-    const event = payload.event ?? {};
-
-    if (HS_KEY && !(await verify(String(event.event_time), String(event.event_type), String(event.event_hash)))) {
-      return new Response('Invalid signature', { status: 401, headers: corsHeaders });
+    if (req.method !== 'POST') {
+      await security('Unsupported method on the signing callback', { method: req.method });
+      return new Response('Rejected', { status: 400, headers: corsHeaders });
     }
 
-    const admin = createClient(url, service);
+    // No key configured means no callback can ever be trusted.
+    if (!HS_KEY) {
+      await security('Signing callback received while no provider key is configured', {});
+      return new Response('Rejected', { status: 400, headers: corsHeaders });
+    }
+
+    let raw = '';
+    try {
+      const form = await req.formData();
+      raw = String(form.get('json') ?? '');
+    } catch {
+      raw = '';
+    }
+    if (!raw) {
+      await security('Signing callback had no payload', {});
+      return new Response('Rejected', { status: 400, headers: corsHeaders });
+    }
+
+    let payload: any;
+    try { payload = JSON.parse(raw); } catch {
+      await security('Signing callback payload was not valid JSON', {});
+      return new Response('Rejected', { status: 400, headers: corsHeaders });
+    }
+
+    const event = payload.event ?? {};
+    const eventTime = String(event.event_time ?? '');
+    const eventType = String(event.event_type ?? '');
+    const providedHash = String(event.event_hash ?? '').toLowerCase();
+
+    // Mandatory HMAC verification on every callback.
+    if (!eventTime || !eventType || !providedHash) {
+      await security('Signing callback was missing the event signature fields', { event_type: eventType });
+      return new Response('Rejected', { status: 400, headers: corsHeaders });
+    }
+    const expected = await eventHash(eventTime, eventType);
+    if (!timingSafeEqual(expected, providedHash)) {
+      await security('Signing callback failed HMAC verification', { event_type: eventType, event_time: eventTime });
+      return new Response('Rejected', { status: 400, headers: corsHeaders });
+    }
+
     const sr = payload.signature_request ?? {};
     const requestId = sr.signature_request_id as string | undefined;
-    const eventType = String(event.event_type ?? '');
     const status = STATUS_BY_EVENT[eventType];
-    if (!requestId || !status) return ok();
+
+    // Callback test events carry no signature request. Acknowledge without touching data.
+    if (eventType === 'callback_test') return ok();
+
+    if (!requestId) {
+      await security('Signing callback carried no signature request id', { event_type: eventType });
+      return new Response('Rejected', { status: 400, headers: corsHeaders });
+    }
 
     const { data: rows } = await admin.from('invoice_signature_requests')
       .select('*').eq('provider_request_id', requestId);
-    if (!rows?.length) return ok();
+
+    // The callback must correspond to a signature request we created.
+    if (!rows?.length) {
+      await security('Signing callback referenced an unknown signature request', {
+        event_type: eventType, provider_request_id: requestId,
+      });
+      return new Response('Rejected', { status: 400, headers: corsHeaders });
+    }
+
+    if (!status) return ok();
 
     const invoiceId = rows[0].invoice_id as string;
     const documentId = rows[0].document_id as string | null;
@@ -74,12 +142,11 @@ Deno.serve(async (req) => {
       }).eq('id', row.id);
     }
 
-    const allSigned = eventType === 'signature_request_all_signed'
-      || (sr.is_complete === true);
+    const allSigned = eventType === 'signature_request_all_signed' || (sr.is_complete === true);
 
     let certificatePath: string | null = null;
 
-    if (allSigned && documentId && HS_KEY) {
+    if (allSigned && documentId) {
       // Fetch the executed PDF, which carries the certificate of completion.
       const res = await fetch(`https://api.hellosign.com/v3/signature_request/files/${requestId}?file_type=pdf`, {
         headers: { Authorization: basic() },
