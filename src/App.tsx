@@ -40,6 +40,7 @@ import StaffNotificationFailures from '@/v2/pages/staff/NotificationFailures';
 
 import StaffRetention from '@/v2/pages/staff/Retention';
 import StaffTemplates from '@/v2/pages/staff/Templates';
+import SingleReviewerReport from '@/v2/pages/staff/SingleReviewerReport';
 
 
 const qc = new QueryClient();
@@ -87,6 +88,7 @@ export default function App() {
               <Route path="/admin/access-log" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffAccessLog /></StaffLayout></RequireAuth>} />
               <Route path="/admin/templates" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffTemplates /></StaffLayout></RequireAuth>} />
               <Route path="/admin/retention" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffRetention /></StaffLayout></RequireAuth>} />
+              <Route path="/admin/single-reviewer" element={<RequireAuth allow={['super_admin']}><StaffLayout><SingleReviewerReport /></StaffLayout></RequireAuth>} />
 
               <Route path="/app/account" element={<Staff><Account /></Staff>} />
 

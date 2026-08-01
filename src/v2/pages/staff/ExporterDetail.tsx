@@ -10,6 +10,7 @@ import { logAudit } from '@/v2/audit';
 import { openDocument } from '@/v2/lib/documents';
 import { CheckCircle2, XCircle, FileText, Clock } from 'lucide-react';
 import AuditLogTable from '@/v2/components/AuditLogTable';
+import ReviewChain, { SingleReviewerBanner } from '@/v2/components/ReviewChain';
 
 
 const DOC_LABEL: Record<string, string> = {
@@ -44,9 +45,10 @@ export default function StaffExporterDetail() {
   useEffect(() => { load(); }, [load]);
   if (!exp) return <div className="text-muted-foreground">Loading…</div>;
 
-  const canBdReview = has(roles, 'originator') || has(roles, 'super_admin');
-  const canFinalApprove = has(roles, 'credit_officer') || has(roles, 'super_admin');
-  const canVerifyDoc = has(roles, 'credit_officer') || has(roles, 'super_admin');
+  const isSuperAdmin = has(roles, 'super_admin');
+  const canBdReview = has(roles, 'originator') || isSuperAdmin;
+  const canFinalApprove = has(roles, 'credit_officer') || isSuperAdmin;
+  const canVerifyDoc = has(roles, 'credit_officer') || isSuperAdmin;
 
   const submitted = !!exp.onboarding_submitted_at;
   const bdApproved = !!exp.bd_approved_at;
@@ -60,43 +62,42 @@ export default function StaffExporterDetail() {
     load();
   };
 
-  const bdApprove = async () => {
+  const review = async (stage: 'bd' | 'compliance', decision: 'approved' | 'returned', note?: string, overrideReason?: string) => {
     setBusy(true);
-    const { error } = await supabase.from('v2_exporters').update({
-      bd_approved_at: new Date().toISOString(), bd_approved_by: user?.id,
-      bd_rejected_at: null, bd_rejection_reason: null,
-    }).eq('id', exp.id);
+    const { error } = await supabase.rpc('record_onboarding_review', {
+      p_exporter_id: exp.id,
+      p_stage: stage,
+      p_decision: decision,
+      p_note: note ?? null,
+      p_override_reason: overrideReason ?? null,
+    });
     setBusy(false);
-    if (error) return toast({ title: 'Failed', description: error.message, variant: 'destructive' });
-    await logAudit({ action: 'exporter_bd_approved', metadata: { exporter_id: exp.id } });
-    toast({ title: 'Approved — awaiting Credit & Compliance' });
+    if (error) {
+      toast({ title: 'Not recorded', description: error.message, variant: 'destructive' });
+      return false;
+    }
+    setReason('');
+    toast({ title: decision === 'approved' ? 'Review recorded' : 'Returned to exporter' });
     load();
+    return true;
   };
-  const bdReject = async () => {
+
+  const bdApprove = () => review('bd', 'approved');
+  const bdReject = () => {
     if (!reason.trim()) return toast({ title: 'Reason required', variant: 'destructive' });
-    setBusy(true);
-    const { error } = await supabase.from('v2_exporters').update({
-      bd_rejected_at: new Date().toISOString(), bd_rejection_reason: reason,
-      bd_approved_at: null, bd_approved_by: null,
-    }).eq('id', exp.id);
-    setBusy(false);
-    if (error) return toast({ title: 'Failed', description: error.message, variant: 'destructive' });
-    await logAudit({ action: 'exporter_bd_rejected', metadata: { exporter_id: exp.id, reason } });
-    setReason(''); toast({ title: 'Returned to exporter' }); load();
+    return review('bd', 'returned', reason);
   };
   const finalApprove = async () => {
-    setBusy(true);
-    const now = new Date().toISOString();
-    const { error } = await supabase.from('v2_exporters').update({
-      onboarding_status: 'active',
-      kyb_status: 'verified', kyb_verified_at: now, kyb_verified_by: user?.id,
-      kyc_status: 'verified', kyc_verified_at: now, kyc_verified_by: user?.id,
-    }).eq('id', exp.id);
-    setBusy(false);
-    if (error) return toast({ title: 'Failed', description: error.message, variant: 'destructive' });
-    await logAudit({ action: 'exporter_final_approved', metadata: { exporter_id: exp.id } });
-    toast({ title: 'Exporter activated' }); load();
+    const ok = await review('compliance', 'approved');
+    if (ok) return;
+    if (!isSuperAdmin) return;
+    const overrideReason = window.prompt(
+      'Four eyes rule blocked this approval. As Super Admin you may override where no second reviewer is available. Enter a written reason:'
+    );
+    if (!overrideReason || !overrideReason.trim()) return;
+    await review('compliance', 'approved', undefined, overrideReason.trim());
   };
+
 
   return (
     <div className="space-y-6">
@@ -106,6 +107,12 @@ export default function StaffExporterDetail() {
           RC {exp.rc_number ?? '—'} · {exp.commodity ?? '—'} · Onboarding: <span className="text-accent">{exp.onboarding_status}</span>
         </p>
       </div>
+
+      {exp.single_reviewer_approved && (
+        <SingleReviewerBanner reason={exp.single_reviewer_reason} at={exp.single_reviewer_at} />
+      )}
+
+
 
       <section className="card-elevated p-5">
         <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-3">Onboarding review</h3>
@@ -129,6 +136,9 @@ export default function StaffExporterDetail() {
         {bdApproved && !isActive && canFinalApprove && (
           <div className="mt-4 space-y-2 border-t border-border pt-4">
             <div className="text-sm font-medium">Credit &amp; Compliance final approval</div>
+            <p className="text-xs text-muted-foreground">
+              Four eyes rule: this approval must be given by someone other than the Business Developer who approved the earlier stage.
+            </p>
             <Button size="sm" onClick={finalApprove} disabled={busy}>Approve & activate exporter</Button>
           </div>
         )}
@@ -137,6 +147,10 @@ export default function StaffExporterDetail() {
           <p className="text-xs text-muted-foreground mt-3">Exporter has not submitted their onboarding pack yet.</p>
         )}
       </section>
+
+      <ReviewChain key={`${exp.bd_approved_at ?? ''}-${exp.bd_rejected_at ?? ''}-${exp.onboarding_status}`} exporterId={id!} />
+
+
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <section className="card-elevated p-5 space-y-2 text-sm">
