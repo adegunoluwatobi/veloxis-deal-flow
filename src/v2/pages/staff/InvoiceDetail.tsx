@@ -104,10 +104,36 @@ export default function StaffInvoiceDetail() {
     !authorityOk && 'Board resolution must be verified, in date and within headroom',
   ].filter(Boolean) as string[];
 
-  const isCreator = inv.created_by === user?.id || inv.submitted_by === user?.id;
+  
   const status = inv.status as string;
   const canReview = canVerify(roles);
   const isSuperAdmin = has(roles, 'super_admin');
+
+  const approveForFunding = async (overrideReason?: string) => {
+    if (!allGatesPass) {
+      toast({ title: 'Gate not met', description: 'The five point funding control gate is not satisfied.', variant: 'destructive' });
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.rpc('approve_invoice_for_funding', {
+      p_invoice_id: id!,
+      p_override_reason: overrideReason ?? null,
+    });
+    setBusy(false);
+    if (error) {
+      if (!overrideReason && isSuperAdmin && /different reviewer/i.test(error.message)) {
+        const r = window.prompt(
+          'Segregation of duties blocked this approval — you verified documents on this application. As Super Admin you may override where no second reviewer is available. Enter a written reason:'
+        );
+        if (r && r.trim()) return approveForFunding(r.trim());
+        return;
+      }
+      toast({ title: 'Not approved', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Approved for funding' });
+    load();
+  };
 
   const transition = async (to: string, action: string, decisionType?: string) => {
     if (['returned_for_revision', 'rejected'].includes(to) && !reason.trim()) {
@@ -119,11 +145,9 @@ export default function StaffInvoiceDetail() {
     if (to === 'funded' && !disbursementGatePass) {
       toast({ title: 'Cannot disburse yet', description: disbursementBlockers.join('. '), variant: 'destructive' }); return;
     }
-    if (to === 'approved' && isCreator && !window.confirm('You created this invoice. Approving requires an override. Proceed?')) return;
     setBusy(true);
     const patch: any = { status: to };
     if (to === 'verified') patch.verified_by = user?.id;
-    if (to === 'approved') patch.approved_by = user?.id;
     if (to === 'funded') { patch.funded_date = new Date().toISOString().slice(0, 10); }
     if (to === 'settled') { patch.settled_date = new Date().toISOString().slice(0, 10); }
     const { error } = await supabase.from('v2_invoices').update(patch).eq('id', id!);
@@ -131,11 +155,11 @@ export default function StaffInvoiceDetail() {
     if (decisionType) {
       await supabase.from('v2_decisions').insert({ invoice_id: id!, decision_type: decisionType as any, reason: reason || null, actor_user_id: user?.id });
     }
-    const overrideMeta = isCreator && to === 'approved' ? { override: true } : {};
-    await logAudit({ invoice_id: id!, action, from_status: status as any, to_status: to as any, note: reason || null, metadata: overrideMeta });
+    await logAudit({ invoice_id: id!, action, from_status: status as any, to_status: to as any, note: reason || null });
     setReason(''); setBusy(false); load();
     toast({ title: 'Updated' });
   };
+
 
   const upload = async (e: React.ChangeEvent<HTMLInputElement>, doc_type: string) => {
     const file = e.target.files?.[0]; if (!file) return;
@@ -186,6 +210,35 @@ export default function StaffInvoiceDetail() {
           <div className="text-sm mt-1">{decisions[0].reason}</div>
         </div>
       )}
+
+      {inv.single_reviewer_approved && (
+        <SingleReviewerBanner reason={inv.single_reviewer_reason} at={inv.single_reviewer_at} />
+      )}
+
+      <section className="card-elevated p-5">
+        <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-3">Review chain</h3>
+        <div className="space-y-2 text-sm">
+          <Row label="Documents verified by">{docState.people[inv.verified_by ?? ''] ?? (inv.verified_by ? inv.verified_by.slice(0, 8) : '—')}</Row>
+          <Row label="Approved for funding by">{docState.people[inv.approved_by ?? ''] ?? (inv.approved_by ? inv.approved_by.slice(0, 8) : '—')}</Row>
+          <div className="border-t border-border my-2" />
+          {decisions.length === 0 && <p className="text-muted-foreground text-xs">No decisions recorded yet.</p>}
+          {[...decisions].reverse().map((d) => (
+            <div key={d.id} className="border-t border-border pt-2 text-xs">
+              <div className="flex justify-between gap-3">
+                <span className="font-medium">{d.decision_type}</span>
+                <span className="text-muted-foreground">
+                  {docState.people[d.actor_user_id ?? ''] ?? 'Unknown'} · {new Date(d.created_at).toLocaleString('en-GB')}
+                </span>
+              </div>
+              {d.reason && <p className="text-muted-foreground mt-1">{d.reason}</p>}
+            </div>
+          ))}
+        </div>
+      </section>
+
+
+
+
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -362,13 +415,17 @@ export default function StaffInvoiceDetail() {
             )}
             {status === 'verified' && canApprove(roles) && (
               <>
-                <Button className="w-full" disabled={busy || !allGatesPass} onClick={() => transition('approved', 'approved', 'approved')}>
+                <p className="text-xs text-muted-foreground">
+                  Segregation of duties: the approver cannot be a person who verified this application's documents.
+                </p>
+                <Button className="w-full" disabled={busy || !allGatesPass} onClick={() => approveForFunding()}>
                   {allGatesPass ? 'Approve for funding' : 'Gate not met'}
                 </Button>
                 <Textarea placeholder="Reason to reject" value={reason} onChange={(e) => setReason(e.target.value)} />
                 <Button variant="outline" className="w-full" disabled={busy} onClick={() => transition('rejected', 'rejected', 'rejected')}>Reject</Button>
               </>
             )}
+
             {status === 'approved' && canApprove(roles) && (
               <>
                 {!disbursementGatePass && (

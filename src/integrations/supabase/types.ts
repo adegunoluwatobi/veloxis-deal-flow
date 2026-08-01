@@ -2425,6 +2425,50 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_reviews: {
+        Row: {
+          created_at: string
+          decision: string
+          exporter_id: string
+          id: string
+          note: string | null
+          override_reason: string | null
+          reviewer_id: string | null
+          single_reviewer_override: boolean
+          stage: string
+        }
+        Insert: {
+          created_at?: string
+          decision: string
+          exporter_id: string
+          id?: string
+          note?: string | null
+          override_reason?: string | null
+          reviewer_id?: string | null
+          single_reviewer_override?: boolean
+          stage: string
+        }
+        Update: {
+          created_at?: string
+          decision?: string
+          exporter_id?: string
+          id?: string
+          note?: string | null
+          override_reason?: string | null
+          reviewer_id?: string | null
+          single_reviewer_override?: boolean
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_reviews_exporter_id_fkey"
+            columns: ["exporter_id"]
+            isOneToOne: false
+            referencedRelation: "v2_exporters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       opportunities: {
         Row: {
           amount: string | null
@@ -3526,6 +3570,10 @@ export type Database = {
           owner_user_id: string | null
           phone: string | null
           rc_number: string | null
+          single_reviewer_approved: boolean
+          single_reviewer_at: string | null
+          single_reviewer_by: string | null
+          single_reviewer_reason: string | null
           tax_id: string | null
           updated_at: string
         }
@@ -3569,6 +3617,10 @@ export type Database = {
           owner_user_id?: string | null
           phone?: string | null
           rc_number?: string | null
+          single_reviewer_approved?: boolean
+          single_reviewer_at?: string | null
+          single_reviewer_by?: string | null
+          single_reviewer_reason?: string | null
           tax_id?: string | null
           updated_at?: string
         }
@@ -3612,6 +3664,10 @@ export type Database = {
           owner_user_id?: string | null
           phone?: string | null
           rc_number?: string | null
+          single_reviewer_approved?: boolean
+          single_reviewer_at?: string | null
+          single_reviewer_by?: string | null
+          single_reviewer_reason?: string | null
           tax_id?: string | null
           updated_at?: string
         }
@@ -3715,6 +3771,10 @@ export type Database = {
           settled_date: string | null
           shipment_date: string | null
           signatory_id: string | null
+          single_reviewer_approved: boolean
+          single_reviewer_at: string | null
+          single_reviewer_by: string | null
+          single_reviewer_reason: string | null
           sla_clock_started_at: string | null
           sla_elapsed_seconds: number
           sla_paused_at: string | null
@@ -3769,6 +3829,10 @@ export type Database = {
           settled_date?: string | null
           shipment_date?: string | null
           signatory_id?: string | null
+          single_reviewer_approved?: boolean
+          single_reviewer_at?: string | null
+          single_reviewer_by?: string | null
+          single_reviewer_reason?: string | null
           sla_clock_started_at?: string | null
           sla_elapsed_seconds?: number
           sla_paused_at?: string | null
@@ -3823,6 +3887,10 @@ export type Database = {
           settled_date?: string | null
           shipment_date?: string | null
           signatory_id?: string | null
+          single_reviewer_approved?: boolean
+          single_reviewer_at?: string | null
+          single_reviewer_by?: string | null
+          single_reviewer_reason?: string | null
           sla_clock_started_at?: string | null
           sla_elapsed_seconds?: number
           sla_paused_at?: string | null
@@ -4406,6 +4474,10 @@ export type Database = {
         Returns: string
       }
       advance_escalation_ladder: { Args: never; Returns: undefined }
+      approve_invoice_for_funding: {
+        Args: { p_invoice_id: string; p_override_reason?: string }
+        Returns: undefined
+      }
       approve_template_counsel: {
         Args: { p_counsel_reference: string; p_template_id: string }
         Returns: undefined
@@ -4554,6 +4626,16 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      record_onboarding_review: {
+        Args: {
+          p_decision: string
+          p_exporter_id: string
+          p_note?: string
+          p_override_reason?: string
+          p_stage: string
+        }
+        Returns: string
       }
       retry_failed_notifications: { Args: never; Returns: number }
       run_document_expiry_job: { Args: never; Returns: Json }
