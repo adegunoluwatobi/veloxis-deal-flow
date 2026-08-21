@@ -255,6 +255,40 @@ export default function ExporterInvoiceNew() {
     }
   };
 
+  /* ---------------- autosave: on blur and every 10 seconds ---------------- */
+  const [autosavedAt, setAutosavedAt] = useState<string | null>(null);
+  const autosave = useCallback(async () => {
+    if (!exp || busy) return;
+    if (!f.invoice_number.trim()) return;
+    if (invoice && invoice.status !== 'draft' && invoice.status !== 'returned_for_revision') return;
+    try {
+      const payload = await buildPayload(false, true);
+      if (invoiceId) {
+        const { error } = await supabase.from('v2_invoices').update(payload).eq('id', invoiceId);
+        if (error) return;
+      } else {
+        const advancePct = await getAdvanceRatePct();
+        const { data, error } = await supabase.from('v2_invoices')
+          .insert({ ...payload, advance_rate: advancePct, status: 'draft' as any })
+          .select('id').single();
+        if (error) return;
+        setInvoiceId(data.id);
+        await logAudit({ invoice_id: data.id, action: 'exporter_draft', to_status: 'draft' as any });
+      }
+      setAutosavedAt(new Date().toLocaleTimeString());
+    } catch {
+      /* autosave stays quiet; the explicit Save draft button reports errors */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exp, busy, f, invoiceId, invoice, gross, deductions, maturityDate, inspectionRequired, selectedCommodity, isOther]);
+
+  const autosaveRef = useRef(autosave);
+  useEffect(() => { autosaveRef.current = autosave; }, [autosave]);
+  useEffect(() => {
+    const t = setInterval(() => { autosaveRef.current(); }, 10000);
+    return () => clearInterval(t);
+  }, []);
+
   const missingFields = () => {
     const miss: string[] = [];
     if (!f.invoice_number) miss.push('Invoice number');
@@ -263,15 +297,19 @@ export default function ExporterInvoiceNew() {
     if (!f.incoterm) miss.push('Incoterm');
     if (!f.bl_number) miss.push('Bill of lading number');
     if (!f.bl_date) miss.push('Bill of lading date');
-    if (f.bl_date && f.bl_date > today()) miss.push('Bill of lading date cannot be in the future');
-    if (!f.port_of_loading) miss.push('Port of loading');
-    if (!f.port_of_discharge) miss.push('Port of discharge');
+    if (f.bl_date && f.bl_date > today()) miss.push('The bill of lading date cannot be in the future');
+    if (!f.port_of_loading || (f.port_of_loading === PORT_NOT_LISTED && !f.port_of_loading_other.trim())) miss.push('Port of loading');
+    if (!f.port_of_discharge || (f.port_of_discharge === PORT_NOT_LISTED && !f.port_of_discharge_other.trim())) miss.push('Port of discharge');
+    if (f.estimated_arrival_date && f.bl_date && f.estimated_arrival_date < f.bl_date) {
+      miss.push('The estimated arrival date must be on or after the bill of lading date');
+    }
     if (!gross) miss.push('Gross invoice value');
     if (!f.signatory_id) miss.push('Who is signing this submission');
     stage1Required.forEach((t) => { if (docsFor(t.id).length === 0) miss.push(t.label); });
     if (!warranty) miss.push('Warranty confirmation');
     return miss;
   };
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
