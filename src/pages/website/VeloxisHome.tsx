@@ -509,10 +509,10 @@ export default function VeloxisWebsite() {
     <div className="min-h-screen" style={{ scrollBehavior: "smooth", background: C.deepEmerald }}>
       <EarlyAccessModal />
       <Helmet>
-        <title>Veloxis — Trade without waiting.</title>
-        <meta name="description" content="Veloxis is a UK-based trade finance platform that advances 80% of your invoice value within 24 hours. No collateral required." />
-        <meta property="og:title" content="Veloxis — Trade without waiting." />
-        <meta property="og:description" content="Veloxis is a UK-based trade finance platform that advances 80% of your invoice value within 24 hours. No collateral required." />
+        <title>Veloxis — Cross-Border Trade Finance</title>
+        <meta name="description" content="Cross-border trade finance that advances 80% of your export invoice within 24 hours. No collateral, no local bank required." />
+        <meta property="og:title" content="Veloxis — Cross-Border Trade Finance" />
+        <meta property="og:description" content="Cross-border trade finance that advances 80% of your export invoice within 24 hours. No collateral, no local bank required." />
         <meta property="og:url" content="https://veloxis.co.uk/" />
         <meta property="og:image" content="https://veloxis.co.uk/og-image.png" />
       </Helmet>
