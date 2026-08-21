@@ -13,20 +13,26 @@ import SignOutButton from '@/v2/components/SignOutButton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 
-type DocType = 'cac_certificate' | 'director_id' | 'proof_of_address' | 'bank_proof';
+type DocType = string;
 
 const REQUIRED_DOCS: { key: DocType; label: string; hint: string }[] = [
-  { key: 'cac_certificate', label: 'Company registration document', hint: 'CAC certificate / Certificate of Incorporation (RC).' },
+  { key: 'cac_certificate', label: 'CAC certificate of incorporation', hint: 'Certificate of Incorporation showing your RC number.' },
+  { key: 'cac_status_report', label: 'CAC status report', hint: 'Current status report listing directors and shareholding.' },
+  { key: 'tin_certificate', label: 'Tax identification number', hint: 'TIN certificate issued by FIRS.' },
+  { key: 'nepc_certificate', label: 'NEPC exporter registration', hint: 'Your Nigerian Export Promotion Council registration.' },
+  { key: 'bank_statement', label: 'Six month bank statement', hint: 'Statements for the corporate account funds will settle to.' },
+  { key: 'board_resolution', label: 'Board resolution authorising the facility', hint: 'Board resolution naming the authorised limit and signatories.' },
   { key: 'director_id', label: 'Director government ID', hint: 'Passport, national ID or driver’s licence.' },
   { key: 'proof_of_address', label: 'Director proof of address', hint: 'Utility bill or bank statement, dated within 3 months.' },
-  { key: 'bank_proof', label: 'Bank details / statement', hint: 'Recent bank statement or a signed bank confirmation letter.' },
 ];
+
 
 export default function ExporterOnboarding() {
   const { user, profile } = useAuth();
   const nav = useNavigate();
   const [exp, setExp] = useState<any>(null);
   const [docs, setDocs] = useState<any[]>([]);
+  const [typeIds, setTypeIds] = useState<Record<string, string>>({});
   const [f, setF] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [submittedOpen, setSubmittedOpen] = useState(false);
@@ -46,8 +52,17 @@ export default function ExporterOnboarding() {
       director_id_type: '', director_id_number: '', director_address: '',
       bank_details: { bank_name: '', account_name: '', account_number: '', swift: '' },
     });
+
+    const { data: dt } = await supabase.from('document_types')
+      .select('id, code').in('code', REQUIRED_DOCS.map((r) => r.key));
+    const map: Record<string, string> = {};
+    (dt ?? []).forEach((t: any) => { map[t.code] = t.id; });
+    setTypeIds(map);
+
     if (e?.id) {
-      const { data: d } = await supabase.from('v2_exporter_documents').select('*').eq('exporter_id', e.id).order('uploaded_at', { ascending: false });
+      const { data: d } = await supabase.from('company_documents')
+        .select('id, document_type_id, original_filename, status, uploaded_at')
+        .eq('exporter_id', e.id).order('uploaded_at', { ascending: false });
       setDocs(d ?? []);
     }
   }, [user, profile]);
@@ -64,8 +79,9 @@ export default function ExporterOnboarding() {
   const set = (k: string, v: any) => setF((x: any) => ({ ...x, [k]: v }));
   const setBank = (k: string, v: string) => setF((x: any) => ({ ...x, bank_details: { ...(x.bank_details ?? {}), [k]: v } }));
 
-  const latestDoc = (t: DocType) => docs.find((d) => d.doc_type === t);
+  const latestDoc = (t: DocType) => docs.find((d) => d.document_type_id === typeIds[t]);
   const missingDocs = REQUIRED_DOCS.filter((r) => !latestDoc(r.key));
+
 
   const requiredFieldsOk =
     f.company_name && f.company_registration_number && f.country_of_incorporation &&
@@ -139,10 +155,24 @@ export default function ExporterOnboarding() {
       if (!token) throw new Error('Session expired — please sign in again.');
       const path = `${expId}/company/onboarding/${doc_type}-${Date.now()}-${file.name.replace(/[^a-z0-9._-]+/gi, '_')}`;
       await uploadWithProgress(path, file, token, (pct) => setProgress((p) => ({ ...p, [doc_type]: pct })));
-      const { error: insErr } = await supabase.from('v2_exporter_documents').insert({
-        exporter_id: expId, doc_type, file_url: path, file_name: file.name, uploaded_by: user!.id,
-      });
+      const typeId = typeIds[doc_type];
+      if (!typeId) throw new Error('This document type is not configured. Please contact Veloxis.');
+      const { data: inserted, error: insErr } = await supabase.from('company_documents').insert({
+        exporter_id: expId,
+        document_type_id: typeId,
+        storage_path: path,
+        original_filename: file.name,
+        file_size_bytes: file.size,
+        uploaded_by: user!.id,
+      }).select('id').single();
       if (insErr) throw new Error(insErr.message);
+      const { data: scan } = await supabase.functions.invoke('scan-document', {
+        body: { document_id: inserted.id, document_kind: 'company' },
+      });
+      if ((scan as any)?.scan_status && (scan as any).scan_status !== 'clean') {
+        throw new Error((scan as any).message ?? 'This file could not be accepted.');
+      }
+
       await load();
       toast({ title: 'Uploaded', description: file.name });
     } catch (err: any) {
@@ -164,7 +194,14 @@ export default function ExporterOnboarding() {
 
   const submitForReview = async () => {
     if (!requiredFieldsOk) { toast({ title: 'Complete required company & director fields', variant: 'destructive' }); return; }
-    if (missingDocs.length) { toast({ title: 'Upload all required documents first', variant: 'destructive' }); return; }
+    if (missingDocs.length) {
+      toast({
+        title: 'Upload all required documents first',
+        description: `Still needed: ${missingDocs.map((d) => d.label).join(', ')}`,
+        variant: 'destructive',
+      });
+      return;
+    }
     setBusy(true);
     const expId = await saveProfile();
     if (!expId) { setBusy(false); return; }
@@ -301,14 +338,16 @@ export default function ExporterOnboarding() {
                       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
                         <span className="inline-flex items-center gap-1.5 max-w-full px-2 py-1 rounded bg-primary/15 text-accent">
                           <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                          <span className="truncate max-w-[16rem]" title={d.file_name || 'Uploaded'}>{d.file_name || 'Uploaded'}</span>
+                          <span className="truncate max-w-[16rem]" title={d.original_filename || 'Uploaded'}>{d.original_filename || 'Uploaded'}</span>
                         </span>
                         {d.uploaded_at && (
                           <span className="text-muted-foreground">
                             Uploaded {new Date(d.uploaded_at).toLocaleDateString()}
                           </span>
                         )}
-                        {d.verified && <span className="px-2 py-0.5 rounded bg-primary/20 text-accent">Verified</span>}
+                        {d.status === 'verified' && <span className="px-2 py-0.5 rounded bg-primary/20 text-accent">Verified</span>}
+                        {d.status === 'rejected' && <span className="px-2 py-0.5 rounded bg-destructive/20 text-destructive">Rejected</span>}
+
                       </div>
                     )}
                     {uploading && (

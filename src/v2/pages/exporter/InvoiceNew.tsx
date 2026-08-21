@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/v2/useAuth';
@@ -17,6 +17,7 @@ import SubmissionProgress, { type StepState } from '@/v2/components/invoice/Subm
 import ExporterInstrumentsPanel from '@/v2/components/invoice/ExporterInstrumentsPanel';
 import DocumentUploadRow, { type UploadedDoc } from '@/v2/components/invoice/DocumentUploadRow';
 import CompanyAuthorityRow, { useCompanyAuthority } from '@/v2/components/invoice/CompanyAuthorityRow';
+import { CountrySelect, PortSelect, PORT_NOT_LISTED } from '@/v2/components/SearchSelect';
 import { ChevronDown, Lock } from 'lucide-react';
 
 const INCOTERMS = ['EXW', 'FCA', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP'];
@@ -64,6 +65,7 @@ export default function ExporterInvoiceNew() {
   const [f, setF] = useState({
     invoice_number: '', buyer_id: '', commodity_id: '', commodity_other: '',
     incoterm: '', bl_number: '', bl_date: '', port_of_loading: '', port_of_discharge: '',
+    port_of_loading_other: '', port_of_discharge_other: '',
     estimated_arrival_date: '', invoice_currency: 'GBP', gross_invoice_value: '',
     agreed_deductions: '0', terms_days: '30', signatory_id: '',
   });
@@ -181,16 +183,23 @@ export default function ExporterInvoiceNew() {
         : step2Done === stage2Types.length ? 'Complete' : 'In progress';
 
   /* ---------------- persistence ---------------- */
-  const buildPayload = async (forSubmit: boolean) => {
+  const buildPayload = async (forSubmit: boolean, skipBuyerCreate = false) => {
     let buyerId = f.buyer_id || null;
-    if (addingBuyer && newBuyer.company_name) {
+    if (!skipBuyerCreate && addingBuyer && newBuyer.company_name) {
       const { data: nb, error: bErr } = await supabase.from('v2_buyers')
-        .insert({ company_name: newBuyer.company_name, country: newBuyer.country || null }).select('id').single();
+        .insert({
+          company_name: newBuyer.company_name,
+          country: newBuyer.country || null,
+          exporter_id: exp.id,
+        }).select('id').single();
       if (bErr) throw new Error(bErr.message);
       buyerId = nb.id;
       setAddingBuyer(false);
+      setMyBuyers((s) => [...s, { id: nb.id, company_name: newBuyer.company_name }]);
       setF((s) => ({ ...s, buyer_id: nb.id }));
     }
+    const loadingIsOther = f.port_of_loading === PORT_NOT_LISTED;
+    const dischargeIsOther = f.port_of_discharge === PORT_NOT_LISTED;
     return {
       invoice_number: f.invoice_number,
       exporter_id: exp.id,
@@ -200,8 +209,10 @@ export default function ExporterInvoiceNew() {
       incoterm: f.incoterm || null,
       bl_number: f.bl_number || null,
       bl_date: f.bl_date || null,
-      port_of_loading: f.port_of_loading || null,
-      port_of_discharge: f.port_of_discharge || null,
+      port_of_loading: loadingIsOther ? null : (f.port_of_loading || null),
+      port_of_discharge: dischargeIsOther ? null : (f.port_of_discharge || null),
+      port_of_loading_other: loadingIsOther ? (f.port_of_loading_other || null) : null,
+      port_of_discharge_other: dischargeIsOther ? (f.port_of_discharge_other || null) : null,
       estimated_arrival_date: f.estimated_arrival_date || null,
       invoice_currency: f.invoice_currency as any,
       gross_invoice_value: gross || null,
@@ -244,6 +255,40 @@ export default function ExporterInvoiceNew() {
     }
   };
 
+  /* ---------------- autosave: on blur and every 10 seconds ---------------- */
+  const [autosavedAt, setAutosavedAt] = useState<string | null>(null);
+  const autosave = useCallback(async () => {
+    if (!exp || busy) return;
+    if (!f.invoice_number.trim()) return;
+    if (invoice && invoice.status !== 'draft' && invoice.status !== 'returned_for_revision') return;
+    try {
+      const payload = await buildPayload(false, true);
+      if (invoiceId) {
+        const { error } = await supabase.from('v2_invoices').update(payload).eq('id', invoiceId);
+        if (error) return;
+      } else {
+        const advancePct = await getAdvanceRatePct();
+        const { data, error } = await supabase.from('v2_invoices')
+          .insert({ ...payload, advance_rate: advancePct, status: 'draft' as any })
+          .select('id').single();
+        if (error) return;
+        setInvoiceId(data.id);
+        await logAudit({ invoice_id: data.id, action: 'exporter_draft', to_status: 'draft' as any });
+      }
+      setAutosavedAt(new Date().toLocaleTimeString());
+    } catch {
+      /* autosave stays quiet; the explicit Save draft button reports errors */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exp, busy, f, invoiceId, invoice, gross, deductions, maturityDate, inspectionRequired, selectedCommodity, isOther]);
+
+  const autosaveRef = useRef(autosave);
+  useEffect(() => { autosaveRef.current = autosave; }, [autosave]);
+  useEffect(() => {
+    const t = setInterval(() => { autosaveRef.current(); }, 10000);
+    return () => clearInterval(t);
+  }, []);
+
   const missingFields = () => {
     const miss: string[] = [];
     if (!f.invoice_number) miss.push('Invoice number');
@@ -252,15 +297,19 @@ export default function ExporterInvoiceNew() {
     if (!f.incoterm) miss.push('Incoterm');
     if (!f.bl_number) miss.push('Bill of lading number');
     if (!f.bl_date) miss.push('Bill of lading date');
-    if (f.bl_date && f.bl_date > today()) miss.push('Bill of lading date cannot be in the future');
-    if (!f.port_of_loading) miss.push('Port of loading');
-    if (!f.port_of_discharge) miss.push('Port of discharge');
+    if (f.bl_date && f.bl_date > today()) miss.push('The bill of lading date cannot be in the future');
+    if (!f.port_of_loading || (f.port_of_loading === PORT_NOT_LISTED && !f.port_of_loading_other.trim())) miss.push('Port of loading');
+    if (!f.port_of_discharge || (f.port_of_discharge === PORT_NOT_LISTED && !f.port_of_discharge_other.trim())) miss.push('Port of discharge');
+    if (f.estimated_arrival_date && f.bl_date && f.estimated_arrival_date < f.bl_date) {
+      miss.push('The estimated arrival date must be on or after the bill of lading date');
+    }
     if (!gross) miss.push('Gross invoice value');
     if (!f.signatory_id) miss.push('Who is signing this submission');
     stage1Required.forEach((t) => { if (docsFor(t.id).length === 0) miss.push(t.label); });
     if (!warranty) miss.push('Warranty confirmation');
     return miss;
   };
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -322,10 +371,13 @@ export default function ExporterInvoiceNew() {
 
       <h1 className="text-2xl">Submit invoice</h1>
 
-      <form className="space-y-6" onSubmit={submit}>
+      <form className="space-y-6" onSubmit={submit} onBlur={() => { autosaveRef.current(); }}>
         {/* ---------------- invoice fields ---------------- */}
         <section className="card-elevated space-y-4 p-6">
-          <h2 className="text-lg">Invoice and shipment</h2>
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-lg">Invoice and shipment</h2>
+            {autosavedAt && <span className="text-xs text-muted-foreground">Draft saved {autosavedAt}</span>}
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Label>Invoice number *</Label>
@@ -342,9 +394,10 @@ export default function ExporterInvoiceNew() {
               {addingBuyer ? (
                 <div className="grid grid-cols-2 gap-2">
                   <Input placeholder="Company name" value={newBuyer.company_name} onChange={(e) => setNewBuyer({ ...newBuyer, company_name: e.target.value })} />
-                  <Input placeholder="Country" value={newBuyer.country} onChange={(e) => setNewBuyer({ ...newBuyer, country: e.target.value })} />
+                  <CountrySelect value={newBuyer.country} onChange={(v) => setNewBuyer({ ...newBuyer, country: v })} placeholder="Buyer country" />
                 </div>
               ) : (
+
                 <Select value={f.buyer_id} onValueChange={(v) => set('buyer_id', v)}>
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent>{myBuyers.map((b) => <SelectItem key={b.id} value={b.id}>{b.company_name}</SelectItem>)}</SelectContent>
@@ -402,11 +455,43 @@ export default function ExporterInvoiceNew() {
             <div>
               <Label>Bill of lading date *</Label>
               <Input type="date" max={today()} value={f.bl_date} onChange={(e) => set('bl_date', e.target.value)} />
+              {f.bl_date > today() && (
+                <p className="mt-1 text-xs text-destructive">The bill of lading date cannot be in the future.</p>
+              )}
+            </div>
+            <div />
+
+            <div>
+              <Label>Port of loading *</Label>
+              <PortSelect
+                label="Port of loading"
+                value={f.port_of_loading}
+                otherValue={f.port_of_loading_other}
+                onChange={(v) => set('port_of_loading', v)}
+                onOtherChange={(v) => set('port_of_loading_other', v)}
+              />
+            </div>
+            <div>
+              <Label>Port of discharge *</Label>
+              <PortSelect
+                label="Port of discharge"
+                value={f.port_of_discharge}
+                otherValue={f.port_of_discharge_other}
+                onChange={(v) => set('port_of_discharge', v)}
+                onOtherChange={(v) => set('port_of_discharge_other', v)}
+              />
+            </div>
+            <div>
+              <Label>Estimated arrival date</Label>
+              <Input type="date" value={f.estimated_arrival_date} onChange={(e) => set('estimated_arrival_date', e.target.value)} />
+              {f.estimated_arrival_date && f.bl_date && f.estimated_arrival_date < f.bl_date && (
+                <p className="mt-1 text-xs text-destructive">The estimated arrival date must be on or after the bill of lading date.</p>
+              )}
+              {f.estimated_arrival_date && f.estimated_arrival_date < today() && f.estimated_arrival_date >= (f.bl_date || '') && (
+                <p className="mt-1 text-xs text-muted-foreground">Goods reported as already arrived.</p>
+              )}
             </div>
 
-            <div><Label>Port of loading *</Label><Input value={f.port_of_loading} onChange={(e) => set('port_of_loading', e.target.value)} /></div>
-            <div><Label>Port of discharge *</Label><Input value={f.port_of_discharge} onChange={(e) => set('port_of_discharge', e.target.value)} /></div>
-            <div><Label>Estimated arrival date</Label><Input type="date" value={f.estimated_arrival_date} onChange={(e) => set('estimated_arrival_date', e.target.value)} /></div>
 
             <div>
               <Label>Currency</Label>
@@ -451,7 +536,7 @@ export default function ExporterInvoiceNew() {
 
           <div className="space-y-3">
             <h3 className="text-sm font-medium">Required documents</h3>
-            <CompanyAuthorityRow state={authority} />
+            <CompanyAuthorityRow state={authority} onBeforeLeave={() => autosaveRef.current()} />
             {stage1Required.map((t) => (
               <DocumentUploadRow
                 key={t.id}

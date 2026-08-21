@@ -91,9 +91,23 @@ export function useCompanyAuthority(exporterId: string | null, invoiceExposure: 
   return state;
 }
 
-export default function CompanyAuthorityRow({ state }: { state: AuthorityState }) {
+export default function CompanyAuthorityRow({
+  state,
+  onBeforeLeave,
+}: {
+  state: AuthorityState;
+  /** Autosaves the draft before we send the exporter off to My Company. */
+  onBeforeLeave?: () => Promise<void> | void;
+}) {
   const { loading, headroom, blockMessage, filename, verifiedAt, companyDocumentId } = state;
   const ok = !loading && !blockMessage && !!headroom;
+  const missingOrExpired = !loading && !!blockMessage && !headroom;
+
+  const openMyCompany = async () => {
+    try { await onBeforeLeave?.(); } catch { /* the draft save is best effort */ }
+    window.open('/portal/profile', '_blank', 'noopener');
+  };
+
 
   return (
     <div className={cn(
@@ -144,11 +158,19 @@ export default function CompanyAuthorityRow({ state }: { state: AuthorityState }
       )}
 
       {!loading && blockMessage && (
-        <p className="mt-3 flex items-start gap-1.5 text-xs text-destructive">
-          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          {blockMessage}
-        </p>
+        <div className="mt-3 space-y-2">
+          <p className="flex items-start gap-1.5 text-xs text-destructive">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            {blockMessage}
+          </p>
+          {(missingOrExpired || blockMessage.includes('expired')) && (
+            <button type="button" onClick={openMyCompany} className="text-xs text-accent hover:underline">
+              Upload board resolution
+            </button>
+          )}
+        </div>
       )}
+
     </div>
   );
 }

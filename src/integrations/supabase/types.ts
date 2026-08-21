@@ -384,6 +384,30 @@ export type Database = {
           },
         ]
       }
+      countries: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cron_log: {
         Row: {
           id: string
@@ -2807,6 +2831,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ports: {
+        Row: {
+          active: boolean
+          country_code: string
+          created_at: string
+          name: string
+          type: string
+          unlocode: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          country_code: string
+          created_at?: string
+          name: string
+          type: string
+          unlocode: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          country_code?: string
+          created_at?: string
+          name?: string
+          type?: string
+          unlocode?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pricing_config: {
         Row: {
           advance_rate_pct: number
@@ -3301,6 +3355,7 @@ export type Database = {
           created_by: string | null
           credit_limit: number | null
           credit_status: Database["public"]["Enums"]["v2_verification_status"]
+          exporter_id: string | null
           id: string
           incorporation_date: string | null
           industry: string | null
@@ -3328,6 +3383,7 @@ export type Database = {
           created_by?: string | null
           credit_limit?: number | null
           credit_status?: Database["public"]["Enums"]["v2_verification_status"]
+          exporter_id?: string | null
           id?: string
           incorporation_date?: string | null
           industry?: string | null
@@ -3355,6 +3411,7 @@ export type Database = {
           created_by?: string | null
           credit_limit?: number | null
           credit_status?: Database["public"]["Enums"]["v2_verification_status"]
+          exporter_id?: string | null
           id?: string
           incorporation_date?: string | null
           industry?: string | null
@@ -3370,7 +3427,15 @@ export type Database = {
           verified_at?: string | null
           verified_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "v2_buyers_exporter_id_fkey"
+            columns: ["exporter_id"]
+            isOneToOne: false
+            referencedRelation: "v2_exporters"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       v2_decisions: {
         Row: {
@@ -3766,7 +3831,10 @@ export type Database = {
           notice_served_by: string | null
           notice_served_method: string | null
           port_of_discharge: string | null
+          port_of_discharge_other: string | null
           port_of_loading: string | null
+          port_of_loading_other: string | null
+          ports_not_listed: boolean
           reference: string | null
           settled_date: string | null
           shipment_date: string | null
@@ -3824,7 +3892,10 @@ export type Database = {
           notice_served_by?: string | null
           notice_served_method?: string | null
           port_of_discharge?: string | null
+          port_of_discharge_other?: string | null
           port_of_loading?: string | null
+          port_of_loading_other?: string | null
+          ports_not_listed?: boolean
           reference?: string | null
           settled_date?: string | null
           shipment_date?: string | null
@@ -3882,7 +3953,10 @@ export type Database = {
           notice_served_by?: string | null
           notice_served_method?: string | null
           port_of_discharge?: string | null
+          port_of_discharge_other?: string | null
           port_of_loading?: string | null
+          port_of_loading_other?: string | null
+          ports_not_listed?: boolean
           reference?: string | null
           settled_date?: string | null
           shipment_date?: string | null
@@ -4750,6 +4824,18 @@ export type Database = {
       }
       v2_sla_pause: { Args: { p_invoice_id: string }; Returns: undefined }
       v2_sla_resume: { Args: { p_invoice_id: string }; Returns: string }
+      v2_transcribe_board_resolution: {
+        Args: {
+          p_authorised_limit: number
+          p_company_document_id: string
+          p_exporter_id: string
+          p_limit_basis: string
+          p_signatories: Json
+          p_valid_from: string
+          p_valid_until: string
+        }
+        Returns: string
+      }
       v2_users_with_role: {
         Args: { _role: Database["public"]["Enums"]["v2_app_role"] }
         Returns: string[]
