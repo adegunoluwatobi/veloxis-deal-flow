@@ -32,6 +32,7 @@ export default function ExporterOnboarding() {
   const nav = useNavigate();
   const [exp, setExp] = useState<any>(null);
   const [docs, setDocs] = useState<any[]>([]);
+  const [typeIds, setTypeIds] = useState<Record<string, string>>({});
   const [f, setF] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [submittedOpen, setSubmittedOpen] = useState(false);
