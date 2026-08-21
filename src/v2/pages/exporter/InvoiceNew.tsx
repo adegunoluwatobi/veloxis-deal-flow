@@ -182,16 +182,23 @@ export default function ExporterInvoiceNew() {
         : step2Done === stage2Types.length ? 'Complete' : 'In progress';
 
   /* ---------------- persistence ---------------- */
-  const buildPayload = async (forSubmit: boolean) => {
+  const buildPayload = async (forSubmit: boolean, skipBuyerCreate = false) => {
     let buyerId = f.buyer_id || null;
-    if (addingBuyer && newBuyer.company_name) {
+    if (!skipBuyerCreate && addingBuyer && newBuyer.company_name) {
       const { data: nb, error: bErr } = await supabase.from('v2_buyers')
-        .insert({ company_name: newBuyer.company_name, country: newBuyer.country || null }).select('id').single();
+        .insert({
+          company_name: newBuyer.company_name,
+          country: newBuyer.country || null,
+          exporter_id: exp.id,
+        }).select('id').single();
       if (bErr) throw new Error(bErr.message);
       buyerId = nb.id;
       setAddingBuyer(false);
+      setMyBuyers((s) => [...s, { id: nb.id, company_name: newBuyer.company_name }]);
       setF((s) => ({ ...s, buyer_id: nb.id }));
     }
+    const loadingIsOther = f.port_of_loading === PORT_NOT_LISTED;
+    const dischargeIsOther = f.port_of_discharge === PORT_NOT_LISTED;
     return {
       invoice_number: f.invoice_number,
       exporter_id: exp.id,
@@ -201,8 +208,10 @@ export default function ExporterInvoiceNew() {
       incoterm: f.incoterm || null,
       bl_number: f.bl_number || null,
       bl_date: f.bl_date || null,
-      port_of_loading: f.port_of_loading || null,
-      port_of_discharge: f.port_of_discharge || null,
+      port_of_loading: loadingIsOther ? null : (f.port_of_loading || null),
+      port_of_discharge: dischargeIsOther ? null : (f.port_of_discharge || null),
+      port_of_loading_other: loadingIsOther ? (f.port_of_loading_other || null) : null,
+      port_of_discharge_other: dischargeIsOther ? (f.port_of_discharge_other || null) : null,
       estimated_arrival_date: f.estimated_arrival_date || null,
       invoice_currency: f.invoice_currency as any,
       gross_invoice_value: gross || null,
