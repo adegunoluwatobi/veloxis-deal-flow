@@ -338,7 +338,9 @@ export default function ExporterOnboarding() {
                             Uploaded {new Date(d.uploaded_at).toLocaleDateString()}
                           </span>
                         )}
-                        {d.verified && <span className="px-2 py-0.5 rounded bg-primary/20 text-accent">Verified</span>}
+                        {d.status === 'verified' && <span className="px-2 py-0.5 rounded bg-primary/20 text-accent">Verified</span>}
+                        {d.status === 'rejected' && <span className="px-2 py-0.5 rounded bg-destructive/20 text-destructive">Rejected</span>}
+
                       </div>
                     )}
                     {uploading && (
