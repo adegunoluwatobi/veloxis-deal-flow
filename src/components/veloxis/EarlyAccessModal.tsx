@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import veloxisLogoWhite from '@/assets/veloxis-logo-white.png';
 
 const STORAGE_KEY = 'veloxis_early_access_registered';
+const DISMISS_KEY = 'veloxis_early_access_dismissed_at';
+const DISMISS_WINDOW_MS = 14 * 24 * 60 * 60 * 1000; // 2 weeks
 
 export function EarlyAccessModal() {
   const [open, setOpen] = useState(false);
@@ -16,13 +18,19 @@ export function EarlyAccessModal() {
   useEffect(() => {
     try {
       if (window.location.pathname.startsWith('/nbcc')) return;
-      if (localStorage.getItem(STORAGE_KEY) !== '1') setOpen(true);
+      if (localStorage.getItem(STORAGE_KEY) === '1') return;
+      const dismissedAt = Number(localStorage.getItem(DISMISS_KEY) ?? 0);
+      if (dismissedAt && Date.now() - dismissedAt < DISMISS_WINDOW_MS) return;
+      setOpen(true);
     } catch {
       setOpen(true);
     }
   }, []);
 
-  const close = () => setOpen(false);
+  const close = () => {
+    try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch {}
+    setOpen(false);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
