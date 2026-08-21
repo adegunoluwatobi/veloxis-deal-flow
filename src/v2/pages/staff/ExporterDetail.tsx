@@ -11,6 +11,7 @@ import { openDocument } from '@/v2/lib/documents';
 import { CheckCircle2, XCircle, FileText, Clock } from 'lucide-react';
 import AuditLogTable from '@/v2/components/AuditLogTable';
 import ReviewChain, { SingleReviewerBanner } from '@/v2/components/ReviewChain';
+import BoardResolutionReviewStep from '@/v2/components/BoardResolutionReviewStep';
 
 
 const DOC_LABEL: Record<string, string> = {
