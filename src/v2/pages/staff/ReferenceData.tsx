@@ -18,6 +18,8 @@ import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/v2/useAuth';
 import { ArrowDown, ArrowUp, Plus, Search } from 'lucide-react';
 import PublicHolidaysTab from '@/v2/components/PublicHolidaysTab';
+import CountriesTab from '@/v2/components/CountriesTab';
+import PortsTab from '@/v2/components/PortsTab';
 import FxRatesTab from '@/v2/components/FxRatesTab';
 
 
