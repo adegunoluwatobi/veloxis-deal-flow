@@ -154,10 +154,24 @@ export default function ExporterOnboarding() {
       if (!token) throw new Error('Session expired — please sign in again.');
       const path = `${expId}/company/onboarding/${doc_type}-${Date.now()}-${file.name.replace(/[^a-z0-9._-]+/gi, '_')}`;
       await uploadWithProgress(path, file, token, (pct) => setProgress((p) => ({ ...p, [doc_type]: pct })));
-      const { error: insErr } = await supabase.from('v2_exporter_documents').insert({
-        exporter_id: expId, doc_type, file_url: path, file_name: file.name, uploaded_by: user!.id,
-      });
+      const typeId = typeIds[doc_type];
+      if (!typeId) throw new Error('This document type is not configured. Please contact Veloxis.');
+      const { data: inserted, error: insErr } = await supabase.from('company_documents').insert({
+        exporter_id: expId,
+        document_type_id: typeId,
+        storage_path: path,
+        original_filename: file.name,
+        file_size_bytes: file.size,
+        uploaded_by: user!.id,
+      }).select('id').single();
       if (insErr) throw new Error(insErr.message);
+      const { data: scan } = await supabase.functions.invoke('scan-document', {
+        body: { document_id: inserted.id, document_kind: 'company' },
+      });
+      if ((scan as any)?.scan_status && (scan as any).scan_status !== 'clean') {
+        throw new Error((scan as any).message ?? 'This file could not be accepted.');
+      }
+
       await load();
       toast({ title: 'Uploaded', description: file.name });
     } catch (err: any) {
