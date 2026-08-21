@@ -36,7 +36,7 @@ export default function StaffExporterDetail() {
     const [{ data: e }, { data: iv }, { data: d }, { data: dir }] = await Promise.all([
       supabase.from('v2_exporters').select('*').eq('id', id!).maybeSingle(),
       supabase.from('v2_invoices').select('id, invoice_number, invoice_amount, invoice_currency, status, maturity_date').eq('exporter_id', id!).order('created_at', { ascending: false }),
-      supabase.from('v2_exporter_documents').select('*').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
+      supabase.from('company_documents').select('id, original_filename, status, uploaded_at, document_types(code, name)').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
       supabase.from('v2_exporter_directors').select('*').eq('exporter_id', id!).order('created_at', { ascending: true }),
     ]);
     setExp(e); setInvoices(iv ?? []); setDocs(d ?? []); setDirectors(dir ?? []);
@@ -57,8 +57,10 @@ export default function StaffExporterDetail() {
   const isActive = exp.onboarding_status === 'active';
 
   const verifyDoc = async (docId: string, verified: boolean) => {
-    await supabase.from('v2_exporter_documents').update({
-      verified, verified_by: verified ? user?.id : null, verified_at: verified ? new Date().toISOString() : null,
+    await supabase.from('company_documents').update({
+      status: verified ? 'verified' : 'pending_review',
+      reviewed_by: verified ? user?.id : null,
+      reviewed_at: verified ? new Date().toISOString() : null,
     }).eq('id', docId);
     load();
   };
@@ -203,15 +205,15 @@ export default function StaffExporterDetail() {
               <div key={d.id} className="flex items-center justify-between border-t border-border pt-2">
                 <div>
                   <button onClick={() => openDocument(d.id, 'company')} className="text-sm text-accent hover:underline inline-flex items-center gap-2">
-                    <FileText className="h-4 w-4" /> {d.file_name || d.doc_type}
+                    <FileText className="h-4 w-4" /> {d.original_filename || d.document_types?.name}
                   </button>
-                  <div className="text-xs text-muted-foreground">{DOC_LABEL[d.doc_type] ?? d.doc_type}</div>
+                  <div className="text-xs text-muted-foreground">{d.document_types?.name ?? DOC_LABEL[d.document_types?.code] ?? '—'}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-xs px-2 py-0.5 rounded ${d.verified ? 'bg-primary/20 text-accent' : 'bg-muted text-muted-foreground'}`}>
-                    {d.verified ? 'Verified' : 'Unverified'}
+                  <span className={`text-xs px-2 py-0.5 rounded ${d.status === 'verified' ? 'bg-primary/20 text-accent' : 'bg-muted text-muted-foreground'}`}>
+                    {d.status === 'verified' ? 'Verified' : 'Unverified'}
                   </span>
-                  {canVerifyDoc && (d.verified
+                  {canVerifyDoc && (d.status === 'verified'
                     ? <Button size="sm" variant="ghost" onClick={() => verifyDoc(d.id, false)}>Unverify</Button>
                     : <Button size="sm" onClick={() => verifyDoc(d.id, true)}>Verify</Button>)}
                 </div>
