@@ -64,6 +64,7 @@ export default function ExporterInvoiceNew() {
   const [f, setF] = useState({
     invoice_number: '', buyer_id: '', commodity_id: '', commodity_other: '',
     incoterm: '', bl_number: '', bl_date: '', port_of_loading: '', port_of_discharge: '',
+    port_of_loading_other: '', port_of_discharge_other: '',
     estimated_arrival_date: '', invoice_currency: 'GBP', gross_invoice_value: '',
     agreed_deductions: '0', terms_days: '30', signatory_id: '',
   });
