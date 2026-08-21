@@ -510,9 +510,9 @@ export default function VeloxisWebsite() {
       <EarlyAccessModal />
       <Helmet>
         <title>Veloxis — Cross-Border Trade Finance</title>
-        <meta name="description" content="Cross-border trade finance that advances 80% of your export invoice within 24 hours. No collateral, no local bank required." />
+        <meta name="description" content="Cross-border trade finance that advances 80% of your export invoice within 24 hours. Funded against your buyer's obligation — no property pledged, no personal guarantees." />
         <meta property="og:title" content="Veloxis — Cross-Border Trade Finance" />
-        <meta property="og:description" content="Cross-border trade finance that advances 80% of your export invoice within 24 hours. No collateral, no local bank required." />
+        <meta property="og:description" content="Cross-border trade finance that advances 80% of your export invoice within 24 hours. Funded against your buyer's obligation — no property pledged, no personal guarantees." />
         <meta property="og:url" content="https://veloxis.co.uk/" />
         <meta property="og:image" content="https://veloxis.co.uk/og-image.png" />
       </Helmet>
