@@ -452,6 +452,8 @@ export default function ReferenceData() {
           <TabsTrigger value="config">System config</TabsTrigger>
           {isSuperAdmin && <TabsTrigger value="fx">Exchange rates</TabsTrigger>}
           {isSuperAdmin && <TabsTrigger value="holidays">Public holidays</TabsTrigger>}
+          {isSuperAdmin && <TabsTrigger value="countries">Countries</TabsTrigger>}
+          {isSuperAdmin && <TabsTrigger value="ports">Ports</TabsTrigger>}
         </TabsList>
         <TabsContent value="documents" className="mt-6"><DocumentTypesTab /></TabsContent>
         <TabsContent value="commodities" className="mt-6"><CommoditiesTab regulated={false} /></TabsContent>
@@ -459,6 +461,9 @@ export default function ReferenceData() {
         <TabsContent value="config" className="mt-6"><SystemConfigTab /></TabsContent>
         {isSuperAdmin && <TabsContent value="fx" className="mt-6"><FxRatesTab /></TabsContent>}
         {isSuperAdmin && <TabsContent value="holidays" className="mt-6"><PublicHolidaysTab /></TabsContent>}
+        {isSuperAdmin && <TabsContent value="countries" className="mt-6"><CountriesTab /></TabsContent>}
+        {isSuperAdmin && <TabsContent value="ports" className="mt-6"><PortsTab /></TabsContent>}
+
       </Tabs>
     </div>
   );
