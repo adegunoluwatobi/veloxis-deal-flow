@@ -194,7 +194,14 @@ export default function ExporterOnboarding() {
 
   const submitForReview = async () => {
     if (!requiredFieldsOk) { toast({ title: 'Complete required company & director fields', variant: 'destructive' }); return; }
-    if (missingDocs.length) { toast({ title: 'Upload all required documents first', variant: 'destructive' }); return; }
+    if (missingDocs.length) {
+      toast({
+        title: 'Upload all required documents first',
+        description: `Still needed: ${missingDocs.map((d) => d.label).join(', ')}`,
+        variant: 'destructive',
+      });
+      return;
+    }
     setBusy(true);
     const expId = await saveProfile();
     if (!expId) { setBusy(false); return; }
