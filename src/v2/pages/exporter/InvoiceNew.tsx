@@ -371,10 +371,13 @@ export default function ExporterInvoiceNew() {
 
       <h1 className="text-2xl">Submit invoice</h1>
 
-      <form className="space-y-6" onSubmit={submit}>
+      <form className="space-y-6" onSubmit={submit} onBlur={() => { autosaveRef.current(); }}>
         {/* ---------------- invoice fields ---------------- */}
         <section className="card-elevated space-y-4 p-6">
-          <h2 className="text-lg">Invoice and shipment</h2>
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-lg">Invoice and shipment</h2>
+            {autosavedAt && <span className="text-xs text-muted-foreground">Draft saved {autosavedAt}</span>}
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Label>Invoice number *</Label>
@@ -391,9 +394,10 @@ export default function ExporterInvoiceNew() {
               {addingBuyer ? (
                 <div className="grid grid-cols-2 gap-2">
                   <Input placeholder="Company name" value={newBuyer.company_name} onChange={(e) => setNewBuyer({ ...newBuyer, company_name: e.target.value })} />
-                  <Input placeholder="Country" value={newBuyer.country} onChange={(e) => setNewBuyer({ ...newBuyer, country: e.target.value })} />
+                  <CountrySelect value={newBuyer.country} onChange={(v) => setNewBuyer({ ...newBuyer, country: v })} placeholder="Buyer country" />
                 </div>
               ) : (
+
                 <Select value={f.buyer_id} onValueChange={(v) => set('buyer_id', v)}>
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent>{myBuyers.map((b) => <SelectItem key={b.id} value={b.id}>{b.company_name}</SelectItem>)}</SelectContent>
