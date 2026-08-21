@@ -158,11 +158,19 @@ export default function CompanyAuthorityRow({
       )}
 
       {!loading && blockMessage && (
-        <p className="mt-3 flex items-start gap-1.5 text-xs text-destructive">
-          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          {blockMessage}
-        </p>
+        <div className="mt-3 space-y-2">
+          <p className="flex items-start gap-1.5 text-xs text-destructive">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            {blockMessage}
+          </p>
+          {(missingOrExpired || blockMessage.includes('expired')) && (
+            <button type="button" onClick={openMyCompany} className="text-xs text-accent hover:underline">
+              Upload board resolution
+            </button>
+          )}
+        </div>
       )}
+
     </div>
   );
 }
