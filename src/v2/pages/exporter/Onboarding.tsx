@@ -51,8 +51,17 @@ export default function ExporterOnboarding() {
       director_id_type: '', director_id_number: '', director_address: '',
       bank_details: { bank_name: '', account_name: '', account_number: '', swift: '' },
     });
+
+    const { data: dt } = await supabase.from('document_types')
+      .select('id, code').in('code', REQUIRED_DOCS.map((r) => r.key));
+    const map: Record<string, string> = {};
+    (dt ?? []).forEach((t: any) => { map[t.code] = t.id; });
+    setTypeIds(map);
+
     if (e?.id) {
-      const { data: d } = await supabase.from('v2_exporter_documents').select('*').eq('exporter_id', e.id).order('uploaded_at', { ascending: false });
+      const { data: d } = await supabase.from('company_documents')
+        .select('id, document_type_id, original_filename, status, uploaded_at')
+        .eq('exporter_id', e.id).order('uploaded_at', { ascending: false });
       setDocs(d ?? []);
     }
   }, [user, profile]);
@@ -69,8 +78,9 @@ export default function ExporterOnboarding() {
   const set = (k: string, v: any) => setF((x: any) => ({ ...x, [k]: v }));
   const setBank = (k: string, v: string) => setF((x: any) => ({ ...x, bank_details: { ...(x.bank_details ?? {}), [k]: v } }));
 
-  const latestDoc = (t: DocType) => docs.find((d) => d.doc_type === t);
+  const latestDoc = (t: DocType) => docs.find((d) => d.document_type_id === typeIds[t]);
   const missingDocs = REQUIRED_DOCS.filter((r) => !latestDoc(r.key));
+
 
   const requiredFieldsOk =
     f.company_name && f.company_registration_number && f.country_of_incorporation &&
