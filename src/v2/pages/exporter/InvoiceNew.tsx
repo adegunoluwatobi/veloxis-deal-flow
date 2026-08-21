@@ -451,11 +451,43 @@ export default function ExporterInvoiceNew() {
             <div>
               <Label>Bill of lading date *</Label>
               <Input type="date" max={today()} value={f.bl_date} onChange={(e) => set('bl_date', e.target.value)} />
+              {f.bl_date > today() && (
+                <p className="mt-1 text-xs text-destructive">The bill of lading date cannot be in the future.</p>
+              )}
+            </div>
+            <div />
+
+            <div>
+              <Label>Port of loading *</Label>
+              <PortSelect
+                label="Port of loading"
+                value={f.port_of_loading}
+                otherValue={f.port_of_loading_other}
+                onChange={(v) => set('port_of_loading', v)}
+                onOtherChange={(v) => set('port_of_loading_other', v)}
+              />
+            </div>
+            <div>
+              <Label>Port of discharge *</Label>
+              <PortSelect
+                label="Port of discharge"
+                value={f.port_of_discharge}
+                otherValue={f.port_of_discharge_other}
+                onChange={(v) => set('port_of_discharge', v)}
+                onOtherChange={(v) => set('port_of_discharge_other', v)}
+              />
+            </div>
+            <div>
+              <Label>Estimated arrival date</Label>
+              <Input type="date" value={f.estimated_arrival_date} onChange={(e) => set('estimated_arrival_date', e.target.value)} />
+              {f.estimated_arrival_date && f.bl_date && f.estimated_arrival_date < f.bl_date && (
+                <p className="mt-1 text-xs text-destructive">The estimated arrival date must be on or after the bill of lading date.</p>
+              )}
+              {f.estimated_arrival_date && f.estimated_arrival_date < today() && f.estimated_arrival_date >= (f.bl_date || '') && (
+                <p className="mt-1 text-xs text-muted-foreground">Goods reported as already arrived.</p>
+              )}
             </div>
 
-            <div><Label>Port of loading *</Label><Input value={f.port_of_loading} onChange={(e) => set('port_of_loading', e.target.value)} /></div>
-            <div><Label>Port of discharge *</Label><Input value={f.port_of_discharge} onChange={(e) => set('port_of_discharge', e.target.value)} /></div>
-            <div><Label>Estimated arrival date</Label><Input type="date" value={f.estimated_arrival_date} onChange={(e) => set('estimated_arrival_date', e.target.value)} /></div>
 
             <div>
               <Label>Currency</Label>
