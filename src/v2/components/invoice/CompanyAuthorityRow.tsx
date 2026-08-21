@@ -91,9 +91,23 @@ export function useCompanyAuthority(exporterId: string | null, invoiceExposure: 
   return state;
 }
 
-export default function CompanyAuthorityRow({ state }: { state: AuthorityState }) {
+export default function CompanyAuthorityRow({
+  state,
+  onBeforeLeave,
+}: {
+  state: AuthorityState;
+  /** Autosaves the draft before we send the exporter off to My Company. */
+  onBeforeLeave?: () => Promise<void> | void;
+}) {
   const { loading, headroom, blockMessage, filename, verifiedAt, companyDocumentId } = state;
   const ok = !loading && !blockMessage && !!headroom;
+  const missingOrExpired = !loading && !!blockMessage && !headroom;
+
+  const openMyCompany = async () => {
+    try { await onBeforeLeave?.(); } catch { /* the draft save is best effort */ }
+    window.open('/portal/profile', '_blank', 'noopener');
+  };
+
 
   return (
     <div className={cn(
