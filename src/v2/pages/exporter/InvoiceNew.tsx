@@ -536,7 +536,7 @@ export default function ExporterInvoiceNew() {
 
           <div className="space-y-3">
             <h3 className="text-sm font-medium">Required documents</h3>
-            <CompanyAuthorityRow state={authority} />
+            <CompanyAuthorityRow state={authority} onBeforeLeave={() => autosaveRef.current()} />
             {stage1Required.map((t) => (
               <DocumentUploadRow
                 key={t.id}
