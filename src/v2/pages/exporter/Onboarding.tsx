@@ -13,14 +13,19 @@ import SignOutButton from '@/v2/components/SignOutButton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 
-type DocType = 'cac_certificate' | 'director_id' | 'proof_of_address' | 'bank_proof';
+type DocType = string;
 
 const REQUIRED_DOCS: { key: DocType; label: string; hint: string }[] = [
-  { key: 'cac_certificate', label: 'Company registration document', hint: 'CAC certificate / Certificate of Incorporation (RC).' },
+  { key: 'cac_certificate', label: 'CAC certificate of incorporation', hint: 'Certificate of Incorporation showing your RC number.' },
+  { key: 'cac_status_report', label: 'CAC status report', hint: 'Current status report listing directors and shareholding.' },
+  { key: 'tin_certificate', label: 'Tax identification number', hint: 'TIN certificate issued by FIRS.' },
+  { key: 'nepc_certificate', label: 'NEPC exporter registration', hint: 'Your Nigerian Export Promotion Council registration.' },
+  { key: 'bank_statement', label: 'Six month bank statement', hint: 'Statements for the corporate account funds will settle to.' },
+  { key: 'board_resolution', label: 'Board resolution authorising the facility', hint: 'Board resolution naming the authorised limit and signatories.' },
   { key: 'director_id', label: 'Director government ID', hint: 'Passport, national ID or driver’s licence.' },
   { key: 'proof_of_address', label: 'Director proof of address', hint: 'Utility bill or bank statement, dated within 3 months.' },
-  { key: 'bank_proof', label: 'Bank details / statement', hint: 'Recent bank statement or a signed bank confirmation letter.' },
 ];
+
 
 export default function ExporterOnboarding() {
   const { user, profile } = useAuth();
