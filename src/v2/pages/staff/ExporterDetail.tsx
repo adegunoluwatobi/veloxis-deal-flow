@@ -133,15 +133,22 @@ export default function StaffExporterDetail() {
           </div>
         )}
 
-        {bdApproved && !isActive && canFinalApprove && (
-          <div className="mt-4 space-y-2 border-t border-border pt-4">
+        {bdApproved && !isActive && (
+          <div className="mt-4 space-y-3 border-t border-border pt-4">
             <div className="text-sm font-medium">Credit &amp; Compliance final approval</div>
-            <p className="text-xs text-muted-foreground">
-              Four eyes rule: this approval must be given by someone other than the Business Developer who approved the earlier stage.
-            </p>
-            <Button size="sm" onClick={finalApprove} disabled={busy}>Approve & activate exporter</Button>
+            <BoardResolutionReviewStep exporterId={id!} canReview={canFinalApprove} onChanged={load} />
+            {canFinalApprove && (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  Four eyes rule: this approval must be given by someone other than the Business Developer who approved the earlier stage.
+                  The board resolution must be recorded before the exporter can be activated.
+                </p>
+                <Button size="sm" onClick={finalApprove} disabled={busy}>Approve &amp; activate exporter</Button>
+              </>
+            )}
           </div>
         )}
+
 
         {!submitted && (
           <p className="text-xs text-muted-foreground mt-3">Exporter has not submitted their onboarding pack yet.</p>
