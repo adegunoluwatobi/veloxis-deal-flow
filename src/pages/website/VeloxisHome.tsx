@@ -57,7 +57,7 @@ const faqs: FaqItem[] = [
   { q: "Does Veloxis finance importers?", a: "Not directly. Veloxis finances the exporter's receivable. The exporter receives the advance, and the buyer pays Veloxis when the invoice falls due." },
   { q: "Does the exporter need to be based in a specific country?", a: "Veloxis is built for African commodity exporters. The buyer must be in the UK or EU and able to be verified and underwritten." },
   { q: "Does Veloxis finance all buyers?", a: "No. Veloxis only finances transactions where the buyer is in the UK or EU and can be properly verified, credit-checked, and underwritten." },
-  { q: "How long does approval take?", a: "A complete application with all documents uploaded, KYC verified by your partner, and buyer details confirmed is reviewed within 24 hours. Once your buyer signs the IPU or the letter of credit is confirmed, funds are released, typically within the same business day." },
+  { q: "How long does approval take?", a: "A complete application with all documents uploaded, KYC verified by your partner, and buyer details confirmed is reviewed within 24 hours — built for Nigerian exporters. Once your buyer signs the IPU or the letter of credit is confirmed, funds are released, typically within the same business day." },
   { q: "Do I need a UK bank account?", a: "No. Veloxis settles funds directly to your domiciliary account in your home country. You do not need a UK or EU bank account. This is one of the key reasons the platform was built." },
   { q: "What goods are eligible?", a: "Veloxis finances legal African commodity exports, including solid minerals, metals and scrap, manufactured goods, textiles, processed chemicals, timber and wood products, seafood, and agricultural and perishable produce shipped under standard trade terms. The only exclusions are weapons, controlled substances, and any goods prohibited under UK sanctions or applicable export controls." },
   { q: "Is Veloxis a lender?", a: "No. Veloxis is an invoice finance provider. We advance funds against your trade receivable — we are buying an asset, not extending a loan. There is no debt on your balance sheet and no loan agreement to service. The model is self-liquidating: the transaction is settled directly by the buyer's bank under the Letter of Credit or Irrevocable Payment Undertaking." },
@@ -100,7 +100,7 @@ const slides: SlideData[] = [
     iconBg: "rgba(26,188,156,0.15)",
     icon: <Shield className="w-6 h-6 text-[#1ABC9C]" />,
     title: "Veloxis solves all of this.",
-    body: "Once approved and your buyer signs the IPU, 80% of your invoice is in your domiciliary account within 24 hours. No collateral. No UK bank needed. Legally documented end to end.",
+    body: "Once approved and your buyer signs the IPU, 80% of your invoice is in your domiciliary account within 24 hours — built for Nigerian exporters. No collateral. No UK bank needed. Legally documented end to end.",
     isSolution: true,
   },
 ];
@@ -143,7 +143,7 @@ const solutionPills = [
 
 const howItWorksSteps = [
   { icon: FileText, title: "Submit", body: "Partner verifies your KYC. Upload your commercial invoice, bill of lading, and buyer details." },
-  { icon: Search, title: "We underwrite", body: "Our team verifies documents, assesses buyer risk, and completes compliance checks within 24 hours." },
+  { icon: Search, title: "We underwrite", body: "Our team verifies documents, assesses buyer risk, and completes compliance checks within 24 hours — built for Nigerian exporters." },
   { icon: Shield, title: "Buyer signs IPU or confirms LC", body: "Your buyer either signs an Irrevocable Payment Undertaking digitally or arranges a confirmed letter of credit from their bank, committing to pay Veloxis on the due date." },
   { icon: DollarSign, title: "Funds released", body: "80% wired to your domiciliary account. At maturity, the buyer (or the confirming bank under the LC) pays Veloxis. We send you the residual." },
 ];
@@ -471,7 +471,7 @@ function ComparisonAnimation() {
         </div>
         <div className="mt-4 text-center">
           <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#1ABC9C]/15 text-[12px] font-medium text-[#5FFFD7]">With Veloxis</span>
-          <p className="text-[13px] text-white/40 mt-2">Four steps. 80% in your account within 24 hours.</p>
+          <p className="text-[13px] text-white/40 mt-2">Four steps. 80% in your account within 24 hours — built for Nigerian exporters.</p>
         </div>
       </div>
     </div>
@@ -510,9 +510,9 @@ export default function VeloxisWebsite() {
       <EarlyAccessModal />
       <Helmet>
         <title>Veloxis — Cross-Border Trade Finance</title>
-        <meta name="description" content="Cross-border trade finance that advances 80% of your export invoice within 24 hours." />
+        <meta name="description" content="Cross-border trade finance that advances 80% of your export invoice within 24 hours — built for Nigerian exporters." />
         <meta property="og:title" content="Veloxis — Cross-Border Trade Finance" />
-        <meta property="og:description" content="Cross-border trade finance that advances 80% of your export invoice within 24 hours." />
+        <meta property="og:description" content="Cross-border trade finance that advances 80% of your export invoice within 24 hours — built for Nigerian exporters." />
         <meta property="og:url" content="https://veloxis.co.uk/" />
         <meta property="og:image" content="https://veloxis.co.uk/og-image.png" />
       </Helmet>
@@ -554,7 +554,7 @@ export default function VeloxisWebsite() {
             <TypingHeadline />
 
             <p className="mb-6 max-w-[420px] text-[16px] leading-[1.65] text-white/60 tracking-[-0.01em]">
-              Get 80% of your invoice value in your account within 24 hours. No collateral required.
+              Get 80% of your invoice value in your account within 24 hours — built for Nigerian exporters. No collateral required.
             </p>
 
             <div className="mb-6 flex flex-col sm:flex-row items-start gap-[14px]">
