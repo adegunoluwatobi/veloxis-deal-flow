@@ -90,8 +90,9 @@ export function boardResolutionHtml(i: ResolutionTemplateInput) {
     <td style="height:90px">Name: ${line(null)}<br/>Designation: ${line(null)}</td></tr></tbody>
   </table>
 
-  <p class="note">Print this template on company letterhead, complete every field, sign, then upload the
-  scanned copy as your board resolution.</p>
+  <p class="note">This is a draft template. Print it on company letterhead, complete every field, sign,
+  then upload the scanned copy as your board resolution.</p>
+  </div>
 </body></html>`;
 }
 
