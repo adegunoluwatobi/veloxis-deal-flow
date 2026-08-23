@@ -33,6 +33,7 @@ export default function StaffExporterDetail() {
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [lastReturnStage, setLastReturnStage] = useState<string | null>(null);
+  const [lastReturn, setLastReturn] = useState<{ stage: string; decision: string; note: string | null; created_at: string } | null>(null);
 
   const load = useCallback(async () => {
     const [{ data: e }, { data: iv }, { data: d }, { data: dir }, { data: rev }] = await Promise.all([
@@ -40,11 +41,12 @@ export default function StaffExporterDetail() {
       supabase.from('v2_invoices').select('id, invoice_number, invoice_amount, invoice_currency, status, maturity_date').eq('exporter_id', id!).order('created_at', { ascending: false }),
       supabase.from('company_documents').select('id, original_filename, status, uploaded_at, reviewed_at, rejection_reason, document_types(code, label)').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
       supabase.from('v2_exporter_directors').select('*').eq('exporter_id', id!).order('created_at', { ascending: true }),
-      supabase.from('onboarding_reviews').select('stage, decision, created_at').eq('exporter_id', id!).order('created_at', { ascending: false }).limit(1),
+      supabase.from('onboarding_reviews').select('stage, decision, note, created_at').eq('exporter_id', id!).order('created_at', { ascending: false }).limit(1),
     ]);
     setExp(e); setInvoices(iv ?? []); setDocs(d ?? []); setDirectors(dir ?? []);
-    const latest = rev?.[0];
+    const latest = rev?.[0] as any;
     setLastReturnStage(latest && latest.decision !== 'approved' ? latest.stage : null);
+    setLastReturn(latest && latest.decision !== 'approved' ? latest : null);
   }, [id]);
 
 
@@ -173,6 +175,29 @@ export default function StaffExporterDetail() {
           />
 
         </div>
+
+        {lastReturn && !isActive && (
+          <div className="mt-4 rounded border border-destructive/40 bg-destructive/10 p-3 text-sm">
+            <div className="font-medium text-destructive">
+              Returned to exporter by {lastReturn.stage === 'bd' ? 'Business Developer' : 'Credit & Compliance'}
+              {' · '}{new Date(lastReturn.created_at).toLocaleString('en-GB')}
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {lastReturn.note?.trim() || 'No reason recorded.'}
+            </p>
+            {docs.some((d) => d.status === 'rejected') && (
+              <ul className="mt-2 space-y-1 text-xs text-muted-foreground list-disc pl-4">
+                {docs.filter((d) => d.status === 'rejected').map((d) => (
+                  <li key={d.id}>
+                    <span className="text-foreground">{d.document_types?.label ?? d.original_filename}:</span>{' '}
+                    {d.rejection_reason || 'No reason given'}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
 
         {submitted && !bdApproved && !isActive && canBdReview && (
           <div className="mt-4 space-y-3 border-t border-border pt-4">
