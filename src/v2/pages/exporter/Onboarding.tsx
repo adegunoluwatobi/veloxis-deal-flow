@@ -565,10 +565,11 @@ export default function ExporterOnboarding() {
           <Button variant="outline" onClick={async () => { const id = await saveProfile(); if (id) toast({ title: 'Saved' }); }} disabled={busy}>
             Save progress
           </Button>
-          <Button onClick={submitForReview} disabled={busy || isActive || (submitted && !bdRejected)}>
-            {submitted && !bdRejected ? 'Submitted' : 'Submit for review'}
-          </Button>
+          <Button onClick={submitForReview} disabled={busy}>Submit for review</Button>
         </div>
+        </>
+        )}
+
       </main>
 
       <Dialog open={submittedOpen} onOpenChange={setSubmittedOpen}>
