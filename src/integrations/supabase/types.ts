@@ -98,6 +98,7 @@ export type Database = {
           full_name: string
           id: string
           id_document_path: string | null
+          phone: string | null
           position: string | null
           updated_at: string
         }
@@ -108,6 +109,7 @@ export type Database = {
           full_name: string
           id?: string
           id_document_path?: string | null
+          phone?: string | null
           position?: string | null
           updated_at?: string
         }
@@ -118,6 +120,7 @@ export type Database = {
           full_name?: string
           id?: string
           id_document_path?: string | null
+          phone?: string | null
           position?: string | null
           updated_at?: string
         }
@@ -133,7 +136,7 @@ export type Database = {
       }
       board_resolutions: {
         Row: {
-          authorised_limit: number
+          authorised_limit: number | null
           company_document_id: string
           created_at: string
           exporter_id: string
@@ -142,6 +145,8 @@ export type Database = {
           limit_currency: string
           notes: string | null
           rejection_reason: string | null
+          renewal_reason: string | null
+          renewal_required: boolean
           superseded_by: string | null
           updated_at: string
           valid_from: string
@@ -151,7 +156,7 @@ export type Database = {
           verified_by: string | null
         }
         Insert: {
-          authorised_limit: number
+          authorised_limit?: number | null
           company_document_id: string
           created_at?: string
           exporter_id: string
@@ -160,6 +165,8 @@ export type Database = {
           limit_currency?: string
           notes?: string | null
           rejection_reason?: string | null
+          renewal_reason?: string | null
+          renewal_required?: boolean
           superseded_by?: string | null
           updated_at?: string
           valid_from: string
@@ -169,7 +176,7 @@ export type Database = {
           verified_by?: string | null
         }
         Update: {
-          authorised_limit?: number
+          authorised_limit?: number | null
           company_document_id?: string
           created_at?: string
           exporter_id?: string
@@ -178,6 +185,8 @@ export type Database = {
           limit_currency?: string
           notes?: string | null
           rejection_reason?: string | null
+          renewal_reason?: string | null
+          renewal_required?: boolean
           superseded_by?: string | null
           updated_at?: string
           valid_from?: string
@@ -4807,6 +4816,10 @@ export type Database = {
         Args: { p_text: string; p_vars: Json }
         Returns: string
       }
+      v2_request_board_resolution: {
+        Args: { p_exporter_id: string; p_note?: string }
+        Returns: undefined
+      }
       v2_request_documents: {
         Args: {
           p_document_type_ids: string[]
@@ -4836,13 +4849,10 @@ export type Database = {
       v2_sla_resume: { Args: { p_invoice_id: string }; Returns: string }
       v2_transcribe_board_resolution: {
         Args: {
-          p_authorised_limit: number
           p_company_document_id: string
           p_exporter_id: string
-          p_limit_basis: string
           p_signatories: Json
           p_valid_from: string
-          p_valid_until: string
         }
         Returns: string
       }
