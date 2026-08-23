@@ -147,6 +147,38 @@ export default function ExporterOnboarding() {
   const errorFor = (k: string) => ((showAllErrors || touched[k]) ? errors[k] : undefined);
   const requiredFieldsOk = Object.keys(errors).length === 0;
 
+  // Board resolution template needs these before it is worth generating.
+  const templateMissing = [
+    !String(f.company_name ?? '').trim() && 'company name',
+    !String(f.company_registration_number ?? '').trim() && 'registration number',
+    !String(f.address ?? '').trim() && 'registered address',
+    !String(f.director_name ?? '').trim() && 'director full name',
+  ].filter(Boolean) as string[];
+
+  const templateInput = () => ({
+    companyName: f.company_name,
+    registrationNumber: f.company_registration_number,
+    registeredAddress: f.address,
+    companyEmail: f.email ?? profile?.email,
+    signatories: [
+      { name: f.director_name, designation: 'Director', email: f.director_email ?? f.email ?? profile?.email },
+      {},
+    ],
+  });
+
+  const templateReady = () => {
+    if (templateMissing.length === 0) return true;
+    setShowAllErrors(true);
+    toast({
+      title: 'Complete your details first',
+      description: `The template needs your ${templateMissing.join(', ')}.`,
+      variant: 'destructive',
+    });
+    return false;
+  };
+
+
+
 
   const saveProfile = async (): Promise<string | null> => {
     const payload: any = {
