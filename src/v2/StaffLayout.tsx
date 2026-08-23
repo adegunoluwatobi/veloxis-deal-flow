@@ -63,10 +63,14 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
           ))}
         </nav>
         <div className="border-t border-sidebar-border p-4 space-y-2">
-          <div className="text-xs">
-            <div className="font-medium truncate">{profile?.name || profile?.email}</div>
-            <div className="text-sidebar-muted">{ROLE_LABEL[primary as keyof typeof ROLE_LABEL]}</div>
+          <div className="flex items-center gap-2">
+            <div className="text-xs min-w-0 flex-1">
+              <div className="font-medium truncate">{profile?.name || profile?.email}</div>
+              <div className="text-sidebar-muted">{ROLE_LABEL[primary as keyof typeof ROLE_LABEL]}</div>
+            </div>
+            <NotificationBell variant="sidebar" />
           </div>
+
           <Button size="sm" variant="ghost" className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
             onClick={async () => { await signOut(); nav('/login'); }}>
             <LogOut className="h-4 w-4" /> Sign out
