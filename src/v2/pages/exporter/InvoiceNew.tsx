@@ -581,11 +581,12 @@ export default function ExporterInvoiceNew() {
         </section>
 
         {/* ---------------- stage 1 uploads ---------------- */}
-        <section className="card-elevated space-y-4 p-6">
-          <div>
+        <section className={`card-elevated space-y-4 p-6 ${step1Locked ? 'opacity-70' : ''}`}>
+          <div className="flex items-center gap-2">
+            {step1Locked && <Lock className="h-4 w-4 text-muted-foreground" />}
             <h2 className="text-lg">Step 1 · Submission documents</h2>
-            {uploadsDisabled && <p className="mt-1 text-xs text-muted-foreground">{uploadsDisabled}.</p>}
           </div>
+          {uploadsDisabled && <p className="text-xs text-muted-foreground">{uploadsDisabled}.</p>}
 
           <div className="space-y-3">
             <h3 className="text-sm font-medium">Required documents</h3>
