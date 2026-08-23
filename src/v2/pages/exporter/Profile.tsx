@@ -50,6 +50,10 @@ export default function ExporterProfile() {
 
   if (!f) return <div className="text-muted-foreground">Loading…</div>;
 
+  // Once Credit & Compliance approve the exporter, company and director details are
+  // locked. They only re-open if a reviewer returns the application.
+  const locked = exp?.onboarding_status === 'active' && !exp?.bd_rejected_at;
+
   const set = (k: string, v: any) => setF((x: any) => ({ ...x, [k]: v }));
   const setBank = (k: string, v: string) => setF((x: any) => ({ ...x, bank_details: { ...(x.bank_details ?? {}), [k]: v } }));
 
@@ -98,6 +102,17 @@ export default function ExporterProfile() {
         )}
       </div>
 
+      {locked && (
+        <div className="card-elevated p-4 border-primary/40 bg-primary/10 text-sm">
+          <div className="font-medium text-accent">Your company details are locked</div>
+          <div className="text-muted-foreground">
+            They were verified at approval. If something needs to change, ask Credit &amp; Compliance to return your
+            profile for amendment — the fields re-open as soon as they do.
+          </div>
+        </div>
+      )}
+
+      <fieldset disabled={locked} className={locked ? 'space-y-6 opacity-70' : 'space-y-6'}>
       <section className="card-elevated p-6 space-y-4">
         <h2 className="text-sm uppercase tracking-wider text-muted-foreground">Company (KYB)</h2>
         <div className="grid grid-cols-2 gap-4">
@@ -150,7 +165,9 @@ export default function ExporterProfile() {
         </div>
       </section>
 
-      <div><Button onClick={save}>Save profile</Button></div>
+      </fieldset>
+
+      {!locked && <div><Button onClick={save}>Save profile</Button></div>}
     </div>
   );
 }
