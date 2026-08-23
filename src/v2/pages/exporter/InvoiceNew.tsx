@@ -297,6 +297,7 @@ export default function ExporterInvoiceNew() {
     if (!exp || busy) return;
     if (!f.invoice_number.trim()) return;
     if (invoice && invoice.status !== 'draft' && invoice.status !== 'returned_for_revision') return;
+    if ((invoice as any)?.stage2_unlocked_at) return;
     try {
       const payload = await buildPayload(false, true);
       if (invoiceId) {
@@ -391,7 +392,15 @@ export default function ExporterInvoiceNew() {
   if (exp === null) return <div className="text-muted-foreground">Loading…</div>;
   if (!exp) return <div className="card-elevated p-6 text-sm">Your exporter profile is not set up yet. Please contact Veloxis.</div>;
 
-  const uploadsDisabled = invoiceId ? null : 'Save your invoice details first to start uploading';
+  // Once Veloxis unlocks step 2, step 1 is frozen unless the application is
+  // sent back for revision or rejected.
+  const step1Locked =
+    !!(invoice as any)?.stage2_unlocked_at &&
+    !['returned_for_revision', 'rejected'].includes(status ?? '');
+
+  const uploadsDisabled = step1Locked
+    ? 'Step 1 is locked while your application is in pre funding'
+    : invoiceId ? null : 'Save your invoice details first to start uploading';
   const optionalCommercial = optionalTypes.filter((d) => /commercial/i.test(d.code) || d.sort_order < 500);
   const optionalCompliance = optionalTypes.filter((d) => !optionalCommercial.includes(d));
 
@@ -407,14 +416,23 @@ export default function ExporterInvoiceNew() {
 
       <h1 className="text-2xl">Submit invoice</h1>
 
-      <form className="space-y-6" onSubmit={submit} onBlur={() => { autosaveRef.current(); }}>
+       <form className="space-y-6" onSubmit={submit} onBlur={() => { if (!step1Locked) autosaveRef.current(); }}>
+        {step1Locked && (
+          <div className="card-elevated flex items-start gap-3 border-l-4 border-l-primary p-4 text-sm">
+            <Lock className="mt-0.5 h-4 w-4 text-muted-foreground" />
+            <p className="text-muted-foreground">
+              Step 1 is complete and locked. Your invoice details and submission documents can no longer be
+              changed unless Veloxis returns the application for revision.
+            </p>
+          </div>
+        )}
         {/* ---------------- invoice fields ---------------- */}
-        <section className="card-elevated space-y-4 p-6">
+        <section className={`card-elevated space-y-4 p-6 ${step1Locked ? 'opacity-70' : ''}`}>
           <div className="flex items-baseline justify-between">
             <h2 className="text-lg">Invoice and shipment</h2>
-            {autosavedAt && <span className="text-xs text-muted-foreground">Draft saved {autosavedAt}</span>}
+            {autosavedAt && !step1Locked && <span className="text-xs text-muted-foreground">Draft saved {autosavedAt}</span>}
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <fieldset disabled={step1Locked} className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Label>Invoice number *</Label>
               <Input value={f.invoice_number} onChange={(e) => set('invoice_number', e.target.value)} />
@@ -560,15 +578,16 @@ export default function ExporterInvoiceNew() {
               <Input readOnly value={maturityDate ?? '—'} className="bg-muted/50" />
               <p className="mt-1 text-xs text-muted-foreground">Bill of lading date plus your payment terms</p>
             </div>
-          </div>
+          </fieldset>
         </section>
 
         {/* ---------------- stage 1 uploads ---------------- */}
-        <section className="card-elevated space-y-4 p-6">
-          <div>
+        <section className={`card-elevated space-y-4 p-6 ${step1Locked ? 'opacity-70' : ''}`}>
+          <div className="flex items-center gap-2">
+            {step1Locked && <Lock className="h-4 w-4 text-muted-foreground" />}
             <h2 className="text-lg">Step 1 · Submission documents</h2>
-            {uploadsDisabled && <p className="mt-1 text-xs text-muted-foreground">{uploadsDisabled}.</p>}
           </div>
+          {uploadsDisabled && <p className="text-xs text-muted-foreground">{uploadsDisabled}.</p>}
 
           <div className="space-y-3">
             <h3 className="text-sm font-medium">Required documents</h3>
@@ -588,6 +607,7 @@ export default function ExporterInvoiceNew() {
                 exporterId={exp.id}
                 docs={docsFor(t.id)}
                 required
+                readOnly={step1Locked}
                 disabledReason={uploadsDisabled}
                 onUploaded={() => invoiceId && refreshInvoiceState(invoiceId)}
               />
@@ -611,7 +631,7 @@ export default function ExporterInvoiceNew() {
                     docs={docsFor(r.document_type_id)}
                     required
                     accent="amber"
-                    disabledReason={uploadsDisabled}
+                    disabledReason={invoiceId ? null : 'Save your invoice details first to start uploading'}
                     onUploaded={() => invoiceId && refreshInvoiceState(invoiceId)}
                   />
                 );
@@ -642,6 +662,7 @@ export default function ExporterInvoiceNew() {
                         invoiceId={invoiceId}
                         exporterId={exp.id}
                         docs={docsFor(t.id)}
+                        readOnly={step1Locked}
                         disabledReason={uploadsDisabled}
                         onUploaded={() => invoiceId && refreshInvoiceState(invoiceId)}
                       />
@@ -687,7 +708,7 @@ export default function ExporterInvoiceNew() {
         <section className="card-elevated space-y-4 p-6">
           <div>
             <Label>Who is signing this submission *</Label>
-            <Select value={f.signatory_id} onValueChange={(v) => set('signatory_id', v)}>
+            <Select disabled={step1Locked} value={f.signatory_id} onValueChange={(v) => set('signatory_id', v)}>
               <SelectTrigger><SelectValue placeholder={signatories.length ? 'Select a named signatory' : 'No authorised signatories on file'} /></SelectTrigger>
               <SelectContent>
                 {signatories.map((s) => (
@@ -703,7 +724,7 @@ export default function ExporterInvoiceNew() {
           </div>
 
           <label className="flex items-start gap-3 text-sm">
-            <Checkbox checked={warranty} onCheckedChange={(v) => setWarranty(!!v)} className="mt-0.5" />
+            <Checkbox disabled={step1Locked} checked={warranty} onCheckedChange={(v) => setWarranty(!!v)} className="mt-0.5" />
             <span className="text-muted-foreground">
               I confirm the goods have shipped, the invoice is genuine and unencumbered, the documents uploaded are true copies,
               and the named signatory is authorised to submit this invoice.
@@ -715,8 +736,12 @@ export default function ExporterInvoiceNew() {
           )}
 
           <div className="flex flex-wrap gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={saveDraft} disabled={busy}>Save draft</Button>
-            <Button type="submit" disabled={busy || !!authority.blockMessage}>Submit for review</Button>
+            {!step1Locked && (
+              <>
+                <Button type="button" variant="outline" onClick={saveDraft} disabled={busy}>Save draft</Button>
+                <Button type="submit" disabled={busy || !!authority.blockMessage}>Submit for review</Button>
+              </>
+            )}
           </div>
         </section>
       </form>
