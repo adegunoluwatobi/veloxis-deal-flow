@@ -15,7 +15,9 @@ export default function StaffExporters() {
   const { roles } = useAuth();
   const navigate = useNavigate();
   const canCreate = roles.includes('originator') || roles.includes('super_admin');
-  const canActivate = roles.includes('originator') || roles.includes('super_admin') || roles.includes('credit_officer');
+  // Activation is driven by the Stage 1 review chain (Credit approval), not a
+  // manual shortcut. Only suspend / reinstate remains as an admin control.
+  const canSuspend = roles.includes('super_admin') || roles.includes('credit_officer');
 
   const load = async () => {
     const { data } = await supabase.from('v2_exporters').select('*').order('created_at', { ascending: false });
@@ -61,8 +63,11 @@ export default function StaffExporters() {
                 <td className="px-4 py-3">{r.email ?? '—'}</td>
                 <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded ${r.onboarding_status === 'active' ? 'bg-success/20 text-success' : r.onboarding_status === 'suspended' ? 'bg-destructive/20 text-destructive' : 'bg-muted text-muted-foreground'}`}>{r.onboarding_status}</span></td>
                 <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                  {canActivate && r.onboarding_status !== 'active' && <Button size="sm" variant="outline" onClick={() => setStatus(r.id, 'active')}>Activate</Button>}
-                  {canActivate && r.onboarding_status === 'active' && <Button size="sm" variant="outline" onClick={() => setStatus(r.id, 'suspended')}>Suspend</Button>}
+                  {r.onboarding_status !== 'active' && r.onboarding_status !== 'suspended' && (
+                    <Button size="sm" variant="outline" onClick={() => navigate(`/app/exporters/${r.id}`)}>Review</Button>
+                  )}
+                  {canSuspend && r.onboarding_status === 'active' && <Button size="sm" variant="outline" onClick={() => setStatus(r.id, 'suspended')}>Suspend</Button>}
+                  {canSuspend && r.onboarding_status === 'suspended' && <Button size="sm" variant="outline" onClick={() => setStatus(r.id, 'active')}>Reinstate</Button>}
                 </td>
               </tr>
             ))}
