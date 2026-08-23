@@ -26,6 +26,7 @@ export default function StaffExporterDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, roles } = useAuth();
   const [exp, setExp] = useState<any>(null);
+  const [showAudit, setShowAudit] = useState(false);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [docs, setDocs] = useState<any[]>([]);
   const [directors, setDirectors] = useState<any[]>([]);
@@ -238,12 +239,22 @@ export default function StaffExporterDetail() {
         </div>
       </section>
 
-      <AuditLogTable
-        exporterId={id}
-        entityTypes={['company_document', 'board_resolution', 'exporter']}
-        title="Company audit trail"
-        csvName="company-audit"
-      />
+      <div>
+        <Button variant="outline" size="sm" onClick={() => setShowAudit((s) => !s)}>
+          {showAudit ? 'Hide company audit trail' : 'Show company audit trail'}
+        </Button>
+        {showAudit && (
+          <div className="mt-4">
+            <AuditLogTable
+              exporterId={id}
+              entityTypes={['company_document', 'board_resolution', 'exporter']}
+              title="Company audit trail"
+              csvName="company-audit"
+            />
+          </div>
+        )}
+      </div>
+
     </div>
 
   );
