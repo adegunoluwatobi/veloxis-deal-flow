@@ -96,7 +96,7 @@ export default function ExporterOnboarding() {
       country_of_incorporation: f.country_of_incorporation || null,
       incorporation_date: f.incorporation_date || null,
       tax_id: f.tax_id || null, industry: f.industry || null,
-      commodity: f.commodity || null, phone: f.phone || null, email: f.email || null,
+      commodity: f.commodity || null, phone: f.phone || null, email: f.email || profile?.email || null,
       address: f.address || null,
       director_name: f.director_name || null, director_email: f.director_email || null,
       director_phone: f.director_phone || null, director_dob: f.director_dob || null,
