@@ -237,27 +237,55 @@ export default function StaffExporterDetail() {
         <section className="card-elevated p-5">
           <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-3">Onboarding documents</h3>
           {docs.length === 0 && <p className="text-sm text-muted-foreground">No documents uploaded.</p>}
-          <div className="space-y-2">
+          {docs.length > 0 && !canVerifyDoc && (
+            <p className="text-xs text-muted-foreground mb-3">Only Credit &amp; Compliance can approve or reject documents.</p>
+          )}
+          <div className="space-y-3">
             {docs.map((d) => (
-              <div key={d.id} className="flex items-center justify-between border-t border-border pt-2">
-                <div>
-                  <button onClick={() => openDocument(d.id, 'company')} className="text-sm text-accent hover:underline inline-flex items-center gap-2">
-                    <FileText className="h-4 w-4" /> {d.original_filename || d.document_types?.name}
-                  </button>
-                  <div className="text-xs text-muted-foreground">{d.document_types?.name ?? DOC_LABEL[d.document_types?.code] ?? '—'}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs px-2 py-0.5 rounded ${d.status === 'verified' ? 'bg-primary/20 text-accent' : 'bg-muted text-muted-foreground'}`}>
-                    {d.status === 'verified' ? 'Verified' : 'Unverified'}
+              <div key={d.id} className="border-t border-border pt-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <button onClick={() => openDocument(d.id, 'company')} className="text-sm text-accent hover:underline inline-flex items-center gap-2">
+                      <FileText className="h-4 w-4 shrink-0" /> <span className="truncate">{d.original_filename || d.document_types?.name}</span>
+                    </button>
+                    <div className="text-xs text-muted-foreground">
+                      {d.document_types?.name ?? DOC_LABEL[d.document_types?.code] ?? '—'}
+                      {d.uploaded_at ? ` · uploaded ${new Date(d.uploaded_at).toLocaleDateString()}` : ''}
+                    </div>
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded shrink-0 ${d.status === 'verified' ? 'bg-primary/20 text-accent' : d.status === 'rejected' ? 'bg-destructive/20 text-destructive' : 'bg-muted text-muted-foreground'}`}>
+                    {d.status === 'verified' ? 'Approved' : d.status === 'rejected' ? 'Rejected' : 'Awaiting review'}
                   </span>
-                  {canVerifyDoc && (d.status === 'verified'
-                    ? <Button size="sm" variant="ghost" onClick={() => verifyDoc(d.id, false)}>Unverify</Button>
-                    : <Button size="sm" onClick={() => verifyDoc(d.id, true)}>Verify</Button>)}
                 </div>
+
+                {d.status === 'rejected' && d.rejection_reason && (
+                  <div className="mt-2 rounded border border-destructive/40 bg-destructive/10 p-2 text-xs">
+                    <span className="text-destructive font-medium">Reason shown to exporter: </span>{d.rejection_reason}
+                  </div>
+                )}
+
+                {canVerifyDoc && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {d.status !== 'verified' && (
+                      <Button size="sm" disabled={busy} onClick={() => setDocStatus(d.id, 'verified')}>Approve</Button>
+                    )}
+                    {d.status !== 'rejected' && (
+                      <Button size="sm" variant="outline" disabled={busy} onClick={() => {
+                        const why = window.prompt('Why is this document being rejected? The exporter will see this reason:');
+                        if (!why || !why.trim()) return;
+                        setDocStatus(d.id, 'rejected', why.trim());
+                      }}>Reject</Button>
+                    )}
+                    {d.status !== 'pending' && (
+                      <Button size="sm" variant="ghost" disabled={busy} onClick={() => setDocStatus(d.id, 'pending')}>Reset to pending</Button>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </section>
+
       </div>
 
       <section className="card-elevated p-5">
