@@ -126,8 +126,9 @@ export default function StaffExporterDetail() {
         </div>
 
         {submitted && !bdApproved && !isActive && canBdReview && (
-          <div className="mt-4 space-y-2 border-t border-border pt-4">
+          <div className="mt-4 space-y-3 border-t border-border pt-4">
             <div className="text-sm font-medium">Business Developer review</div>
+            <BoardResolutionReviewStep exporterId={id!} canReview onChanged={load} />
             <div className="flex gap-2">
               <Button size="sm" onClick={bdApprove} disabled={busy}>Approve & pass to Credit</Button>
             </div>
