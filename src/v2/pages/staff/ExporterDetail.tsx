@@ -40,11 +40,12 @@ export default function StaffExporterDetail() {
       supabase.from('v2_invoices').select('id, invoice_number, invoice_amount, invoice_currency, status, maturity_date').eq('exporter_id', id!).order('created_at', { ascending: false }),
       supabase.from('company_documents').select('id, original_filename, status, uploaded_at, reviewed_at, rejection_reason, document_types(code, label)').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
       supabase.from('v2_exporter_directors').select('*').eq('exporter_id', id!).order('created_at', { ascending: true }),
-      supabase.from('onboarding_reviews').select('stage, decision, created_at').eq('exporter_id', id!).order('created_at', { ascending: false }).limit(1),
+      supabase.from('onboarding_reviews').select('stage, decision, note, created_at').eq('exporter_id', id!).order('created_at', { ascending: false }).limit(1),
     ]);
     setExp(e); setInvoices(iv ?? []); setDocs(d ?? []); setDirectors(dir ?? []);
-    const latest = rev?.[0];
+    const latest = rev?.[0] as any;
     setLastReturnStage(latest && latest.decision !== 'approved' ? latest.stage : null);
+    setLastReturn(latest && latest.decision !== 'approved' ? latest : null);
   }, [id]);
 
 
