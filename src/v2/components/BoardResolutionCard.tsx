@@ -10,18 +10,17 @@ import { sniffFileType, contentTypeFor, MISMATCH_MESSAGE } from '@/v2/lib/fileSn
 
 type Resolution = {
   id: string;
-  authorised_limit: number;
-  limit_currency: string;
-  limit_basis: string;
   valid_from: string;
   valid_until: string;
   verification_status: 'pending' | 'verified' | 'rejected';
   rejection_reason: string | null;
   company_document_id: string | null;
+  renewal_required: boolean;
+  renewal_reason: string | null;
 };
 
 type Doc = { id: string; original_filename: string | null; status: string; uploaded_at: string };
-type Signatory = { id: string; full_name: string; position: string | null; email: string | null };
+type Signatory = { id: string; full_name: string; position: string | null; email: string | null; phone: string | null };
 
 const PILL: Record<string, string> = {
   pending: 'bg-amber-500/20 text-amber-400',
@@ -30,13 +29,6 @@ const PILL: Record<string, string> = {
   expired: 'bg-destructive/20 text-destructive',
 };
 
-const money = (n: number, cur: string) =>
-  new Intl.NumberFormat('en-GB', { style: 'currency', currency: cur || 'GBP', maximumFractionDigits: 0 }).format(n);
-
-const BASIS_COPY: Record<string, string> = {
-  gross_face_value: 'Limit applies to invoice face value',
-  advance_outstanding: 'Limit applies to funds advanced',
-};
 
 
 export default function BoardResolutionCard({ exporterId }: { exporterId?: string }) {
