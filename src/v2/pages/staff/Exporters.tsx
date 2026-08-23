@@ -13,7 +13,6 @@ type E = { id: string; company_name: string; rc_number: string | null; commodity
 
 export default function StaffExporters() {
   const [rows, setRows] = useState<E[]>([]);
-  const [open, setOpen] = useState(false);
   const { roles } = useAuth();
   const navigate = useNavigate();
   const canCreate = roles.includes('originator') || roles.includes('super_admin');
