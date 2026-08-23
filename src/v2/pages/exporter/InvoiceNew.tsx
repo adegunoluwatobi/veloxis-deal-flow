@@ -606,6 +606,7 @@ export default function ExporterInvoiceNew() {
                 exporterId={exp.id}
                 docs={docsFor(t.id)}
                 required
+                readOnly={step1Locked}
                 disabledReason={uploadsDisabled}
                 onUploaded={() => invoiceId && refreshInvoiceState(invoiceId)}
               />
@@ -629,7 +630,7 @@ export default function ExporterInvoiceNew() {
                     docs={docsFor(r.document_type_id)}
                     required
                     accent="amber"
-                    disabledReason={uploadsDisabled}
+                    disabledReason={invoiceId ? null : 'Save your invoice details first to start uploading'}
                     onUploaded={() => invoiceId && refreshInvoiceState(invoiceId)}
                   />
                 );
@@ -660,6 +661,7 @@ export default function ExporterInvoiceNew() {
                         invoiceId={invoiceId}
                         exporterId={exp.id}
                         docs={docsFor(t.id)}
+                        readOnly={step1Locked}
                         disabledReason={uploadsDisabled}
                         onUploaded={() => invoiceId && refreshInvoiceState(invoiceId)}
                       />
@@ -705,7 +707,7 @@ export default function ExporterInvoiceNew() {
         <section className="card-elevated space-y-4 p-6">
           <div>
             <Label>Who is signing this submission *</Label>
-            <Select value={f.signatory_id} onValueChange={(v) => set('signatory_id', v)}>
+            <Select disabled={step1Locked} value={f.signatory_id} onValueChange={(v) => set('signatory_id', v)}>
               <SelectTrigger><SelectValue placeholder={signatories.length ? 'Select a named signatory' : 'No authorised signatories on file'} /></SelectTrigger>
               <SelectContent>
                 {signatories.map((s) => (
@@ -721,7 +723,7 @@ export default function ExporterInvoiceNew() {
           </div>
 
           <label className="flex items-start gap-3 text-sm">
-            <Checkbox checked={warranty} onCheckedChange={(v) => setWarranty(!!v)} className="mt-0.5" />
+            <Checkbox disabled={step1Locked} checked={warranty} onCheckedChange={(v) => setWarranty(!!v)} className="mt-0.5" />
             <span className="text-muted-foreground">
               I confirm the goods have shipped, the invoice is genuine and unencumbered, the documents uploaded are true copies,
               and the named signatory is authorised to submit this invoice.
@@ -733,8 +735,12 @@ export default function ExporterInvoiceNew() {
           )}
 
           <div className="flex flex-wrap gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={saveDraft} disabled={busy}>Save draft</Button>
-            <Button type="submit" disabled={busy || !!authority.blockMessage}>Submit for review</Button>
+            {!step1Locked && (
+              <>
+                <Button type="button" variant="outline" onClick={saveDraft} disabled={busy}>Save draft</Button>
+                <Button type="submit" disabled={busy || !!authority.blockMessage}>Submit for review</Button>
+              </>
+            )}
           </div>
         </section>
       </form>
