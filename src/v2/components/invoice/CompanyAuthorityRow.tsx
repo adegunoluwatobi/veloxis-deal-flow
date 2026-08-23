@@ -5,13 +5,7 @@ import { cn } from '@/lib/utils';
 import { AlertTriangle, CheckCircle2, FileText } from 'lucide-react';
 import { openDocument } from './DocumentUploadRow';
 
-export type Headroom = {
-  authorised_limit: number;
-  limit_currency: string;
-  limit_basis: string;
-  committed_exposure: number;
-  headroom: number;
-} | null;
+export type Headroom = null;
 
 export type AuthorityState = {
   loading: boolean;
@@ -25,15 +19,9 @@ export type AuthorityState = {
   blockMessage: string | null;
 };
 
-const money = (n: number, ccy: string) =>
-  new Intl.NumberFormat('en-GB', { style: 'currency', currency: ccy || 'GBP', maximumFractionDigits: 2 }).format(n);
-
-const basisLine = (basis: string) =>
-  basis === 'advance_outstanding' ? 'Limit applies to funds advanced' : 'Limit applies to invoice face value';
-
 /**
- * Loads the active verified board resolution and the server-computed headroom.
- * Nothing about the limit is recomputed in the client.
+ * Loads the active verified board resolution. Resolutions carry no monetary
+ * limit — only validity (verified, in date, not superseded) is enforced.
  */
 export function useCompanyAuthority(exporterId: string | null, invoiceExposure: number): AuthorityState {
   const [state, setState] = useState<AuthorityState>({
@@ -65,14 +53,9 @@ export function useCompanyAuthority(exporterId: string | null, invoiceExposure: 
       .eq('id', res.company_document_id)
       .maybeSingle();
 
-    const { data: hr } = await supabase.rpc('exporter_headroom', { p_exporter_id: exporterId });
-    const h = (Array.isArray(hr) ? hr[0] : hr) as any as Headroom;
-
     let block: string | null = null;
     if (res.valid_until && new Date(res.valid_until) < new Date(new Date().toDateString())) {
       block = `Your board resolution expired on ${new Date(res.valid_until).toLocaleDateString()}. Please upload a current one`;
-    } else if (h && invoiceExposure > Number(h.headroom)) {
-      block = `This invoice would take your total outstanding above the limit authorised by your board resolution. Your available headroom is ${money(Number(h.headroom), h.limit_currency)} ${h.limit_currency}`;
     }
 
     setState({
@@ -82,10 +65,10 @@ export function useCompanyAuthority(exporterId: string | null, invoiceExposure: 
       filename: cd?.original_filename ?? 'Board resolution',
       verifiedAt: res.verified_at,
       validUntil: res.valid_until,
-      headroom: h ?? null,
+      headroom: null,
       blockMessage: block,
     });
-  }, [exporterId, invoiceExposure]);
+  }, [exporterId]);
 
   useEffect(() => { load(); }, [load]);
   return state;
@@ -99,9 +82,9 @@ export default function CompanyAuthorityRow({
   /** Autosaves the draft before we send the exporter off to My Company. */
   onBeforeLeave?: () => Promise<void> | void;
 }) {
-  const { loading, headroom, blockMessage, filename, verifiedAt, companyDocumentId } = state;
-  const ok = !loading && !blockMessage && !!headroom;
-  const missingOrExpired = !loading && !!blockMessage && !headroom;
+  const { loading, blockMessage, filename, verifiedAt, validUntil, companyDocumentId, resolutionId } = state;
+  const ok = !loading && !blockMessage && !!resolutionId;
+  const missingOrExpired = !loading && !!blockMessage;
 
   const openMyCompany = async () => {
     try { await onBeforeLeave?.(); } catch { /* the draft save is best effort */ }
@@ -130,7 +113,7 @@ export default function CompanyAuthorityRow({
 
       {loading && <p className="mt-3 text-xs text-muted-foreground">Checking your board resolution…</p>}
 
-      {!loading && headroom && (
+      {!loading && resolutionId && (
         <div className="mt-3 grid gap-1.5 text-xs sm:grid-cols-2">
           {companyDocumentId && (
             <div className="flex items-center gap-1.5">
@@ -143,17 +126,9 @@ export default function CompanyAuthorityRow({
           <div className="text-muted-foreground">
             Verified {verifiedAt ? new Date(verifiedAt).toLocaleDateString() : '—'}
           </div>
-          <div>
-            <span className="text-muted-foreground">Authorised limit: </span>
-            {money(Number(headroom.authorised_limit), headroom.limit_currency)} {headroom.limit_currency}
+          <div className="text-muted-foreground sm:col-span-2">
+            Valid until {validUntil ? new Date(validUntil).toLocaleDateString() : '—'} — a new resolution is required once it expires or your directors change.
           </div>
-          <div>
-            <span className="text-muted-foreground">Headroom remaining: </span>
-            <span className={Number(headroom.headroom) <= 0 ? 'text-destructive' : ''}>
-              {money(Number(headroom.headroom), headroom.limit_currency)} {headroom.limit_currency}
-            </span>
-          </div>
-          <div className="text-muted-foreground sm:col-span-2">{basisLine(headroom.limit_basis)}</div>
         </div>
       )}
 
