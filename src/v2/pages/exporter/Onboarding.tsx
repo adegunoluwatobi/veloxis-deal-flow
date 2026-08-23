@@ -68,7 +68,7 @@ export default function ExporterOnboarding() {
 
     if (e?.id) {
       const { data: d } = await supabase.from('company_documents')
-        .select('id, document_type_id, original_filename, status, uploaded_at')
+        .select('id, document_type_id, original_filename, status, uploaded_at, rejection_reason')
         .eq('exporter_id', e.id).order('uploaded_at', { ascending: false });
       setDocs(d ?? []);
     }
