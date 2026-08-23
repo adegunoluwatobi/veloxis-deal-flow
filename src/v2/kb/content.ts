@@ -71,7 +71,7 @@ export const ROLE_GUIDE: {
     performs: [
       'Runs KYB/KYC and AML verification on exporters, directors and buyers',
       'Reviews each uploaded document, accepts or rejects with a reason, and raises information requests',
-      'Transcribes the board resolution: authorised limit, currency and signatories',
+      'Transcribes the board resolution: signatories, contact details and 1-year validity',
       'Checks signatory authority and regulated-commodity flags',
       'Pauses and resumes the decision SLA while information is outstanding',
       'Marks the application verified once every gate is satisfied',
