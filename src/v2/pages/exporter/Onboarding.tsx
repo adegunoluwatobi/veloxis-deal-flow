@@ -396,8 +396,18 @@ export default function ExporterOnboarding() {
           </div>
         )}
 
+        {formLocked && (
+          <div className="card-elevated p-6 text-sm text-muted-foreground">
+            Your submitted details are locked while they are under review. If anything needs changing, your reviewer will
+            request it and this form will re-open.
+          </div>
+        )}
+
+        {!formLocked && (
+        <>
         <section className="card-elevated p-6 space-y-4">
           <h2 className="text-sm uppercase tracking-wider text-muted-foreground">1 · Company (KYB)</h2>
+
           <div className="grid grid-cols-2 gap-4">
             <Field label="Company name *" error={errorFor('company_name')}><Input value={f.company_name ?? ''} onBlur={() => blur('company_name')} onChange={(e) => set('company_name', e.target.value)} /></Field>
             <Field label="Registration number (RC / CAC) *" error={errorFor('company_registration_number')}><Input value={f.company_registration_number ?? ''} onBlur={() => blur('company_registration_number')} onChange={(e) => set('company_registration_number', e.target.value)} /></Field>
