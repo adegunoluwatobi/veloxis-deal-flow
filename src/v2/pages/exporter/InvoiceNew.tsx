@@ -391,7 +391,15 @@ export default function ExporterInvoiceNew() {
   if (exp === null) return <div className="text-muted-foreground">Loading…</div>;
   if (!exp) return <div className="card-elevated p-6 text-sm">Your exporter profile is not set up yet. Please contact Veloxis.</div>;
 
-  const uploadsDisabled = invoiceId ? null : 'Save your invoice details first to start uploading';
+  // Once Veloxis unlocks step 2, step 1 is frozen unless the application is
+  // sent back for revision or rejected.
+  const step1Locked =
+    !!(invoice as any)?.stage2_unlocked_at &&
+    !['returned_for_revision', 'rejected'].includes(status ?? '');
+
+  const uploadsDisabled = step1Locked
+    ? 'Step 1 is locked while your application is in pre funding'
+    : invoiceId ? null : 'Save your invoice details first to start uploading';
   const optionalCommercial = optionalTypes.filter((d) => /commercial/i.test(d.code) || d.sort_order < 500);
   const optionalCompliance = optionalTypes.filter((d) => !optionalCommercial.includes(d));
 
