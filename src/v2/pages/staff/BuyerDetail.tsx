@@ -16,7 +16,11 @@ export default function StaffBuyerDetail() {
   const [limit, setLimit] = useState('');
   const [kyb, setKyb] = useState<any>({});
   const { roles, user } = useAuth();
+  // Final approval (verify / reject / credit / sanctions) sits with Credit & Compliance.
   const canVerify = roles.includes('credit_officer') || roles.includes('super_admin');
+  // Business Developers may prepare and review the KYB record.
+  const canReview = canVerify || roles.includes('originator');
+  const isSuperAdmin = roles.includes('super_admin');
 
   const load = async () => {
     const [{ data: buyer }, { data: iv }] = await Promise.all([
