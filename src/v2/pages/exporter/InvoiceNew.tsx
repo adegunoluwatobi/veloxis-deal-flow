@@ -104,6 +104,38 @@ export default function ExporterInvoiceNew() {
     setRequests((r ?? []) as any);
   }, []);
 
+  /* ---------------- resume an existing application (?id=) ---------------- */
+  useEffect(() => {
+    if (!resumeId) return;
+    (async () => {
+      setInvoiceId(resumeId);
+      await refreshInvoiceState(resumeId);
+      const { data: inv } = await supabase.from('v2_invoices').select('*').eq('id', resumeId).maybeSingle();
+      if (!inv) return;
+      setF((s) => ({
+        ...s,
+        invoice_number: inv.invoice_number ?? '',
+        buyer_id: inv.buyer_id ?? '',
+        commodity_id: inv.commodity_id ?? '',
+        incoterm: inv.incoterm ?? '',
+        bl_number: inv.bl_number ?? '',
+        bl_date: inv.bl_date ?? '',
+        port_of_loading: inv.port_of_loading ?? (inv.port_of_loading_other ? PORT_NOT_LISTED : ''),
+        port_of_discharge: inv.port_of_discharge ?? (inv.port_of_discharge_other ? PORT_NOT_LISTED : ''),
+        port_of_loading_other: inv.port_of_loading_other ?? '',
+        port_of_discharge_other: inv.port_of_discharge_other ?? '',
+        estimated_arrival_date: inv.estimated_arrival_date ?? '',
+        invoice_currency: inv.invoice_currency ?? 'GBP',
+        gross_invoice_value: inv.gross_invoice_value != null ? String(inv.gross_invoice_value) : String(inv.invoice_amount ?? ''),
+        agreed_deductions: inv.agreed_deductions != null ? String(inv.agreed_deductions) : '0',
+        terms_days: String(inv.terms_days ?? '30'),
+        signatory_id: inv.signatory_id ?? '',
+      }));
+    })();
+  }, [resumeId, refreshInvoiceState]);
+
+
+
   /* ---------------- derived values ---------------- */
   const selectedCommodity = commodities.find((c) => c.id === f.commodity_id) ?? null;
   const isOther = (selectedCommodity?.name ?? '').toLowerCase() === OTHER_LABEL;
