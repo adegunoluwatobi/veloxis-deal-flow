@@ -333,7 +333,9 @@ export default function ExporterOnboarding() {
         <div className="max-w-4xl mx-auto h-full flex items-center gap-4 px-6">
           <span className="wordmark text-accent">VELOXIS</span>
           <span className="ml-auto text-xs text-muted-foreground truncate">{profile?.email}</span>
+          <NotificationBell />
           <SignOutButton />
+
         </div>
       </header>
       <main className="max-w-4xl mx-auto p-8 space-y-6">
