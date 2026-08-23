@@ -32,10 +32,12 @@ export default function ExporterLayout({ children }: { children: React.ReactNode
           </nav>
           <div className="ml-auto flex items-center gap-3 text-xs">
             <span className="text-muted-foreground truncate max-w-[200px]">{profile?.email}</span>
+            <NotificationBell />
             <Button size="sm" variant="ghost" onClick={async () => { await signOut(); nav('/login'); }}>
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
+
         </div>
       </header>
       <main className="max-w-6xl mx-auto p-8">{children}</main>
