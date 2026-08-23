@@ -157,7 +157,7 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
 
   const expired = res?.verification_status === 'verified' && new Date(res.valid_until) < new Date();
   const status = expired ? 'expired' : res?.verification_status ?? doc?.status ?? null;
-  const headroom = res && committed !== null ? Number(res.authorised_limit) - committed : null;
+  const needsReplacement = !!res?.renewal_required || expired;
 
   const uploadControl = (
     <label className={`inline-flex items-center gap-2 text-sm px-3 py-2 rounded border border-border cursor-pointer hover:bg-muted/20 ${uploading ? 'opacity-60 pointer-events-none' : ''}`}>
@@ -192,35 +192,24 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
         </div>
       )}
 
+      {res?.renewal_required && (
+        <div className="rounded border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-400">
+          {res.renewal_reason ?? 'A replacement board resolution is required.'}
+        </div>
+      )}
+
       {res?.verification_status === 'verified' && (
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <Row label="Authorised limit">
-              {money(Number(res.authorised_limit), res.limit_currency)} {res.limit_currency}
-            </Row>
-            <Row label="Valid from">{res.valid_from}</Row>
-            <Row label="Valid until">{res.valid_until}</Row>
-            <Row label="Headroom remaining">
-              {headroom === null ? (
-                <span className="text-destructive">Unavailable</span>
-              ) : (
-                <span className={headroom <= 0 ? 'text-destructive' : ''}>
-                  {money(headroom, res.limit_currency)} {res.limit_currency}
-                </span>
-              )}
-            </Row>
+            <Row label="Passed on">{res.valid_from}</Row>
+            <Row label="Expires">{res.valid_until}</Row>
           </div>
           <p className="text-xs text-muted-foreground">
-            {BASIS_COPY[res.limit_basis] ?? BASIS_COPY.gross_face_value}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Limits are recorded in GBP. If the board resolution is denominated in another currency, the reviewer
-            converts at the rate in force on the resolution date and records the original wording and rate in the notes.
+            A board resolution stays valid for one year from the date it was passed. We will ask for a
+            replacement when it expires, or whenever your board of directors changes.
           </p>
 
-          {headroomError && (
-            <p className="text-xs text-destructive">Headroom could not be calculated: {headroomError}</p>
-          )}
+
 
           <div>
             <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Named signatories</div>
