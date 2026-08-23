@@ -284,11 +284,17 @@ export default function ExporterOnboarding() {
             <Field label="Country of incorporation *"><OptionSelect value={f.country_of_incorporation} onChange={(v) => set('country_of_incorporation', v)} options={COUNTRIES} placeholder="Select country" /></Field>
             <Field label="Incorporation date"><Input type="date" value={f.incorporation_date ?? ''} onChange={(e) => set('incorporation_date', e.target.value)} /></Field>
             <Field label="Tax ID / TIN"><Input value={f.tax_id ?? ''} onChange={(e) => set('tax_id', e.target.value)} /></Field>
-            <Field label="Industry / commodity"><Input value={f.commodity ?? ''} onChange={(e) => set('commodity', e.target.value)} /></Field>
+            <Field label="Industry"><OptionSelect value={f.industry} onChange={(v) => set('industry', v)} options={INDUSTRIES} placeholder="Select industry" /></Field>
+            <Field label="Primary commodity"><Input value={f.commodity ?? ''} onChange={(e) => set('commodity', e.target.value)} /></Field>
             <Field label="Company phone"><Input value={f.phone ?? ''} onChange={(e) => set('phone', e.target.value)} /></Field>
-            <Field label="Company email"><Input value={f.email ?? ''} onChange={(e) => set('email', e.target.value)} /></Field>
+            <Field label="Company email">
+              <Input value={f.email ?? profile?.email ?? ''} readOnly disabled className="opacity-70 cursor-not-allowed" />
+            </Field>
             <div className="col-span-2"><Field label="Registered address"><Input value={f.address ?? ''} onChange={(e) => set('address', e.target.value)} /></Field></div>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Your company email is the address your account was invited with and cannot be changed here.
+          </p>
         </section>
 
         <section className="card-elevated p-6 space-y-4">
