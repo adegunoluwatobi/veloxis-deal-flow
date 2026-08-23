@@ -68,7 +68,7 @@ export default function ExporterOnboarding() {
 
     if (e?.id) {
       const { data: d } = await supabase.from('company_documents')
-        .select('id, document_type_id, original_filename, status, uploaded_at')
+        .select('id, document_type_id, original_filename, status, uploaded_at, rejection_reason')
         .eq('exporter_id', e.id).order('uploaded_at', { ascending: false });
       setDocs(d ?? []);
     }
@@ -97,6 +97,7 @@ export default function ExporterOnboarding() {
     return true;
   };
   const missingDocs = REQUIRED_DOCS.filter((r) => docRequired(r.key) && !latestDoc(r.key));
+  const rejectedDocs = REQUIRED_DOCS.filter((r) => latestDoc(r.key)?.status === 'rejected');
 
   const errors: Record<string, string> = (() => {
     const e: Record<string, string> = {};
@@ -417,6 +418,34 @@ export default function ExporterOnboarding() {
           </div>
         )}
 
+        {formLocked && rejectedDocs.length > 0 && (
+          <section className="card-elevated p-6 space-y-4 border-destructive/50">
+            <div>
+              <h2 className="text-sm uppercase tracking-wider text-destructive">Documents to replace</h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                Credit &amp; Compliance rejected the documents below. Upload corrected copies — the rest of your
+                application stays locked.
+              </p>
+            </div>
+            {rejectedDocs.map((r) => {
+              const d = latestDoc(r.key);
+              return (
+                <div key={r.key} className="flex items-start justify-between gap-4 border-t border-border pt-3">
+                  <div className="min-w-0">
+                    <div className="text-sm">{r.label}</div>
+                    <div className="text-xs text-destructive mt-1">{d?.rejection_reason || 'No reason was recorded.'}</div>
+                  </div>
+                  <label className={`text-xs px-3 py-2 border border-border rounded inline-flex items-center gap-2 shrink-0 ${busy ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:bg-muted/20'}`}>
+                    <Upload className="h-3.5 w-3.5" /> Replace
+                    <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => upload(e, r.key)} disabled={busy} />
+                  </label>
+                </div>
+              );
+            })}
+          </section>
+        )}
+
+
         {!formLocked && (
         <>
         <section className="card-elevated p-6 space-y-4">
@@ -559,7 +588,14 @@ export default function ExporterOnboarding() {
                         )}
                         {d.status === 'verified' && <span className="px-2 py-0.5 rounded bg-primary/20 text-accent">Verified</span>}
                         {d.status === 'rejected' && <span className="px-2 py-0.5 rounded bg-destructive/20 text-destructive">Rejected</span>}
-
+                        {d.status === 'pending' && <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground">Awaiting review</span>}
+                        {d.status === 'rejected' && (
+                          <div className="w-full mt-1 rounded border border-destructive/40 bg-destructive/10 p-2 text-xs">
+                            <div className="font-medium text-destructive">Rejected by Credit &amp; Compliance</div>
+                            <div className="mt-0.5">{d.rejection_reason || 'No reason was recorded.'}</div>
+                            <div className="text-muted-foreground mt-0.5">Please upload a corrected document.</div>
+                          </div>
+                        )}
                       </div>
                     )}
                     {uploading && (

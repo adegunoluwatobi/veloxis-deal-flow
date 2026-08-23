@@ -37,7 +37,7 @@ export default function StaffExporterDetail() {
     const [{ data: e }, { data: iv }, { data: d }, { data: dir }] = await Promise.all([
       supabase.from('v2_exporters').select('*').eq('id', id!).maybeSingle(),
       supabase.from('v2_invoices').select('id, invoice_number, invoice_amount, invoice_currency, status, maturity_date').eq('exporter_id', id!).order('created_at', { ascending: false }),
-      supabase.from('company_documents').select('id, original_filename, status, uploaded_at, document_types(code, name)').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
+      supabase.from('company_documents').select('id, original_filename, status, uploaded_at, reviewed_at, rejection_reason, document_types(code, name)').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
       supabase.from('v2_exporter_directors').select('*').eq('exporter_id', id!).order('created_at', { ascending: true }),
     ]);
     setExp(e); setInvoices(iv ?? []); setDocs(d ?? []); setDirectors(dir ?? []);
@@ -50,23 +50,44 @@ export default function StaffExporterDetail() {
   const isSuperAdmin = has(roles, 'super_admin');
   const canBdReview = has(roles, 'originator') || isSuperAdmin;
   const canFinalApprove = has(roles, 'credit_officer') || isSuperAdmin;
-  // Business Developers may approve individual documents; final onboarding
-  // approval stays with Credit & Compliance.
-  const canVerifyDoc = has(roles, 'credit_officer') || has(roles, 'originator') || isSuperAdmin;
+  // Document approval / rejection sits with Credit & Compliance (and Super Admin).
+  const canVerifyDoc = has(roles, 'credit_officer') || isSuperAdmin;
 
   const submitted = !!exp.onboarding_submitted_at;
   const bdApproved = !!exp.bd_approved_at;
   const bdRejected = !!exp.bd_rejected_at;
   const isActive = exp.onboarding_status === 'active';
 
-  const verifyDoc = async (docId: string, verified: boolean) => {
-    await supabase.from('company_documents').update({
-      status: verified ? 'verified' : 'pending_review',
-      reviewed_by: verified ? user?.id : null,
-      reviewed_at: verified ? new Date().toISOString() : null,
+  const setDocStatus = async (docId: string, status: 'verified' | 'rejected' | 'pending', reason?: string) => {
+    setBusy(true);
+    const { error } = await supabase.from('company_documents').update({
+      status,
+      rejection_reason: status === 'rejected' ? (reason ?? null) : null,
+      reviewed_by: status === 'pending' ? null : user?.id,
+      reviewed_at: status === 'pending' ? null : new Date().toISOString(),
     }).eq('id', docId);
+    setBusy(false);
+    if (error) return toast({ title: 'Could not update document', description: error.message, variant: 'destructive' });
+    toast({
+      title: status === 'verified' ? 'Document approved' : status === 'rejected' ? 'Document rejected' : 'Review reset',
+      description: status === 'rejected' ? 'The exporter can see your reason and re-upload.' : undefined,
+    });
     load();
   };
+
+  const reopenApplication = async () => {
+    const why = window.prompt('Reopen this approved application for correction. Enter the reason the exporter will see:');
+    if (!why || !why.trim()) return;
+    setBusy(true);
+    const { error } = await supabase.rpc('record_onboarding_review', {
+      p_exporter_id: exp.id, p_stage: 'compliance', p_decision: 'returned', p_note: why.trim(), p_override_reason: null,
+    });
+    setBusy(false);
+    if (error) return toast({ title: 'Could not reopen', description: error.message, variant: 'destructive' });
+    toast({ title: 'Application reopened', description: 'The exporter can edit and re-submit.' });
+    load();
+  };
+
 
   const review = async (stage: 'bd' | 'compliance', decision: 'approved' | 'returned', note?: string, overrideReason?: string) => {
     setBusy(true);
@@ -169,6 +190,20 @@ export default function StaffExporterDetail() {
         )}
 
 
+        {isActive && (
+          <div className="mt-4 border-t border-border pt-4 space-y-2">
+            <p className="text-xs text-muted-foreground">
+              This exporter is approved and their company details are locked. Credit &amp; Compliance or a Super Admin can
+              reopen the application if something needs correcting.
+            </p>
+            {(canFinalApprove || isSuperAdmin) && (
+              <Button size="sm" variant="outline" onClick={reopenApplication} disabled={busy}>
+                Reopen application for correction
+              </Button>
+            )}
+          </div>
+        )}
+
         {!submitted && (
           <p className="text-xs text-muted-foreground mt-3">Exporter has not submitted their onboarding pack yet.</p>
         )}
@@ -216,27 +251,55 @@ export default function StaffExporterDetail() {
         <section className="card-elevated p-5">
           <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-3">Onboarding documents</h3>
           {docs.length === 0 && <p className="text-sm text-muted-foreground">No documents uploaded.</p>}
-          <div className="space-y-2">
+          {docs.length > 0 && !canVerifyDoc && (
+            <p className="text-xs text-muted-foreground mb-3">Only Credit &amp; Compliance can approve or reject documents.</p>
+          )}
+          <div className="space-y-3">
             {docs.map((d) => (
-              <div key={d.id} className="flex items-center justify-between border-t border-border pt-2">
-                <div>
-                  <button onClick={() => openDocument(d.id, 'company')} className="text-sm text-accent hover:underline inline-flex items-center gap-2">
-                    <FileText className="h-4 w-4" /> {d.original_filename || d.document_types?.name}
-                  </button>
-                  <div className="text-xs text-muted-foreground">{d.document_types?.name ?? DOC_LABEL[d.document_types?.code] ?? '—'}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs px-2 py-0.5 rounded ${d.status === 'verified' ? 'bg-primary/20 text-accent' : 'bg-muted text-muted-foreground'}`}>
-                    {d.status === 'verified' ? 'Verified' : 'Unverified'}
+              <div key={d.id} className="border-t border-border pt-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <button onClick={() => openDocument(d.id, 'company')} className="text-sm text-accent hover:underline inline-flex items-center gap-2">
+                      <FileText className="h-4 w-4 shrink-0" /> <span className="truncate">{d.original_filename || d.document_types?.name}</span>
+                    </button>
+                    <div className="text-xs text-muted-foreground">
+                      {d.document_types?.name ?? DOC_LABEL[d.document_types?.code] ?? '—'}
+                      {d.uploaded_at ? ` · uploaded ${new Date(d.uploaded_at).toLocaleDateString()}` : ''}
+                    </div>
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded shrink-0 ${d.status === 'verified' ? 'bg-primary/20 text-accent' : d.status === 'rejected' ? 'bg-destructive/20 text-destructive' : 'bg-muted text-muted-foreground'}`}>
+                    {d.status === 'verified' ? 'Approved' : d.status === 'rejected' ? 'Rejected' : 'Awaiting review'}
                   </span>
-                  {canVerifyDoc && (d.status === 'verified'
-                    ? <Button size="sm" variant="ghost" onClick={() => verifyDoc(d.id, false)}>Unverify</Button>
-                    : <Button size="sm" onClick={() => verifyDoc(d.id, true)}>Verify</Button>)}
                 </div>
+
+                {d.status === 'rejected' && d.rejection_reason && (
+                  <div className="mt-2 rounded border border-destructive/40 bg-destructive/10 p-2 text-xs">
+                    <span className="text-destructive font-medium">Reason shown to exporter: </span>{d.rejection_reason}
+                  </div>
+                )}
+
+                {canVerifyDoc && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {d.status !== 'verified' && (
+                      <Button size="sm" disabled={busy} onClick={() => setDocStatus(d.id, 'verified')}>Approve</Button>
+                    )}
+                    {d.status !== 'rejected' && (
+                      <Button size="sm" variant="outline" disabled={busy} onClick={() => {
+                        const why = window.prompt('Why is this document being rejected? The exporter will see this reason:');
+                        if (!why || !why.trim()) return;
+                        setDocStatus(d.id, 'rejected', why.trim());
+                      }}>Reject</Button>
+                    )}
+                    {d.status !== 'pending' && (
+                      <Button size="sm" variant="ghost" disabled={busy} onClick={() => setDocStatus(d.id, 'pending')}>Reset to pending</Button>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </section>
+
       </div>
 
       <section className="card-elevated p-5">
