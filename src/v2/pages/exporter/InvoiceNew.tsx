@@ -650,8 +650,8 @@ export default function ExporterInvoiceNew() {
             </CollapsibleTrigger>
             {missingOptionalCount > 0 && (
               <p className="text-xs text-amber-400">
-                {missingOptionalCount} optional document{missingOptionalCount === 1 ? '' : 's'} not supplied. A thinner file
-                carries more risk, so pricing may be reviewed upward. Adding them can support a lower fee.
+                {missingOptionalCount} optional document{missingOptionalCount === 1 ? '' : 's'} not supplied. This is only a suggestion —
+                Credit &amp; Compliance may be asked to review the rate on a thinner file. You can ignore this and submit anyway.
               </p>
             )}
 
