@@ -363,7 +363,7 @@ export default function ExporterOnboarding() {
                 {bdApproved ? 'Awaiting Credit & Compliance approval' : 'Awaiting Business Developer review'}
               </div>
               <div className="text-muted-foreground">
-                Your application has been submitted. You won’t have access to the exporter portal until it is approved or rejected. We’ll notify you by email once a decision is made. You can still update your details below.
+                Your application has been submitted and your details are now locked. You won’t have access to the exporter portal until it is approved or rejected. We’ll notify you by email once a decision is made.
               </div>
             </div>
           </div>
