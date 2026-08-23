@@ -276,7 +276,7 @@ export default function StaffInvoiceDetail() {
                 <ul className="space-y-2 text-sm">
                   {([
                     ['Deed of assignment signed by both parties', gate.deed, null],
-                    ['Domiciliation instrument signed', gate.tripartite, null],
+                    ['Domiciliation instruction signed', gate.tripartite, null],
                     ['Notice of assignment signed', gate.noa, null],
                     ['Buyer credit clear and sanctions clear', gate.buyerClear, buyer ? `/app/buyers/${buyer.id}` : null],
                     ['Stage 1 shipping documents verified', gate.bol, null],
