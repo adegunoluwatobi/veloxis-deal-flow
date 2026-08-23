@@ -41,6 +41,7 @@ import StaffNotificationFailures from '@/v2/pages/staff/NotificationFailures';
 import StaffRetention from '@/v2/pages/staff/Retention';
 import StaffTemplates from '@/v2/pages/staff/Templates';
 import SingleReviewerReport from '@/v2/pages/staff/SingleReviewerReport';
+import KnowledgeBase from '@/v2/pages/KnowledgeBase';
 
 
 const qc = new QueryClient();
@@ -90,6 +91,7 @@ export default function App() {
               <Route path="/admin/retention" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffRetention /></StaffLayout></RequireAuth>} />
               <Route path="/admin/single-reviewer" element={<RequireAuth allow={['super_admin']}><StaffLayout><SingleReviewerReport /></StaffLayout></RequireAuth>} />
 
+              <Route path="/app/help" element={<Staff><KnowledgeBase audience="staff" /></Staff>} />
               <Route path="/app/account" element={<Staff><Account /></Staff>} />
 
               <Route path="/portal/onboarding" element={<RequireAuth allow="exporter"><ExporterOnboarding /></RequireAuth>} />
@@ -98,6 +100,7 @@ export default function App() {
               <Route path="/portal/invoices/new" element={<Portal><ExporterInvoiceNew /></Portal>} />
               <Route path="/portal/invoices/:id" element={<Portal><ExporterInvoiceDetail /></Portal>} />
               <Route path="/portal/profile" element={<Portal><ExporterProfile /></Portal>} />
+              <Route path="/portal/help" element={<Portal><KnowledgeBase audience="exporter" /></Portal>} />
               <Route path="/portal/account" element={<Portal><Account /></Portal>} />
 
               <Route path="*" element={<RootRedirect />} />

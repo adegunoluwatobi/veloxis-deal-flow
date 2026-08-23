@@ -1,13 +1,14 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from './useAuth';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, FileText, Building2, UserCircle, LogOut } from 'lucide-react';
+import { LayoutDashboard, FileText, Building2, UserCircle, LogOut, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV = [
   { to: '/portal', label: 'My Dashboard', icon: LayoutDashboard, end: true },
   { to: '/portal/invoices', label: 'My Invoices', icon: FileText },
   { to: '/portal/profile', label: 'My Company', icon: Building2 },
+  { to: '/portal/help', label: 'Help', icon: BookOpen },
   { to: '/portal/account', label: 'Account', icon: UserCircle },
 ];
 
