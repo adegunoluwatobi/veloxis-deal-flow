@@ -80,7 +80,9 @@ Deno.serve(async (req) => {
 
     // Assign role if provided
     if (role) {
-      await admin.from("app_user_roles").insert({ user_id: userId, role }).select();
+      const { error: roleErr } = await admin.from("app_user_roles").insert({ user_id: userId, role }).select();
+      // Ignore duplicate role assignments; surface anything else
+      if (roleErr && roleErr.code !== "23505") return json({ error: roleErr.message }, 400);
     }
 
     // Generate a magic link
