@@ -100,7 +100,7 @@ function InviteExporterDialog() {
       return toast({ title: 'Invite failed', description, variant: 'destructive' });
     }
     setLink((data as any)?.action_link ?? null);
-    toast({ title: 'Magic link sent', description: `${email.trim()} has been invited.` });
+    toast({ title: 'Magic link created', description: `Copy the link below and send it to ${email.trim()}.` });
   };
 
   return (
@@ -120,7 +120,7 @@ function InviteExporterDialog() {
           <p className="text-xs text-muted-foreground">The invitee is assigned the Exporter role, sets a password, then completes KYB/KYC onboarding.</p>
           {link && (
             <div className="rounded-md border border-border bg-muted/30 p-3 text-xs space-y-2">
-              <div className="text-muted-foreground">Magic link (also emailed):</div>
+              <div className="text-muted-foreground">Magic link — send this to the exporter (email delivery is not active yet):</div>
               <div className="break-all font-mono">{link}</div>
               <Button size="sm" variant="outline" onClick={() => navigator.clipboard.writeText(link)}>Copy</Button>
             </div>
