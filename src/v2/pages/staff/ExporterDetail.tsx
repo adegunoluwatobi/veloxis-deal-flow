@@ -154,8 +154,17 @@ export default function StaffExporterDetail() {
         <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-3">Onboarding review</h3>
         <div className="grid grid-cols-3 gap-3 text-sm">
           <Stage ok={submitted} label="Submitted by exporter" />
-          <Stage ok={bdApproved} warn={bdRejected} label={bdRejected ? 'Returned by BD' : 'Business Developer'} />
-          <Stage ok={isActive} label="Credit & Compliance" />
+          <Stage
+            ok={bdApproved}
+            warn={bdRejected && lastReturnStage === 'bd'}
+            label={bdRejected && lastReturnStage === 'bd' ? 'Returned by BD' : 'Business Developer'}
+          />
+          <Stage
+            ok={isActive}
+            warn={bdRejected && lastReturnStage === 'compliance'}
+            label={bdRejected && lastReturnStage === 'compliance' ? 'Returned by Credit & Compliance' : 'Credit & Compliance'}
+          />
+
         </div>
 
         {submitted && !bdApproved && !isActive && canBdReview && (
