@@ -6,16 +6,8 @@ import { cn } from '@/lib/utils';
 import { openDocument } from '@/v2/lib/documents';
 import { AlertTriangle, FileText } from 'lucide-react';
 
-type Headroom = {
-  authorised_limit: number; limit_currency: string; limit_basis: string;
-  committed_exposure: number; headroom: number;
-};
-
 const money = (n: number, ccy = 'GBP') =>
   new Intl.NumberFormat('en-GB', { style: 'currency', currency: ccy || 'GBP', maximumFractionDigits: 2 }).format(Number(n || 0));
-
-const basisLine = (b: string) =>
-  b === 'advance_outstanding' ? 'Limit applies to funds advanced' : 'Limit applies to invoice face value';
 
 export type AuthorityFlags = {
   amberHeadroom: boolean;
@@ -25,6 +17,7 @@ export type AuthorityFlags = {
   inDate: boolean;
   withinHeadroom: boolean;
 };
+
 
 export default function CompanyAuthorityPanel({
   exporterId, signatoryId, invoiceExposure, onFlags,
