@@ -12,6 +12,7 @@ import AdditionalDirectors from '@/v2/components/AdditionalDirectors';
 import SignOutButton from '@/v2/components/SignOutButton';
 import NotificationBell from '@/v2/components/NotificationBell';
 import { openBoardResolutionTemplate, downloadBoardResolutionPdf } from '@/v2/lib/boardResolutionTemplate';
+import { computeOnboardingLock } from '@/v2/lib/onboardingLock';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
@@ -333,15 +334,8 @@ export default function ExporterOnboarding() {
   };
 
 
-  const status = exp?.onboarding_status ?? 'pending';
-  const submitted = !!exp?.onboarding_submitted_at;
-  const bdApproved = !!exp?.bd_approved_at;
-  // a return is only "open" if it happened after the latest submission
-  const bdRejected = !!exp?.bd_rejected_at &&
-    (!exp?.onboarding_submitted_at ||
-      new Date(exp.bd_rejected_at).getTime() > new Date(exp.onboarding_submitted_at).getTime());
-  const isActive = status === 'active';
-  const formLocked = isActive || (submitted && !bdRejected);
+  const { status, submitted, bdApproved, bdRejected, isActive, formLocked } =
+    computeOnboardingLock(exp as never);
 
 
   return (
