@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.guard_board_resolution_controls() FROM PUBLIC, anon, authenticated;
