@@ -322,6 +322,9 @@ export default function ExporterOnboarding() {
     const { error } = await supabase.from('v2_exporters').update({
       onboarding_status: 'pending', kyb_status: 'pending', kyc_status: 'pending',
       onboarding_submitted_at: new Date().toISOString(),
+      // clear the previous return so the form re-locks while under review
+      bd_rejected_at: null,
+      bd_rejection_reason: null,
     }).eq('id', expId);
     setBusy(false);
     if (error) return toast({ title: 'Submit failed', description: error.message, variant: 'destructive' });
@@ -333,7 +336,10 @@ export default function ExporterOnboarding() {
   const status = exp?.onboarding_status ?? 'pending';
   const submitted = !!exp?.onboarding_submitted_at;
   const bdApproved = !!exp?.bd_approved_at;
-  const bdRejected = !!exp?.bd_rejected_at;
+  // a return is only "open" if it happened after the latest submission
+  const bdRejected = !!exp?.bd_rejected_at &&
+    (!exp?.onboarding_submitted_at ||
+      new Date(exp.bd_rejected_at).getTime() > new Date(exp.onboarding_submitted_at).getTime());
   const isActive = status === 'active';
   const formLocked = isActive || (submitted && !bdRejected);
 
