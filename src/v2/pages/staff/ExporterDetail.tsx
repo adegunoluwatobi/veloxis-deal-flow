@@ -155,10 +155,17 @@ export default function StaffExporterDetail() {
         <div className="grid grid-cols-3 gap-3 text-sm">
           <Stage ok={submitted} label="Submitted by exporter" />
           <Stage
-            ok={bdApproved}
+            ok={bdApproved || isActive}
             warn={bdRejected && lastReturnStage === 'bd'}
-            label={bdRejected && lastReturnStage === 'bd' ? 'Returned by BD' : 'Business Developer'}
+            label={
+              bdRejected && lastReturnStage === 'bd'
+                ? 'Returned by BD'
+                : !bdApproved && isActive
+                  ? 'Business Developer (superseded)'
+                  : 'Business Developer'
+            }
           />
+
           <Stage
             ok={isActive}
             warn={bdRejected && lastReturnStage === 'compliance'}
