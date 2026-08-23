@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { OptionSelect, ID_TYPES, COUNTRIES, NIGERIAN_BANKS } from '@/v2/lib/formOptions';
-import { CheckCircle2, Upload, Clock, AlertCircle, Lock } from 'lucide-react';
+import { OptionSelect, ID_TYPES, COUNTRIES, NATIONALITIES, INDUSTRIES, NIGERIAN_BANKS } from '@/v2/lib/formOptions';
+import { CheckCircle2, Upload, Clock, AlertCircle, Lock, FileDown } from 'lucide-react';
 import AdditionalDirectors from '@/v2/components/AdditionalDirectors';
 import SignOutButton from '@/v2/components/SignOutButton';
+import { openBoardResolutionTemplate } from '@/v2/lib/boardResolutionTemplate';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 
