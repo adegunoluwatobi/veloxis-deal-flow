@@ -222,17 +222,23 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
                     {s.full_name}
                     {s.position && <span className="text-muted-foreground"> · {s.position}</span>}
                     {s.email && <span className="text-muted-foreground"> · {s.email}</span>}
+                    {s.phone && <span className="text-muted-foreground"> · {s.phone}</span>}
                   </li>
                 ))}
               </ul>
             )}
           </div>
-          {expired && (
+          {needsReplacement && (
             <div className="space-y-2">
-              <p className="text-sm text-destructive">This resolution expired on {res.valid_until}. Upload a replacement for review.</p>
+              <p className="text-sm text-destructive">
+                {expired
+                  ? `This resolution expired on ${res.valid_until}. Upload a replacement for review.`
+                  : 'Upload a replacement board resolution for review.'}
+              </p>
               {uploadControl}
             </div>
           )}
+
         </div>
       )}
 
