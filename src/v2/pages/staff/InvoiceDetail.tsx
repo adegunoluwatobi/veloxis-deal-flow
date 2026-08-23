@@ -136,6 +136,21 @@ export default function StaffInvoiceDetail() {
     load();
   };
 
+  const stage2Unlocked = !!inv.stage2_unlocked_at;
+  const canUnlockStage2 = canReview && docState.stage1Complete && noOutstandingRequests;
+
+  const unlockStage2 = async () => {
+    setBusy(true);
+    const { error } = await supabase.from('v2_invoices')
+      .update({ stage2_unlocked_at: new Date().toISOString(), stage2_unlocked_by: user?.id })
+      .eq('id', id!);
+    setBusy(false);
+    if (error) { toast({ title: 'Could not unlock', description: error.message, variant: 'destructive' }); return; }
+    await logAudit({ invoice_id: id!, action: 'stage2_unlocked' });
+    toast({ title: 'Stage 2 unlocked', description: 'The exporter can now upload their Stage 2 documents.' });
+    load();
+  };
+
   const transition = async (to: string, action: string, decisionType?: string) => {
     if (['returned_for_revision', 'rejected'].includes(to) && !reason.trim()) {
       toast({ title: 'Reason required', variant: 'destructive' }); return;
