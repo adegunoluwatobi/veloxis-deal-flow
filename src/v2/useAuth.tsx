@@ -71,12 +71,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // Tracks which user we have already loaded roles/profile for. Supabase fires
+    // auth events on every tab focus / token refresh — reloading on those would
+    // flip the app back into its loading state and make the page appear to refresh.
+    let loadedFor: string | null = null;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s); setUser(s?.user ?? null);
       if (s?.user) {
         const uid = s.user.id;
-        setDataLoaded(false);
-        setTimeout(() => load(uid), 0);
+        if (loadedFor !== uid) {
+          loadedFor = uid;
+          setDataLoaded(false);
+          setTimeout(() => load(uid), 0);
+        }
         if (event === 'SIGNED_IN') {
           setTimeout(async () => {
             const nowIso = new Date().toISOString();
@@ -85,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, 0);
         }
       } else {
+        loadedFor = null;
         setRoles([]); setProfile(null); setExporterOnboarding(null); setError(null); setDataLoaded(true);
       }
       setSessionResolved(true);
@@ -92,12 +101,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session); setUser(session?.user ?? null);
-      if (session?.user) load(session.user.id).finally(() => setSessionResolved(true));
+      if (session?.user) {
+        if (loadedFor !== session.user.id) {
+          loadedFor = session.user.id;
+          load(session.user.id).finally(() => setSessionResolved(true));
+        } else {
+          setSessionResolved(true);
+        }
+      }
       else { setDataLoaded(true); setSessionResolved(true); }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
 
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
