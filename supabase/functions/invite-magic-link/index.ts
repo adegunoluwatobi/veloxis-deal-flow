@@ -8,6 +8,16 @@ const cors = {
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 
+function authErrorResponse(message: string) {
+  if (message.includes("unable to find user from email identity for duplicates")) {
+    return json({
+      error: "This email has an orphaned login identity from a previously deleted account. The login identity must be removed before this address can be invited again.",
+      code: "ORPHANED_AUTH_IDENTITY",
+    }, 409);
+  }
+  return json({ error: message }, 400);
+}
+
 function getSiteUrl() {
   const raw = Deno.env.get("SITE_URL")?.trim() || "https://app.veloxis.co.uk";
   try {
@@ -62,7 +72,7 @@ Deno.serve(async (req) => {
         email_confirm: true,
         user_metadata: { name, full_name: name, role },
       });
-      if (cErr) return json({ error: cErr.message }, 400);
+      if (cErr) return authErrorResponse(cErr.message);
       userId = created.user?.id ?? null;
     }
     if (!userId) return json({ error: "Failed to resolve user" }, 500);

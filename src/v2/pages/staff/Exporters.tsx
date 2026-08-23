@@ -90,7 +90,15 @@ function InviteExporterDialog() {
       body: { email: email.trim(), name: name.trim(), role: 'exporter' },
     });
     setSending(false);
-    if (error) return toast({ title: 'Invite failed', description: error.message, variant: 'destructive' });
+    if (error) {
+      let description = error.message;
+      if ('context' in error && error.context instanceof Response) {
+        const response = error.context.clone();
+        const payload = await response.json().catch(() => null) as { error?: string } | null;
+        description = payload?.error ?? description;
+      }
+      return toast({ title: 'Invite failed', description, variant: 'destructive' });
+    }
     setLink((data as any)?.action_link ?? null);
     toast({ title: 'Magic link sent', description: `${email.trim()} has been invited.` });
   };
