@@ -597,6 +597,32 @@ export default function ExporterOnboarding() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div className="space-y-1"><Label className="text-xs">{label}</Label>{children}</div>;
+const FIELD_LABELS: Record<string, string> = {
+  company_name: 'Company name',
+  company_registration_number: 'Registration number (RC / CAC)',
+  country_of_incorporation: 'Country of incorporation',
+  incorporation_date: 'Incorporation date',
+  tax_id: 'Tax ID / TIN',
+  phone: 'Company phone',
+  address: 'Registered address',
+  director_name: 'Director full name',
+  director_email: 'Director email',
+  director_phone: 'Director phone',
+  director_dob: 'Date of birth',
+  director_id_type: 'ID type',
+  director_id_number: 'ID number',
+  bank_name: 'Bank name',
+  account_number: 'Account number / IBAN',
+  swift: 'SWIFT / BIC',
+};
+
+function Field({ label, children, error }: { label: string; children: React.ReactNode; error?: string }) {
+  return (
+    <div className={`space-y-1 ${error ? '[&_input]:border-destructive [&_button]:border-destructive' : ''}`}>
+      <Label className={`text-xs ${error ? 'text-destructive' : ''}`}>{label}</Label>
+      {children}
+      {error && <p className="text-xs text-destructive flex items-start gap-1"><AlertCircle className="h-3 w-3 mt-0.5 shrink-0" />{error}</p>}
+    </div>
+  );
 }
+
