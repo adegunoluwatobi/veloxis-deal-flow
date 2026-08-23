@@ -449,7 +449,29 @@ export default function ExporterOnboarding() {
             <Field label="ID type *" error={errorFor('director_id_type')}><OptionSelect value={f.director_id_type} onChange={(v) => { set('director_id_type', v); blur('director_id_type'); }} options={ID_TYPES} placeholder="Select ID type" /></Field>
             <Field label="ID number *" error={errorFor('director_id_number')}><Input value={f.director_id_number ?? ''} onBlur={() => blur('director_id_number')} onChange={(e) => set('director_id_number', e.target.value)} /></Field>
             <div className="col-span-2"><Field label="Director residential address"><Input value={f.director_address ?? ''} onChange={(e) => set('director_address', e.target.value)} /></Field></div>
+            <div className="col-span-2 space-y-1.5 border-t border-border pt-3">
+              <div className="text-sm font-medium">
+                Director government ID {idImageRequired ? <span className="text-destructive">*</span> : <span className="ml-1 text-xs font-normal text-muted-foreground">(not required for National ID / NIN)</span>}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Upload a clear image of the {f.director_id_type || 'selected ID'} — it must match the ID type and number above.
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <label className={`text-xs px-3 py-2 border border-border rounded inline-flex items-center gap-2 ${busy ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:bg-muted/20'}`}>
+                  <Upload className="h-3.5 w-3.5" />
+                  {progress['director_id'] !== undefined ? `Uploading… ${progress['director_id']}%` : latestDoc('director_id') ? 'Replace ID' : 'Upload ID'}
+                  <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => upload(e, 'director_id')} disabled={busy} />
+                </label>
+                {latestDoc('director_id') && progress['director_id'] === undefined && (
+                  <span className="inline-flex items-center gap-1.5 text-xs text-accent">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span className="truncate max-w-[16rem]">{latestDoc('director_id')?.original_filename || 'Uploaded'}</span>
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
+
         </section>
 
         <AdditionalDirectors exporterId={exp?.id} ensureExporterId={saveProfile} />
