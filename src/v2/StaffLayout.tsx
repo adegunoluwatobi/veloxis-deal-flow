@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard, Users, FileText, Building2, ShieldCheck,
   Landmark, ScrollText, UserCog, Settings, LogOut, UserCircle, Database,
-  Bell, BellOff, Eye, Archive, ShieldAlert,
+  Bell, BellOff, Eye, Archive, ShieldAlert, BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -27,6 +27,7 @@ const NAV = [
   { to: '/admin/reference-data', label: 'Reference Data', icon: Database, superOnly: true },
   { to: '/admin/templates', label: 'Document Templates', icon: ScrollText, superOnly: true },
 
+  { to: '/app/help', label: 'Knowledge Base', icon: BookOpen },
   { to: '/app/account', label: 'My Account', icon: UserCircle },
   { to: '/app/settings', label: 'Settings', icon: Settings, superOnly: true },
 ];
