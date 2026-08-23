@@ -297,6 +297,7 @@ export default function ExporterInvoiceNew() {
     if (!exp || busy) return;
     if (!f.invoice_number.trim()) return;
     if (invoice && invoice.status !== 'draft' && invoice.status !== 'returned_for_revision') return;
+    if ((invoice as any)?.stage2_unlocked_at) return;
     try {
       const payload = await buildPayload(false, true);
       if (invoiceId) {
