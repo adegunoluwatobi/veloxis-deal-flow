@@ -29,6 +29,7 @@ export default function StaffExporterDetail() {
   const [showAudit, setShowAudit] = useState(false);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [docs, setDocs] = useState<any[]>([]);
+  const [requiredTypes, setRequiredTypes] = useState<any[]>([]);
   const [directors, setDirectors] = useState<any[]>([]);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
@@ -36,14 +37,15 @@ export default function StaffExporterDetail() {
   const [lastReturn, setLastReturn] = useState<{ stage: string; decision: string; note: string | null; created_at: string } | null>(null);
 
   const load = useCallback(async () => {
-    const [{ data: e }, { data: iv }, { data: d }, { data: dir }, { data: rev }] = await Promise.all([
+    const [{ data: e }, { data: iv }, { data: d }, { data: dir }, { data: rev }, { data: rt }] = await Promise.all([
       supabase.from('v2_exporters').select('*').eq('id', id!).maybeSingle(),
       supabase.from('v2_invoices').select('id, invoice_number, invoice_amount, invoice_currency, status, maturity_date').eq('exporter_id', id!).order('created_at', { ascending: false }),
-      supabase.from('company_documents').select('id, original_filename, status, uploaded_at, reviewed_at, rejection_reason, document_types(code, label)').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
+      supabase.from('company_documents').select('id, original_filename, status, uploaded_at, reviewed_at, rejection_reason, document_type_id, document_types(code, label)').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
       supabase.from('v2_exporter_directors').select('*').eq('exporter_id', id!).order('created_at', { ascending: true }),
       supabase.from('onboarding_reviews').select('stage, decision, note, created_at').eq('exporter_id', id!).order('created_at', { ascending: false }).limit(1),
+      supabase.from('document_types').select('id, label, sort_order').eq('active', true).eq('level', 'company').eq('requirement', 'mandatory').order('sort_order'),
     ]);
-    setExp(e); setInvoices(iv ?? []); setDocs(d ?? []); setDirectors(dir ?? []);
+    setExp(e); setInvoices(iv ?? []); setDocs(d ?? []); setDirectors(dir ?? []); setRequiredTypes(rt ?? []);
     const latest = rev?.[0] as any;
     setLastReturnStage(latest && latest.decision !== 'approved' ? latest.stage : null);
     setLastReturn(latest && latest.decision !== 'approved' ? latest : null);
@@ -64,6 +66,13 @@ export default function StaffExporterDetail() {
   const bdApproved = !!exp.bd_approved_at;
   const bdRejected = !!exp.bd_rejected_at;
   const isActive = exp.onboarding_status === 'active';
+
+  // Credit & Compliance may not activate an exporter until every mandatory
+  // company document has been approved.
+  const verifiedTypeIds = new Set(docs.filter((d) => d.status === 'verified').map((d) => d.document_type_id));
+  const outstandingDocs = requiredTypes.filter((t) => !verifiedTypeIds.has(t.id));
+  const docsComplete = outstandingDocs.length === 0;
+
 
   const setDocStatus = async (docId: string, status: 'verified' | 'rejected' | 'pending', reason?: string) => {
     setBusy(true);
@@ -229,7 +238,24 @@ export default function StaffExporterDetail() {
                   Four eyes rule: this approval must be given by someone other than the Business Developer who approved the earlier stage.
                   The board resolution must be recorded before the exporter can be activated.
                 </p>
-                <Button size="sm" onClick={finalApprove} disabled={busy}>Approve &amp; activate exporter</Button>
+                {!docsComplete && (
+                  <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs">
+                    <div className="font-medium text-amber-400">
+                      All onboarding documents must be approved before you can activate this exporter
+                    </div>
+                    <ul className="mt-1 list-disc pl-4 text-muted-foreground">
+                      {outstandingDocs.map((t) => (<li key={t.id}>{t.label}</li>))}
+                    </ul>
+                  </div>
+                )}
+                <Button
+                  size="sm"
+                  onClick={finalApprove}
+                  disabled={busy || !docsComplete}
+                  title={!docsComplete ? 'Approve every required onboarding document first' : undefined}
+                >
+                  Approve &amp; activate exporter
+                </Button>
                 <Textarea placeholder="Reason to return to exporter" value={reason} onChange={(e) => setReason(e.target.value)} />
                 <Button size="sm" variant="outline" onClick={complianceReturn} disabled={busy}>Return to exporter</Button>
               </>
