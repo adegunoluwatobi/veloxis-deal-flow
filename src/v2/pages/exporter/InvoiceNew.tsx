@@ -415,14 +415,23 @@ export default function ExporterInvoiceNew() {
 
       <h1 className="text-2xl">Submit invoice</h1>
 
-      <form className="space-y-6" onSubmit={submit} onBlur={() => { autosaveRef.current(); }}>
+       <form className="space-y-6" onSubmit={submit} onBlur={() => { if (!step1Locked) autosaveRef.current(); }}>
+        {step1Locked && (
+          <div className="card-elevated flex items-start gap-3 border-l-4 border-l-primary p-4 text-sm">
+            <Lock className="mt-0.5 h-4 w-4 text-muted-foreground" />
+            <p className="text-muted-foreground">
+              Step 1 is complete and locked. Your invoice details and submission documents can no longer be
+              changed unless Veloxis returns the application for revision.
+            </p>
+          </div>
+        )}
         {/* ---------------- invoice fields ---------------- */}
-        <section className="card-elevated space-y-4 p-6">
+        <section className={`card-elevated space-y-4 p-6 ${step1Locked ? 'opacity-70' : ''}`}>
           <div className="flex items-baseline justify-between">
             <h2 className="text-lg">Invoice and shipment</h2>
-            {autosavedAt && <span className="text-xs text-muted-foreground">Draft saved {autosavedAt}</span>}
+            {autosavedAt && !step1Locked && <span className="text-xs text-muted-foreground">Draft saved {autosavedAt}</span>}
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <fieldset disabled={step1Locked} className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Label>Invoice number *</Label>
               <Input value={f.invoice_number} onChange={(e) => set('invoice_number', e.target.value)} />
