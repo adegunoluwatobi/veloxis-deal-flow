@@ -93,6 +93,10 @@ export default function StaffExporterDetail() {
     if (!reason.trim()) return toast({ title: 'Reason required', variant: 'destructive' });
     return review('bd', 'returned', reason);
   };
+  const complianceReturn = () => {
+    if (!reason.trim()) return toast({ title: 'Reason required', variant: 'destructive' });
+    return review('compliance', 'returned', reason);
+  };
   const finalApprove = async () => {
     const ok = await review('compliance', 'approved');
     if (ok) return;
@@ -140,9 +144,15 @@ export default function StaffExporterDetail() {
           </div>
         )}
 
-        {bdApproved && !isActive && (
+        {submitted && !isActive && (bdApproved || canFinalApprove) && (
           <div className="mt-4 space-y-3 border-t border-border pt-4">
             <div className="text-sm font-medium">Credit &amp; Compliance final approval</div>
+            {!bdApproved && canFinalApprove && (
+              <p className="text-xs text-amber-400">
+                The Business Developer has not signed off yet. Credit &amp; Compliance holds the final decision and may
+                approve or return this application directly, superseding the Business Developer stage.
+              </p>
+            )}
             <BoardResolutionReviewStep exporterId={id!} canReview={canBdReview || canFinalApprove} onChanged={load} />
             {canFinalApprove && (
               <>
@@ -151,6 +161,8 @@ export default function StaffExporterDetail() {
                   The board resolution must be recorded before the exporter can be activated.
                 </p>
                 <Button size="sm" onClick={finalApprove} disabled={busy}>Approve &amp; activate exporter</Button>
+                <Textarea placeholder="Reason to return to exporter" value={reason} onChange={(e) => setReason(e.target.value)} />
+                <Button size="sm" variant="outline" onClick={complianceReturn} disabled={busy}>Return to exporter</Button>
               </>
             )}
           </div>

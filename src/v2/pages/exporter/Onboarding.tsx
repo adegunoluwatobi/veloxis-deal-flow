@@ -21,7 +21,7 @@ type DocType = string;
 const REQUIRED_DOCS: { key: DocType; label: string; hint: string }[] = [
   { key: 'cac_certificate', label: 'CAC certificate of incorporation', hint: 'Certificate of Incorporation showing your RC number.' },
   { key: 'cac_status_report', label: 'CAC status report', hint: 'Current status report listing directors and shareholding.' },
-  { key: 'tin_certificate', label: 'Tax identification number', hint: 'TIN certificate issued by FIRS.' },
+  { key: 'tin_certificate', label: 'Tax identification number', hint: 'TIN certificate issued by FIRS. A clear screenshot of your TIN record on the FIRS site is acceptable.' },
   { key: 'nepc_certificate', label: 'NEPC exporter registration', hint: 'Your Nigerian Export Promotion Council registration.' },
   { key: 'bank_statement', label: 'Six month bank statement', hint: 'Statements for the corporate account funds will settle to.' },
   { key: 'board_resolution', label: 'Board resolution authorising the facility', hint: 'Board resolution naming the authorised signatories (no monetary limit required). Valid for 1 year.' },
