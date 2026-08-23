@@ -415,6 +415,28 @@ export default function StaffInvoiceDetail() {
 
           <section className="card-elevated p-5 space-y-3">
             <h3 className="text-sm uppercase tracking-wider text-muted-foreground">Actions</h3>
+
+            {canReview && !['draft', 'rejected'].includes(status) && (
+              stage2Unlocked ? (
+                <p className="text-xs text-success">
+                  Stage 2 uploads unlocked for the exporter
+                  {inv.stage2_unlocked_at ? ` · ${new Date(inv.stage2_unlocked_at).toLocaleString('en-GB')}` : ''}
+                  {inv.stage2_unlocked_by ? ` · ${docState.people[inv.stage2_unlocked_by] ?? ''}` : ''}
+                </p>
+              ) : (
+                <>
+                  <Button variant="outline" className="w-full" disabled={busy || !canUnlockStage2} onClick={unlockStage2}>
+                    {canUnlockStage2 ? 'Unlock Stage 2 for exporter' : 'Stage 1 documents not fully approved'}
+                  </Button>
+                  {!canUnlockStage2 && (
+                    <p className="text-xs text-muted-foreground">
+                      All Stage 1 documents must be verified and no document requests outstanding.
+                    </p>
+                  )}
+                </>
+              )
+            )}
+
             {(status === 'submitted' || status === 'information_requested') && canReview && (
               <>
                 {reviewBlockers.length > 0 && (
