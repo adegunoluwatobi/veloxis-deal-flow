@@ -8,7 +8,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/v2/useAuth';
 
-type E = { id: string; company_name: string; rc_number: string | null; commodity: string | null; onboarding_status: string; email: string | null; created_at: string };
+type E = { id: string; company_name: string; rc_number: string | null; commodity: string | null; onboarding_status: string; email: string | null; created_at: string; onboarding_submitted_at: string | null; bd_approved_at: string | null; bd_rejected_at: string | null };
+
+function stageOf(r: E) {
+  if (r.onboarding_status === 'active') return { label: 'Active', action: 'View' };
+  if (r.onboarding_status === 'suspended') return { label: 'Suspended', action: 'View' };
+  if (r.bd_rejected_at && !r.bd_approved_at) return { label: 'Returned to exporter', action: 'View' };
+  if (r.bd_approved_at) return { label: 'With Credit & Compliance', action: 'Final approval' };
+  if (r.onboarding_submitted_at) return { label: 'Awaiting BD review', action: 'Review' };
+  return { label: 'Onboarding in progress', action: 'View' };
+}
 
 export default function StaffExporters() {
   const [rows, setRows] = useState<E[]>([]);
@@ -61,10 +70,10 @@ export default function StaffExporters() {
                 <td className="px-4 py-3">{r.rc_number ?? '—'}</td>
                 <td className="px-4 py-3">{r.commodity ?? '—'}</td>
                 <td className="px-4 py-3">{r.email ?? '—'}</td>
-                <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded ${r.onboarding_status === 'active' ? 'bg-success/20 text-success' : r.onboarding_status === 'suspended' ? 'bg-destructive/20 text-destructive' : 'bg-muted text-muted-foreground'}`}>{r.onboarding_status}</span></td>
+                <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded ${r.onboarding_status === 'active' ? 'bg-success/20 text-success' : r.onboarding_status === 'suspended' ? 'bg-destructive/20 text-destructive' : 'bg-muted text-muted-foreground'}`}>{stageOf(r).label}</span></td>
                 <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                   {r.onboarding_status !== 'active' && r.onboarding_status !== 'suspended' && (
-                    <Button size="sm" variant="outline" onClick={() => navigate(`/app/exporters/${r.id}`)}>Review</Button>
+                    <Button size="sm" variant="outline" onClick={() => navigate(`/app/exporters/${r.id}`)}>{stageOf(r).action}</Button>
                   )}
                   {canSuspend && r.onboarding_status === 'active' && <Button size="sm" variant="outline" onClick={() => setStatus(r.id, 'suspended')}>Suspend</Button>}
                   {canSuspend && r.onboarding_status === 'suspended' && <Button size="sm" variant="outline" onClick={() => setStatus(r.id, 'active')}>Reinstate</Button>}
