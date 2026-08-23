@@ -37,7 +37,7 @@ export default function StaffExporterDetail() {
     const [{ data: e }, { data: iv }, { data: d }, { data: dir }] = await Promise.all([
       supabase.from('v2_exporters').select('*').eq('id', id!).maybeSingle(),
       supabase.from('v2_invoices').select('id, invoice_number, invoice_amount, invoice_currency, status, maturity_date').eq('exporter_id', id!).order('created_at', { ascending: false }),
-      supabase.from('company_documents').select('id, original_filename, status, uploaded_at, reviewed_at, rejection_reason, document_types(code, name)').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
+      supabase.from('company_documents').select('id, original_filename, status, uploaded_at, reviewed_at, rejection_reason, document_types(code, label)').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
       supabase.from('v2_exporter_directors').select('*').eq('exporter_id', id!).order('created_at', { ascending: true }),
     ]);
     setExp(e); setInvoices(iv ?? []); setDocs(d ?? []); setDirectors(dir ?? []);
@@ -260,10 +260,10 @@ export default function StaffExporterDetail() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <button onClick={() => openDocument(d.id, 'company')} className="text-sm text-accent hover:underline inline-flex items-center gap-2">
-                      <FileText className="h-4 w-4 shrink-0" /> <span className="truncate">{d.original_filename || d.document_types?.name}</span>
+                      <FileText className="h-4 w-4 shrink-0" /> <span className="truncate">{d.original_filename || d.document_types?.label}</span>
                     </button>
                     <div className="text-xs text-muted-foreground">
-                      {d.document_types?.name ?? DOC_LABEL[d.document_types?.code] ?? '—'}
+                      {d.document_types?.label ?? DOC_LABEL[d.document_types?.code] ?? '—'}
                       {d.uploaded_at ? ` · uploaded ${new Date(d.uploaded_at).toLocaleDateString()}` : ''}
                     </div>
                   </div>
