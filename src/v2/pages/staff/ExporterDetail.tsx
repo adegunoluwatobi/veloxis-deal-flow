@@ -36,14 +36,15 @@ export default function StaffExporterDetail() {
   const [lastReturn, setLastReturn] = useState<{ stage: string; decision: string; note: string | null; created_at: string } | null>(null);
 
   const load = useCallback(async () => {
-    const [{ data: e }, { data: iv }, { data: d }, { data: dir }, { data: rev }] = await Promise.all([
+    const [{ data: e }, { data: iv }, { data: d }, { data: dir }, { data: rev }, { data: rt }] = await Promise.all([
       supabase.from('v2_exporters').select('*').eq('id', id!).maybeSingle(),
       supabase.from('v2_invoices').select('id, invoice_number, invoice_amount, invoice_currency, status, maturity_date').eq('exporter_id', id!).order('created_at', { ascending: false }),
-      supabase.from('company_documents').select('id, original_filename, status, uploaded_at, reviewed_at, rejection_reason, document_types(code, label)').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
+      supabase.from('company_documents').select('id, original_filename, status, uploaded_at, reviewed_at, rejection_reason, document_type_id, document_types(code, label)').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
       supabase.from('v2_exporter_directors').select('*').eq('exporter_id', id!).order('created_at', { ascending: true }),
       supabase.from('onboarding_reviews').select('stage, decision, note, created_at').eq('exporter_id', id!).order('created_at', { ascending: false }).limit(1),
+      supabase.from('document_types').select('id, label, sort_order').eq('active', true).eq('level', 'company').eq('requirement', 'mandatory').order('sort_order'),
     ]);
-    setExp(e); setInvoices(iv ?? []); setDocs(d ?? []); setDirectors(dir ?? []);
+    setExp(e); setInvoices(iv ?? []); setDocs(d ?? []); setDirectors(dir ?? []); setRequiredTypes(rt ?? []);
     const latest = rev?.[0] as any;
     setLastReturnStage(latest && latest.decision !== 'approved' ? latest.stage : null);
     setLastReturn(latest && latest.decision !== 'approved' ? latest : null);
