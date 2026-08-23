@@ -252,8 +252,18 @@ export default function ExporterOnboarding() {
 
 
   const submitForReview = async () => {
-    if (!requiredFieldsOk) { toast({ title: 'Complete required company & director fields', variant: 'destructive' }); return; }
+    if (!requiredFieldsOk) {
+      setShowAllErrors(true);
+      toast({
+        title: 'Please fix the highlighted fields',
+        description: `${Object.keys(errors).length} field${Object.keys(errors).length === 1 ? '' : 's'} need attention.`,
+        variant: 'destructive',
+      });
+      document.getElementById('onboarding-error-summary')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     if (missingDocs.length) {
+      setShowAllErrors(true);
       toast({
         title: 'Upload all required documents first',
         description: `Still needed: ${missingDocs.map((d) => d.label).join(', ')}`,
@@ -261,6 +271,7 @@ export default function ExporterOnboarding() {
       });
       return;
     }
+
     setBusy(true);
     const expId = await saveProfile();
     if (!expId) { setBusy(false); return; }
