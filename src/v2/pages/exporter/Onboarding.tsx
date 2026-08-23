@@ -10,6 +10,7 @@ import { OptionSelect, ID_TYPES, COUNTRIES, NATIONALITIES, INDUSTRIES, NIGERIAN_
 import { CheckCircle2, Upload, Clock, AlertCircle, Lock, FileDown, Printer } from 'lucide-react';
 import AdditionalDirectors from '@/v2/components/AdditionalDirectors';
 import SignOutButton from '@/v2/components/SignOutButton';
+import NotificationBell from '@/v2/components/NotificationBell';
 import { openBoardResolutionTemplate, downloadBoardResolutionPdf } from '@/v2/lib/boardResolutionTemplate';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -333,7 +334,9 @@ export default function ExporterOnboarding() {
         <div className="max-w-4xl mx-auto h-full flex items-center gap-4 px-6">
           <span className="wordmark text-accent">VELOXIS</span>
           <span className="ml-auto text-xs text-muted-foreground truncate">{profile?.email}</span>
+          <NotificationBell />
           <SignOutButton />
+
         </div>
       </header>
       <main className="max-w-4xl mx-auto p-8 space-y-6">
