@@ -68,8 +68,8 @@ export function boardResolutionHtml(i: ResolutionTemplateInput) {
   <ol>
     <li>The Company be and is hereby authorised to enter into cross-border trade finance
         arrangements with Veloxis Limited, including the assignment of export receivables.</li>
-    <li>The maximum aggregate limit authorised under these arrangements shall be
-        <strong>GBP ${line(null)}</strong> (in words: ${line(null)}), measured on invoice face value.</li>
+    <li>No monetary limit is placed on these arrangements; each transaction shall be considered on
+        its own merits, with amounts denominated in the invoice currency (USD unless otherwise agreed).</li>
     <li>This authority shall be valid from ${line(null)} until ${line(null)}.</li>
     <li>The persons named below be and are hereby appointed authorised signatories, each empowered
         to execute invoices, deeds of assignment, notices of assignment, domiciliation instructions
