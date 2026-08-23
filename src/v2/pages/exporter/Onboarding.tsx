@@ -24,7 +24,7 @@ const REQUIRED_DOCS: { key: DocType; label: string; hint: string }[] = [
   { key: 'tin_certificate', label: 'Tax identification number', hint: 'TIN certificate issued by FIRS.' },
   { key: 'nepc_certificate', label: 'NEPC exporter registration', hint: 'Your Nigerian Export Promotion Council registration.' },
   { key: 'bank_statement', label: 'Six month bank statement', hint: 'Statements for the corporate account funds will settle to.' },
-  { key: 'board_resolution', label: 'Board resolution authorising the facility', hint: 'Board resolution naming the authorised limit and signatories.' },
+  { key: 'board_resolution', label: 'Board resolution authorising the facility', hint: 'Board resolution naming the authorised signatories (no monetary limit required). Valid for 1 year.' },
   { key: 'director_id', label: 'Director government ID', hint: 'International passport, driver’s licence or voter’s card — must match the ID type and number entered above.' },
   { key: 'proof_of_address', label: 'Director proof of address', hint: 'Utility bill or bank statement, dated within 3 months.' },
 ];
