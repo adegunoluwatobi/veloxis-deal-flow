@@ -81,7 +81,7 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
     if (r?.id) {
       const { data: s } = await supabase
         .from('authorised_signatories')
-        .select('id, full_name, position, email')
+        .select('id, full_name, position, email, phone')
         .eq('board_resolution_id', r.id)
         .order('full_name');
       setSigs((s as Signatory[]) ?? []);
