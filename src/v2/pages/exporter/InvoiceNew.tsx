@@ -403,6 +403,8 @@ export default function ExporterInvoiceNew() {
     : invoiceId ? null : 'Save your invoice details first to start uploading';
   const optionalCommercial = optionalTypes.filter((d) => /commercial/i.test(d.code) || d.sort_order < 500);
   const optionalCompliance = optionalTypes.filter((d) => !optionalCommercial.includes(d));
+  const missingOptionalCount = optionalTypes.filter((t) => docsFor(t.id).length === 0).length;
+
 
   return (
     <div className="max-w-3xl space-y-6 pb-16">
