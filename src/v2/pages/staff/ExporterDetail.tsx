@@ -238,12 +238,22 @@ export default function StaffExporterDetail() {
         </div>
       </section>
 
-      <AuditLogTable
-        exporterId={id}
-        entityTypes={['company_document', 'board_resolution', 'exporter']}
-        title="Company audit trail"
-        csvName="company-audit"
-      />
+      <div>
+        <Button variant="outline" size="sm" onClick={() => setShowAudit((s) => !s)}>
+          {showAudit ? 'Hide company audit trail' : 'Show company audit trail'}
+        </Button>
+        {showAudit && (
+          <div className="mt-4">
+            <AuditLogTable
+              exporterId={id}
+              entityTypes={['company_document', 'board_resolution', 'exporter']}
+              title="Company audit trail"
+              csvName="company-audit"
+            />
+          </div>
+        )}
+      </div>
+
     </div>
 
   );
