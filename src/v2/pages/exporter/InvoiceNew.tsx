@@ -68,7 +68,7 @@ export default function ExporterInvoiceNew() {
     invoice_number: '', buyer_id: '', commodity_id: '', commodity_other: '',
     incoterm: '', bl_number: '', bl_date: '', port_of_loading: '', port_of_discharge: '',
     port_of_loading_other: '', port_of_discharge_other: '',
-    estimated_arrival_date: '', invoice_currency: 'GBP', gross_invoice_value: '',
+    estimated_arrival_date: '', invoice_currency: 'USD', gross_invoice_value: '',
     agreed_deductions: '0', terms_days: '30', signatory_id: '',
   });
   const set = (k: keyof typeof f, v: string) => setF((s) => ({ ...s, [k]: v }));
@@ -125,7 +125,7 @@ export default function ExporterInvoiceNew() {
         port_of_loading_other: inv.port_of_loading_other ?? '',
         port_of_discharge_other: inv.port_of_discharge_other ?? '',
         estimated_arrival_date: inv.estimated_arrival_date ?? '',
-        invoice_currency: inv.invoice_currency ?? 'GBP',
+        invoice_currency: inv.invoice_currency ?? 'USD',
         gross_invoice_value: inv.gross_invoice_value != null ? String(inv.gross_invoice_value) : String(inv.invoice_amount ?? ''),
         agreed_deductions: inv.agreed_deductions != null ? String(inv.agreed_deductions) : '0',
         terms_days: String(inv.terms_days ?? '30'),
@@ -418,6 +418,22 @@ export default function ExporterInvoiceNew() {
 
       <h1 className="text-2xl">Submit invoice</h1>
 
+      {!authority.loading && !authority.resolutionId && (
+        <div className="card-elevated flex items-start gap-3 border-destructive/50 bg-destructive/5 p-4 text-sm">
+          <Lock className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+          <div>
+            <div className="font-medium text-destructive">An invoice cannot be created yet</div>
+            <p className="mt-1 text-muted-foreground">
+              Your board resolution must be uploaded and approved by Veloxis before any invoice can be submitted.
+              You can fill this form in, but it cannot be submitted until the resolution is approved.
+            </p>
+            <button type="button" onClick={() => window.open('/portal/profile', '_blank', 'noopener')} className="mt-2 text-xs text-accent hover:underline">
+              Upload board resolution
+            </button>
+          </div>
+        </div>
+      )}
+
        <form className="space-y-6" onSubmit={submit} onBlur={() => { if (!step1Locked) autosaveRef.current(); }}>
         {step1Locked && (
           <div className="card-elevated flex items-start gap-3 border-l-4 border-l-primary p-4 text-sm">
@@ -553,7 +569,7 @@ export default function ExporterInvoiceNew() {
               <Label>Currency</Label>
               <Select value={f.invoice_currency} onValueChange={(v) => set('invoice_currency', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{['GBP', 'USD', 'EUR'].map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                <SelectContent>{['USD', 'GBP', 'EUR'].map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
               </Select>
             </div>
 

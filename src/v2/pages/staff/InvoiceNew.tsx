@@ -15,7 +15,7 @@ export default function StaffInvoiceNew() {
   const [buyers, setBuyers] = useState<{ id: string; company_name: string }[]>([]);
   const [form, setForm] = useState({
     invoice_number: '', exporter_id: '', buyer_id: '', commodity: '',
-    invoice_currency: 'GBP', invoice_amount: '', terms_days: '30',
+    invoice_currency: 'USD', invoice_amount: '', terms_days: '30',
     advance_rate: '', shipment_date: '',
   });
   const [busy, setBusy] = useState(false);
@@ -93,7 +93,7 @@ export default function StaffInvoiceNew() {
             <Label>Currency</Label>
             <Select value={form.invoice_currency} onValueChange={(v) => set('invoice_currency', v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{['GBP', 'USD', 'EUR'].map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+              <SelectContent>{['USD', 'GBP', 'EUR'].map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
