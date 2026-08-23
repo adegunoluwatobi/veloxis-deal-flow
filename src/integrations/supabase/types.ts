@@ -4752,6 +4752,10 @@ export type Database = {
         Returns: string
       }
       v2_can_review_documents: { Args: { _user_id: string }; Returns: boolean }
+      v2_can_transcribe_resolution: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       v2_email_shell: {
         Args: { p_body_html: string; p_title: string }
         Returns: string

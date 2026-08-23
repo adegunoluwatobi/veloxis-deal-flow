@@ -139,7 +139,7 @@ export default function StaffExporterDetail() {
         {bdApproved && !isActive && (
           <div className="mt-4 space-y-3 border-t border-border pt-4">
             <div className="text-sm font-medium">Credit &amp; Compliance final approval</div>
-            <BoardResolutionReviewStep exporterId={id!} canReview={canFinalApprove} onChanged={load} />
+            <BoardResolutionReviewStep exporterId={id!} canReview={canBdReview || canFinalApprove} onChanged={load} />
             {canFinalApprove && (
               <>
                 <p className="text-xs text-muted-foreground">
