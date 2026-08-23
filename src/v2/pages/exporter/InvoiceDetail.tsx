@@ -59,6 +59,17 @@ export default function ExporterInvoiceDetail() {
         <p className="text-sm text-muted-foreground">Status: <span className="text-accent">{INVOICE_STATUS_LABEL[inv.status]}</span></p>
       </div>
 
+      {inv.stage2_unlocked_at && !['rejected', 'settled'].includes(inv.status) && (
+        <div className="card-elevated p-4 border-accent/50 bg-accent/10 space-y-2">
+          <div className="text-sm font-medium">Stage 1 documents approved — Stage 2 is now open</div>
+          <p className="text-sm text-muted-foreground">
+            Your reviewer has approved your Stage 1 pack. You can now upload your Stage 2 documents.
+          </p>
+          <Button asChild size="sm"><Link to={`/portal/invoices/new?id=${inv.id}`}>Upload Stage 2 documents</Link></Button>
+        </div>
+      )}
+
+
       {inv.status === 'returned_for_revision' && decisions[0] && (
         <div className="card-elevated p-4 border-warning/60 bg-warning/10">
           <div className="text-sm font-medium">Returned for revision</div>
