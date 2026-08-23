@@ -32,16 +32,21 @@ export default function StaffExporterDetail() {
   const [directors, setDirectors] = useState<any[]>([]);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
+  const [lastReturnStage, setLastReturnStage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const [{ data: e }, { data: iv }, { data: d }, { data: dir }] = await Promise.all([
+    const [{ data: e }, { data: iv }, { data: d }, { data: dir }, { data: rev }] = await Promise.all([
       supabase.from('v2_exporters').select('*').eq('id', id!).maybeSingle(),
       supabase.from('v2_invoices').select('id, invoice_number, invoice_amount, invoice_currency, status, maturity_date').eq('exporter_id', id!).order('created_at', { ascending: false }),
       supabase.from('company_documents').select('id, original_filename, status, uploaded_at, reviewed_at, rejection_reason, document_types(code, label)').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
       supabase.from('v2_exporter_directors').select('*').eq('exporter_id', id!).order('created_at', { ascending: true }),
+      supabase.from('onboarding_reviews').select('stage, decision, created_at').eq('exporter_id', id!).order('created_at', { ascending: false }).limit(1),
     ]);
     setExp(e); setInvoices(iv ?? []); setDocs(d ?? []); setDirectors(dir ?? []);
+    const latest = rev?.[0];
+    setLastReturnStage(latest && latest.decision !== 'approved' ? latest.stage : null);
   }, [id]);
+
 
 
   useEffect(() => { load(); }, [load]);
