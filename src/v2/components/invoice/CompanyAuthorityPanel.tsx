@@ -73,7 +73,10 @@ export default function CompanyAuthorityPanel({
   const headroom = Number(hr?.headroom ?? 0);
   const amberHeadroom = !!hr && limit > 0 && headroom < limit * 0.2;
   const signatoryMismatch = !!signatoryId && signatories.length > 0 && !signatories.some((s) => s.id === signatoryId);
-  const withinHeadroom = !hr || invoiceExposure <= headroom;
+  // exporter_headroom already includes this submitted invoice in committed exposure.
+  // Comparing the invoice to the remaining balance counts it twice and blocks a
+  // valid application (for example £23,590 committed against a £25,000 limit).
+  const withinHeadroom = !hr || Number(hr.committed_exposure) <= limit;
 
   useEffect(() => {
     onFlags?.({ amberHeadroom, expiringSoon, signatoryMismatch, resolutionVerified: verified, inDate, withinHeadroom });
