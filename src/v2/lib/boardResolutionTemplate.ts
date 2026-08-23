@@ -44,7 +44,8 @@ export function boardResolutionHtml(i: ResolutionTemplateInput) {
   .meta p { margin:2px 0; }
   .note { font-size:10pt; color:#555; margin-top:26px; }
 </style></head>
-<body onload="window.print()">
+<body>
+
   <h1>${line(i.companyName)}</h1>
   <div class="sub">Extract of resolution of the Board of Directors</div>
 
