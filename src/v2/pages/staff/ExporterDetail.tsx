@@ -176,6 +176,29 @@ export default function StaffExporterDetail() {
 
         </div>
 
+        {lastReturn && !isActive && (
+          <div className="mt-4 rounded border border-destructive/40 bg-destructive/10 p-3 text-sm">
+            <div className="font-medium text-destructive">
+              Returned to exporter by {lastReturn.stage === 'bd' ? 'Business Developer' : 'Credit & Compliance'}
+              {' · '}{new Date(lastReturn.created_at).toLocaleString('en-GB')}
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {lastReturn.note?.trim() || 'No reason recorded.'}
+            </p>
+            {docs.some((d) => d.status === 'rejected') && (
+              <ul className="mt-2 space-y-1 text-xs text-muted-foreground list-disc pl-4">
+                {docs.filter((d) => d.status === 'rejected').map((d) => (
+                  <li key={d.id}>
+                    <span className="text-foreground">{d.document_types?.label ?? d.original_filename}:</span>{' '}
+                    {d.rejection_reason || 'No reason given'}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+
         {submitted && !bdApproved && !isActive && canBdReview && (
           <div className="mt-4 space-y-3 border-t border-border pt-4">
             <div className="text-sm font-medium">Business Developer review</div>
