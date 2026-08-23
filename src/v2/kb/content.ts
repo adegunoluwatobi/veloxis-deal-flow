@@ -72,7 +72,7 @@ export const ROLE_GUIDE: {
       'Runs KYB/KYC and AML verification on exporters, directors and buyers',
       'Reviews each uploaded document, accepts or rejects with a reason, and raises information requests',
       'Transcribes the board resolution: authorised limit, currency and signatories',
-      'Checks headroom, signatory authority and regulated-commodity flags',
+      'Checks signatory authority and regulated-commodity flags',
       'Pauses and resumes the decision SLA while information is outstanding',
       'Marks the application verified once every gate is satisfied',
     ],
@@ -207,7 +207,7 @@ export const SECTIONS: KbSection[] = [
         audience: ['staff', 'exporter'],
         body: [
           'The board resolution sets the authorised facility limit (held in GBP) and names the people authorised to sign instruments. Credit & Compliance transcribes those details during review.',
-          'The platform then enforces them: an application is blocked if it would exceed available headroom, or if the named signatory is not on the resolution.',
+          'The platform then enforces them: an application is blocked if the resolution has expired, or if the named signatory is not on the resolution.',
         ],
       },
     ],
@@ -368,7 +368,7 @@ export const SECTIONS: KbSection[] = [
         body: ['Submission is blocked until every gate passes. Check each of the following.'],
         bullets: [
           'Onboarding is verified and all company documents are accepted',
-          'A board resolution is on file with enough remaining headroom',
+          'A valid, in-date board resolution is on file',
           'The signatory named on the application appears on the board resolution',
           'Every required document for the commodity has been uploaded',
           'A live (non-placeholder) FX rate exists for the invoice currency',

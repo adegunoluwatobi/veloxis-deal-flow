@@ -104,7 +104,7 @@ export default function StaffInvoiceDetail() {
   const reviewBlockers = [
     !docState.stage1Complete && `Stage 1 documents ${docState.stage1Verified} of ${docState.stage1Required.length} verified`,
     !noOutstandingRequests && `${docState.outstandingRequests.length} document request outstanding`,
-    !authorityOk && 'Board resolution must be verified, in date and within headroom',
+    !authorityOk && 'Board resolution must be verified and in date',
   ].filter(Boolean) as string[];
 
   
