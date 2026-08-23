@@ -168,7 +168,9 @@ export default function ExporterInvoiceNew() {
   const step2Done = stage2Types.filter((t) => docsFor(t.id).length > 0).length;
 
   const status = invoice?.status ?? null;
-  const step2Locked = !['approved', 'funded', 'monitoring', 'settled'].includes(status ?? '');
+  const step2Locked =
+    !(invoice as any)?.stage2_unlocked_at &&
+    !['approved', 'funded', 'monitoring', 'settled'].includes(status ?? '');
 
   const step1State: StepState =
     requests.length > 0 ? 'Action required'
