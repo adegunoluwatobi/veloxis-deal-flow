@@ -184,10 +184,12 @@ export default function StaffExporterDetail() {
             <div className="text-sm font-medium">Credit &amp; Compliance final approval</div>
             {!bdApproved && canFinalApprove && (
               <p className="text-xs text-amber-400">
-                The Business Developer has not signed off yet. Credit &amp; Compliance holds the final decision and may
-                approve or return this application directly, superseding the Business Developer stage.
+                The Business Developer has not signed off yet. Credit &amp; Compliance holds the final decision: approving
+                here will mark the Business Developer stage as superseded and the audit trail will record that no
+                separate Business Developer sign-off took place.
               </p>
             )}
+
             <BoardResolutionReviewStep exporterId={id!} canReview={canBdReview || canFinalApprove} onChanged={load} />
             {canFinalApprove && (
               <>
