@@ -88,10 +88,55 @@ export function boardResolutionHtml(i: ResolutionTemplateInput) {
 </body></html>`;
 }
 
+/** Opens the template in a new tab and triggers the browser print dialog. */
 export function openBoardResolutionTemplate(input: ResolutionTemplateInput) {
   const w = window.open('', '_blank');
   if (!w) return false;
   w.document.write(boardResolutionHtml(input));
   w.document.close();
+  w.focus();
+  setTimeout(() => w.print(), 350);
   return true;
 }
+
+/** Renders the template into a hidden iframe and saves it as a multi-page A4 PDF. */
+export async function downloadBoardResolutionPdf(input: ResolutionTemplateInput) {
+  const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
+    import('jspdf'),
+    import('html2canvas'),
+  ]);
+
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0;';
+  document.body.appendChild(iframe);
+  try {
+    const doc = iframe.contentDocument!;
+    doc.open();
+    doc.write(boardResolutionHtml(input).replace('@page { size: A4; margin: 22mm; }', ''));
+    doc.close();
+    doc.body.style.cssText += 'width:794px;padding:56px;box-sizing:border-box;background:#fff;margin:0;';
+    await new Promise((r) => setTimeout(r, 120));
+
+    const canvas = await html2canvas(doc.body, { scale: 2, backgroundColor: '#ffffff', windowWidth: 794 });
+    const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const imgH = (canvas.height * pageW) / canvas.width;
+    const img = canvas.toDataURL('image/jpeg', 0.95);
+
+    let remaining = imgH;
+    let offset = 0;
+    while (remaining > 0) {
+      pdf.addImage(img, 'JPEG', 0, -offset, pageW, imgH);
+      remaining -= pageH;
+      offset += pageH;
+      if (remaining > 0) pdf.addPage();
+    }
+    const name = (input.companyName || 'board-resolution').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+    pdf.save(`${name}-board-resolution.pdf`);
+    return true;
+  } finally {
+    iframe.remove();
+  }
+}
+
