@@ -34,6 +34,8 @@ export default function StaffExporters() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div><h1 className="text-2xl">Exporters</h1><p className="text-sm text-muted-foreground">{rows.length} total</p></div>
+        <div className="flex items-center gap-2">
+        {canCreate && <InviteExporterDialog />}
         {canCreate && (
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild><Button>Add exporter</Button></DialogTrigger>
@@ -43,6 +45,7 @@ export default function StaffExporters() {
             </DialogContent>
           </Dialog>
         )}
+        </div>
       </div>
       <div className="card-elevated overflow-hidden">
         <table className="w-full text-sm">
@@ -116,4 +119,57 @@ function NewExporterForm({ onDone }: { onDone: () => void }) {
 }
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return <div className="space-y-1"><Label className="text-xs">{label}</Label>{children}</div>;
+}
+
+function InviteExporterDialog() {
+  const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [sending, setSending] = useState(false);
+  const [link, setLink] = useState<string | null>(null);
+
+  const send = async () => {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return toast({ title: 'Please enter a valid email address.', variant: 'destructive' });
+    }
+    setSending(true); setLink(null);
+    const { data, error } = await supabase.functions.invoke('invite-magic-link', {
+      body: { email: email.trim(), name: name.trim(), role: 'exporter' },
+    });
+    setSending(false);
+    if (error) return toast({ title: 'Invite failed', description: error.message, variant: 'destructive' });
+    setLink((data as any)?.action_link ?? null);
+    toast({ title: 'Magic link sent', description: `${email.trim()} has been invited.` });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setEmail(''); setName(''); setLink(null); } }}>
+      <DialogTrigger asChild><Button variant="outline">Invite exporter</Button></DialogTrigger>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Invite exporter by magic link</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Email *</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="exporter@company.com" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Full name</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Jane Doe" />
+          </div>
+          <p className="text-xs text-muted-foreground">The invitee is assigned the Exporter role, sets a password, then completes KYB/KYC onboarding.</p>
+          {link && (
+            <div className="rounded-md border border-border bg-muted/30 p-3 text-xs space-y-2">
+              <div className="text-muted-foreground">Magic link (also emailed):</div>
+              <div className="break-all font-mono">{link}</div>
+              <Button size="sm" variant="outline" onClick={() => navigator.clipboard.writeText(link)}>Copy</Button>
+            </div>
+          )}
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setOpen(false)}>Close</Button>
+          <Button onClick={send} disabled={sending}>{sending ? 'Sending…' : 'Send invite'}</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
