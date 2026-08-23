@@ -26,6 +26,7 @@ export default function StaffExporterDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, roles } = useAuth();
   const [exp, setExp] = useState<any>(null);
+  const [showAudit, setShowAudit] = useState(false);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [docs, setDocs] = useState<any[]>([]);
   const [directors, setDirectors] = useState<any[]>([]);
