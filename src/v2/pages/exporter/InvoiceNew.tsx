@@ -698,7 +698,7 @@ export default function ExporterInvoiceNew() {
               docs={docsFor(t.id)}
               required
               readOnly={step2Locked}
-              disabledReason={uploadsDisabled}
+              disabledReason={invoiceId ? null : 'Save your invoice details first to start uploading'}
               onUploaded={() => invoiceId && refreshInvoiceState(invoiceId)}
             />
           ))}
