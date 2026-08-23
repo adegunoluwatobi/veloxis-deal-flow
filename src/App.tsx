@@ -44,7 +44,14 @@ import SingleReviewerReport from '@/v2/pages/staff/SingleReviewerReport';
 import KnowledgeBase from '@/v2/pages/KnowledgeBase';
 
 
-const qc = new QueryClient();
+// Don't refetch every query when the user comes back to the tab — it makes the
+// whole app look like it reloaded. Data still refreshes on mount and on demand.
+const qc = new QueryClient({
+  defaultOptions: {
+    queries: { refetchOnWindowFocus: false, refetchOnReconnect: false, staleTime: 30_000 },
+  },
+});
+
 
 const Staff = ({ children }: { children: React.ReactNode }) => (
   <RequireAuth allow="staff"><StaffLayout>{children}</StaffLayout></RequireAuth>
