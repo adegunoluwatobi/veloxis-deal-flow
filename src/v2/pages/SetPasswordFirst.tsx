@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { isStaff } from '@/v2/roles';
+import { PasswordInput } from '@/v2/components/PasswordInput';
 
 export default function SetPasswordFirst() {
   const { user, roles, refresh, signOut } = useAuth();
@@ -60,12 +61,12 @@ export default function SetPasswordFirst() {
         <form onSubmit={submit} className="space-y-4 card-elevated p-6">
           <div className="space-y-1.5">
             <Label htmlFor="pw">New password</Label>
-            <Input id="pw" type="password" required minLength={8} value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="new-password" />
+            <PasswordInput id="pw" required minLength={8} value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="new-password" />
             <p className="text-xs text-muted-foreground">Minimum 8 characters.</p>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="confirm">Confirm password</Label>
-            <Input id="confirm" type="password" required minLength={8} value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
+            <PasswordInput id="confirm" required minLength={8} value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
           </div>
           <Button type="submit" className="w-full" disabled={busy}>{busy ? 'Saving…' : 'Set password & continue'}</Button>
           <button type="button" className="w-full text-xs text-muted-foreground hover:text-foreground" onClick={async () => { await signOut(); nav('/login', { replace: true }); }}>Sign out</button>

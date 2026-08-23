@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { ROLE_LABEL } from '@/v2/roles';
+import { PasswordInput } from '@/v2/components/PasswordInput';
 
 export default function Account() {
   const { user, profile, roles, refresh } = useAuth();
@@ -91,15 +92,15 @@ export default function Account() {
         <div className="grid grid-cols-1 gap-4 max-w-sm">
           <div className="space-y-1">
             <Label className="text-xs">Current password</Label>
-            <Input type="password" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} autoComplete="current-password" />
+            <PasswordInput value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} autoComplete="current-password" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">New password</Label>
-            <Input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} autoComplete="new-password" />
+            <PasswordInput value={newPw} onChange={(e) => setNewPw(e.target.value)} autoComplete="new-password" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Confirm new password</Label>
-            <Input type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} autoComplete="new-password" />
+            <PasswordInput value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} autoComplete="new-password" />
           </div>
         </div>
         <div>

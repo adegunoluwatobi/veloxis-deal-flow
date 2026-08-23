@@ -324,6 +324,8 @@ export default function ExporterOnboarding() {
   const bdApproved = !!exp?.bd_approved_at;
   const bdRejected = !!exp?.bd_rejected_at;
   const isActive = status === 'active';
+  const formLocked = isActive || (submitted && !bdRejected);
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -361,7 +363,7 @@ export default function ExporterOnboarding() {
                 {bdApproved ? 'Awaiting Credit & Compliance approval' : 'Awaiting Business Developer review'}
               </div>
               <div className="text-muted-foreground">
-                Your application has been submitted. You won’t have access to the exporter portal until it is approved or rejected. We’ll notify you by email once a decision is made. You can still update your details below.
+                Your application has been submitted and your details are now locked. You won’t have access to the exporter portal until it is approved or rejected. We’ll notify you by email once a decision is made.
               </div>
             </div>
           </div>
@@ -396,8 +398,18 @@ export default function ExporterOnboarding() {
           </div>
         )}
 
+        {formLocked && (
+          <div className="card-elevated p-6 text-sm text-muted-foreground">
+            Your submitted details are locked while they are under review. If anything needs changing, your reviewer will
+            request it and this form will re-open.
+          </div>
+        )}
+
+        {!formLocked && (
+        <>
         <section className="card-elevated p-6 space-y-4">
           <h2 className="text-sm uppercase tracking-wider text-muted-foreground">1 · Company (KYB)</h2>
+
           <div className="grid grid-cols-2 gap-4">
             <Field label="Company name *" error={errorFor('company_name')}><Input value={f.company_name ?? ''} onBlur={() => blur('company_name')} onChange={(e) => set('company_name', e.target.value)} /></Field>
             <Field label="Registration number (RC / CAC) *" error={errorFor('company_registration_number')}><Input value={f.company_registration_number ?? ''} onBlur={() => blur('company_registration_number')} onChange={(e) => set('company_registration_number', e.target.value)} /></Field>
@@ -565,10 +577,11 @@ export default function ExporterOnboarding() {
           <Button variant="outline" onClick={async () => { const id = await saveProfile(); if (id) toast({ title: 'Saved' }); }} disabled={busy}>
             Save progress
           </Button>
-          <Button onClick={submitForReview} disabled={busy || isActive || (submitted && !bdRejected)}>
-            {submitted && !bdRejected ? 'Submitted' : 'Submit for review'}
-          </Button>
+          <Button onClick={submitForReview} disabled={busy}>Submit for review</Button>
         </div>
+        </>
+        )}
+
       </main>
 
       <Dialog open={submittedOpen} onOpenChange={setSubmittedOpen}>

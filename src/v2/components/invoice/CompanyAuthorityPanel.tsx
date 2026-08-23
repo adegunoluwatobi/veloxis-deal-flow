@@ -6,16 +6,8 @@ import { cn } from '@/lib/utils';
 import { openDocument } from '@/v2/lib/documents';
 import { AlertTriangle, FileText } from 'lucide-react';
 
-type Headroom = {
-  authorised_limit: number; limit_currency: string; limit_basis: string;
-  committed_exposure: number; headroom: number;
-};
-
 const money = (n: number, ccy = 'GBP') =>
   new Intl.NumberFormat('en-GB', { style: 'currency', currency: ccy || 'GBP', maximumFractionDigits: 2 }).format(Number(n || 0));
-
-const basisLine = (b: string) =>
-  b === 'advance_outstanding' ? 'Limit applies to funds advanced' : 'Limit applies to invoice face value';
 
 export type AuthorityFlags = {
   amberHeadroom: boolean;
@@ -26,6 +18,7 @@ export type AuthorityFlags = {
   withinHeadroom: boolean;
 };
 
+
 export default function CompanyAuthorityPanel({
   exporterId, signatoryId, invoiceExposure, onFlags,
 }: {
@@ -35,7 +28,6 @@ export default function CompanyAuthorityPanel({
   const [res, setRes] = useState<any>(null);
   const [doc, setDoc] = useState<any>(null);
   const [signatories, setSignatories] = useState<any[]>([]);
-  const [hr, setHr] = useState<Headroom | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -49,14 +41,12 @@ export default function CompanyAuthorityPanel({
       .maybeSingle();
     setRes(r ?? null);
     if (r) {
-      const [{ data: cd }, { data: sg }, { data: h }] = await Promise.all([
+      const [{ data: cd }, { data: sg }] = await Promise.all([
         supabase.from('company_documents').select('id, original_filename').eq('id', r.company_document_id).maybeSingle(),
         supabase.from('authorised_signatories').select('*').eq('board_resolution_id', r.id),
-        supabase.rpc('exporter_headroom', { p_exporter_id: exporterId }),
       ]);
       setDoc(cd ?? null);
       setSignatories(sg ?? []);
-      setHr((Array.isArray(h) ? h[0] : h) as Headroom);
     }
     setLoading(false);
   }, [exporterId]);
@@ -69,18 +59,15 @@ export default function CompanyAuthorityPanel({
   const inDate = !!validUntil && validUntil >= today;
   const daysLeft = validUntil ? Math.round((validUntil.getTime() - today.getTime()) / 86400000) : null;
   const expiringSoon = daysLeft !== null && daysLeft <= 30;
-  const limit = Number(res?.authorised_limit ?? 0);
-  const headroom = Number(hr?.headroom ?? 0);
-  const amberHeadroom = !!hr && limit > 0 && headroom < limit * 0.2;
+  const renewalRequired = !!res?.renewal_required;
   const signatoryMismatch = !!signatoryId && signatories.length > 0 && !signatories.some((s) => s.id === signatoryId);
-  // exporter_headroom already includes this submitted invoice in committed exposure.
-  // Comparing the invoice to the remaining balance counts it twice and blocks a
-  // valid application (for example £23,590 committed against a £25,000 limit).
-  const withinHeadroom = !hr || Number(hr.committed_exposure) <= limit;
+  // Resolutions no longer carry a monetary limit, so there is no headroom gate.
+  const withinHeadroom = true;
+  const amberHeadroom = false;
 
   useEffect(() => {
-    onFlags?.({ amberHeadroom, expiringSoon, signatoryMismatch, resolutionVerified: verified, inDate, withinHeadroom });
-  }, [amberHeadroom, expiringSoon, signatoryMismatch, verified, inDate, withinHeadroom, onFlags]);
+    onFlags?.({ amberHeadroom, expiringSoon, signatoryMismatch, resolutionVerified: verified && !renewalRequired, inDate, withinHeadroom });
+  }, [amberHeadroom, expiringSoon, signatoryMismatch, verified, renewalRequired, inDate, withinHeadroom, onFlags]);
 
   if (loading) return <section className="card-elevated p-5 text-sm text-muted-foreground">Loading company authority…</section>;
 
@@ -95,8 +82,8 @@ export default function CompanyAuthorityPanel({
 
   return (
     <section className={cn('card-elevated p-5 space-y-3',
-      (!verified || !inDate || signatoryMismatch || !withinHeadroom) ? 'border-destructive/50'
-        : amberHeadroom || expiringSoon ? 'border-amber-500/50' : '')}>
+      (!verified || !inDate || signatoryMismatch || renewalRequired) ? 'border-destructive/50'
+        : expiringSoon ? 'border-amber-500/50' : '')}>
       <div className="flex items-center justify-between">
         <h3 className="text-sm uppercase tracking-wider text-muted-foreground">Company authority</h3>
         <span className={cn('text-xs px-2 py-0.5 rounded border',
@@ -106,19 +93,17 @@ export default function CompanyAuthorityPanel({
       </div>
 
       <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1 text-sm">
-        <Line label="Authorised limit">{money(limit, res.limit_currency)} {res.limit_currency}</Line>
-        <Line label="Limit basis">{basisLine(res.limit_basis)}</Line>
-        <Line label="Valid from">{res.valid_from ?? '—'}</Line>
-        <Line label="Valid until">{res.valid_until ?? '—'}</Line>
-        <Line label="Committed exposure">{hr ? `${money(Number(hr.committed_exposure), hr.limit_currency)}` : '—'}</Line>
-        <Line label="Headroom remaining">{hr ? money(headroom, hr.limit_currency) : '—'}</Line>
+        <Line label="Passed on">{res.valid_from ?? '—'}</Line>
+        <Line label="Expires">{res.valid_until ?? '—'}</Line>
       </div>
 
       <div className="text-sm">
         <div className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Named signatories</div>
         {signatories.length === 0
           ? <p className="text-muted-foreground">None recorded.</p>
-          : <ul className="space-y-0.5">{signatories.map((s) => <li key={s.id}>{s.full_name}{s.position ? ` · ${s.position}` : ''}</li>)}</ul>}
+          : <ul className="space-y-0.5">{signatories.map((s) => (
+              <li key={s.id}>{s.full_name}{s.position ? ` · ${s.position}` : ''}{s.phone ? ` · ${s.phone}` : ''}</li>
+            ))}</ul>}
       </div>
 
       {doc && (
@@ -129,15 +114,15 @@ export default function CompanyAuthorityPanel({
 
       {res.notes && <p className="text-xs text-muted-foreground">Reviewer notes: {res.notes}</p>}
 
-      {expiringSoon && inDate && <Flag tone="red">This resolution expires in {daysLeft} days.</Flag>}
-      {!inDate && <Flag tone="red">This resolution has expired.</Flag>}
-      {amberHeadroom && <Flag tone="amber">Headroom is under twenty percent of the authorised limit.</Flag>}
-      {!withinHeadroom && <Flag tone="red">This application exceeds the headroom remaining.</Flag>}
+      {expiringSoon && inDate && <Flag tone="amber">This resolution expires in {daysLeft} days.</Flag>}
+      {!inDate && <Flag tone="red">This resolution has expired. Ask the exporter for a replacement.</Flag>}
+      {renewalRequired && <Flag tone="red">{res.renewal_reason ?? 'A replacement board resolution is required.'}</Flag>}
       {signatoryMismatch && <Flag tone="red">Submitted by a person not named in the board resolution</Flag>}
 
       <p className="text-xs text-muted-foreground">
-        Limits are recorded in GBP. Where the resolution is denominated in another currency, the reviewer converts at the rate in force on the resolution date and records the original wording and rate in notes. A replacement resolution is recorded through the supersede action, never as a second active record.
+        A resolution runs for one year from the date it was passed. A replacement is recorded through the supersede action, never as a second active record.
       </p>
+
     </section>
   );
 }

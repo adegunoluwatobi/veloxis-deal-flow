@@ -403,6 +403,8 @@ export default function ExporterInvoiceNew() {
     : invoiceId ? null : 'Save your invoice details first to start uploading';
   const optionalCommercial = optionalTypes.filter((d) => /commercial/i.test(d.code) || d.sort_order < 500);
   const optionalCompliance = optionalTypes.filter((d) => !optionalCommercial.includes(d));
+  const missingOptionalCount = optionalTypes.filter((t) => docsFor(t.id).length === 0).length;
+
 
   return (
     <div className="max-w-3xl space-y-6 pb-16">
@@ -646,6 +648,13 @@ export default function ExporterInvoiceNew() {
                 <ChevronDown className={`h-4 w-4 transition-transform ${optionalOpen ? 'rotate-180' : ''}`} />
               </Button>
             </CollapsibleTrigger>
+            {missingOptionalCount > 0 && (
+              <p className="text-xs text-amber-400">
+                {missingOptionalCount} optional document{missingOptionalCount === 1 ? '' : 's'} not supplied. A thinner file
+                carries more risk, so pricing may be reviewed upward. Adding them can support a lower fee.
+              </p>
+            )}
+
             <CollapsibleContent className="space-y-4 pt-3">
               {[['Commercial', optionalCommercial], ['Compliance', optionalCompliance]].map(([heading, list]) => {
                 const items = list as DocType[];
@@ -672,36 +681,6 @@ export default function ExporterInvoiceNew() {
               })}
             </CollapsibleContent>
           </Collapsible>
-        </section>
-
-        {/* ---------------- stage 2 preview ---------------- */}
-        <section className={`card-elevated space-y-3 p-6 ${step2Locked ? 'opacity-60' : ''}`}>
-          <div className="flex items-center gap-2">
-            {step2Locked && <Lock className="h-4 w-4 text-muted-foreground" />}
-            <h2 className="text-lg">Step 2 · Pre funding documents</h2>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {step2Locked ? 'Unlocks once your submission is approved. Here is what you can prepare now.' : 'Upload your certificate of origin. We handle the rest.'}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            We prepare these documents for you. You will be asked to sign them electronically.
-          </p>
-          <ExporterInstrumentsPanel invoiceId={invoiceId ?? undefined} />
-          {stage2Types.map((t) => (
-            <DocumentUploadRow
-              key={t.id}
-              label={t.label}
-              description={t.description}
-              documentTypeId={t.id}
-              invoiceId={invoiceId}
-              exporterId={exp.id}
-              docs={docsFor(t.id)}
-              required
-              readOnly={step2Locked}
-              disabledReason={invoiceId ? null : 'Save your invoice details first to start uploading'}
-              onUploaded={() => invoiceId && refreshInvoiceState(invoiceId)}
-            />
-          ))}
         </section>
 
         {/* ---------------- signatory and warranty ---------------- */}
@@ -744,6 +723,37 @@ export default function ExporterInvoiceNew() {
             )}
           </div>
         </section>
+
+        {/* ---------------- stage 2 preview ---------------- */}
+        <section className={`card-elevated space-y-3 p-6 ${step2Locked ? 'opacity-60' : ''}`}>
+          <div className="flex items-center gap-2">
+            {step2Locked && <Lock className="h-4 w-4 text-muted-foreground" />}
+            <h2 className="text-lg">Step 2 · Pre funding documents</h2>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {step2Locked ? 'Unlocks once your submission is approved. Here is what you can prepare now.' : 'Upload your certificate of origin. We handle the rest.'}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            We prepare these documents for you. You will be asked to sign them electronically.
+          </p>
+          <ExporterInstrumentsPanel invoiceId={invoiceId ?? undefined} />
+          {stage2Types.map((t) => (
+            <DocumentUploadRow
+              key={t.id}
+              label={t.label}
+              description={t.description}
+              documentTypeId={t.id}
+              invoiceId={invoiceId}
+              exporterId={exp.id}
+              docs={docsFor(t.id)}
+              required
+              readOnly={step2Locked}
+              disabledReason={invoiceId ? null : 'Save your invoice details first to start uploading'}
+              onUploaded={() => invoiceId && refreshInvoiceState(invoiceId)}
+            />
+          ))}
+        </section>
+
       </form>
     </div>
   );

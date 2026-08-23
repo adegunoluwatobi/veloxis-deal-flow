@@ -10,18 +10,17 @@ import { sniffFileType, contentTypeFor, MISMATCH_MESSAGE } from '@/v2/lib/fileSn
 
 type Resolution = {
   id: string;
-  authorised_limit: number;
-  limit_currency: string;
-  limit_basis: string;
   valid_from: string;
   valid_until: string;
   verification_status: 'pending' | 'verified' | 'rejected';
   rejection_reason: string | null;
   company_document_id: string | null;
+  renewal_required: boolean;
+  renewal_reason: string | null;
 };
 
 type Doc = { id: string; original_filename: string | null; status: string; uploaded_at: string };
-type Signatory = { id: string; full_name: string; position: string | null; email: string | null };
+type Signatory = { id: string; full_name: string; position: string | null; email: string | null; phone: string | null };
 
 const PILL: Record<string, string> = {
   pending: 'bg-amber-500/20 text-amber-400',
@@ -30,13 +29,6 @@ const PILL: Record<string, string> = {
   expired: 'bg-destructive/20 text-destructive',
 };
 
-const money = (n: number, cur: string) =>
-  new Intl.NumberFormat('en-GB', { style: 'currency', currency: cur || 'GBP', maximumFractionDigits: 0 }).format(n);
-
-const BASIS_COPY: Record<string, string> = {
-  gross_face_value: 'Limit applies to invoice face value',
-  advance_outstanding: 'Limit applies to funds advanced',
-};
 
 
 export default function BoardResolutionCard({ exporterId }: { exporterId?: string }) {
@@ -56,11 +48,12 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
 
     const { data: r } = await supabase
       .from('board_resolutions')
-      .select('id, authorised_limit, limit_currency, limit_basis, valid_from, valid_until, verification_status, rejection_reason, company_document_id')
+      .select('id, valid_from, valid_until, verification_status, rejection_reason, company_document_id, renewal_required, renewal_reason')
       .eq('exporter_id', exporterId)
       .is('superseded_by', null)
       .maybeSingle();
     setRes((r as Resolution) ?? null);
+
 
     if (r?.company_document_id) {
       const { data: d } = await supabase
@@ -164,7 +157,7 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
 
   const expired = res?.verification_status === 'verified' && new Date(res.valid_until) < new Date();
   const status = expired ? 'expired' : res?.verification_status ?? doc?.status ?? null;
-  const headroom = res && committed !== null ? Number(res.authorised_limit) - committed : null;
+  const needsReplacement = !!res?.renewal_required || expired;
 
   const uploadControl = (
     <label className={`inline-flex items-center gap-2 text-sm px-3 py-2 rounded border border-border cursor-pointer hover:bg-muted/20 ${uploading ? 'opacity-60 pointer-events-none' : ''}`}>
@@ -199,35 +192,24 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
         </div>
       )}
 
+      {res?.renewal_required && (
+        <div className="rounded border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-400">
+          {res.renewal_reason ?? 'A replacement board resolution is required.'}
+        </div>
+      )}
+
       {res?.verification_status === 'verified' && (
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <Row label="Authorised limit">
-              {money(Number(res.authorised_limit), res.limit_currency)} {res.limit_currency}
-            </Row>
-            <Row label="Valid from">{res.valid_from}</Row>
-            <Row label="Valid until">{res.valid_until}</Row>
-            <Row label="Headroom remaining">
-              {headroom === null ? (
-                <span className="text-destructive">Unavailable</span>
-              ) : (
-                <span className={headroom <= 0 ? 'text-destructive' : ''}>
-                  {money(headroom, res.limit_currency)} {res.limit_currency}
-                </span>
-              )}
-            </Row>
+            <Row label="Passed on">{res.valid_from}</Row>
+            <Row label="Expires">{res.valid_until}</Row>
           </div>
           <p className="text-xs text-muted-foreground">
-            {BASIS_COPY[res.limit_basis] ?? BASIS_COPY.gross_face_value}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Limits are recorded in GBP. If the board resolution is denominated in another currency, the reviewer
-            converts at the rate in force on the resolution date and records the original wording and rate in the notes.
+            A board resolution stays valid for one year from the date it was passed. We will ask for a
+            replacement when it expires, or whenever your board of directors changes.
           </p>
 
-          {headroomError && (
-            <p className="text-xs text-destructive">Headroom could not be calculated: {headroomError}</p>
-          )}
+
 
           <div>
             <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Named signatories</div>
@@ -240,17 +222,23 @@ export default function BoardResolutionCard({ exporterId }: { exporterId?: strin
                     {s.full_name}
                     {s.position && <span className="text-muted-foreground"> · {s.position}</span>}
                     {s.email && <span className="text-muted-foreground"> · {s.email}</span>}
+                    {s.phone && <span className="text-muted-foreground"> · {s.phone}</span>}
                   </li>
                 ))}
               </ul>
             )}
           </div>
-          {expired && (
+          {needsReplacement && (
             <div className="space-y-2">
-              <p className="text-sm text-destructive">This resolution expired on {res.valid_until}. Upload a replacement for review.</p>
+              <p className="text-sm text-destructive">
+                {expired
+                  ? `This resolution expired on ${res.valid_until}. Upload a replacement for review.`
+                  : 'Upload a replacement board resolution for review.'}
+              </p>
               {uploadControl}
             </div>
           )}
+
         </div>
       )}
 
