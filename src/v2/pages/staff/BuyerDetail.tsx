@@ -72,6 +72,9 @@ export default function StaffBuyerDetail() {
   };
 
   const exposure = invoices.reduce((s, i) => s + Number(i.invoice_amount), 0);
+  const kybLocked = (b.kyb_status ?? 'pending') === 'verified';
+  const canEdit = canReview && !kybLocked;
+  const clearanceOutstanding = kybLocked && (b.credit_status !== 'clear' || b.sanctions_status !== 'clear');
 
   return (
     <div className="space-y-6">
@@ -80,38 +83,64 @@ export default function StaffBuyerDetail() {
         <p className="text-sm text-muted-foreground">{b.country ?? '—'} · Reg {b.registration_number ?? b.companies_house_id ?? '—'}</p>
       </div>
 
+      {clearanceOutstanding && (
+        <div className="rounded border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-300">
+          <div className="font-medium">Credit and sanctions clearance outstanding</div>
+          <p className="mt-1">
+            KYB is verified for this buyer. Credit and sanctions must now be cleared by Credit &amp; Compliance
+            before any application against this buyer can be funded.
+            {b.credit_status !== 'clear' && ' Credit is not cleared.'}
+            {b.sanctions_status !== 'clear' && ' Sanctions are not cleared.'}
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-6">
         <section className="card-elevated p-5 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-sm uppercase tracking-wider text-muted-foreground">KYB — Know Your Business</h3>
             <StatusPill s={b.kyb_status ?? 'pending'} />
           </div>
+          {kybLocked && (
+            <p className="text-xs text-muted-foreground">
+              KYB has been verified and is locked. The record can no longer be edited.
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-3">
-            <F label="Registration number"><Input value={kyb.registration_number} onChange={(e) => setKyb({ ...kyb, registration_number: e.target.value })} disabled={!canVerify} /></F>
-            <F label="Companies House ID"><Input value={kyb.companies_house_id} onChange={(e) => setKyb({ ...kyb, companies_house_id: e.target.value })} disabled={!canVerify} /></F>
-            <F label="Incorporation date"><Input type="date" value={kyb.incorporation_date} onChange={(e) => setKyb({ ...kyb, incorporation_date: e.target.value })} disabled={!canVerify} /></F>
-            <F label="Country of incorporation"><Input value={kyb.country_of_incorporation} onChange={(e) => setKyb({ ...kyb, country_of_incorporation: e.target.value })} disabled={!canVerify} /></F>
-            <F label="Country"><Input value={kyb.country} onChange={(e) => setKyb({ ...kyb, country: e.target.value })} disabled={!canVerify} /></F>
-            <F label="Tax ID / VAT"><Input value={kyb.tax_id} onChange={(e) => setKyb({ ...kyb, tax_id: e.target.value })} disabled={!canVerify} /></F>
-            <F label="Industry"><Input value={kyb.industry} onChange={(e) => setKyb({ ...kyb, industry: e.target.value })} disabled={!canVerify} /></F>
-            <div className="col-span-2"><F label="Registered address"><Input value={kyb.registered_address} onChange={(e) => setKyb({ ...kyb, registered_address: e.target.value })} disabled={!canVerify} /></F></div>
+            <F label="Registration number"><Input value={kyb.registration_number} onChange={(e) => setKyb({ ...kyb, registration_number: e.target.value })} disabled={!canEdit} /></F>
+            <F label="Companies House ID"><Input value={kyb.companies_house_id} onChange={(e) => setKyb({ ...kyb, companies_house_id: e.target.value })} disabled={!canEdit} /></F>
+            <F label="Incorporation date"><Input type="date" value={kyb.incorporation_date} onChange={(e) => setKyb({ ...kyb, incorporation_date: e.target.value })} disabled={!canEdit} /></F>
+            <F label="Country of incorporation"><Input value={kyb.country_of_incorporation} onChange={(e) => setKyb({ ...kyb, country_of_incorporation: e.target.value })} disabled={!canEdit} /></F>
+            <F label="Country"><Input value={kyb.country} onChange={(e) => setKyb({ ...kyb, country: e.target.value })} disabled={!canEdit} /></F>
+            <F label="Tax ID / VAT"><Input value={kyb.tax_id} onChange={(e) => setKyb({ ...kyb, tax_id: e.target.value })} disabled={!canEdit} /></F>
+            <F label="Industry"><Input value={kyb.industry} onChange={(e) => setKyb({ ...kyb, industry: e.target.value })} disabled={!canEdit} /></F>
+            <div className="col-span-2"><F label="Registered address"><Input value={kyb.registered_address} onChange={(e) => setKyb({ ...kyb, registered_address: e.target.value })} disabled={!canEdit} /></F></div>
           </div>
           <div className="grid grid-cols-3 gap-3 pt-2 border-t border-border">
-            <F label="Contact name"><Input value={kyb.contact_name} onChange={(e) => setKyb({ ...kyb, contact_name: e.target.value })} disabled={!canVerify} /></F>
-            <F label="Contact email"><Input type="email" value={kyb.contact_email} onChange={(e) => setKyb({ ...kyb, contact_email: e.target.value })} disabled={!canVerify} /></F>
-            <F label="Contact phone"><Input value={kyb.contact_phone} onChange={(e) => setKyb({ ...kyb, contact_phone: e.target.value })} disabled={!canVerify} /></F>
+            <F label="Contact name"><Input value={kyb.contact_name} onChange={(e) => setKyb({ ...kyb, contact_name: e.target.value })} disabled={!canEdit} /></F>
+            <F label="Contact email"><Input type="email" value={kyb.contact_email} onChange={(e) => setKyb({ ...kyb, contact_email: e.target.value })} disabled={!canEdit} /></F>
+            <F label="Contact phone"><Input value={kyb.contact_phone} onChange={(e) => setKyb({ ...kyb, contact_phone: e.target.value })} disabled={!canEdit} /></F>
           </div>
-          <F label="Reviewer notes"><Textarea rows={2} value={kyb.kyb_notes} onChange={(e) => setKyb({ ...kyb, kyb_notes: e.target.value })} disabled={!canVerify} /></F>
-          {canVerify && (
+          <F label="Reviewer notes"><Textarea rows={2} value={kyb.kyb_notes} onChange={(e) => setKyb({ ...kyb, kyb_notes: e.target.value })} disabled={!canEdit} /></F>
+          {canEdit && (
             <div className="flex flex-wrap gap-2 pt-2">
               <Button size="sm" onClick={saveKyb}>Save KYB</Button>
               <Button size="sm" variant="outline" onClick={() => setKybStatus('in_review')}>Mark in review</Button>
-              <Button size="sm" variant="default" onClick={() => setKybStatus('verified')}>Verify</Button>
-              <Button size="sm" variant="destructive" onClick={() => setKybStatus('rejected')}>Reject</Button>
+              {canVerify && <Button size="sm" variant="default" onClick={() => setKybStatus('verified')}>Verify</Button>}
+              {canVerify && <Button size="sm" variant="destructive" onClick={() => setKybStatus('rejected')}>Reject</Button>}
             </div>
+          )}
+          {!canVerify && canReview && !kybLocked && (
+            <p className="text-xs text-muted-foreground">
+              You can prepare and review this record. Final verification is given by Credit &amp; Compliance.
+            </p>
+          )}
+          {kybLocked && isSuperAdmin && (
+            <Button size="sm" variant="outline" onClick={() => setKybStatus('in_review')}>Reopen for editing</Button>
           )}
           <div className="text-xs text-muted-foreground pt-1">Verified: {b.kyb_verified_at ? new Date(b.kyb_verified_at).toLocaleString() : '—'}</div>
         </section>
+
 
         <section className="card-elevated p-5 space-y-3">
           <h3 className="text-sm uppercase tracking-wider text-muted-foreground">Credit & Sanctions</h3>
