@@ -3,6 +3,8 @@ import { useAuth } from './useAuth';
 import { Button } from '@/components/ui/button';
 import { LayoutDashboard, FileText, Building2, UserCircle, LogOut, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import NotificationBell from './components/NotificationBell';
+
 
 const NAV = [
   { to: '/portal', label: 'My Dashboard', icon: LayoutDashboard, end: true },
