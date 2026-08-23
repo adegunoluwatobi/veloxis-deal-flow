@@ -67,6 +67,13 @@ export default function StaffExporterDetail() {
   const bdRejected = !!exp.bd_rejected_at;
   const isActive = exp.onboarding_status === 'active';
 
+  // Credit & Compliance may not activate an exporter until every mandatory
+  // company document has been approved.
+  const verifiedTypeIds = new Set(docs.filter((d) => d.status === 'verified').map((d) => d.document_type_id));
+  const outstandingDocs = requiredTypes.filter((t) => !verifiedTypeIds.has(t.id));
+  const docsComplete = outstandingDocs.length === 0;
+
+
   const setDocStatus = async (docId: string, status: 'verified' | 'rejected' | 'pending', reason?: string) => {
     setBusy(true);
     const { error } = await supabase.from('company_documents').update({
