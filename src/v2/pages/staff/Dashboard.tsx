@@ -33,7 +33,7 @@ function Stat({ label, value, hint, warn }: { label: string; value: string; hint
   );
 }
 
-const fmt = (n: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(n);
+const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
 
 export default function StaffDashboard() {
   const [m, setM] = useState<Metrics | null>(null);
