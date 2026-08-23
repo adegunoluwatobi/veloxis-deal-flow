@@ -77,7 +77,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let loadedFor: string | null = null;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
-      setSession(s); setUser(s?.user ?? null);
+      setSession(s);
+      // Keep the SAME user object reference when the id hasn't changed. Supabase
+      // emits a fresh User object on every token refresh / tab focus; swapping it
+      // re-runs every `[user]` effect in the app and looks like a page refresh.
+      setUser((prev) => (prev && s?.user && prev.id === s.user.id ? prev : (s?.user ?? null)));
+
       if (s?.user) {
         const uid = s.user.id;
         if (loadedFor !== uid) {
@@ -100,7 +105,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session); setUser(session?.user ?? null);
+      setSession(session);
+      setUser((prev) => (prev && session?.user && prev.id === session.user.id ? prev : (session?.user ?? null)));
+
       if (session?.user) {
         if (loadedFor !== session.user.id) {
           loadedFor = session.user.id;
