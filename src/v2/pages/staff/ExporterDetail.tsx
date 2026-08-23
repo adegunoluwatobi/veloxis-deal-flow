@@ -33,6 +33,7 @@ export default function StaffExporterDetail() {
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [lastReturnStage, setLastReturnStage] = useState<string | null>(null);
+  const [lastReturn, setLastReturn] = useState<{ stage: string; decision: string; note: string | null; created_at: string } | null>(null);
 
   const load = useCallback(async () => {
     const [{ data: e }, { data: iv }, { data: d }, { data: dir }, { data: rev }] = await Promise.all([
