@@ -43,8 +43,15 @@ export function boardResolutionHtml(i: ResolutionTemplateInput) {
   ol { padding-left:20px; } li { margin-bottom:10px; }
   .meta p { margin:2px 0; }
   .note { font-size:10pt; color:#555; margin-top:26px; }
+  .watermark { position:fixed; top:45%; left:50%; transform:translate(-50%,-50%) rotate(-32deg);
+    font-size:110pt; font-weight:bold; letter-spacing:.12em; color:rgba(150,150,150,.18);
+    z-index:0; pointer-events:none; white-space:nowrap; }
+  .page { position:relative; z-index:1; }
 </style></head>
 <body>
+  <div class="watermark">DRAFT</div>
+  <div class="page">
+
 
   <h1>${line(i.companyName)}</h1>
   <div class="sub">Extract of resolution of the Board of Directors</div>
