@@ -42,6 +42,7 @@ import StaffRetention from '@/v2/pages/staff/Retention';
 import StaffTemplates from '@/v2/pages/staff/Templates';
 import SingleReviewerReport from '@/v2/pages/staff/SingleReviewerReport';
 import KnowledgeBase from '@/v2/pages/KnowledgeBase';
+import MyNotifications from '@/v2/pages/MyNotifications';
 
 
 // Don't refetch every query when the user comes back to the tab — it makes the
@@ -98,6 +99,7 @@ export default function App() {
               <Route path="/admin/retention" element={<RequireAuth allow={['super_admin']}><StaffLayout><StaffRetention /></StaffLayout></RequireAuth>} />
               <Route path="/admin/single-reviewer" element={<RequireAuth allow={['super_admin']}><StaffLayout><SingleReviewerReport /></StaffLayout></RequireAuth>} />
 
+              <Route path="/app/notifications" element={<Staff><MyNotifications /></Staff>} />
               <Route path="/app/help" element={<Staff><KnowledgeBase audience="staff" /></Staff>} />
               <Route path="/app/account" element={<Staff><Account /></Staff>} />
 
@@ -107,6 +109,7 @@ export default function App() {
               <Route path="/portal/invoices/new" element={<Portal><ExporterInvoiceNew /></Portal>} />
               <Route path="/portal/invoices/:id" element={<Portal><ExporterInvoiceDetail /></Portal>} />
               <Route path="/portal/profile" element={<Portal><ExporterProfile /></Portal>} />
+              <Route path="/portal/notifications" element={<Portal><MyNotifications /></Portal>} />
               <Route path="/portal/help" element={<Portal><KnowledgeBase audience="exporter" /></Portal>} />
               <Route path="/portal/account" element={<Portal><Account /></Portal>} />
 
