@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS on_auth_user_created_v2 ON auth.users;
