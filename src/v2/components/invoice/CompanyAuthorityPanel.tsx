@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils';
 import { openDocument } from '@/v2/lib/documents';
 import { AlertTriangle, FileText } from 'lucide-react';
 
-const money = (n: number, ccy = 'GBP') =>
-  new Intl.NumberFormat('en-GB', { style: 'currency', currency: ccy || 'GBP', maximumFractionDigits: 2 }).format(Number(n || 0));
+const money = (n: number, ccy = 'USD') =>
+  new Intl.NumberFormat('en-GB', { style: 'currency', currency: ccy || 'USD', maximumFractionDigits: 2 }).format(Number(n || 0));
 
 export type AuthorityFlags = {
   amberHeadroom: boolean;

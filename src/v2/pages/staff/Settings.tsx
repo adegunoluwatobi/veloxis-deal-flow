@@ -10,7 +10,7 @@ import { useAuth } from '@/v2/useAuth';
 export default function StaffSettings() {
   const { user } = useAuth();
   const [capital, setCapital] = useState('');
-  const [currency, setCurrency] = useState('GBP');
+  const [currency, setCurrency] = useState('USD');
   useEffect(() => {
     supabase.from('v2_settings').select('*').eq('id', 1).maybeSingle().then(({ data }) => {
       if (data) { setCapital(String(data.capital_base)); setCurrency(data.currency); }
@@ -29,7 +29,7 @@ export default function StaffSettings() {
         <div><Label>Base currency</Label>
           <Select value={currency} onValueChange={setCurrency}>
             <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{['GBP', 'USD', 'EUR'].map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+            <SelectContent>{['USD', 'GBP', 'EUR'].map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <Button onClick={save}>Save</Button>
