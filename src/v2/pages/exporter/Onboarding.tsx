@@ -83,15 +83,69 @@ export default function ExporterOnboarding() {
 
   const set = (k: string, v: any) => setF((x: any) => ({ ...x, [k]: v }));
   const setBank = (k: string, v: string) => setF((x: any) => ({ ...x, bank_details: { ...(x.bank_details ?? {}), [k]: v } }));
+  const blur = (k: string) => setTouched((t) => ({ ...t, [k]: true }));
 
   const latestDoc = (t: DocType) => docs.find((d) => d.document_type_id === typeIds[t]);
   const missingDocs = REQUIRED_DOCS.filter((r) => !latestDoc(r.key));
 
+  const errors: Record<string, string> = (() => {
+    const e: Record<string, string> = {};
+    const s = (v: any) => String(v ?? '').trim();
+    const emailOk = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+    const phoneOk = (v: string) => /^\+?[0-9][0-9\s().-]{6,19}$/.test(v);
 
-  const requiredFieldsOk =
-    f.company_name && f.company_registration_number && f.country_of_incorporation &&
-    f.director_name && f.director_id_type && f.director_id_number &&
-    f.bank_details?.bank_name && f.bank_details?.account_number;
+    if (!s(f.company_name)) e.company_name = 'Company name is required.';
+    else if (s(f.company_name).length < 2) e.company_name = 'Enter the full registered company name.';
+
+    if (!s(f.company_registration_number)) e.company_registration_number = 'Registration number is required.';
+    else if (!/^[A-Za-z0-9/-]{4,20}$/.test(s(f.company_registration_number)))
+      e.company_registration_number = 'Enter a valid RC / CAC number (letters and numbers, 4–20 characters).';
+
+    if (!s(f.country_of_incorporation)) e.country_of_incorporation = 'Select the country of incorporation.';
+
+    if (s(f.incorporation_date) && new Date(s(f.incorporation_date)) > new Date())
+      e.incorporation_date = 'Incorporation date cannot be in the future.';
+
+    if (s(f.tax_id) && !/^[A-Za-z0-9-]{6,20}$/.test(s(f.tax_id)))
+      e.tax_id = 'Enter a valid TIN (6–20 characters, letters or numbers).';
+
+    if (s(f.phone) && !phoneOk(s(f.phone))) e.phone = 'Enter a valid phone number, e.g. +234 801 234 5678.';
+    if (!s(f.address)) e.address = 'Registered address is required.';
+
+    if (!s(f.director_name)) e.director_name = 'Director full name is required.';
+    else if (!s(f.director_name).includes(' ')) e.director_name = 'Enter the director’s first and last name.';
+
+    if (s(f.director_email) && !emailOk(s(f.director_email))) e.director_email = 'Please enter a valid email address.';
+    if (s(f.director_phone) && !phoneOk(s(f.director_phone))) e.director_phone = 'Enter a valid phone number.';
+
+    if (s(f.director_dob)) {
+      const dob = new Date(s(f.director_dob));
+      const age = (Date.now() - dob.getTime()) / 31557600000;
+      if (age < 18) e.director_dob = 'The director must be at least 18 years old.';
+      else if (age > 100) e.director_dob = 'Please check the date of birth.';
+    }
+
+    if (!s(f.director_id_type)) e.director_id_type = 'Select the ID type.';
+    if (!s(f.director_id_number)) e.director_id_number = 'ID number is required.';
+    else if (!/^[A-Za-z0-9-]{5,20}$/.test(s(f.director_id_number)))
+      e.director_id_number = 'Enter the ID number exactly as printed (5–20 characters).';
+
+    if (!s(f.bank_details?.bank_name)) e.bank_name = 'Select your bank.';
+    const acct = s(f.bank_details?.account_number);
+    if (!acct) e.account_number = 'Account number is required.';
+    else if (!/^[A-Za-z0-9]{8,34}$/.test(acct)) e.account_number = 'Enter a valid account number or IBAN (8–34 characters).';
+    else if (/^\d+$/.test(acct) && acct.length !== 10) e.account_number = 'A Nigerian account number (NUBAN) is 10 digits.';
+
+    const swift = s(f.bank_details?.swift);
+    if (swift && !/^[A-Za-z]{6}[A-Za-z0-9]{2}([A-Za-z0-9]{3})?$/.test(swift))
+      e.swift = 'A SWIFT / BIC code is 8 or 11 characters, e.g. ABCDNGLA.';
+
+    return e;
+  })();
+
+  const errorFor = (k: string) => ((showAllErrors || touched[k]) ? errors[k] : undefined);
+  const requiredFieldsOk = Object.keys(errors).length === 0;
+
 
   const saveProfile = async (): Promise<string | null> => {
     const payload: any = {
