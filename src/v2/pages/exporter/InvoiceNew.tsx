@@ -674,36 +674,6 @@ export default function ExporterInvoiceNew() {
           </Collapsible>
         </section>
 
-        {/* ---------------- stage 2 preview ---------------- */}
-        <section className={`card-elevated space-y-3 p-6 ${step2Locked ? 'opacity-60' : ''}`}>
-          <div className="flex items-center gap-2">
-            {step2Locked && <Lock className="h-4 w-4 text-muted-foreground" />}
-            <h2 className="text-lg">Step 2 · Pre funding documents</h2>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {step2Locked ? 'Unlocks once your submission is approved. Here is what you can prepare now.' : 'Upload your certificate of origin. We handle the rest.'}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            We prepare these documents for you. You will be asked to sign them electronically.
-          </p>
-          <ExporterInstrumentsPanel invoiceId={invoiceId ?? undefined} />
-          {stage2Types.map((t) => (
-            <DocumentUploadRow
-              key={t.id}
-              label={t.label}
-              description={t.description}
-              documentTypeId={t.id}
-              invoiceId={invoiceId}
-              exporterId={exp.id}
-              docs={docsFor(t.id)}
-              required
-              readOnly={step2Locked}
-              disabledReason={invoiceId ? null : 'Save your invoice details first to start uploading'}
-              onUploaded={() => invoiceId && refreshInvoiceState(invoiceId)}
-            />
-          ))}
-        </section>
-
         {/* ---------------- signatory and warranty ---------------- */}
         <section className="card-elevated space-y-4 p-6">
           <div>
@@ -744,6 +714,37 @@ export default function ExporterInvoiceNew() {
             )}
           </div>
         </section>
+
+        {/* ---------------- stage 2 preview ---------------- */}
+        <section className={`card-elevated space-y-3 p-6 ${step2Locked ? 'opacity-60' : ''}`}>
+          <div className="flex items-center gap-2">
+            {step2Locked && <Lock className="h-4 w-4 text-muted-foreground" />}
+            <h2 className="text-lg">Step 2 · Pre funding documents</h2>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {step2Locked ? 'Unlocks once your submission is approved. Here is what you can prepare now.' : 'Upload your certificate of origin. We handle the rest.'}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            We prepare these documents for you. You will be asked to sign them electronically.
+          </p>
+          <ExporterInstrumentsPanel invoiceId={invoiceId ?? undefined} />
+          {stage2Types.map((t) => (
+            <DocumentUploadRow
+              key={t.id}
+              label={t.label}
+              description={t.description}
+              documentTypeId={t.id}
+              invoiceId={invoiceId}
+              exporterId={exp.id}
+              docs={docsFor(t.id)}
+              required
+              readOnly={step2Locked}
+              disabledReason={invoiceId ? null : 'Save your invoice details first to start uploading'}
+              onUploaded={() => invoiceId && refreshInvoiceState(invoiceId)}
+            />
+          ))}
+        </section>
+
       </form>
     </div>
   );
