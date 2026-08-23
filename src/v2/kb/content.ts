@@ -206,7 +206,7 @@ export const SECTIONS: KbSection[] = [
         summary: 'Defines how much can be drawn and who may sign.',
         audience: ['staff', 'exporter'],
         body: [
-          'The board resolution sets the authorised facility limit (held in GBP) and names the people authorised to sign instruments. Credit & Compliance transcribes those details during review.',
+          'The board resolution carries no monetary limit — it names the people authorised to sign instruments. Credit & Compliance transcribes those details during review.',
           'The platform then enforces them: an application is blocked if the resolution has expired, or if the named signatory is not on the resolution.',
         ],
       },

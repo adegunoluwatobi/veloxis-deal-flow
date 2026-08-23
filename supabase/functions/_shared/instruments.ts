@@ -28,7 +28,7 @@ export function buildTokens(ctx: {
   invoice: any; exporter: any; buyer: any; signatory: any; bank: any;
 }): Record<string, string> {
   const { invoice: i, exporter: e, buyer: b, signatory: s, bank } = ctx;
-  const currency = String(i.invoice_currency ?? 'GBP');
+  const currency = String(i.invoice_currency ?? 'USD');
   const gross = Number(i.gross_invoice_value ?? i.invoice_amount ?? 0);
   const deductions = Number(i.agreed_deductions ?? 0);
   const net = Math.max(0, gross - deductions);

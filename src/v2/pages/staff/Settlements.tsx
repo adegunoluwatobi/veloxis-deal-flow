@@ -41,17 +41,17 @@ export default function Settlements() {
         <Card className="p-5">
           <div className="text-xs uppercase text-muted-foreground">Due</div>
           <div className="text-2xl font-semibold mt-1">{due.length}</div>
-          <div className="text-xs text-muted-foreground">{fmt(sum(due), 'GBP')} face value</div>
+          <div className="text-xs text-muted-foreground">{fmt(sum(due), 'USD')} face value</div>
         </Card>
         <Card className="p-5">
           <div className="text-xs uppercase text-muted-foreground">Overdue</div>
           <div className="text-2xl font-semibold mt-1 text-destructive">{overdue.length}</div>
-          <div className="text-xs text-muted-foreground">{fmt(sum(overdue), 'GBP')} face value</div>
+          <div className="text-xs text-muted-foreground">{fmt(sum(overdue), 'USD')} face value</div>
         </Card>
         <Card className="p-5">
           <div className="text-xs uppercase text-muted-foreground">Collected</div>
           <div className="text-2xl font-semibold mt-1 text-accent">{collected.length}</div>
-          <div className="text-xs text-muted-foreground">{fmt(sum(collected), 'GBP')} face value</div>
+          <div className="text-xs text-muted-foreground">{fmt(sum(collected), 'USD')} face value</div>
         </Card>
       </div>
 

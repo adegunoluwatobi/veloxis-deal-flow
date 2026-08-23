@@ -18,14 +18,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 
 type DocType = string;
 
-const REQUIRED_DOCS: { key: DocType; label: string; hint: string }[] = [
+const REQUIRED_DOCS: { key: DocType; label: string; hint: string; optional?: boolean }[] = [
   { key: 'cac_certificate', label: 'CAC certificate of incorporation', hint: 'Certificate of Incorporation showing your RC number.' },
   { key: 'cac_status_report', label: 'CAC status report', hint: 'Current status report listing directors and shareholding.' },
   { key: 'tin_certificate', label: 'Tax identification number', hint: 'TIN certificate issued by FIRS. A clear screenshot of your TIN record on the FIRS site is acceptable.' },
   { key: 'nepc_certificate', label: 'NEPC exporter registration', hint: 'Your Nigerian Export Promotion Council registration.' },
   { key: 'bank_statement', label: 'Six month bank statement', hint: 'Statements for the corporate account funds will settle to.' },
-  { key: 'board_resolution', label: 'Board resolution authorising the facility', hint: 'Board resolution naming the authorised signatories (no monetary limit required). Valid for 1 year.' },
-  { key: 'director_id', label: 'Director government ID', hint: 'International passport, driver’s licence or voter’s card — must match the ID type and number entered above.' },
+  { key: 'board_resolution', label: 'Board resolution authorising the facility', hint: 'Board resolution naming the authorised signatories (no monetary limit required). Valid for 1 year. You can upload this later, but no invoice can be created until it is uploaded and approved.', optional: true },
+  { key: 'director_id', label: 'Director government ID', hint: 'Upload a clear image of the international passport, driver’s licence or voter’s card — must match the ID type and number entered above. Not required if you provided a National ID (NIN).' },
   { key: 'proof_of_address', label: 'Director proof of address', hint: 'Utility bill or bank statement, dated within 3 months.' },
 ];
 
@@ -88,7 +88,15 @@ export default function ExporterOnboarding() {
   const blur = (k: string) => setTouched((t) => ({ ...t, [k]: true }));
 
   const latestDoc = (t: DocType) => docs.find((d) => d.document_type_id === typeIds[t]);
-  const missingDocs = REQUIRED_DOCS.filter((r) => !latestDoc(r.key));
+  // A NIN is verified electronically, so no ID image is required for it.
+  const idImageRequired = String(f.director_id_type ?? '') !== 'National ID (NIN)';
+  const docRequired = (key: DocType) => {
+    const spec = REQUIRED_DOCS.find((r) => r.key === key);
+    if (spec?.optional) return false;
+    if (key === 'director_id') return idImageRequired;
+    return true;
+  };
+  const missingDocs = REQUIRED_DOCS.filter((r) => docRequired(r.key) && !latestDoc(r.key));
 
   const errors: Record<string, string> = (() => {
     const e: Record<string, string> = {};
@@ -111,7 +119,8 @@ export default function ExporterOnboarding() {
     if (s(f.tax_id) && !/^[A-Za-z0-9-]{6,20}$/.test(s(f.tax_id)))
       e.tax_id = 'Enter a valid TIN (6–20 characters, letters or numbers).';
 
-    if (s(f.phone) && !phoneOk(s(f.phone))) e.phone = 'Enter a valid phone number, e.g. +234 801 234 5678.';
+    if (!s(f.phone)) e.phone = 'Company phone is required.';
+    else if (!phoneOk(s(f.phone))) e.phone = 'Enter a valid phone number, e.g. +234 801 234 5678.';
     if (!s(f.address)) e.address = 'Registered address is required.';
 
     if (!s(f.director_name)) e.director_name = 'Director full name is required.';
@@ -421,15 +430,12 @@ export default function ExporterOnboarding() {
             <Field label="Tax ID / TIN" error={errorFor('tax_id')}><Input value={f.tax_id ?? ''} onBlur={() => blur('tax_id')} onChange={(e) => set('tax_id', e.target.value)} /></Field>
             <Field label="Industry"><OptionSelect value={f.industry} onChange={(v) => set('industry', v)} options={INDUSTRIES} placeholder="Select industry" /></Field>
             <Field label="Primary commodity"><Input value={f.commodity ?? ''} onChange={(e) => set('commodity', e.target.value)} /></Field>
-            <Field label="Company phone" error={errorFor('phone')}><Input value={f.phone ?? ''} onBlur={() => blur('phone')} onChange={(e) => set('phone', e.target.value)} /></Field>
+            <Field label="Company phone *" error={errorFor('phone')}><Input value={f.phone ?? ''} onBlur={() => blur('phone')} onChange={(e) => set('phone', e.target.value)} /></Field>
             <Field label="Company email">
               <Input value={f.email ?? profile?.email ?? ''} readOnly disabled className="opacity-70 cursor-not-allowed" />
             </Field>
             <div className="col-span-2"><Field label="Registered address *" error={errorFor('address')}><Input value={f.address ?? ''} onBlur={() => blur('address')} onChange={(e) => set('address', e.target.value)} /></Field></div>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Your company email is the address your account was invited with and cannot be changed here.
-          </p>
         </section>
 
         <section className="card-elevated p-6 space-y-4">
@@ -446,7 +452,7 @@ export default function ExporterOnboarding() {
           </div>
         </section>
 
-        <AdditionalDirectors exporterId={exp?.id} />
+        <AdditionalDirectors exporterId={exp?.id} ensureExporterId={saveProfile} />
 
 
         <section className="card-elevated p-6 space-y-4">
@@ -475,7 +481,10 @@ export default function ExporterOnboarding() {
               return (
                 <div key={r.key} className="flex items-start justify-between gap-4 border-t border-border pt-3">
                   <div className="flex-1">
-                    <div className="text-sm font-medium">{r.label}</div>
+                    <div className="text-sm font-medium">
+                      {r.label}
+                      {!docRequired(r.key) && <span className="ml-2 text-xs font-normal text-muted-foreground">(can be uploaded later)</span>}
+                    </div>
                     <div className="text-xs text-muted-foreground">{r.hint}</div>
                     {r.key === 'director_id' && (
                       <div className="text-xs text-muted-foreground mt-0.5">

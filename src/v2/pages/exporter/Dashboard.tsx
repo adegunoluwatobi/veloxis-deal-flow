@@ -4,18 +4,32 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/v2/useAuth';
 import { INVOICE_STATUS_LABEL } from '@/v2/roles';
 import { Button } from '@/components/ui/button';
+import { AlertTriangle } from 'lucide-react';
 
 export default function ExporterDashboard() {
   const { user } = useAuth();
   const [invoices, setInvoices] = useState<any[]>([]);
   const [received, setReceived] = useState(0);
   const [exp, setExp] = useState<any>(null);
+  const [resolutionOk, setResolutionOk] = useState(true);
 
   useEffect(() => {
     (async () => {
       const { data: e } = await supabase.from('v2_exporters').select('*').eq('owner_user_id', user!.id).maybeSingle();
       setExp(e);
       if (!e) return;
+
+      // Board resolution reminder: shown on every visit until one is verified and in date.
+      const { data: res } = await supabase
+        .from('board_resolutions')
+        .select('valid_until')
+        .eq('exporter_id', e.id)
+        .eq('verification_status', 'verified')
+        .is('superseded_by', null)
+        .maybeSingle();
+      const inDate = !!res && (!res.valid_until || new Date(res.valid_until) >= new Date(new Date().toDateString()));
+      setResolutionOk(inDate);
+
       const { data: iv } = await supabase.from('v2_invoices').select('id, invoice_number, status, invoice_amount, invoice_currency, advance_rate').eq('exporter_id', e.id).order('created_at', { ascending: false });
       setInvoices(iv ?? []);
       const { data: mv } = await supabase.from('v2_money_movements').select('amount, type, invoice_id').in('invoice_id', (iv ?? []).map((x) => x.id));
@@ -35,9 +49,23 @@ export default function ExporterDashboard() {
 
       <div className="grid grid-cols-3 gap-3">
         <Stat label="Invoices" value={String(invoices.length)} />
-        <Stat label="Received to date" value={`£${received.toLocaleString()}`} />
+        <Stat label="Received to date" value={`$${received.toLocaleString()}`} />
         <Stat label="Awaiting action" value={String(returned.length)} highlight={returned.length > 0} />
       </div>
+
+      {!resolutionOk && (
+        <section className="card-elevated flex items-start gap-3 border-destructive/50 bg-destructive/5 p-5">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+          <div className="text-sm">
+            <div className="font-medium text-destructive">Board resolution required</div>
+            <p className="mt-1 text-muted-foreground">
+              You cannot create an invoice until your board resolution has been uploaded and approved by Veloxis.
+              Upload it in My Company — you can download a draft template there.
+            </p>
+            <Button asChild size="sm" variant="outline" className="mt-3"><Link to="/portal/profile">Upload board resolution</Link></Button>
+          </div>
+        </section>
+      )}
 
       {returned.length > 0 && (
         <section className="card-elevated p-5 border-warning/60">

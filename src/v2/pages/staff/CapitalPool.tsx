@@ -4,13 +4,13 @@ import { Card } from '@/components/ui/card';
 
 export default function CapitalPool() {
   const [base, setBase] = useState<number>(0);
-  const [currency, setCurrency] = useState<string>('GBP');
+  const [currency, setCurrency] = useState<string>('USD');
   const [deployed, setDeployed] = useState<number>(0);
 
   useEffect(() => {
     (async () => {
       const { data: s } = await supabase.from('v2_settings').select('capital_base,currency').eq('id', 1).maybeSingle();
-      if (s) { setBase(Number(s.capital_base) || 0); setCurrency(s.currency || 'GBP'); }
+      if (s) { setBase(Number(s.capital_base) || 0); setCurrency(s.currency || 'USD'); }
       const { data: inv } = await supabase
         .from('v2_invoices')
         .select('invoice_amount,advance_rate,status')

@@ -1,4 +1,8 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ChevronDown } from 'lucide-react';
 
 export const ID_TYPES = [
   'International Passport',
@@ -72,29 +76,51 @@ export const INDUSTRIES = [
 
 export const NIGERIAN_BANKS = [
   'Access Bank',
+  'Alternative Bank',
+  'Bank of Industry',
   'Citibank Nigeria',
+  'Coronation Merchant Bank',
+  'Development Bank of Nigeria',
   'Ecobank Nigeria',
+  'FBNQuest Merchant Bank',
   'Fidelity Bank',
   'First Bank of Nigeria',
   'First City Monument Bank (FCMB)',
+  'FSDH Merchant Bank',
   'Globus Bank',
+  'Greenwich Merchant Bank',
   'Guaranty Trust Bank (GTBank)',
   'Heritage Bank',
+  'Jaiz Bank',
   'Keystone Bank',
+  'Kuda Microfinance Bank',
+  'Lotus Bank',
+  'Mint Finex Microfinance Bank',
+  'Moniepoint Microfinance Bank',
+  'Nigerian Export-Import Bank (NEXIM)',
+  'Nova Merchant Bank',
+  'Opay Digital Services',
   'Optimus Bank',
+  'PalmPay',
   'Parallex Bank',
   'Polaris Bank',
   'Premium Trust Bank',
   'Providus Bank',
+  'Rand Merchant Bank',
+  'Rubies Microfinance Bank',
   'Signature Bank',
+  'Sparkle Microfinance Bank',
   'Stanbic IBTC Bank',
   'Standard Chartered Bank Nigeria',
   'Sterling Bank',
+  'SunTrust Bank Nigeria',
   'SunTrust Bank',
+  'Taj Bank',
   'Titan Trust Bank',
   'Union Bank of Nigeria',
   'United Bank for Africa (UBA)',
   'Unity Bank',
+  'VFD Microfinance Bank',
   'Wema Bank',
   'Zenith Bank',
 ] as const;
@@ -112,16 +138,30 @@ export function OptionSelect({
   placeholder?: string;
   disabled?: boolean;
 }) {
+  const [open, setOpen] = useState(false);
   return (
-    <Select value={value || undefined} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger>
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent className="max-h-72">
-        {options.map((o) => (
-          <SelectItem key={o} value={o}>{o}</SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button type="button" variant="outline" disabled={disabled} className="w-full justify-between font-normal">
+          <span className={value ? 'truncate' : 'text-muted-foreground truncate'}>{value || placeholder}</span>
+          <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Search…" />
+          <CommandList className="max-h-72">
+            <CommandEmpty>Nothing found.</CommandEmpty>
+            <CommandGroup>
+              {options.map((o) => (
+                <CommandItem key={o} value={o} onSelect={() => { onChange(o); setOpen(false); }}>
+                  {o}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }

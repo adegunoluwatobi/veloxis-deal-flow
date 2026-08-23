@@ -36,7 +36,7 @@ const DOC_LABEL: Record<string, string> = {
   tripartite: 'Tripartite Domiciliation Agreement', kyc: 'KYC', other: 'Other',
 };
 
-const fmt = (n: number, cur = 'GBP') => new Intl.NumberFormat('en-GB', { style: 'currency', currency: cur }).format(n);
+const fmt = (n: number, cur = 'USD') => new Intl.NumberFormat('en-GB', { style: 'currency', currency: cur }).format(n);
 
 export default function StaffInvoiceDetail() {
   const { id } = useParams<{ id: string }>();
