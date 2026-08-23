@@ -322,6 +322,9 @@ export default function ExporterOnboarding() {
     const { error } = await supabase.from('v2_exporters').update({
       onboarding_status: 'pending', kyb_status: 'pending', kyc_status: 'pending',
       onboarding_submitted_at: new Date().toISOString(),
+      // clear the previous return so the form re-locks while under review
+      bd_rejected_at: null,
+      bd_rejection_reason: null,
     }).eq('id', expId);
     setBusy(false);
     if (error) return toast({ title: 'Submit failed', description: error.message, variant: 'destructive' });
