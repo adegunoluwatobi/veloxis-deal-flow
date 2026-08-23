@@ -238,7 +238,24 @@ export default function StaffExporterDetail() {
                   Four eyes rule: this approval must be given by someone other than the Business Developer who approved the earlier stage.
                   The board resolution must be recorded before the exporter can be activated.
                 </p>
-                <Button size="sm" onClick={finalApprove} disabled={busy}>Approve &amp; activate exporter</Button>
+                {!docsComplete && (
+                  <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs">
+                    <div className="font-medium text-amber-400">
+                      All onboarding documents must be approved before you can activate this exporter
+                    </div>
+                    <ul className="mt-1 list-disc pl-4 text-muted-foreground">
+                      {outstandingDocs.map((t) => (<li key={t.id}>{t.label}</li>))}
+                    </ul>
+                  </div>
+                )}
+                <Button
+                  size="sm"
+                  onClick={finalApprove}
+                  disabled={busy || !docsComplete}
+                  title={!docsComplete ? 'Approve every required onboarding document first' : undefined}
+                >
+                  Approve &amp; activate exporter
+                </Button>
                 <Textarea placeholder="Reason to return to exporter" value={reason} onChange={(e) => setReason(e.target.value)} />
                 <Button size="sm" variant="outline" onClick={complianceReturn} disabled={busy}>Return to exporter</Button>
               </>
