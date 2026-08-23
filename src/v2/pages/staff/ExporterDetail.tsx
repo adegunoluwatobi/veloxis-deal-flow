@@ -29,6 +29,7 @@ export default function StaffExporterDetail() {
   const [showAudit, setShowAudit] = useState(false);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [docs, setDocs] = useState<any[]>([]);
+  const [requiredTypes, setRequiredTypes] = useState<any[]>([]);
   const [directors, setDirectors] = useState<any[]>([]);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
