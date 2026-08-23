@@ -274,19 +274,22 @@ export default function StaffInvoiceDetail() {
               <section className="card-elevated p-5">
                 <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-3">Five point funding gate</h3>
                 <ul className="space-y-2 text-sm">
-                  {[
-                    ['Deed of assignment signed by both parties', gate.deed],
-                    ['Domiciliation instruction signed', gate.tripartite],
-                    ['Notice of assignment signed', gate.noa],
-                    ['Buyer credit clear and sanctions clear', gate.buyerClear],
-                    ['Stage 1 shipping documents verified', gate.bol],
-                    ['Certificate of origin verified', originVerified],
-                  ].map(([label, ok]) => (
-                    <li key={label as string} className="flex items-center gap-2">
+                  {([
+                    ['Deed of assignment signed by both parties', gate.deed, null],
+                    ['Domiciliation instruction signed', gate.tripartite, null],
+                    ['Notice of assignment signed', gate.noa, null],
+                    ['Buyer credit clear and sanctions clear', gate.buyerClear, buyer ? `/app/buyers/${buyer.id}` : null],
+                    ['Stage 1 shipping documents verified', gate.bol, null],
+                    ['Certificate of origin verified', originVerified, null],
+                  ] as [string, boolean, string | null][]).map(([label, ok, href]) => (
+                    <li key={label} className="flex items-center gap-2">
                       {ok ? <CheckCircle2 className="h-4 w-4 text-success" /> : <XCircle className="h-4 w-4 text-destructive" />}
-                      <span className={ok ? '' : 'text-muted-foreground'}>{label as string}</span>
+                      {!ok && href
+                        ? <Link to={href} className="text-accent hover:underline">{label} — review buyer</Link>
+                        : <span className={ok ? '' : 'text-muted-foreground'}>{label}</span>}
                     </li>
                   ))}
+
                 </ul>
               </section>
 
