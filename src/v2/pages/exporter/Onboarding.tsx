@@ -97,6 +97,7 @@ export default function ExporterOnboarding() {
     return true;
   };
   const missingDocs = REQUIRED_DOCS.filter((r) => docRequired(r.key) && !latestDoc(r.key));
+  const rejectedDocs = REQUIRED_DOCS.filter((r) => latestDoc(r.key)?.status === 'rejected');
 
   const errors: Record<string, string> = (() => {
     const e: Record<string, string> = {};
