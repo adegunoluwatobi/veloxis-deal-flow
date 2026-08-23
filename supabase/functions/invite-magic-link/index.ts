@@ -31,8 +31,10 @@ Deno.serve(async (req) => {
 
     const admin = createClient(url, svc, { auth: { autoRefreshToken: false, persistSession: false } });
     const { data: rr } = await admin.from("app_user_roles").select("role").eq("user_id", user.id);
-    const isSuper = (rr ?? []).some((r: any) => r.role === "super_admin");
-    if (!isSuper) return json({ error: "Forbidden: super_admin only" }, 403);
+    const callerRoles = (rr ?? []).map((r: any) => r.role as string);
+    const isSuper = callerRoles.includes("super_admin");
+    const isOriginator = callerRoles.includes("originator");
+    if (!isSuper && !isOriginator) return json({ error: "Forbidden" }, 403);
 
     const body = await req.json();
     const email = String(body.email ?? "").trim().toLowerCase();
@@ -42,6 +44,11 @@ Deno.serve(async (req) => {
 
     const validRoles = ["super_admin","originator","credit_officer","approver","exporter"];
     if (role && !validRoles.includes(role)) return json({ error: "Invalid role" }, 400);
+
+    // Business Developers may only invite exporters — never staff roles.
+    if (!isSuper && role !== "exporter") {
+      return json({ error: "Business Developers can only invite exporters" }, 403);
+    }
 
     // Find or create auth user
     let userId: string | null = null;
