@@ -144,6 +144,8 @@ export default function ExporterProfile() {
         </div>
       </section>
 
+      </fieldset>
+
       <AdditionalDirectors exporterId={exp?.id} />
 
       <BoardResolutionCard exporterId={exp?.id} />
@@ -152,6 +154,7 @@ export default function ExporterProfile() {
 
 
 
+      <fieldset disabled={locked} className={locked ? 'space-y-6 opacity-70' : 'space-y-6'}>
       <section className="card-elevated p-6 space-y-4">
         <h2 className="text-sm uppercase tracking-wider text-muted-foreground">Bank details</h2>
         <div className="grid grid-cols-2 gap-4">
