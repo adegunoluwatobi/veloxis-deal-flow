@@ -304,7 +304,7 @@ export default function ExporterOnboarding() {
             <Field label="Director email"><Input type="email" value={f.director_email ?? ''} onChange={(e) => set('director_email', e.target.value)} /></Field>
             <Field label="Director phone"><Input value={f.director_phone ?? ''} onChange={(e) => set('director_phone', e.target.value)} /></Field>
             <Field label="Date of birth"><Input type="date" value={f.director_dob ?? ''} onChange={(e) => set('director_dob', e.target.value)} /></Field>
-            <Field label="Nationality"><Input value={f.director_nationality ?? ''} onChange={(e) => set('director_nationality', e.target.value)} /></Field>
+            <Field label="Nationality"><OptionSelect value={f.director_nationality} onChange={(v) => set('director_nationality', v)} options={NATIONALITIES} placeholder="Select nationality" /></Field>
             <Field label="ID type *"><OptionSelect value={f.director_id_type} onChange={(v) => set('director_id_type', v)} options={ID_TYPES} placeholder="Select ID type" /></Field>
             <Field label="ID number *"><Input value={f.director_id_number ?? ''} onChange={(e) => set('director_id_number', e.target.value)} /></Field>
             <div className="col-span-2"><Field label="Director residential address"><Input value={f.director_address ?? ''} onChange={(e) => set('director_address', e.target.value)} /></Field></div>
