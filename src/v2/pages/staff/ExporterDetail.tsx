@@ -37,7 +37,7 @@ export default function StaffExporterDetail() {
     const [{ data: e }, { data: iv }, { data: d }, { data: dir }] = await Promise.all([
       supabase.from('v2_exporters').select('*').eq('id', id!).maybeSingle(),
       supabase.from('v2_invoices').select('id, invoice_number, invoice_amount, invoice_currency, status, maturity_date').eq('exporter_id', id!).order('created_at', { ascending: false }),
-      supabase.from('company_documents').select('id, original_filename, status, uploaded_at, document_types(code, name)').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
+      supabase.from('company_documents').select('id, original_filename, status, uploaded_at, reviewed_at, rejection_reason, document_types(code, name)').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
       supabase.from('v2_exporter_directors').select('*').eq('exporter_id', id!).order('created_at', { ascending: true }),
     ]);
     setExp(e); setInvoices(iv ?? []); setDocs(d ?? []); setDirectors(dir ?? []);
@@ -50,23 +50,44 @@ export default function StaffExporterDetail() {
   const isSuperAdmin = has(roles, 'super_admin');
   const canBdReview = has(roles, 'originator') || isSuperAdmin;
   const canFinalApprove = has(roles, 'credit_officer') || isSuperAdmin;
-  // Business Developers may approve individual documents; final onboarding
-  // approval stays with Credit & Compliance.
-  const canVerifyDoc = has(roles, 'credit_officer') || has(roles, 'originator') || isSuperAdmin;
+  // Document approval / rejection sits with Credit & Compliance (and Super Admin).
+  const canVerifyDoc = has(roles, 'credit_officer') || isSuperAdmin;
 
   const submitted = !!exp.onboarding_submitted_at;
   const bdApproved = !!exp.bd_approved_at;
   const bdRejected = !!exp.bd_rejected_at;
   const isActive = exp.onboarding_status === 'active';
 
-  const verifyDoc = async (docId: string, verified: boolean) => {
-    await supabase.from('company_documents').update({
-      status: verified ? 'verified' : 'pending_review',
-      reviewed_by: verified ? user?.id : null,
-      reviewed_at: verified ? new Date().toISOString() : null,
+  const setDocStatus = async (docId: string, status: 'verified' | 'rejected' | 'pending', reason?: string) => {
+    setBusy(true);
+    const { error } = await supabase.from('company_documents').update({
+      status,
+      rejection_reason: status === 'rejected' ? (reason ?? null) : null,
+      reviewed_by: status === 'pending' ? null : user?.id,
+      reviewed_at: status === 'pending' ? null : new Date().toISOString(),
     }).eq('id', docId);
+    setBusy(false);
+    if (error) return toast({ title: 'Could not update document', description: error.message, variant: 'destructive' });
+    toast({
+      title: status === 'verified' ? 'Document approved' : status === 'rejected' ? 'Document rejected' : 'Review reset',
+      description: status === 'rejected' ? 'The exporter can see your reason and re-upload.' : undefined,
+    });
     load();
   };
+
+  const reopenApplication = async () => {
+    const why = window.prompt('Reopen this approved application for correction. Enter the reason the exporter will see:');
+    if (!why || !why.trim()) return;
+    setBusy(true);
+    const { error } = await supabase.rpc('record_onboarding_review', {
+      p_exporter_id: exp.id, p_stage: 'compliance', p_decision: 'returned', p_note: why.trim(), p_override_reason: null,
+    });
+    setBusy(false);
+    if (error) return toast({ title: 'Could not reopen', description: error.message, variant: 'destructive' });
+    toast({ title: 'Application reopened', description: 'The exporter can edit and re-submit.' });
+    load();
+  };
+
 
   const review = async (stage: 'bd' | 'compliance', decision: 'approved' | 'returned', note?: string, overrideReason?: string) => {
     setBusy(true);
