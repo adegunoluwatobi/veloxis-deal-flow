@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { OptionSelect, ID_TYPES, COUNTRIES, NIGERIAN_BANKS } from '@/v2/lib/formOptions';
-import { CheckCircle2, Upload, Clock, AlertCircle, Lock } from 'lucide-react';
+import { OptionSelect, ID_TYPES, COUNTRIES, NATIONALITIES, INDUSTRIES, NIGERIAN_BANKS } from '@/v2/lib/formOptions';
+import { CheckCircle2, Upload, Clock, AlertCircle, Lock, FileDown } from 'lucide-react';
 import AdditionalDirectors from '@/v2/components/AdditionalDirectors';
 import SignOutButton from '@/v2/components/SignOutButton';
+import { openBoardResolutionTemplate } from '@/v2/lib/boardResolutionTemplate';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 
@@ -22,7 +23,7 @@ const REQUIRED_DOCS: { key: DocType; label: string; hint: string }[] = [
   { key: 'nepc_certificate', label: 'NEPC exporter registration', hint: 'Your Nigerian Export Promotion Council registration.' },
   { key: 'bank_statement', label: 'Six month bank statement', hint: 'Statements for the corporate account funds will settle to.' },
   { key: 'board_resolution', label: 'Board resolution authorising the facility', hint: 'Board resolution naming the authorised limit and signatories.' },
-  { key: 'director_id', label: 'Director government ID', hint: 'Passport, national ID or driver’s licence.' },
+  { key: 'director_id', label: 'Director government ID', hint: 'International passport, driver’s licence or voter’s card — must match the ID type and number entered above.' },
   { key: 'proof_of_address', label: 'Director proof of address', hint: 'Utility bill or bank statement, dated within 3 months.' },
 ];
 
@@ -95,7 +96,7 @@ export default function ExporterOnboarding() {
       country_of_incorporation: f.country_of_incorporation || null,
       incorporation_date: f.incorporation_date || null,
       tax_id: f.tax_id || null, industry: f.industry || null,
-      commodity: f.commodity || null, phone: f.phone || null, email: f.email || null,
+      commodity: f.commodity || null, phone: f.phone || null, email: f.email || profile?.email || null,
       address: f.address || null,
       director_name: f.director_name || null, director_email: f.director_email || null,
       director_phone: f.director_phone || null, director_dob: f.director_dob || null,
@@ -283,11 +284,17 @@ export default function ExporterOnboarding() {
             <Field label="Country of incorporation *"><OptionSelect value={f.country_of_incorporation} onChange={(v) => set('country_of_incorporation', v)} options={COUNTRIES} placeholder="Select country" /></Field>
             <Field label="Incorporation date"><Input type="date" value={f.incorporation_date ?? ''} onChange={(e) => set('incorporation_date', e.target.value)} /></Field>
             <Field label="Tax ID / TIN"><Input value={f.tax_id ?? ''} onChange={(e) => set('tax_id', e.target.value)} /></Field>
-            <Field label="Industry / commodity"><Input value={f.commodity ?? ''} onChange={(e) => set('commodity', e.target.value)} /></Field>
+            <Field label="Industry"><OptionSelect value={f.industry} onChange={(v) => set('industry', v)} options={INDUSTRIES} placeholder="Select industry" /></Field>
+            <Field label="Primary commodity"><Input value={f.commodity ?? ''} onChange={(e) => set('commodity', e.target.value)} /></Field>
             <Field label="Company phone"><Input value={f.phone ?? ''} onChange={(e) => set('phone', e.target.value)} /></Field>
-            <Field label="Company email"><Input value={f.email ?? ''} onChange={(e) => set('email', e.target.value)} /></Field>
+            <Field label="Company email">
+              <Input value={f.email ?? profile?.email ?? ''} readOnly disabled className="opacity-70 cursor-not-allowed" />
+            </Field>
             <div className="col-span-2"><Field label="Registered address"><Input value={f.address ?? ''} onChange={(e) => set('address', e.target.value)} /></Field></div>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Your company email is the address your account was invited with and cannot be changed here.
+          </p>
         </section>
 
         <section className="card-elevated p-6 space-y-4">
@@ -297,7 +304,7 @@ export default function ExporterOnboarding() {
             <Field label="Director email"><Input type="email" value={f.director_email ?? ''} onChange={(e) => set('director_email', e.target.value)} /></Field>
             <Field label="Director phone"><Input value={f.director_phone ?? ''} onChange={(e) => set('director_phone', e.target.value)} /></Field>
             <Field label="Date of birth"><Input type="date" value={f.director_dob ?? ''} onChange={(e) => set('director_dob', e.target.value)} /></Field>
-            <Field label="Nationality"><Input value={f.director_nationality ?? ''} onChange={(e) => set('director_nationality', e.target.value)} /></Field>
+            <Field label="Nationality"><OptionSelect value={f.director_nationality} onChange={(v) => set('director_nationality', v)} options={NATIONALITIES} placeholder="Select nationality" /></Field>
             <Field label="ID type *"><OptionSelect value={f.director_id_type} onChange={(v) => set('director_id_type', v)} options={ID_TYPES} placeholder="Select ID type" /></Field>
             <Field label="ID number *"><Input value={f.director_id_number ?? ''} onChange={(e) => set('director_id_number', e.target.value)} /></Field>
             <div className="col-span-2"><Field label="Director residential address"><Input value={f.director_address ?? ''} onChange={(e) => set('director_address', e.target.value)} /></Field></div>
@@ -334,6 +341,32 @@ export default function ExporterOnboarding() {
                   <div className="flex-1">
                     <div className="text-sm font-medium">{r.label}</div>
                     <div className="text-xs text-muted-foreground">{r.hint}</div>
+                    {r.key === 'director_id' && (
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        Recorded above: {f.director_id_type || 'no ID type selected'}
+                        {f.director_id_number ? ` · ${f.director_id_number}` : ' · no ID number entered'}
+                      </div>
+                    )}
+                    {r.key === 'board_resolution' && (
+                      <Button
+                        type="button" size="sm" variant="outline" className="mt-2 h-7 text-xs"
+                        onClick={() => {
+                          const ok = openBoardResolutionTemplate({
+                            companyName: f.company_name,
+                            registrationNumber: f.company_registration_number,
+                            registeredAddress: f.address,
+                            companyEmail: f.email ?? profile?.email,
+                            signatories: [
+                              { name: f.director_name, designation: 'Director', email: f.director_email ?? f.email ?? profile?.email },
+                              {},
+                            ],
+                          });
+                          if (!ok) toast({ title: 'Allow pop-ups to open the template', variant: 'destructive' });
+                        }}
+                      >
+                        <FileDown className="h-3.5 w-3.5 mr-1" /> Generate template
+                      </Button>
+                    )}
                     {d && !uploading && !err && (
                       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
                         <span className="inline-flex items-center gap-1.5 max-w-full px-2 py-1 rounded bg-primary/15 text-accent">

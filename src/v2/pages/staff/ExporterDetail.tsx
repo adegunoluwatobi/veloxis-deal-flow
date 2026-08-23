@@ -50,7 +50,9 @@ export default function StaffExporterDetail() {
   const isSuperAdmin = has(roles, 'super_admin');
   const canBdReview = has(roles, 'originator') || isSuperAdmin;
   const canFinalApprove = has(roles, 'credit_officer') || isSuperAdmin;
-  const canVerifyDoc = has(roles, 'credit_officer') || isSuperAdmin;
+  // Business Developers may approve individual documents; final onboarding
+  // approval stays with Credit & Compliance.
+  const canVerifyDoc = has(roles, 'credit_officer') || has(roles, 'originator') || isSuperAdmin;
 
   const submitted = !!exp.onboarding_submitted_at;
   const bdApproved = !!exp.bd_approved_at;

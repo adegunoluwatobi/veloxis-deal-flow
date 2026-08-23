@@ -566,10 +566,6 @@ export default function VeloxisWebsite() {
               </button>
             </div>
 
-            <p className="text-[12px] text-white/30 mb-4">
-              Applying as a market partner? <Link to="/apply/partner" className="text-[#1ABC9C] hover:text-[#5FFFD7] transition-colors">Register here →</Link>
-            </p>
-
             <div className="mt-6 flex flex-wrap gap-5">
               {["No collateral", "24-hour decisions", "Domiciliary settlement"].map(t => (
                 <span key={t} className="flex items-center gap-2 text-[13px] text-white/40">
