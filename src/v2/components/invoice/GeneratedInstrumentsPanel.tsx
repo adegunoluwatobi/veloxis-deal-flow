@@ -38,12 +38,24 @@ export default function GeneratedInstrumentsPanel({
   const [serveOpen, setServeOpen] = useState(false);
   const [method, setMethod] = useState('');
 
+  // Non-2xx responses arrive as FunctionsHttpError with the body on error.context.
+  const readError = async (data: any, error: any): Promise<string | null> => {
+    if (data?.error) return data.error as string;
+    if (!error) return null;
+    try {
+      const body = await (error as any)?.context?.json?.();
+      if (body?.error) return body.error as string;
+    } catch { /* body not JSON */ }
+    return error.message ?? 'Something went wrong.';
+  };
+
   const generate = async () => {
     setBusy(true);
     const { data, error } = await supabase.functions.invoke('generate-instruments', { body: { invoice_id: invoiceId } });
     setBusy(false);
-    if (error || data?.error) {
-      toast({ title: 'Could not generate', description: (data?.error ?? error?.message) as string, variant: 'destructive' });
+    const message = await readError(data, error);
+    if (message) {
+      toast({ title: 'Could not generate', description: message, variant: 'destructive' });
       return;
     }
     const missing: string[] = data?.unresolved_tokens ?? [];
@@ -58,13 +70,15 @@ export default function GeneratedInstrumentsPanel({
     setBusy(true);
     const { data, error } = await supabase.functions.invoke('send-for-signature', { body: { invoice_id: invoiceId } });
     setBusy(false);
-    if (error || data?.error) {
-      toast({ title: 'Could not send', description: (data?.error ?? error?.message) as string, variant: 'destructive' });
+    const message = await readError(data, error);
+    if (message) {
+      toast({ title: 'Could not send', description: message, variant: 'destructive' });
       return;
     }
     toast({ title: 'Sent for signature', description: 'All three instruments are with the signing parties.' });
     await reload(); onChanged();
   };
+
 
   const markServed = async () => {
     if (method.trim().length < 3) { toast({ title: 'Record how it was served', variant: 'destructive' }); return; }
