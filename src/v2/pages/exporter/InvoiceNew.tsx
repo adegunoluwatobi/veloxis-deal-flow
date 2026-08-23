@@ -577,7 +577,7 @@ export default function ExporterInvoiceNew() {
               <Input readOnly value={maturityDate ?? '—'} className="bg-muted/50" />
               <p className="mt-1 text-xs text-muted-foreground">Bill of lading date plus your payment terms</p>
             </div>
-          </div>
+          </fieldset>
         </section>
 
         {/* ---------------- stage 1 uploads ---------------- */}
