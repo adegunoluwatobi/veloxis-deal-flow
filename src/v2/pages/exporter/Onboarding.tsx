@@ -12,6 +12,7 @@ import AdditionalDirectors from '@/v2/components/AdditionalDirectors';
 import SignOutButton from '@/v2/components/SignOutButton';
 import NotificationBell from '@/v2/components/NotificationBell';
 import { openBoardResolutionTemplate, downloadBoardResolutionPdf } from '@/v2/lib/boardResolutionTemplate';
+import { computeOnboardingLock } from '@/v2/lib/onboardingLock';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
