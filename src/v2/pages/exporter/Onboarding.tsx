@@ -341,6 +341,32 @@ export default function ExporterOnboarding() {
                   <div className="flex-1">
                     <div className="text-sm font-medium">{r.label}</div>
                     <div className="text-xs text-muted-foreground">{r.hint}</div>
+                    {r.key === 'director_id' && (
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        Recorded above: {f.director_id_type || 'no ID type selected'}
+                        {f.director_id_number ? ` · ${f.director_id_number}` : ' · no ID number entered'}
+                      </div>
+                    )}
+                    {r.key === 'board_resolution' && (
+                      <Button
+                        type="button" size="sm" variant="outline" className="mt-2 h-7 text-xs"
+                        onClick={() => {
+                          const ok = openBoardResolutionTemplate({
+                            companyName: f.company_name,
+                            registrationNumber: f.company_registration_number,
+                            registeredAddress: f.address,
+                            companyEmail: f.email ?? profile?.email,
+                            signatories: [
+                              { name: f.director_name, designation: 'Director', email: f.director_email ?? f.email ?? profile?.email },
+                              {},
+                            ],
+                          });
+                          if (!ok) toast({ title: 'Allow pop-ups to open the template', variant: 'destructive' });
+                        }}
+                      >
+                        <FileDown className="h-3.5 w-3.5 mr-1" /> Generate template
+                      </Button>
+                    )}
                     {d && !uploading && !err && (
                       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
                         <span className="inline-flex items-center gap-1.5 max-w-full px-2 py-1 rounded bg-primary/15 text-accent">
