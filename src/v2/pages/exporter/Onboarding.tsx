@@ -324,6 +324,8 @@ export default function ExporterOnboarding() {
   const bdApproved = !!exp?.bd_approved_at;
   const bdRejected = !!exp?.bd_rejected_at;
   const isActive = status === 'active';
+  const formLocked = isActive || (submitted && !bdRejected);
+
 
   return (
     <div className="min-h-screen bg-background">
