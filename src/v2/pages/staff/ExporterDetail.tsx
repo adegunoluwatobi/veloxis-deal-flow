@@ -190,6 +190,20 @@ export default function StaffExporterDetail() {
         )}
 
 
+        {isActive && (
+          <div className="mt-4 border-t border-border pt-4 space-y-2">
+            <p className="text-xs text-muted-foreground">
+              This exporter is approved and their company details are locked. Credit &amp; Compliance or a Super Admin can
+              reopen the application if something needs correcting.
+            </p>
+            {(canFinalApprove || isSuperAdmin) && (
+              <Button size="sm" variant="outline" onClick={reopenApplication} disabled={busy}>
+                Reopen application for correction
+              </Button>
+            )}
+          </div>
+        )}
+
         {!submitted && (
           <p className="text-xs text-muted-foreground mt-3">Exporter has not submitted their onboarding pack yet.</p>
         )}
