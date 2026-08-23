@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '../useAuth';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,7 @@ const dotClass = (type: string | null) =>
 export default function NotificationBell({ variant = 'light' }: { variant?: 'light' | 'sidebar' }) {
   const { user } = useAuth();
   const nav = useNavigate();
+  const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
 
@@ -135,6 +136,18 @@ export default function NotificationBell({ variant = 'light' }: { variant?: 'lig
             </ul>
           )}
         </ScrollArea>
+        <div className="border-t border-border">
+          <button
+            type="button"
+            className="w-full px-4 py-2.5 text-xs font-medium text-primary hover:bg-muted/30 transition-colors"
+            onClick={() => {
+              setOpen(false);
+              nav(pathname.startsWith('/portal') ? '/portal/notifications' : '/app/notifications');
+            }}
+          >
+            View all notifications
+          </button>
+        </div>
       </PopoverContent>
     </Popover>
   );
