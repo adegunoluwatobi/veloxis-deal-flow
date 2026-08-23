@@ -646,6 +646,13 @@ export default function ExporterInvoiceNew() {
                 <ChevronDown className={`h-4 w-4 transition-transform ${optionalOpen ? 'rotate-180' : ''}`} />
               </Button>
             </CollapsibleTrigger>
+            {missingOptionalCount > 0 && (
+              <p className="text-xs text-amber-400">
+                {missingOptionalCount} optional document{missingOptionalCount === 1 ? '' : 's'} not supplied. A thinner file
+                carries more risk, so pricing may be reviewed upward. Adding them can support a lower fee.
+              </p>
+            )}
+
             <CollapsibleContent className="space-y-4 pt-3">
               {[['Commercial', optionalCommercial], ['Compliance', optionalCompliance]].map(([heading, list]) => {
                 const items = list as DocType[];
