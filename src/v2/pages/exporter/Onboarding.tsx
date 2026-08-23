@@ -345,21 +345,39 @@ export default function ExporterOnboarding() {
           </div>
         )}
 
+        {showAllErrors && Object.keys(errors).length > 0 && (
+          <div id="onboarding-error-summary" className="card-elevated p-4 border-destructive/60 bg-destructive/10">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <div className="font-medium text-destructive">
+                  {Object.keys(errors).length} field{Object.keys(errors).length === 1 ? '' : 's'} need attention
+                </div>
+                <ul className="mt-1.5 space-y-0.5 text-muted-foreground list-disc pl-4">
+                  {Object.entries(errors).map(([k, v]) => (
+                    <li key={k}><span className="text-foreground">{FIELD_LABELS[k] ?? k}</span> — {v}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
         <section className="card-elevated p-6 space-y-4">
           <h2 className="text-sm uppercase tracking-wider text-muted-foreground">1 · Company (KYB)</h2>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Company name *"><Input value={f.company_name ?? ''} onChange={(e) => set('company_name', e.target.value)} /></Field>
-            <Field label="Registration number (RC / CAC) *"><Input value={f.company_registration_number ?? ''} onChange={(e) => set('company_registration_number', e.target.value)} /></Field>
-            <Field label="Country of incorporation *"><OptionSelect value={f.country_of_incorporation} onChange={(v) => set('country_of_incorporation', v)} options={COUNTRIES} placeholder="Select country" /></Field>
-            <Field label="Incorporation date"><Input type="date" value={f.incorporation_date ?? ''} onChange={(e) => set('incorporation_date', e.target.value)} /></Field>
-            <Field label="Tax ID / TIN"><Input value={f.tax_id ?? ''} onChange={(e) => set('tax_id', e.target.value)} /></Field>
+            <Field label="Company name *" error={errorFor('company_name')}><Input value={f.company_name ?? ''} onBlur={() => blur('company_name')} onChange={(e) => set('company_name', e.target.value)} /></Field>
+            <Field label="Registration number (RC / CAC) *" error={errorFor('company_registration_number')}><Input value={f.company_registration_number ?? ''} onBlur={() => blur('company_registration_number')} onChange={(e) => set('company_registration_number', e.target.value)} /></Field>
+            <Field label="Country of incorporation *" error={errorFor('country_of_incorporation')}><OptionSelect value={f.country_of_incorporation} onChange={(v) => { set('country_of_incorporation', v); blur('country_of_incorporation'); }} options={COUNTRIES} placeholder="Select country" /></Field>
+            <Field label="Incorporation date" error={errorFor('incorporation_date')}><Input type="date" value={f.incorporation_date ?? ''} onBlur={() => blur('incorporation_date')} onChange={(e) => set('incorporation_date', e.target.value)} /></Field>
+            <Field label="Tax ID / TIN" error={errorFor('tax_id')}><Input value={f.tax_id ?? ''} onBlur={() => blur('tax_id')} onChange={(e) => set('tax_id', e.target.value)} /></Field>
             <Field label="Industry"><OptionSelect value={f.industry} onChange={(v) => set('industry', v)} options={INDUSTRIES} placeholder="Select industry" /></Field>
             <Field label="Primary commodity"><Input value={f.commodity ?? ''} onChange={(e) => set('commodity', e.target.value)} /></Field>
-            <Field label="Company phone"><Input value={f.phone ?? ''} onChange={(e) => set('phone', e.target.value)} /></Field>
+            <Field label="Company phone" error={errorFor('phone')}><Input value={f.phone ?? ''} onBlur={() => blur('phone')} onChange={(e) => set('phone', e.target.value)} /></Field>
             <Field label="Company email">
               <Input value={f.email ?? profile?.email ?? ''} readOnly disabled className="opacity-70 cursor-not-allowed" />
             </Field>
-            <div className="col-span-2"><Field label="Registered address"><Input value={f.address ?? ''} onChange={(e) => set('address', e.target.value)} /></Field></div>
+            <div className="col-span-2"><Field label="Registered address *" error={errorFor('address')}><Input value={f.address ?? ''} onBlur={() => blur('address')} onChange={(e) => set('address', e.target.value)} /></Field></div>
           </div>
           <p className="text-xs text-muted-foreground">
             Your company email is the address your account was invited with and cannot be changed here.
@@ -369,13 +387,13 @@ export default function ExporterOnboarding() {
         <section className="card-elevated p-6 space-y-4">
           <h2 className="text-sm uppercase tracking-wider text-muted-foreground">2 · Director (KYC)</h2>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Director full name *"><Input value={f.director_name ?? ''} onChange={(e) => set('director_name', e.target.value)} /></Field>
-            <Field label="Director email"><Input type="email" value={f.director_email ?? ''} onChange={(e) => set('director_email', e.target.value)} /></Field>
-            <Field label="Director phone"><Input value={f.director_phone ?? ''} onChange={(e) => set('director_phone', e.target.value)} /></Field>
-            <Field label="Date of birth"><Input type="date" value={f.director_dob ?? ''} onChange={(e) => set('director_dob', e.target.value)} /></Field>
+            <Field label="Director full name *" error={errorFor('director_name')}><Input value={f.director_name ?? ''} onBlur={() => blur('director_name')} onChange={(e) => set('director_name', e.target.value)} /></Field>
+            <Field label="Director email" error={errorFor('director_email')}><Input type="email" value={f.director_email ?? ''} onBlur={() => blur('director_email')} onChange={(e) => set('director_email', e.target.value)} /></Field>
+            <Field label="Director phone" error={errorFor('director_phone')}><Input value={f.director_phone ?? ''} onBlur={() => blur('director_phone')} onChange={(e) => set('director_phone', e.target.value)} /></Field>
+            <Field label="Date of birth" error={errorFor('director_dob')}><Input type="date" value={f.director_dob ?? ''} onBlur={() => blur('director_dob')} onChange={(e) => set('director_dob', e.target.value)} /></Field>
             <Field label="Nationality"><OptionSelect value={f.director_nationality} onChange={(v) => set('director_nationality', v)} options={NATIONALITIES} placeholder="Select nationality" /></Field>
-            <Field label="ID type *"><OptionSelect value={f.director_id_type} onChange={(v) => set('director_id_type', v)} options={ID_TYPES} placeholder="Select ID type" /></Field>
-            <Field label="ID number *"><Input value={f.director_id_number ?? ''} onChange={(e) => set('director_id_number', e.target.value)} /></Field>
+            <Field label="ID type *" error={errorFor('director_id_type')}><OptionSelect value={f.director_id_type} onChange={(v) => { set('director_id_type', v); blur('director_id_type'); }} options={ID_TYPES} placeholder="Select ID type" /></Field>
+            <Field label="ID number *" error={errorFor('director_id_number')}><Input value={f.director_id_number ?? ''} onBlur={() => blur('director_id_number')} onChange={(e) => set('director_id_number', e.target.value)} /></Field>
             <div className="col-span-2"><Field label="Director residential address"><Input value={f.director_address ?? ''} onChange={(e) => set('director_address', e.target.value)} /></Field></div>
           </div>
         </section>
@@ -386,15 +404,16 @@ export default function ExporterOnboarding() {
         <section className="card-elevated p-6 space-y-4">
           <h2 className="text-sm uppercase tracking-wider text-muted-foreground">3 · Bank details</h2>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Bank name *"><OptionSelect value={f.bank_details?.bank_name} onChange={(v) => setBank('bank_name', v)} options={NIGERIAN_BANKS} placeholder="Select bank" /></Field>
+            <Field label="Bank name *" error={errorFor('bank_name')}><OptionSelect value={f.bank_details?.bank_name} onChange={(v) => { setBank('bank_name', v); blur('bank_name'); }} options={NIGERIAN_BANKS} placeholder="Select bank" /></Field>
             <Field label="Account name (must match company name)">
               <Input value={f.company_name ?? ''} readOnly disabled className="opacity-70 cursor-not-allowed" />
             </Field>
 
-            <Field label="Account number / IBAN *"><Input value={f.bank_details?.account_number ?? ''} onChange={(e) => setBank('account_number', e.target.value)} /></Field>
-            <Field label="SWIFT / BIC"><Input value={f.bank_details?.swift ?? ''} onChange={(e) => setBank('swift', e.target.value)} /></Field>
+            <Field label="Account number / IBAN *" error={errorFor('account_number')}><Input value={f.bank_details?.account_number ?? ''} onBlur={() => blur('account_number')} onChange={(e) => setBank('account_number', e.target.value)} /></Field>
+            <Field label="SWIFT / BIC" error={errorFor('swift')}><Input value={f.bank_details?.swift ?? ''} onBlur={() => blur('swift')} onChange={(e) => setBank('swift', e.target.value)} /></Field>
           </div>
         </section>
+
 
         <section className="card-elevated p-6 space-y-4">
           <h2 className="text-sm uppercase tracking-wider text-muted-foreground">4 · Upload documents</h2>
