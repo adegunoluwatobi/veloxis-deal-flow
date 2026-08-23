@@ -116,16 +116,30 @@ export function OptionSelect({
   placeholder?: string;
   disabled?: boolean;
 }) {
+  const [open, setOpen] = useState(false);
   return (
-    <Select value={value || undefined} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger>
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent className="max-h-72">
-        {options.map((o) => (
-          <SelectItem key={o} value={o}>{o}</SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button type="button" variant="outline" disabled={disabled} className="w-full justify-between font-normal">
+          <span className={value ? 'truncate' : 'text-muted-foreground truncate'}>{value || placeholder}</span>
+          <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Search…" />
+          <CommandList className="max-h-72">
+            <CommandEmpty>Nothing found.</CommandEmpty>
+            <CommandGroup>
+              {options.map((o) => (
+                <CommandItem key={o} value={o} onSelect={() => { onChange(o); setOpen(false); }}>
+                  {o}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
