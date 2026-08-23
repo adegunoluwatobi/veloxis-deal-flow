@@ -131,7 +131,8 @@ export default function BoardResolutionReviewStep({
             Board resolution <span className="text-destructive">*</span>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Required. Check the document, then record the authorised limit and signatories.
+            Required. Check the document, then record the date it was passed and the authorised signatories.
+            The resolution runs for one year from that date.
           </p>
         </div>
         {doc && (
@@ -141,14 +142,27 @@ export default function BoardResolutionReviewStep({
         )}
       </div>
 
-      {!doc && <p className="text-sm text-destructive">The exporter has not uploaded a board resolution.</p>}
+      {!doc && (
+        <div className="space-y-2">
+          <p className="text-sm text-destructive">The exporter has not uploaded a board resolution.</p>
+          {canReview && (
+            <Button size="sm" variant="outline" onClick={requestResolution} disabled={busy}>
+              Request board resolution
+            </Button>
+          )}
+        </div>
+      )}
+
+      {resolution?.renewal_required && (
+        <div className="rounded border border-amber-500/40 bg-amber-500/10 p-2 text-sm text-amber-400">
+          {resolution.renewal_reason ?? 'A replacement board resolution is required.'}
+        </div>
+      )}
 
       {done && (
         <div className="grid grid-cols-2 gap-2 text-sm">
-          <div><span className="text-muted-foreground">Authorised limit: </span>{money(Number(resolution.authorised_limit))} GBP</div>
-          <div><span className="text-muted-foreground">Basis: </span>{resolution.limit_basis === 'advance_outstanding' ? 'Funds advanced' : 'Invoice face value'}</div>
-          <div><span className="text-muted-foreground">Valid from: </span>{resolution.valid_from}</div>
-          <div><span className="text-muted-foreground">Valid until: </span>{resolution.valid_until}</div>
+          <div><span className="text-muted-foreground">Passed on: </span>{resolution.valid_from}</div>
+          <div><span className="text-muted-foreground">Expires: </span>{resolution.valid_until}</div>
         </div>
       )}
 
@@ -156,46 +170,33 @@ export default function BoardResolutionReviewStep({
         <div className="space-y-4 border-t border-border pt-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs">Authorised limit (GBP)</Label>
-              <Input type="number" step="0.01" value={form.authorised_limit}
-                onChange={(e) => setForm({ ...form, authorised_limit: e.target.value })} />
+              <Label className="text-xs">Date the resolution was passed</Label>
+              <Input type="date" value={validFrom} onChange={(e) => setValidFrom(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Limit basis</Label>
-              <Select value={form.limit_basis} onValueChange={(v) => setForm({ ...form, limit_basis: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="gross_face_value">Invoice face value</SelectItem>
-                  <SelectItem value="advance_outstanding">Funds advanced</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Valid from</Label>
-              <Input type="date" value={form.valid_from} onChange={(e) => setForm({ ...form, valid_from: e.target.value })} />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Valid until</Label>
-              <Input type="date" value={form.valid_until} onChange={(e) => setForm({ ...form, valid_until: e.target.value })} />
+              <Label className="text-xs">Expires (one year, automatic)</Label>
+              <Input value={oneYearOn(validFrom) || '—'} readOnly className="bg-muted/30" />
             </div>
           </div>
 
           <div className="space-y-2">
             <div className="text-xs uppercase tracking-wider text-muted-foreground">Authorised signatories</div>
             {sigs.map((s, i) => (
-              <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2">
+              <div key={i} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2">
                 <Input placeholder="Full name" value={s.full_name}
                   onChange={(e) => setSigs(sigs.map((x, j) => j === i ? { ...x, full_name: e.target.value } : x))} />
                 <Input placeholder="Position" value={s.position}
                   onChange={(e) => setSigs(sigs.map((x, j) => j === i ? { ...x, position: e.target.value } : x))} />
                 <Input placeholder="Email" value={s.email}
                   onChange={(e) => setSigs(sigs.map((x, j) => j === i ? { ...x, email: e.target.value } : x))} />
+                <Input placeholder="Phone" value={s.phone}
+                  onChange={(e) => setSigs(sigs.map((x, j) => j === i ? { ...x, phone: e.target.value } : x))} />
                 <Button type="button" size="icon" variant="ghost" onClick={() => setSigs(sigs.filter((_, j) => j !== i))}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             ))}
-            <Button type="button" size="sm" variant="outline" onClick={() => setSigs([...sigs, { full_name: '', position: '', email: '' }])}>
+            <Button type="button" size="sm" variant="outline" onClick={() => setSigs([...sigs, emptySig()])}>
               <Plus className="h-4 w-4 mr-1" /> Add signatory
             </Button>
           </div>
@@ -222,22 +223,21 @@ export default function BoardResolutionReviewStep({
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirm the transcribed figures</DialogTitle>
+            <DialogTitle>Confirm the transcribed details</DialogTitle>
             <DialogDescription>
-              These figures become a hard limit on everything this exporter can draw.
+              These signatories become the only people who can commit this company.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-1 text-sm">
-            <div><span className="text-muted-foreground">Authorised limit: </span>{money(Number(form.authorised_limit || 0))} GBP</div>
-            <div><span className="text-muted-foreground">Basis: </span>{form.limit_basis === 'advance_outstanding' ? 'Funds advanced' : 'Invoice face value'}</div>
-            <div><span className="text-muted-foreground">Valid: </span>{form.valid_from} to {form.valid_until}</div>
+            <div><span className="text-muted-foreground">Valid: </span>{validFrom} to {oneYearOn(validFrom)}</div>
             <div className="pt-2 text-muted-foreground">Signatories</div>
             <ul className="list-disc pl-5">
               {sigs.filter((s) => s.full_name.trim()).map((s, i) => (
-                <li key={i}>{s.full_name}{s.position ? ` · ${s.position}` : ''}{s.email ? ` · ${s.email}` : ''}</li>
+                <li key={i}>{s.full_name}{s.position ? ` · ${s.position}` : ''}{s.email ? ` · ${s.email}` : ''}{s.phone ? ` · ${s.phone}` : ''}</li>
               ))}
             </ul>
           </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmOpen(false)}>Back</Button>
             <Button onClick={transcribe} disabled={busy}>Confirm and record</Button>
