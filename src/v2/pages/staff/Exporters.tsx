@@ -35,15 +35,6 @@ export default function StaffExporters() {
         <div><h1 className="text-2xl">Exporters</h1><p className="text-sm text-muted-foreground">{rows.length} total</p></div>
         <div className="flex items-center gap-2">
         {canCreate && <InviteExporterDialog />}
-        {canCreate && (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button>Add exporter</Button></DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>New exporter</DialogTitle></DialogHeader>
-              <NewExporterForm onDone={() => { setOpen(false); load(); }} />
-            </DialogContent>
-          </Dialog>
-        )}
         </div>
       </div>
       <div className="card-elevated overflow-hidden">
