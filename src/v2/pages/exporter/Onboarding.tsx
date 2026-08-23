@@ -40,6 +40,10 @@ export default function ExporterOnboarding() {
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [uploadingName, setUploadingName] = useState<Record<string, string>>({});
   const [uploadError, setUploadError] = useState<Record<string, { file: File; message: string }>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [showAllErrors, setShowAllErrors] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
+
 
 
   const load = useCallback(async () => {
