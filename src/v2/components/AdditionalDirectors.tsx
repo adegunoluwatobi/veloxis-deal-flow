@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,10 +29,24 @@ const BLANK = {
   id_document_url: '', id_document_name: '',
 };
 
-export default function AdditionalDirectors({ exporterId }: { exporterId?: string | null }) {
+export default function AdditionalDirectors({
+  exporterId,
+  ensureExporterId,
+}: {
+  exporterId?: string | null;
+  /** Saves the company profile if needed and returns the exporter id. */
+  ensureExporterId?: () => Promise<string | null>;
+}) {
   const [rows, setRows] = useState<any[]>([]);
   const [busy, setBusy] = useState(false);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
   const [uploading, setUploading] = useState<Record<number, string>>({});
+  const savingRef = useRef(false);
+
+  const resolveExporterId = useCallback(async () => {
+    if (exporterId) return exporterId;
+    return (await ensureExporterId?.()) ?? null;
+  }, [exporterId, ensureExporterId]);
 
   const load = useCallback(async () => {
     if (!exporterId) { setRows([]); return; }
@@ -62,54 +76,66 @@ export default function AdditionalDirectors({ exporterId }: { exporterId?: strin
     setRows((rs) => rs.filter((_, i) => i !== idx));
   };
 
-  const saveAll = async () => {
-    if (!exporterId) { toast({ title: 'Save your company profile first', variant: 'destructive' }); return; }
-    const dirty = rows.filter((r) => r._dirty);
-    if (dirty.length === 0) { toast({ title: 'Nothing to save' }); return; }
-    if (dirty.some((r) => !r.full_name?.trim())) {
-      toast({ title: 'Every director needs a full name', variant: 'destructive' });
-      return;
-    }
+  const saveAll = useCallback(async () => {
+    if (savingRef.current) return;
+    const dirty = rows.filter((r) => r._dirty && r.full_name?.trim());
+    if (dirty.length === 0) return;
+    const expId = await resolveExporterId();
+    if (!expId) return;
+
+    savingRef.current = true;
     setBusy(true);
-    for (const r of dirty) {
-      const payload = {
-        exporter_id: exporterId,
-        full_name: r.full_name.trim(),
-        email: r.email || null,
-        phone: r.phone || null,
-        dob: r.dob || null,
-        nationality: r.nationality || null,
-        id_type: r.id_type || null,
-        id_number: r.id_number || null,
-        address: r.address || null,
-        position: r.position || null,
-        id_document_url: r.id_document_url || null,
-        id_document_name: r.id_document_name || null,
-      };
-      const { error } = r.id
-        ? await supabase.from('v2_exporter_directors').update(payload).eq('id', r.id)
-        : await supabase.from('v2_exporter_directors').insert(payload);
-      if (error) {
-        setBusy(false);
-        toast({ title: 'Could not save directors', description: error.message, variant: 'destructive' });
-        return;
+    try {
+      for (const r of dirty) {
+        const payload = {
+          exporter_id: expId,
+          full_name: r.full_name.trim(),
+          email: r.email || null,
+          phone: r.phone || null,
+          dob: r.dob || null,
+          nationality: r.nationality || null,
+          id_type: r.id_type || null,
+          id_number: r.id_number || null,
+          address: r.address || null,
+          position: r.position || null,
+          id_document_url: r.id_document_url || null,
+          id_document_name: r.id_document_name || null,
+        };
+        const res = r.id
+          ? await supabase.from('v2_exporter_directors').update(payload).eq('id', r.id).select('id').single()
+          : await supabase.from('v2_exporter_directors').insert(payload).select('id').single();
+        if (res.error) {
+          toast({ title: 'Could not save directors', description: res.error.message, variant: 'destructive' });
+          return;
+        }
+        const newId = res.data?.id;
+        setRows((rs) => rs.map((x) => (x === r ? { ...x, id: newId, _dirty: false, _new: false } : x)));
       }
+      setSavedAt(new Date().toLocaleTimeString());
+    } finally {
+      savingRef.current = false;
+      setBusy(false);
     }
-    setBusy(false);
-    toast({ title: 'Directors saved' });
-    load();
-  };
+  }, [rows, resolveExporterId]);
+
+  /* Autosave dirty rows a moment after the exporter stops typing. */
+  useEffect(() => {
+    if (!rows.some((r) => r._dirty && r.full_name?.trim())) return;
+    const t = setTimeout(() => { saveAll(); }, 1200);
+    return () => clearTimeout(t);
+  }, [rows, saveAll]);
 
   const uploadId = async (idx: number, file: File) => {
-    if (!exporterId) { toast({ title: 'Save your company profile first', variant: 'destructive' }); return; }
+    const expId = await resolveExporterId();
+    if (!expId) { toast({ title: 'Add your company details first', variant: 'destructive' }); return; }
     setUploading((u) => ({ ...u, [idx]: file.name }));
     try {
       const safe = file.name.replace(/[^a-z0-9._-]+/gi, '_');
-      const path = `${exporterId}/company/directors/id-${Date.now()}-${safe}`;
+      const path = `${expId}/company/directors/id-${Date.now()}-${safe}`;
       const { error } = await supabase.storage.from('veloxis-documents').upload(path, file, { upsert: true });
       if (error) throw error;
       setRows((rs) => rs.map((r, i) => (i === idx ? { ...r, id_document_url: path, id_document_name: file.name, _dirty: true } : r)));
-      toast({ title: 'ID uploaded', description: `${file.name} — remember to save directors.` });
+      toast({ title: 'ID uploaded', description: file.name });
     } catch (err: any) {
       toast({ title: 'Upload failed', description: err?.message ?? 'Please try again.', variant: 'destructive' });
     } finally {
@@ -126,14 +152,13 @@ export default function AdditionalDirectors({ exporterId }: { exporterId?: strin
             Add every other director or beneficial owner. Each one is screened as part of KYC.
           </p>
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={addRow} disabled={busy}>
-          <Plus className="h-3.5 w-3.5 mr-1" /> Add director
-        </Button>
+        <div className="flex items-center gap-3">
+          {savedAt && <span className="text-xs text-muted-foreground">Saved {savedAt}</span>}
+          <Button type="button" variant="outline" size="sm" onClick={addRow}>
+            <Plus className="h-3.5 w-3.5 mr-1" /> Add director
+          </Button>
+        </div>
       </div>
-
-      {!exporterId && (
-        <p className="text-xs text-amber-400">Save your company details first, then you can add more directors.</p>
-      )}
 
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">No additional directors added.</p>
@@ -169,7 +194,7 @@ export default function AdditionalDirectors({ exporterId }: { exporterId?: strin
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png"
                         className="hidden"
-                        disabled={!exporterId || !!uploading[idx]}
+                        disabled={!!uploading[idx]}
                         onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ''; if (file) uploadId(idx, file); }}
                       />
                     </label>
@@ -188,7 +213,7 @@ export default function AdditionalDirectors({ exporterId }: { exporterId?: strin
       )}
 
       {rows.length > 0 && (
-        <div><Button type="button" variant="outline" onClick={saveAll} disabled={busy || !exporterId}>Save directors</Button></div>
+        <p className="text-xs text-muted-foreground">Changes to directors save automatically.</p>
       )}
     </section>
   );
