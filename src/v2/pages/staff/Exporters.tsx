@@ -75,42 +75,6 @@ export default function StaffExporters() {
   );
 }
 
-function NewExporterForm({ onDone }: { onDone: () => void }) {
-  const [f, setF] = useState({ company_name: '', rc_number: '', contact_name: '', email: '', phone: '', commodity: '', address: '', nepc_status: 'none' });
-  const [busy, setBusy] = useState(false);
-  const set = (k: keyof typeof f, v: string) => setF((x) => ({ ...x, [k]: v }));
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault(); setBusy(true);
-    const { error } = await supabase.from('v2_exporters').insert({ ...f, nepc_status: f.nepc_status as any, onboarding_status: 'pending' } as any);
-    setBusy(false);
-    if (error) return toast({ title: 'Failed', description: error.message, variant: 'destructive' });
-    toast({ title: 'Exporter added' }); onDone();
-  };
-  return (
-    <form onSubmit={submit} className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Company *"><Input required value={f.company_name} onChange={(e) => set('company_name', e.target.value)} /></Field>
-        <Field label="RC number"><Input value={f.rc_number} onChange={(e) => set('rc_number', e.target.value)} /></Field>
-        <Field label="Contact name"><Input value={f.contact_name} onChange={(e) => set('contact_name', e.target.value)} /></Field>
-        <Field label="Email"><Input type="email" value={f.email} onChange={(e) => set('email', e.target.value)} /></Field>
-        <Field label="Phone"><Input value={f.phone} onChange={(e) => set('phone', e.target.value)} /></Field>
-        <Field label="Commodity"><Input value={f.commodity} onChange={(e) => set('commodity', e.target.value)} /></Field>
-        <Field label="NEPC status">
-          <Select value={f.nepc_status} onValueChange={(v) => set('nepc_status', v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{['valid', 'expired', 'none'].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-          </Select>
-        </Field>
-        <Field label="Address"><Input value={f.address} onChange={(e) => set('address', e.target.value)} /></Field>
-      </div>
-      <Button type="submit" disabled={busy}>Create</Button>
-    </form>
-  );
-}
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div className="space-y-1"><Label className="text-xs">{label}</Label>{children}</div>;
-}
-
 function InviteExporterDialog() {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
