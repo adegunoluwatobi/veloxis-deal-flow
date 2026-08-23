@@ -508,9 +508,11 @@ function RequestDocumentDialog({
 }
 
 export function InspectionOverrideCard({
-  invoiceId, required, reason, canOverride, onChanged,
+  invoiceId, required, reason, canOverride, onChanged, satisfied = false,
 }: {
   invoiceId: string; required: boolean; reason: string | null; canOverride: boolean; onChanged: () => void;
+  /** true once a clean certificate of inspection has been uploaded and verified */
+  satisfied?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState('');
@@ -532,13 +534,15 @@ export function InspectionOverrideCard({
     <section className="card-elevated p-5 space-y-2">
       <h3 className="text-sm uppercase tracking-wider text-muted-foreground">Inspection</h3>
       <div className="flex items-center gap-2 text-sm">
-        {required ? <ShieldAlert className="h-4 w-4 text-amber-400" /> : <CheckCircle2 className="h-4 w-4 text-emerald-400" />}
+        {required && !satisfied ? <ShieldAlert className="h-4 w-4 text-amber-400" /> : <CheckCircle2 className="h-4 w-4 text-emerald-400" />}
         {required
-          ? 'A clean certificate of inspection is required and must be verified before this application advances.'
+          ? (satisfied
+            ? 'The clean certificate of inspection has been uploaded and verified.'
+            : 'A clean certificate of inspection is required and must be verified before this application advances.')
           : 'No inspection certificate is required on this application.'}
       </div>
       {reason && <p className="text-xs text-muted-foreground">Last override: {reason}</p>}
-      {canOverride && (
+      {canOverride && !(required && satisfied) && (
         <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
           {required ? 'Remove inspection requirement' : 'Require inspection'}
         </Button>

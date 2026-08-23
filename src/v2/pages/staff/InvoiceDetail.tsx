@@ -67,6 +67,8 @@ export default function StaffInvoiceDetail() {
   useEffect(() => { load(); }, [load]);
 
   const docState = useInvoiceDocuments(id, !!inv?.inspection_required);
+  const inspectionType = docState.types.find((t) => t.code === 'inspection_certificate');
+  const inspectionVerified = !!inspectionType && docState.currentFor(inspectionType.id)?.status === 'verified';
   const instruments = useInstruments(id);
 
   if (!inv) return <div className="text-muted-foreground">Loading…</div>;
@@ -367,6 +369,7 @@ export default function StaffInvoiceDetail() {
                 required={!!inv.inspection_required}
                 reason={inv.inspection_override_reason ?? null}
                 canOverride={canReview}
+                satisfied={inspectionVerified}
                 onChanged={load}
               />
               <GeneratedInstrumentsPanel
