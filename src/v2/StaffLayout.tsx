@@ -8,6 +8,8 @@ import {
   Bell, BellOff, Eye, Archive, ShieldAlert, BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import NotificationBell from './components/NotificationBell';
+
 
 const NAV = [
   { to: '/app', label: 'Overview', icon: LayoutDashboard, end: true },
