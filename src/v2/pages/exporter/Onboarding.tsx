@@ -7,10 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { OptionSelect, ID_TYPES, COUNTRIES, NATIONALITIES, INDUSTRIES, NIGERIAN_BANKS } from '@/v2/lib/formOptions';
-import { CheckCircle2, Upload, Clock, AlertCircle, Lock, FileDown } from 'lucide-react';
+import { CheckCircle2, Upload, Clock, AlertCircle, Lock, FileDown, Printer } from 'lucide-react';
 import AdditionalDirectors from '@/v2/components/AdditionalDirectors';
 import SignOutButton from '@/v2/components/SignOutButton';
-import { openBoardResolutionTemplate } from '@/v2/lib/boardResolutionTemplate';
+import { openBoardResolutionTemplate, downloadBoardResolutionPdf } from '@/v2/lib/boardResolutionTemplate';
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 
@@ -40,6 +41,10 @@ export default function ExporterOnboarding() {
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [uploadingName, setUploadingName] = useState<Record<string, string>>({});
   const [uploadError, setUploadError] = useState<Record<string, { file: File; message: string }>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [showAllErrors, setShowAllErrors] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
+
 
 
   const load = useCallback(async () => {
@@ -79,15 +84,101 @@ export default function ExporterOnboarding() {
 
   const set = (k: string, v: any) => setF((x: any) => ({ ...x, [k]: v }));
   const setBank = (k: string, v: string) => setF((x: any) => ({ ...x, bank_details: { ...(x.bank_details ?? {}), [k]: v } }));
+  const blur = (k: string) => setTouched((t) => ({ ...t, [k]: true }));
 
   const latestDoc = (t: DocType) => docs.find((d) => d.document_type_id === typeIds[t]);
   const missingDocs = REQUIRED_DOCS.filter((r) => !latestDoc(r.key));
 
+  const errors: Record<string, string> = (() => {
+    const e: Record<string, string> = {};
+    const s = (v: any) => String(v ?? '').trim();
+    const emailOk = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+    const phoneOk = (v: string) => /^\+?[0-9][0-9\s().-]{6,19}$/.test(v);
 
-  const requiredFieldsOk =
-    f.company_name && f.company_registration_number && f.country_of_incorporation &&
-    f.director_name && f.director_id_type && f.director_id_number &&
-    f.bank_details?.bank_name && f.bank_details?.account_number;
+    if (!s(f.company_name)) e.company_name = 'Company name is required.';
+    else if (s(f.company_name).length < 2) e.company_name = 'Enter the full registered company name.';
+
+    if (!s(f.company_registration_number)) e.company_registration_number = 'Registration number is required.';
+    else if (!/^[A-Za-z0-9/-]{4,20}$/.test(s(f.company_registration_number)))
+      e.company_registration_number = 'Enter a valid RC / CAC number (letters and numbers, 4–20 characters).';
+
+    if (!s(f.country_of_incorporation)) e.country_of_incorporation = 'Select the country of incorporation.';
+
+    if (s(f.incorporation_date) && new Date(s(f.incorporation_date)) > new Date())
+      e.incorporation_date = 'Incorporation date cannot be in the future.';
+
+    if (s(f.tax_id) && !/^[A-Za-z0-9-]{6,20}$/.test(s(f.tax_id)))
+      e.tax_id = 'Enter a valid TIN (6–20 characters, letters or numbers).';
+
+    if (s(f.phone) && !phoneOk(s(f.phone))) e.phone = 'Enter a valid phone number, e.g. +234 801 234 5678.';
+    if (!s(f.address)) e.address = 'Registered address is required.';
+
+    if (!s(f.director_name)) e.director_name = 'Director full name is required.';
+    else if (!s(f.director_name).includes(' ')) e.director_name = 'Enter the director’s first and last name.';
+
+    if (s(f.director_email) && !emailOk(s(f.director_email))) e.director_email = 'Please enter a valid email address.';
+    if (s(f.director_phone) && !phoneOk(s(f.director_phone))) e.director_phone = 'Enter a valid phone number.';
+
+    if (s(f.director_dob)) {
+      const dob = new Date(s(f.director_dob));
+      const age = (Date.now() - dob.getTime()) / 31557600000;
+      if (age < 18) e.director_dob = 'The director must be at least 18 years old.';
+      else if (age > 100) e.director_dob = 'Please check the date of birth.';
+    }
+
+    if (!s(f.director_id_type)) e.director_id_type = 'Select the ID type.';
+    if (!s(f.director_id_number)) e.director_id_number = 'ID number is required.';
+    else if (!/^[A-Za-z0-9-]{5,20}$/.test(s(f.director_id_number)))
+      e.director_id_number = 'Enter the ID number exactly as printed (5–20 characters).';
+
+    if (!s(f.bank_details?.bank_name)) e.bank_name = 'Select your bank.';
+    const acct = s(f.bank_details?.account_number);
+    if (!acct) e.account_number = 'Account number is required.';
+    else if (!/^[A-Za-z0-9]{8,34}$/.test(acct)) e.account_number = 'Enter a valid account number or IBAN (8–34 characters).';
+    else if (/^\d+$/.test(acct) && acct.length !== 10) e.account_number = 'A Nigerian account number (NUBAN) is 10 digits.';
+
+    const swift = s(f.bank_details?.swift);
+    if (swift && !/^[A-Za-z]{6}[A-Za-z0-9]{2}([A-Za-z0-9]{3})?$/.test(swift))
+      e.swift = 'A SWIFT / BIC code is 8 or 11 characters, e.g. ABCDNGLA.';
+
+    return e;
+  })();
+
+  const errorFor = (k: string) => ((showAllErrors || touched[k]) ? errors[k] : undefined);
+  const requiredFieldsOk = Object.keys(errors).length === 0;
+
+  // Board resolution template needs these before it is worth generating.
+  const templateMissing = [
+    !String(f.company_name ?? '').trim() && 'company name',
+    !String(f.company_registration_number ?? '').trim() && 'registration number',
+    !String(f.address ?? '').trim() && 'registered address',
+    !String(f.director_name ?? '').trim() && 'director full name',
+  ].filter(Boolean) as string[];
+
+  const templateInput = () => ({
+    companyName: f.company_name,
+    registrationNumber: f.company_registration_number,
+    registeredAddress: f.address,
+    companyEmail: f.email ?? profile?.email,
+    signatories: [
+      { name: f.director_name, designation: 'Director', email: f.director_email ?? f.email ?? profile?.email },
+      {},
+    ],
+  });
+
+  const templateReady = () => {
+    if (templateMissing.length === 0) return true;
+    setShowAllErrors(true);
+    toast({
+      title: 'Complete your details first',
+      description: `The template needs your ${templateMissing.join(', ')}.`,
+      variant: 'destructive',
+    });
+    return false;
+  };
+
+
+
 
   const saveProfile = async (): Promise<string | null> => {
     const payload: any = {
@@ -194,8 +285,18 @@ export default function ExporterOnboarding() {
 
 
   const submitForReview = async () => {
-    if (!requiredFieldsOk) { toast({ title: 'Complete required company & director fields', variant: 'destructive' }); return; }
+    if (!requiredFieldsOk) {
+      setShowAllErrors(true);
+      toast({
+        title: 'Please fix the highlighted fields',
+        description: `${Object.keys(errors).length} field${Object.keys(errors).length === 1 ? '' : 's'} need attention.`,
+        variant: 'destructive',
+      });
+      document.getElementById('onboarding-error-summary')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     if (missingDocs.length) {
+      setShowAllErrors(true);
       toast({
         title: 'Upload all required documents first',
         description: `Still needed: ${missingDocs.map((d) => d.label).join(', ')}`,
@@ -203,6 +304,7 @@ export default function ExporterOnboarding() {
       });
       return;
     }
+
     setBusy(true);
     const expId = await saveProfile();
     if (!expId) { setBusy(false); return; }
@@ -276,21 +378,39 @@ export default function ExporterOnboarding() {
           </div>
         )}
 
+        {showAllErrors && Object.keys(errors).length > 0 && (
+          <div id="onboarding-error-summary" className="card-elevated p-4 border-destructive/60 bg-destructive/10">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <div className="font-medium text-destructive">
+                  {Object.keys(errors).length} field{Object.keys(errors).length === 1 ? '' : 's'} need attention
+                </div>
+                <ul className="mt-1.5 space-y-0.5 text-muted-foreground list-disc pl-4">
+                  {Object.entries(errors).map(([k, v]) => (
+                    <li key={k}><span className="text-foreground">{FIELD_LABELS[k] ?? k}</span> — {v}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
         <section className="card-elevated p-6 space-y-4">
           <h2 className="text-sm uppercase tracking-wider text-muted-foreground">1 · Company (KYB)</h2>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Company name *"><Input value={f.company_name ?? ''} onChange={(e) => set('company_name', e.target.value)} /></Field>
-            <Field label="Registration number (RC / CAC) *"><Input value={f.company_registration_number ?? ''} onChange={(e) => set('company_registration_number', e.target.value)} /></Field>
-            <Field label="Country of incorporation *"><OptionSelect value={f.country_of_incorporation} onChange={(v) => set('country_of_incorporation', v)} options={COUNTRIES} placeholder="Select country" /></Field>
-            <Field label="Incorporation date"><Input type="date" value={f.incorporation_date ?? ''} onChange={(e) => set('incorporation_date', e.target.value)} /></Field>
-            <Field label="Tax ID / TIN"><Input value={f.tax_id ?? ''} onChange={(e) => set('tax_id', e.target.value)} /></Field>
+            <Field label="Company name *" error={errorFor('company_name')}><Input value={f.company_name ?? ''} onBlur={() => blur('company_name')} onChange={(e) => set('company_name', e.target.value)} /></Field>
+            <Field label="Registration number (RC / CAC) *" error={errorFor('company_registration_number')}><Input value={f.company_registration_number ?? ''} onBlur={() => blur('company_registration_number')} onChange={(e) => set('company_registration_number', e.target.value)} /></Field>
+            <Field label="Country of incorporation *" error={errorFor('country_of_incorporation')}><OptionSelect value={f.country_of_incorporation} onChange={(v) => { set('country_of_incorporation', v); blur('country_of_incorporation'); }} options={COUNTRIES} placeholder="Select country" /></Field>
+            <Field label="Incorporation date" error={errorFor('incorporation_date')}><Input type="date" value={f.incorporation_date ?? ''} onBlur={() => blur('incorporation_date')} onChange={(e) => set('incorporation_date', e.target.value)} /></Field>
+            <Field label="Tax ID / TIN" error={errorFor('tax_id')}><Input value={f.tax_id ?? ''} onBlur={() => blur('tax_id')} onChange={(e) => set('tax_id', e.target.value)} /></Field>
             <Field label="Industry"><OptionSelect value={f.industry} onChange={(v) => set('industry', v)} options={INDUSTRIES} placeholder="Select industry" /></Field>
             <Field label="Primary commodity"><Input value={f.commodity ?? ''} onChange={(e) => set('commodity', e.target.value)} /></Field>
-            <Field label="Company phone"><Input value={f.phone ?? ''} onChange={(e) => set('phone', e.target.value)} /></Field>
+            <Field label="Company phone" error={errorFor('phone')}><Input value={f.phone ?? ''} onBlur={() => blur('phone')} onChange={(e) => set('phone', e.target.value)} /></Field>
             <Field label="Company email">
               <Input value={f.email ?? profile?.email ?? ''} readOnly disabled className="opacity-70 cursor-not-allowed" />
             </Field>
-            <div className="col-span-2"><Field label="Registered address"><Input value={f.address ?? ''} onChange={(e) => set('address', e.target.value)} /></Field></div>
+            <div className="col-span-2"><Field label="Registered address *" error={errorFor('address')}><Input value={f.address ?? ''} onBlur={() => blur('address')} onChange={(e) => set('address', e.target.value)} /></Field></div>
           </div>
           <p className="text-xs text-muted-foreground">
             Your company email is the address your account was invited with and cannot be changed here.
@@ -300,13 +420,13 @@ export default function ExporterOnboarding() {
         <section className="card-elevated p-6 space-y-4">
           <h2 className="text-sm uppercase tracking-wider text-muted-foreground">2 · Director (KYC)</h2>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Director full name *"><Input value={f.director_name ?? ''} onChange={(e) => set('director_name', e.target.value)} /></Field>
-            <Field label="Director email"><Input type="email" value={f.director_email ?? ''} onChange={(e) => set('director_email', e.target.value)} /></Field>
-            <Field label="Director phone"><Input value={f.director_phone ?? ''} onChange={(e) => set('director_phone', e.target.value)} /></Field>
-            <Field label="Date of birth"><Input type="date" value={f.director_dob ?? ''} onChange={(e) => set('director_dob', e.target.value)} /></Field>
+            <Field label="Director full name *" error={errorFor('director_name')}><Input value={f.director_name ?? ''} onBlur={() => blur('director_name')} onChange={(e) => set('director_name', e.target.value)} /></Field>
+            <Field label="Director email" error={errorFor('director_email')}><Input type="email" value={f.director_email ?? ''} onBlur={() => blur('director_email')} onChange={(e) => set('director_email', e.target.value)} /></Field>
+            <Field label="Director phone" error={errorFor('director_phone')}><Input value={f.director_phone ?? ''} onBlur={() => blur('director_phone')} onChange={(e) => set('director_phone', e.target.value)} /></Field>
+            <Field label="Date of birth" error={errorFor('director_dob')}><Input type="date" value={f.director_dob ?? ''} onBlur={() => blur('director_dob')} onChange={(e) => set('director_dob', e.target.value)} /></Field>
             <Field label="Nationality"><OptionSelect value={f.director_nationality} onChange={(v) => set('director_nationality', v)} options={NATIONALITIES} placeholder="Select nationality" /></Field>
-            <Field label="ID type *"><OptionSelect value={f.director_id_type} onChange={(v) => set('director_id_type', v)} options={ID_TYPES} placeholder="Select ID type" /></Field>
-            <Field label="ID number *"><Input value={f.director_id_number ?? ''} onChange={(e) => set('director_id_number', e.target.value)} /></Field>
+            <Field label="ID type *" error={errorFor('director_id_type')}><OptionSelect value={f.director_id_type} onChange={(v) => { set('director_id_type', v); blur('director_id_type'); }} options={ID_TYPES} placeholder="Select ID type" /></Field>
+            <Field label="ID number *" error={errorFor('director_id_number')}><Input value={f.director_id_number ?? ''} onBlur={() => blur('director_id_number')} onChange={(e) => set('director_id_number', e.target.value)} /></Field>
             <div className="col-span-2"><Field label="Director residential address"><Input value={f.director_address ?? ''} onChange={(e) => set('director_address', e.target.value)} /></Field></div>
           </div>
         </section>
@@ -317,15 +437,16 @@ export default function ExporterOnboarding() {
         <section className="card-elevated p-6 space-y-4">
           <h2 className="text-sm uppercase tracking-wider text-muted-foreground">3 · Bank details</h2>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Bank name *"><OptionSelect value={f.bank_details?.bank_name} onChange={(v) => setBank('bank_name', v)} options={NIGERIAN_BANKS} placeholder="Select bank" /></Field>
+            <Field label="Bank name *" error={errorFor('bank_name')}><OptionSelect value={f.bank_details?.bank_name} onChange={(v) => { setBank('bank_name', v); blur('bank_name'); }} options={NIGERIAN_BANKS} placeholder="Select bank" /></Field>
             <Field label="Account name (must match company name)">
               <Input value={f.company_name ?? ''} readOnly disabled className="opacity-70 cursor-not-allowed" />
             </Field>
 
-            <Field label="Account number / IBAN *"><Input value={f.bank_details?.account_number ?? ''} onChange={(e) => setBank('account_number', e.target.value)} /></Field>
-            <Field label="SWIFT / BIC"><Input value={f.bank_details?.swift ?? ''} onChange={(e) => setBank('swift', e.target.value)} /></Field>
+            <Field label="Account number / IBAN *" error={errorFor('account_number')}><Input value={f.bank_details?.account_number ?? ''} onBlur={() => blur('account_number')} onChange={(e) => setBank('account_number', e.target.value)} /></Field>
+            <Field label="SWIFT / BIC" error={errorFor('swift')}><Input value={f.bank_details?.swift ?? ''} onBlur={() => blur('swift')} onChange={(e) => setBank('swift', e.target.value)} /></Field>
           </div>
         </section>
+
 
         <section className="card-elevated p-6 space-y-4">
           <h2 className="text-sm uppercase tracking-wider text-muted-foreground">4 · Upload documents</h2>
@@ -348,25 +469,37 @@ export default function ExporterOnboarding() {
                       </div>
                     )}
                     {r.key === 'board_resolution' && (
-                      <Button
-                        type="button" size="sm" variant="outline" className="mt-2 h-7 text-xs"
-                        onClick={() => {
-                          const ok = openBoardResolutionTemplate({
-                            companyName: f.company_name,
-                            registrationNumber: f.company_registration_number,
-                            registeredAddress: f.address,
-                            companyEmail: f.email ?? profile?.email,
-                            signatories: [
-                              { name: f.director_name, designation: 'Director', email: f.director_email ?? f.email ?? profile?.email },
-                              {},
-                            ],
-                          });
-                          if (!ok) toast({ title: 'Allow pop-ups to open the template', variant: 'destructive' });
-                        }}
-                      >
-                        <FileDown className="h-3.5 w-3.5 mr-1" /> Generate template
-                      </Button>
+                      <div className="mt-2 space-y-1.5">
+                        <div className="flex flex-wrap gap-2">
+                          <Button type="button" size="sm" variant="outline" className="h-7 text-xs" disabled={pdfBusy}
+                            onClick={() => {
+                              if (!templateReady()) return;
+                              const ok = openBoardResolutionTemplate(templateInput());
+                              if (!ok) toast({ title: 'Allow pop-ups to print the template', variant: 'destructive' });
+                            }}>
+                            <Printer className="h-3.5 w-3.5 mr-1" /> Print template
+                          </Button>
+                          <Button type="button" size="sm" variant="outline" className="h-7 text-xs" disabled={pdfBusy}
+                            onClick={async () => {
+                              if (!templateReady()) return;
+                              setPdfBusy(true);
+                              try {
+                                await downloadBoardResolutionPdf(templateInput());
+                              } catch (e: any) {
+                                toast({ title: 'Could not create the PDF', description: e?.message, variant: 'destructive' });
+                              } finally { setPdfBusy(false); }
+                            }}>
+                            <FileDown className="h-3.5 w-3.5 mr-1" /> {pdfBusy ? 'Preparing PDF…' : 'Download PDF'}
+                          </Button>
+                        </div>
+                        {templateMissing.length > 0 && (
+                          <div className="text-xs text-destructive">
+                            Complete {templateMissing.join(', ')} above to generate the template.
+                          </div>
+                        )}
+                      </div>
                     )}
+
                     {d && !uploading && !err && (
                       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
                         <span className="inline-flex items-center gap-1.5 max-w-full px-2 py-1 rounded bg-primary/15 text-accent">
@@ -464,6 +597,32 @@ export default function ExporterOnboarding() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div className="space-y-1"><Label className="text-xs">{label}</Label>{children}</div>;
+const FIELD_LABELS: Record<string, string> = {
+  company_name: 'Company name',
+  company_registration_number: 'Registration number (RC / CAC)',
+  country_of_incorporation: 'Country of incorporation',
+  incorporation_date: 'Incorporation date',
+  tax_id: 'Tax ID / TIN',
+  phone: 'Company phone',
+  address: 'Registered address',
+  director_name: 'Director full name',
+  director_email: 'Director email',
+  director_phone: 'Director phone',
+  director_dob: 'Date of birth',
+  director_id_type: 'ID type',
+  director_id_number: 'ID number',
+  bank_name: 'Bank name',
+  account_number: 'Account number / IBAN',
+  swift: 'SWIFT / BIC',
+};
+
+function Field({ label, children, error }: { label: string; children: React.ReactNode; error?: string }) {
+  return (
+    <div className={`space-y-1 ${error ? '[&_input]:border-destructive [&_button]:border-destructive' : ''}`}>
+      <Label className={`text-xs ${error ? 'text-destructive' : ''}`}>{label}</Label>
+      {children}
+      {error && <p className="text-xs text-destructive flex items-start gap-1"><AlertCircle className="h-3 w-3 mt-0.5 shrink-0" />{error}</p>}
+    </div>
+  );
 }
+
