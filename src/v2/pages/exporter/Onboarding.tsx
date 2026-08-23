@@ -559,7 +559,14 @@ export default function ExporterOnboarding() {
                         )}
                         {d.status === 'verified' && <span className="px-2 py-0.5 rounded bg-primary/20 text-accent">Verified</span>}
                         {d.status === 'rejected' && <span className="px-2 py-0.5 rounded bg-destructive/20 text-destructive">Rejected</span>}
-
+                        {d.status === 'pending' && <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground">Awaiting review</span>}
+                        {d.status === 'rejected' && (
+                          <div className="w-full mt-1 rounded border border-destructive/40 bg-destructive/10 p-2 text-xs">
+                            <div className="font-medium text-destructive">Rejected by Credit &amp; Compliance</div>
+                            <div className="mt-0.5">{d.rejection_reason || 'No reason was recorded.'}</div>
+                            <div className="text-muted-foreground mt-0.5">Please upload a corrected document.</div>
+                          </div>
+                        )}
                       </div>
                     )}
                     {uploading && (
