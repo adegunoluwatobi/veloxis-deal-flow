@@ -44,6 +44,8 @@ const addDays = (iso: string, days: number) => {
 export default function ExporterInvoiceNew() {
   const { user } = useAuth();
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
+  const resumeId = searchParams.get('id');
 
   const [exp, setExp] = useState<any>(null);
   const [invoiceId, setInvoiceId] = useState<string | null>(null);
