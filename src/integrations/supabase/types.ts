@@ -3846,6 +3846,8 @@ export type Database = {
           sla_clock_started_at: string | null
           sla_elapsed_seconds: number
           sla_paused_at: string | null
+          stage2_unlocked_at: string | null
+          stage2_unlocked_by: string | null
           status: Database["public"]["Enums"]["v2_invoice_status"]
           submitted_by: string | null
           terms_days: number
@@ -3907,6 +3909,8 @@ export type Database = {
           sla_clock_started_at?: string | null
           sla_elapsed_seconds?: number
           sla_paused_at?: string | null
+          stage2_unlocked_at?: string | null
+          stage2_unlocked_by?: string | null
           status?: Database["public"]["Enums"]["v2_invoice_status"]
           submitted_by?: string | null
           terms_days?: number
@@ -3968,6 +3972,8 @@ export type Database = {
           sla_clock_started_at?: string | null
           sla_elapsed_seconds?: number
           sla_paused_at?: string | null
+          stage2_unlocked_at?: string | null
+          stage2_unlocked_by?: string | null
           status?: Database["public"]["Enums"]["v2_invoice_status"]
           submitted_by?: string | null
           terms_days?: number

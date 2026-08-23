@@ -136,6 +136,21 @@ export default function StaffInvoiceDetail() {
     load();
   };
 
+  const stage2Unlocked = !!inv.stage2_unlocked_at;
+  const canUnlockStage2 = canReview && docState.stage1Complete && noOutstandingRequests;
+
+  const unlockStage2 = async () => {
+    setBusy(true);
+    const { error } = await supabase.from('v2_invoices')
+      .update({ stage2_unlocked_at: new Date().toISOString(), stage2_unlocked_by: user?.id })
+      .eq('id', id!);
+    setBusy(false);
+    if (error) { toast({ title: 'Could not unlock', description: error.message, variant: 'destructive' }); return; }
+    await logAudit({ invoice_id: id!, action: 'stage2_unlocked' });
+    toast({ title: 'Stage 2 unlocked', description: 'The exporter can now upload their Stage 2 documents.' });
+    load();
+  };
+
   const transition = async (to: string, action: string, decisionType?: string) => {
     if (['returned_for_revision', 'rejected'].includes(to) && !reason.trim()) {
       toast({ title: 'Reason required', variant: 'destructive' }); return;
@@ -400,6 +415,28 @@ export default function StaffInvoiceDetail() {
 
           <section className="card-elevated p-5 space-y-3">
             <h3 className="text-sm uppercase tracking-wider text-muted-foreground">Actions</h3>
+
+            {canReview && !['draft', 'rejected'].includes(status) && (
+              stage2Unlocked ? (
+                <p className="text-xs text-success">
+                  Stage 2 uploads unlocked for the exporter
+                  {inv.stage2_unlocked_at ? ` · ${new Date(inv.stage2_unlocked_at).toLocaleString('en-GB')}` : ''}
+                  {inv.stage2_unlocked_by ? ` · ${docState.people[inv.stage2_unlocked_by] ?? ''}` : ''}
+                </p>
+              ) : (
+                <>
+                  <Button variant="outline" className="w-full" disabled={busy || !canUnlockStage2} onClick={unlockStage2}>
+                    {canUnlockStage2 ? 'Unlock Stage 2 for exporter' : 'Stage 1 documents not fully approved'}
+                  </Button>
+                  {!canUnlockStage2 && (
+                    <p className="text-xs text-muted-foreground">
+                      All Stage 1 documents must be verified and no document requests outstanding.
+                    </p>
+                  )}
+                </>
+              )
+            )}
+
             {(status === 'submitted' || status === 'information_requested') && canReview && (
               <>
                 {reviewBlockers.length > 0 && (
