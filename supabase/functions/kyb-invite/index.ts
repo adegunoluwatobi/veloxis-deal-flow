@@ -91,7 +91,12 @@ Deno.serve(async (req) => {
     }
 
     if (action === "email") {
-      return json({ error: "For security the link isn't stored. Use Resend to issue and email a new link." }, 400);
+      // Only possible while the creator still holds the raw link (shown once after create/resend).
+      const token = String(body.token ?? "");
+      if (!token || (await sha256(token)) !== inv.token_hash) return json({ error: "Link no longer available. Use Resend to issue a new one." }, 400);
+      const ok = await sendEmail(inv, token);
+      if (ok) await admin.from("kyb_invite_events").insert({ invite_id: id, action: "emailed", actor_id: user.id });
+      return ok ? json({ success: true }) : json({ error: "Email could not be sent" }, 502);
     }
 
     return json({ error: "Unknown action" }, 400);
