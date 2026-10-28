@@ -87,6 +87,7 @@ Deno.serve(async (req) => {
       }).eq("id", id).select("*").single();
       await admin.from("kyb_invite_events").insert({ invite_id: id, action: "resent", actor_id: user.id, details: { previous_link_invalidated: true } });
       const emailed = body.send_email ? await sendEmail(upd, token) : false;
+      if (emailed) await admin.from('kyb_invite_events').insert({ invite_id: id, action: 'emailed', actor_id: user.id });
       return json({ success: true, invite: upd, link: `${siteUrl()}/onboard/${token}`, emailed });
     }
 
