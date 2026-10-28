@@ -1,4 +1,4 @@
-- [ ] Add approved-only pack sending and seven-day revocable PDF links.
-- [ ] Add append-only application activity, lifecycle capture, filters and revocation controls.
-- [ ] Verify permissions, link behavior, tests and application page.
-- [ ] Connect Resend and verify email delivery (waiting on Resend connection).
+- [x] Add approved-only pack sending controls and seven-day revocable PDF link handling.
+- [x] Add append-only application activity, lifecycle capture, filters and revocation controls.
+- [x] Verify admin dialog, validation, Activity filters, protected columns, immutable rows, invalid links and security rule tests.
+- [ ] Connect Resend, configure its verified Veloxis sender, and verify actual email delivery plus a sent-link download/revocation end-to-end (Resend connection declined).
