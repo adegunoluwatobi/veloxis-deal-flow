@@ -2255,6 +2255,117 @@ export type Database = {
           },
         ]
       }
+      kyb_invite_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          id: string
+          invite_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          invite_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          invite_id?: string
+        }
+        Relationships: []
+      }
+      kyb_invite_rate_limits: {
+        Row: {
+          created_at: string
+          id: number
+          ip_hash: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          ip_hash: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          ip_hash?: string
+        }
+        Relationships: []
+      }
+      kyb_invites: {
+        Row: {
+          company_name: string
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          exporter_id: string | null
+          id: string
+          internal_note: string | null
+          last_sent_at: string
+          opened_at: string | null
+          registered_at: string | null
+          registered_user_id: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          send_count: number
+          status: string
+          token_hash: string
+        }
+        Insert: {
+          company_name: string
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at: string
+          exporter_id?: string | null
+          id?: string
+          internal_note?: string | null
+          last_sent_at?: string
+          opened_at?: string | null
+          registered_at?: string | null
+          registered_user_id?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          send_count?: number
+          status?: string
+          token_hash: string
+        }
+        Update: {
+          company_name?: string
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          exporter_id?: string | null
+          id?: string
+          internal_note?: string | null
+          last_sent_at?: string
+          opened_at?: string | null
+          registered_at?: string | null
+          registered_user_id?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          send_count?: number
+          status?: string
+          token_hash?: string
+        }
+        Relationships: []
+      }
       kyc_profile_change_requests: {
         Row: {
           created_at: string
@@ -3630,6 +3741,7 @@ export type Database = {
           id: string
           incorporation_date: string | null
           industry: string | null
+          invite_id: string | null
           kyb_notes: string | null
           kyb_status: Database["public"]["Enums"]["v2_kyc_status"]
           kyb_verified_at: string | null
@@ -3677,6 +3789,7 @@ export type Database = {
           id?: string
           incorporation_date?: string | null
           industry?: string | null
+          invite_id?: string | null
           kyb_notes?: string | null
           kyb_status?: Database["public"]["Enums"]["v2_kyc_status"]
           kyb_verified_at?: string | null
@@ -3724,6 +3837,7 @@ export type Database = {
           id?: string
           incorporation_date?: string | null
           industry?: string | null
+          invite_id?: string | null
           kyb_notes?: string | null
           kyb_status?: Database["public"]["Enums"]["v2_kyc_status"]
           kyb_verified_at?: string | null
@@ -5158,12 +5272,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5187,11 +5301,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5212,11 +5326,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5237,11 +5351,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5254,11 +5368,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

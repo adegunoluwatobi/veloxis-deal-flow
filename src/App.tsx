@@ -43,6 +43,8 @@ import StaffTemplates from '@/v2/pages/staff/Templates';
 import SingleReviewerReport from '@/v2/pages/staff/SingleReviewerReport';
 import KnowledgeBase from '@/v2/pages/KnowledgeBase';
 import MyNotifications from '@/v2/pages/MyNotifications';
+import OnboardInvite from '@/v2/pages/OnboardInvite';
+import StaffInvites from '@/v2/pages/staff/Invites';
 
 
 // Don't refetch every query when the user comes back to the tab — it makes the
@@ -73,6 +75,8 @@ export default function App() {
               <Route path="/" element={<VeloxisHome />} />
               <Route path="/set-password" element={<RequireAuth><SetPasswordFirst /></RequireAuth>} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/onboard/:token" element={<OnboardInvite />} />
+              <Route path="/admin/invites" element={<RequireAuth allow={['super_admin', 'originator']}><StaffLayout><StaffInvites /></StaffLayout></RequireAuth>} />
               <Route path="/home" element={<RootRedirect />} />
 
               <Route path="/app" element={<Staff><StaffDashboard /></Staff>} />

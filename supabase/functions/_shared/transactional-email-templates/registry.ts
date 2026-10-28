@@ -47,6 +47,7 @@ import { template as maturityReminder1 } from './maturity-reminder-1.tsx'
 
 // Stage 4 — Admin-initiated invites.
 import { template as registrationLinkInvite } from './registration-link-invite.tsx'
+import { template as kybOnboardingInvite } from './kyb-onboarding-invite.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'exporter-invitation': exporterInvitation,
@@ -77,4 +78,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'maturity-reminder-7': maturityReminder7,
   'maturity-reminder-1': maturityReminder1,
   'registration-link-invite': registrationLinkInvite,
+  'kyb-onboarding-invite': kybOnboardingInvite,
 }
