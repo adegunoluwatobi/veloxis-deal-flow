@@ -8,6 +8,13 @@
       "when": 1793185373013,
       "tag": "0000_kyb_onboarding_invites",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793185804909,
+      "tag": "0001_onboarding_wizard_fields",
+      "breakpoints": true
     }
   ]
 }
