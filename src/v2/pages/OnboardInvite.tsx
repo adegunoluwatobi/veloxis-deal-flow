@@ -36,8 +36,6 @@ export default function OnboardInvite() {
   const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
-    // Remove the token from the address bar/history once read.
-    window.history.replaceState(null, '', '/onboard');
     (async () => {
       const { data } = await supabase.functions.invoke('kyb-invite-validate', { body: { token } });
       if (data?.valid) setState({ kind: 'form', email: data.email, company: data.company_name });
