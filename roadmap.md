@@ -1,0 +1,4 @@
+- [ ] Add approved-only pack sending and seven-day revocable PDF links.
+- [ ] Add append-only application activity, lifecycle capture, filters and revocation controls.
+- [ ] Verify permissions, link behavior, tests and application page.
+- [ ] Connect Resend and verify email delivery (waiting on Resend connection).
