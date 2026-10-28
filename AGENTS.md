@@ -1,1 +1,2 @@
 - KYB Onboarding Invites store only a SHA-256 hash of the link token and are registered server-side via the `register-with-invite` function (email always taken from the invite); never call signUp from the client for invites. Why: the invited email must be impossible to change.
+- Staff visibility of an exporter (and its directors/documents) goes through `v2_can_view_exporter`: BDs see only exporters they created/invited; KYB packs and sensitive-field reveals go through the `exporter-pack` function. Why: one ownership rule, every reveal/download audited.
