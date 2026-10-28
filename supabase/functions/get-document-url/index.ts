@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
   const authHeader = req.headers.get('Authorization') ?? '';
   if (!authHeader.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
 
-  let body: { document_id?: string; document_kind?: string };
+  let body: { document_id?: string; document_kind?: string; purpose?: string };
   try { body = await req.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
 
   const documentId = body.document_id;
@@ -110,7 +110,7 @@ Deno.serve(async (req) => {
     entity_id: documentId,
     invoice_id: invoiceId,
     exporter_id: exporterId,
-    action: 'viewed',
+    action: body.purpose === 'download' ? 'downloaded' : 'viewed',
     actor_id: user.id,
     actor_role: isStaff ? roles.join(',') : 'exporter',
     metadata: { at: new Date().toISOString(), ip, user_agent: userAgent },
