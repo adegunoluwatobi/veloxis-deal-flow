@@ -316,7 +316,9 @@ export type Database = {
           exporter_id: string
           file_size_bytes: number | null
           id: string
+          issue_date: string | null
           original_filename: string | null
+          person_id: string | null
           rejection_reason: string | null
           retention_expires_at: string | null
           reviewed_at: string | null
@@ -338,7 +340,9 @@ export type Database = {
           exporter_id: string
           file_size_bytes?: number | null
           id?: string
+          issue_date?: string | null
           original_filename?: string | null
+          person_id?: string | null
           rejection_reason?: string | null
           retention_expires_at?: string | null
           reviewed_at?: string | null
@@ -360,7 +364,9 @@ export type Database = {
           exporter_id?: string
           file_size_bytes?: number | null
           id?: string
+          issue_date?: string | null
           original_filename?: string | null
+          person_id?: string | null
           rejection_reason?: string | null
           retention_expires_at?: string | null
           reviewed_at?: string | null
@@ -3602,6 +3608,11 @@ export type Database = {
       v2_exporter_directors: {
         Row: {
           address: string | null
+          address_city: string | null
+          address_country: string | null
+          address_state: string | null
+          address_street: string | null
+          bvn: string | null
           created_at: string
           dob: string | null
           email: string | null
@@ -3610,17 +3621,25 @@ export type Database = {
           id: string
           id_document_name: string | null
           id_document_url: string | null
+          id_expiry: string | null
           id_number: string | null
           id_type: string | null
           is_primary: boolean
           nationality: string | null
+          person_role: string
           phone: string | null
           position: string | null
+          shareholding_pct: number | null
           updated_at: string
           verified: boolean
         }
         Insert: {
           address?: string | null
+          address_city?: string | null
+          address_country?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          bvn?: string | null
           created_at?: string
           dob?: string | null
           email?: string | null
@@ -3629,17 +3648,25 @@ export type Database = {
           id?: string
           id_document_name?: string | null
           id_document_url?: string | null
+          id_expiry?: string | null
           id_number?: string | null
           id_type?: string | null
           is_primary?: boolean
           nationality?: string | null
+          person_role?: string
           phone?: string | null
           position?: string | null
+          shareholding_pct?: number | null
           updated_at?: string
           verified?: boolean
         }
         Update: {
           address?: string | null
+          address_city?: string | null
+          address_country?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          bvn?: string | null
           created_at?: string
           dob?: string | null
           email?: string | null
@@ -3648,12 +3675,15 @@ export type Database = {
           id?: string
           id_document_name?: string | null
           id_document_url?: string | null
+          id_expiry?: string | null
           id_number?: string | null
           id_type?: string | null
           is_primary?: boolean
           nationality?: string | null
+          person_role?: string
           phone?: string | null
           position?: string | null
+          shareholding_pct?: number | null
           updated_at?: string
           verified?: boolean
         }
@@ -3716,8 +3746,14 @@ export type Database = {
       }
       v2_exporters: {
         Row: {
+          accuracy_confirmed_at: string | null
           address: string | null
+          address_city: string | null
+          address_country: string | null
+          address_state: string | null
+          address_street: string | null
           bank_details: Json
+          banks_with_access: boolean | null
           bd_approved_at: string | null
           bd_approved_by: string | null
           bd_rejected_at: string | null
@@ -3729,6 +3765,7 @@ export type Database = {
           country_of_incorporation: string | null
           created_at: string
           created_by: string | null
+          data_consent_at: string | null
           director_address: string | null
           director_dob: string | null
           director_email: string | null
@@ -3750,11 +3787,15 @@ export type Database = {
           kyc_status: Database["public"]["Enums"]["v2_kyc_status"]
           kyc_verified_at: string | null
           kyc_verified_by: string | null
+          nepc_number: string | null
           nepc_status: Database["public"]["Enums"]["v2_nepc_status"]
           onboarding_status: Database["public"]["Enums"]["v2_onboarding_status"]
+          onboarding_step: number
           onboarding_submitted_at: string | null
+          other_banks: string[]
           owner_user_id: string | null
           phone: string | null
+          proposed_signatories: Json
           rc_number: string | null
           single_reviewer_approved: boolean
           single_reviewer_at: string | null
@@ -3762,10 +3803,17 @@ export type Database = {
           single_reviewer_reason: string | null
           tax_id: string | null
           updated_at: string
+          website: string | null
         }
         Insert: {
+          accuracy_confirmed_at?: string | null
           address?: string | null
+          address_city?: string | null
+          address_country?: string | null
+          address_state?: string | null
+          address_street?: string | null
           bank_details?: Json
+          banks_with_access?: boolean | null
           bd_approved_at?: string | null
           bd_approved_by?: string | null
           bd_rejected_at?: string | null
@@ -3777,6 +3825,7 @@ export type Database = {
           country_of_incorporation?: string | null
           created_at?: string
           created_by?: string | null
+          data_consent_at?: string | null
           director_address?: string | null
           director_dob?: string | null
           director_email?: string | null
@@ -3798,11 +3847,15 @@ export type Database = {
           kyc_status?: Database["public"]["Enums"]["v2_kyc_status"]
           kyc_verified_at?: string | null
           kyc_verified_by?: string | null
+          nepc_number?: string | null
           nepc_status?: Database["public"]["Enums"]["v2_nepc_status"]
           onboarding_status?: Database["public"]["Enums"]["v2_onboarding_status"]
+          onboarding_step?: number
           onboarding_submitted_at?: string | null
+          other_banks?: string[]
           owner_user_id?: string | null
           phone?: string | null
+          proposed_signatories?: Json
           rc_number?: string | null
           single_reviewer_approved?: boolean
           single_reviewer_at?: string | null
@@ -3810,10 +3863,17 @@ export type Database = {
           single_reviewer_reason?: string | null
           tax_id?: string | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
+          accuracy_confirmed_at?: string | null
           address?: string | null
+          address_city?: string | null
+          address_country?: string | null
+          address_state?: string | null
+          address_street?: string | null
           bank_details?: Json
+          banks_with_access?: boolean | null
           bd_approved_at?: string | null
           bd_approved_by?: string | null
           bd_rejected_at?: string | null
@@ -3825,6 +3885,7 @@ export type Database = {
           country_of_incorporation?: string | null
           created_at?: string
           created_by?: string | null
+          data_consent_at?: string | null
           director_address?: string | null
           director_dob?: string | null
           director_email?: string | null
@@ -3846,11 +3907,15 @@ export type Database = {
           kyc_status?: Database["public"]["Enums"]["v2_kyc_status"]
           kyc_verified_at?: string | null
           kyc_verified_by?: string | null
+          nepc_number?: string | null
           nepc_status?: Database["public"]["Enums"]["v2_nepc_status"]
           onboarding_status?: Database["public"]["Enums"]["v2_onboarding_status"]
+          onboarding_step?: number
           onboarding_submitted_at?: string | null
+          other_banks?: string[]
           owner_user_id?: string | null
           phone?: string | null
+          proposed_signatories?: Json
           rc_number?: string | null
           single_reviewer_approved?: boolean
           single_reviewer_at?: string | null
@@ -3858,6 +3923,7 @@ export type Database = {
           single_reviewer_reason?: string | null
           tax_id?: string | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }

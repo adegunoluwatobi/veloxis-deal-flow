@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -26,6 +26,7 @@ import ExporterInvoiceNew from '@/v2/pages/exporter/InvoiceNew';
 import ExporterInvoiceDetail from '@/v2/pages/exporter/InvoiceDetail';
 import ExporterProfile from '@/v2/pages/exporter/Profile';
 import ExporterOnboarding from '@/v2/pages/exporter/Onboarding';
+import ExporterOnboardingStatus from '@/v2/pages/exporter/OnboardingStatus';
 import VeloxisHome from '@/pages/website/VeloxisHome';
 import StaffCapitalPool from '@/v2/pages/staff/CapitalPool';
 import StaffVerifications from '@/v2/pages/staff/Verifications';
@@ -108,6 +109,9 @@ export default function App() {
               <Route path="/app/account" element={<Staff><Account /></Staff>} />
 
               <Route path="/portal/onboarding" element={<RequireAuth allow="exporter"><ExporterOnboarding /></RequireAuth>} />
+              <Route path="/portal/onboarding/status" element={<RequireAuth allow="exporter"><ExporterOnboardingStatus /></RequireAuth>} />
+              <Route path="/onboarding" element={<Navigate to="/portal/onboarding" replace />} />
+              <Route path="/onboarding/status" element={<Navigate to="/portal/onboarding/status" replace />} />
               <Route path="/portal" element={<Portal><ExporterDashboard /></Portal>} />
               <Route path="/portal/invoices" element={<Portal><ExporterInvoices /></Portal>} />
               <Route path="/portal/invoices/new" element={<Portal><ExporterInvoiceNew /></Portal>} />
