@@ -36,6 +36,13 @@
       "when": 1793188112316,
       "tag": "0004_complete_kyb_activity_sources",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793188216723,
+      "tag": "0005_restrict_kyb_pack_private_columns",
+      "breakpoints": true
     }
   ]
 }
