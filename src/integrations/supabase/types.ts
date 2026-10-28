@@ -2261,6 +2261,42 @@ export type Database = {
           },
         ]
       }
+      kyb_application_activity: {
+        Row: {
+          actor_id: string | null
+          actor_name: string | null
+          created_at: string
+          details: Json
+          event_type: string
+          exporter_id: string | null
+          id: string
+          invite_id: string | null
+          source_key: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          details?: Json
+          event_type: string
+          exporter_id?: string | null
+          id?: string
+          invite_id?: string | null
+          source_key?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          details?: Json
+          event_type?: string
+          exporter_id?: string | null
+          id?: string
+          invite_id?: string | null
+          source_key?: string | null
+        }
+        Relationships: []
+      }
       kyb_invite_events: {
         Row: {
           action: string
@@ -2368,6 +2404,69 @@ export type Database = {
           revoked_by?: string | null
           send_count?: number
           status?: string
+          token_hash?: string
+        }
+        Relationships: []
+      }
+      kyb_pack_links: {
+        Row: {
+          cc: string[]
+          created_at: string
+          delivery_status: string
+          expires_at: string
+          exporter_id: string
+          id: string
+          pack_type: string
+          provider_message_id: string | null
+          recipients: string[]
+          revoked_at: string | null
+          revoked_by: string | null
+          sender_name: string
+          sent_at: string | null
+          sent_by: string
+          signed_url: string
+          storage_path: string
+          subject: string
+          token_hash: string
+        }
+        Insert: {
+          cc?: string[]
+          created_at?: string
+          delivery_status?: string
+          expires_at?: string
+          exporter_id: string
+          id?: string
+          pack_type: string
+          provider_message_id?: string | null
+          recipients: string[]
+          revoked_at?: string | null
+          revoked_by?: string | null
+          sender_name: string
+          sent_at?: string | null
+          sent_by: string
+          signed_url: string
+          storage_path: string
+          subject: string
+          token_hash: string
+        }
+        Update: {
+          cc?: string[]
+          created_at?: string
+          delivery_status?: string
+          expires_at?: string
+          exporter_id?: string
+          id?: string
+          pack_type?: string
+          provider_message_id?: string | null
+          recipients?: string[]
+          revoked_at?: string | null
+          revoked_by?: string | null
+          sender_name?: string
+          sent_at?: string | null
+          sent_by?: string
+          signed_url?: string
+          storage_path?: string
+          subject?: string
           token_hash?: string
         }
         Relationships: []
@@ -4858,6 +4957,19 @@ export type Database = {
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
       is_v2_staff: { Args: { _user_id: string }; Returns: boolean }
       is_veloxis_staff: { Args: { _user_id: string }; Returns: boolean }
+      kyb_append_activity: {
+        Args: {
+          p_actor: string
+          p_at?: string
+          p_details: Json
+          p_event: string
+          p_exporter: string
+          p_invite: string
+          p_source?: string
+        }
+        Returns: undefined
+      }
+      kyb_revoke_pack: { Args: { p_link_id: string }; Returns: string }
       lookup_active_partners_for_country: {
         Args: { p_country: string }
         Returns: {

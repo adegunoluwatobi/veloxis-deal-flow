@@ -13,6 +13,8 @@ import AuditLogTable from '@/v2/components/AuditLogTable';
 import ReviewChain, { SingleReviewerBanner } from '@/v2/components/ReviewChain';
 import BoardResolutionReviewStep from '@/v2/components/BoardResolutionReviewStep';
 import { KybReviewSections, KybPackButtons, AssignBd } from '@/v2/components/KybReview';
+import { ApplicationActivity, SendPack } from '@/v2/components/ApplicationActivity';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 
 const DOC_LABEL: Record<string, string> = {
@@ -27,7 +29,7 @@ export default function StaffExporterDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, roles } = useAuth();
   const [exp, setExp] = useState<any>(null);
-  const [showAudit, setShowAudit] = useState(false);
+  const [activityRefresh, setActivityRefresh] = useState(0);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [docs, setDocs] = useState<any[]>([]);
   const [requiredTypes, setRequiredTypes] = useState<any[]>([]);
@@ -38,12 +40,13 @@ export default function StaffExporterDetail() {
   const [lastReturn, setLastReturn] = useState<{ stage: string; decision: string; note: string | null; created_at: string } | null>(null);
 
   const load = useCallback(async () => {
+    if (!id) return;
     const [{ data: e }, { data: iv }, { data: d }, { data: dir }, { data: rev }, { data: rt }] = await Promise.all([
-      supabase.from('v2_exporters').select('*').eq('id', id!).maybeSingle(),
-      supabase.from('v2_invoices').select('id, invoice_number, invoice_amount, invoice_currency, status, maturity_date').eq('exporter_id', id!).order('created_at', { ascending: false }),
-      supabase.from('company_documents').select('id, original_filename, status, uploaded_at, reviewed_at, rejection_reason, document_type_id, person_id, issue_date, document_types(code, label, sort_order)').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
-      supabase.from('v2_exporter_directors').select('*').eq('exporter_id', id!).order('is_primary', { ascending: false }).order('created_at', { ascending: true }),
-      supabase.from('onboarding_reviews').select('stage, decision, note, created_at').eq('exporter_id', id!).order('created_at', { ascending: false }).limit(1),
+      supabase.from('v2_exporters').select('*').eq('id', id).maybeSingle(),
+      supabase.from('v2_invoices').select('id, invoice_number, invoice_amount, invoice_currency, status, maturity_date').eq('exporter_id', id).order('created_at', { ascending: false }),
+      supabase.from('company_documents').select('id, original_filename, status, uploaded_at, reviewed_at, rejection_reason, document_type_id, person_id, issue_date, document_types(code, label, sort_order)').eq('exporter_id', id).order('uploaded_at', { ascending: false }),
+      supabase.from('v2_exporter_directors').select('*').eq('exporter_id', id).order('is_primary', { ascending: false }).order('created_at', { ascending: true }),
+      supabase.from('onboarding_reviews').select('stage, decision, note, created_at').eq('exporter_id', id).order('created_at', { ascending: false }).limit(1),
       supabase.from('document_types').select('id, label, sort_order').eq('active', true).eq('level', 'company').eq('requirement', 'mandatory').order('sort_order'),
     ]);
     setExp(e); setInvoices(iv ?? []); setDocs(d ?? []); setDirectors(dir ?? []); setRequiredTypes(rt ?? []);
@@ -55,7 +58,7 @@ export default function StaffExporterDetail() {
 
 
   useEffect(() => { load(); }, [load]);
-  if (!exp) return <div className="text-muted-foreground">Loading…</div>;
+  if (!exp || !id) return <div className="text-muted-foreground">Loading…</div>;
 
   const isSuperAdmin = has(roles, 'super_admin');
   const canBdReview = has(roles, 'originator') || isSuperAdmin;
@@ -156,9 +159,13 @@ export default function StaffExporterDetail() {
             RC {exp.company_registration_number ?? exp.rc_number ?? '—'} · {exp.commodity ?? '—'} · Onboarding: <span className="text-accent">{exp.onboarding_status}</span>
           </p>
         </div>
-        <KybPackButtons exporterId={id!} />
+        <div className="flex flex-wrap gap-2"><KybPackButtons exporterId={id} />{isActive && <SendPack exporterId={id} companyName={exp.company_name} onSent={() => setActivityRefresh(v => v + 1)} />}</div>
       </div>
-      {isSuperAdmin && <AssignBd exporterId={id!} current={exp.created_by} onSaved={load} />}
+      {isSuperAdmin && <AssignBd exporterId={id} current={exp.created_by} onSaved={load} />}
+
+      <Tabs defaultValue="application" onValueChange={value => { if (value === 'activity') setActivityRefresh(v => v + 1); }}>
+      <TabsList><TabsTrigger value="application">Application</TabsTrigger><TabsTrigger value="activity">Activity</TabsTrigger></TabsList>
+      <TabsContent value="application" className="space-y-6 mt-6">
 
       {exp.single_reviewer_approved && (
         <SingleReviewerBanner reason={exp.single_reviewer_reason} at={exp.single_reviewer_at} />
@@ -216,7 +223,7 @@ export default function StaffExporterDetail() {
         {submitted && !bdApproved && !isActive && canBdReview && (
           <div className="mt-4 space-y-3 border-t border-border pt-4">
             <div className="text-sm font-medium">Business Developer review</div>
-            <BoardResolutionReviewStep exporterId={id!} canReview onChanged={load} />
+            <BoardResolutionReviewStep exporterId={id} canReview onChanged={load} />
             <div className="flex gap-2">
               <Button size="sm" onClick={bdApprove} disabled={busy}>Approve & pass to Credit</Button>
             </div>
@@ -236,7 +243,7 @@ export default function StaffExporterDetail() {
               </p>
             )}
 
-            <BoardResolutionReviewStep exporterId={id!} canReview={canBdReview || canFinalApprove} onChanged={load} />
+            <BoardResolutionReviewStep exporterId={id} canReview={canBdReview || canFinalApprove} onChanged={load} />
             {canFinalApprove && (
               <>
                 <p className="text-xs text-muted-foreground">
@@ -288,7 +295,7 @@ export default function StaffExporterDetail() {
         )}
       </section>
 
-      <ReviewChain key={`${exp.bd_approved_at ?? ''}-${exp.bd_rejected_at ?? ''}-${exp.onboarding_status}`} exporterId={id!} />
+      <ReviewChain key={`${exp.bd_approved_at ?? ''}-${exp.bd_rejected_at ?? ''}-${exp.onboarding_status}`} exporterId={id} />
 
 
 
@@ -316,21 +323,9 @@ export default function StaffExporterDetail() {
         </div>
       </section>
 
-      <div>
-        <Button variant="outline" size="sm" onClick={() => setShowAudit((s) => !s)}>
-          {showAudit ? 'Hide company audit trail' : 'Show company audit trail'}
-        </Button>
-        {showAudit && (
-          <div className="mt-4">
-            <AuditLogTable
-              exporterId={id}
-              entityTypes={['company_document', 'board_resolution', 'exporter']}
-              title="Company audit trail"
-              csvName="company-audit"
-            />
-          </div>
-        )}
-      </div>
+      </TabsContent>
+      <TabsContent value="activity" className="mt-6"><ApplicationActivity exporterId={id} inviteId={exp.invite_id} refresh={activityRefresh} /></TabsContent>
+      </Tabs>
 
     </div>
 
