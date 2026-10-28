@@ -25,6 +25,7 @@ const NAV = [
   { to: '/admin/notifications', label: 'Notifications', icon: Bell, BellOff, superOnly: true },
   { to: '/admin/notifications/failures', label: 'Undelivered', icon: BellOff, superOnly: true },
 
+  { to: '/admin/invites', label: 'Invites', icon: Users, inviteOnly: true },
   { to: '/app/users', label: 'User Management', icon: UserCog, superOnly: true },
   { to: '/admin/reference-data', label: 'Reference Data', icon: Database, superOnly: true },
   { to: '/admin/templates', label: 'Document Templates', icon: ScrollText, superOnly: true },
@@ -39,7 +40,8 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
   const { profile, roles, signOut } = useAuth();
   const nav = useNavigate();
   const isSuper = roles.includes('super_admin');
-  const items = NAV.filter((n) => !n.superOnly || isSuper);
+  const canInvite = isSuper || roles.includes('originator');
+  const items = NAV.filter((n: any) => (!n.superOnly || isSuper) && (!n.inviteOnly || canInvite));
   const primary = roles.find((r) => r !== 'exporter') ?? 'super_admin';
 
   return (
