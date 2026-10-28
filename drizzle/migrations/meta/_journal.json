@@ -15,6 +15,13 @@
       "when": 1793185804909,
       "tag": "0001_onboarding_wizard_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793186272325,
+      "tag": "0002_migration",
+      "breakpoints": true
     }
   ]
 }
