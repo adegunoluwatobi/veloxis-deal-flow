@@ -4951,6 +4951,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      v2_can_view_exporter: {
+        Args: { _exporter_id: string; _uid: string }
+        Returns: boolean
+      }
       v2_email_shell: {
         Args: { p_body_html: string; p_title: string }
         Returns: string

@@ -19,8 +19,14 @@ function stageOf(r: E) {
   return { label: 'Onboarding in progress', action: 'View' };
 }
 
+type InviteInfo = { type: string; by: string };
+
 export default function StaffExporters() {
   const [rows, setRows] = useState<E[]>([]);
+  const [invites, setInvites] = useState<Record<string, InviteInfo>>({});
+  const [q, setQ] = useState('');
+  const [accessFilter, setAccessFilter] = useState<'all' | 'yes' | 'no'>('all');
+  const [inviteFilter, setInviteFilter] = useState<'all' | 'kyb' | 'platform' | 'none'>('all');
   const { roles } = useAuth();
   const navigate = useNavigate();
   const canCreate = roles.includes('originator') || roles.includes('super_admin');
@@ -30,7 +36,25 @@ export default function StaffExporters() {
 
   const load = async () => {
     const { data } = await supabase.from('v2_exporters').select('*').order('created_at', { ascending: false });
-    setRows((data ?? []) as any);
+    const list = (data ?? []) as any[];
+    setRows(list);
+    const [{ data: kyb }, { data: reg }] = await Promise.all([
+      supabase.from('kyb_invites').select('id, exporter_id, created_by'),
+      supabase.from('registration_invites').select('email, invited_by'),
+    ]);
+    const actorIds = Array.from(new Set([...(kyb ?? []).map((k: any) => k.created_by), ...(reg ?? []).map((r: any) => r.invited_by)].filter(Boolean)));
+    const { data: profs } = actorIds.length
+      ? await supabase.from('profiles').select('user_id, name, email').in('user_id', actorIds)
+      : { data: [] as any[] };
+    const nameOf = (uid?: string | null) => { const p = (profs ?? []).find((x: any) => x.user_id === uid); return p?.name || p?.email || '—'; };
+    const map: Record<string, InviteInfo> = {};
+    for (const e of list) {
+      const k = (kyb ?? []).find((x: any) => x.id === e.invite_id || x.exporter_id === e.id);
+      if (k) { map[e.id] = { type: 'KYB Onboarding Invite', by: nameOf(k.created_by) }; continue; }
+      const r = (reg ?? []).find((x: any) => e.email && x.email?.toLowerCase() === e.email.toLowerCase());
+      if (r) map[e.id] = { type: 'Platform Invite', by: nameOf(r.invited_by) };
+    }
+    setInvites(map);
   };
   useEffect(() => { load(); }, []);
 
@@ -39,36 +63,62 @@ export default function StaffExporters() {
     load();
   };
 
+  const term = q.trim().toLowerCase();
+  const shown = rows.filter((r: any) => {
+    if (term && !`${r.company_name ?? ''} ${r.rc_number ?? ''} ${r.company_registration_number ?? ''}`.toLowerCase().includes(term)) return false;
+    if (accessFilter === 'yes' && r.banks_with_access !== true) return false;
+    if (accessFilter === 'no' && r.banks_with_access !== false) return false;
+    const it = invites[r.id]?.type;
+    if (inviteFilter === 'kyb' && it !== 'KYB Onboarding Invite') return false;
+    if (inviteFilter === 'platform' && it !== 'Platform Invite') return false;
+    if (inviteFilter === 'none' && it) return false;
+    return true;
+  });
+  const sel = 'h-9 rounded-md border border-input bg-background px-2 text-sm';
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl">Exporters</h1><p className="text-sm text-muted-foreground">{rows.length} total</p></div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div><h1 className="text-2xl">Exporters</h1><p className="text-sm text-muted-foreground">{shown.length} of {rows.length}</p></div>
         <div className="flex items-center gap-2">
         {canCreate && <InviteExporterDialog />}
         </div>
       </div>
-      <div className="card-elevated overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Input placeholder="Search company name or RC number" value={q} onChange={(e) => setQ(e.target.value)} className="sm:max-w-xs" />
+        <select aria-label="Access Bank customer" className={sel} value={accessFilter} onChange={(e) => setAccessFilter(e.target.value as any)}>
+          <option value="all">Access Bank: all</option><option value="yes">Access Bank: Yes</option><option value="no">Access Bank: No</option>
+        </select>
+        <select aria-label="Invite type" className={sel} value={inviteFilter} onChange={(e) => setInviteFilter(e.target.value as any)}>
+          <option value="all">Invite: all</option><option value="kyb">KYB Onboarding Invite</option><option value="platform">Platform Invite</option><option value="none">No invite</option>
+        </select>
+      </div>
+      <div className="card-elevated overflow-x-auto">
+        <table className="w-full text-sm min-w-[900px]">
           <thead className="bg-muted/30 text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="text-left px-4 py-3">Company</th>
               <th className="text-left px-4 py-3">RC</th>
-              <th className="text-left px-4 py-3">Commodity</th>
+              <th className="text-left px-4 py-3">Access Bank</th>
+              <th className="text-left px-4 py-3">Invite</th>
               <th className="text-left px-4 py-3">Contact</th>
               <th className="text-left px-4 py-3">Status</th>
               <th className="text-right px-4 py-3">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
+            {shown.map((r: any) => (
               <tr
                 key={r.id}
                 onClick={() => navigate(`/app/exporters/${r.id}`)}
                 className="border-t border-border hover:bg-muted/20 cursor-pointer"
               >
                 <td className="px-4 py-3 text-accent">{r.company_name}</td>
-                <td className="px-4 py-3">{r.rc_number ?? '—'}</td>
-                <td className="px-4 py-3">{r.commodity ?? '—'}</td>
+                <td className="px-4 py-3">{r.company_registration_number ?? r.rc_number ?? '—'}</td>
+                <td className="px-4 py-3">{r.banks_with_access == null ? '—' : r.banks_with_access ? 'Yes' : 'No'}</td>
+                <td className="px-4 py-3">
+                  {invites[r.id] ? <><div>{invites[r.id].type}</div><div className="text-xs text-muted-foreground">by {invites[r.id].by}</div></> : '—'}
+                </td>
                 <td className="px-4 py-3">{r.email ?? '—'}</td>
                 <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded ${r.onboarding_status === 'active' ? 'bg-success/20 text-success' : r.onboarding_status === 'suspended' ? 'bg-destructive/20 text-destructive' : 'bg-muted text-muted-foreground'}`}>{stageOf(r).label}</span></td>
                 <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
@@ -80,13 +130,14 @@ export default function StaffExporters() {
                 </td>
               </tr>
             ))}
-            {rows.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">No exporters yet</td></tr>}
+            {shown.length === 0 && <tr><td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">No exporters match</td></tr>}
           </tbody>
         </table>
       </div>
     </div>
   );
 }
+
 
 function InviteExporterDialog() {
   const [open, setOpen] = useState(false);
