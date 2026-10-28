@@ -28,19 +28,17 @@ Deno.serve(async (req) => {
       userId = existing.id;
       existingAccount = true;
     } else {
-      // Server-side signUp so Auth sends the confirmation email.
-      const anon = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
-        auth: { autoRefreshToken: false, persistSession: false },
+      // Public sign-ups are disabled (invite-only), so create the account server-side.
+      // The invite link was delivered to this exact email, which proves ownership.
+      const { data: cu, error: cuErr } = await admin.auth.admin.createUser({
+        email, password, email_confirm: true,
+        user_metadata: { name: inv.contact_name, full_name: inv.contact_name, role: "exporter" },
       });
-      const { data: su, error: suErr } = await anon.auth.signUp({
-        email, password,
-        options: {
-          emailRedirectTo: `${siteUrl()}/portal/onboarding`,
-          data: { name: inv.contact_name, full_name: inv.contact_name, role: "exporter" },
-        },
-      });
-      if (suErr || !su.user) return json({ error: "We couldn't create your account. Please contact Veloxis." }, 400);
-      userId = su.user.id;
+      if (cuErr || !cu.user) {
+        console.error("createUser failed", cuErr?.status, cuErr?.code, cuErr?.message);
+        return json({ error: "We couldn't create your account. Please contact Veloxis." }, 400);
+      }
+      userId = cu.user.id;
     }
 
     const now = new Date().toISOString();
