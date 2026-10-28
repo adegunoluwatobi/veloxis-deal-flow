@@ -1,9 +1,6 @@
 import { z } from 'npm:zod@3.25.76';
 
-export const PACK_LIFETIME_SECONDS = 7 * 24 * 60 * 60;
-export const canSendPack = (status: string) => status === 'active';
-export const linkAvailable = (link: { revoked_at: string | null; expires_at: string; delivery_status: string }, now = Date.now()) =>
-  link.delivery_status === 'sent' && link.revoked_at === null && Date.parse(link.expires_at) > now;
+export { PACK_LIFETIME_SECONDS, canSendPack, linkAvailable } from './pack-lifecycle.ts';
 export const sendPackSchema = z.object({
   action: z.literal('send'), exporter_id: z.string().uuid(),
   to: z.array(z.string().trim().email()).min(1).max(50),
