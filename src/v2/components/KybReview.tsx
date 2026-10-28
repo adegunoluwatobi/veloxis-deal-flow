@@ -119,7 +119,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-function DocItem({ d, canVerifyDoc, busy, onSetStatus }: { d: any; canVerifyDoc: boolean; busy: boolean; onSetStatus: (id: string, s: 'verified' | 'rejected' | 'pending', r?: string) => void }) {
+function DocItem({ d, canVerifyDoc, busy, onSetStatus }: { d: any; canVerifyDoc: boolean; busy: boolean; onSetStatus: (id: string, s: 'verified' | 'rejected' | 'pending', r?: string) => unknown }) {
   const [preview, setPreview] = useState<{ url: string; type: string } | null>(null);
   const [loading, setLoading] = useState<'p' | 'd' | null>(null);
   const fetchBlob = async (purpose: 'view' | 'download') => {
@@ -187,7 +187,7 @@ function DocItem({ d, canVerifyDoc, busy, onSetStatus }: { d: any; canVerifyDoc:
 
 export function KybReviewSections({ exp, people, docs, canVerifyDoc, busy, onSetStatus }: {
   exp: any; people: any[]; docs: any[]; canVerifyDoc: boolean; busy: boolean;
-  onSetStatus: (id: string, s: 'verified' | 'rejected' | 'pending', r?: string) => Promise<void> | void;
+  onSetStatus: (id: string, s: 'verified' | 'rejected' | 'pending', r?: string) => unknown;
 }) {
   const b = exp.bank_details ?? {};
   const primary = people.find((p) => p.is_primary);
