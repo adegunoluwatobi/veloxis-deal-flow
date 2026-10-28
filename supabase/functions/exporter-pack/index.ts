@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
   const authHeader = req.headers.get('Authorization') ?? '';
   if (!authHeader.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
 
-  let body: { exporter_id?: string; mode?: string; field?: string; person_id?: string };
+  let body: { exporter_id?: string; mode?: string; field?: string; person_id?: string; purpose?: string };
   try { body = await req.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
   const { exporter_id, mode } = body;
   if (!exporter_id || !uuidRe.test(exporter_id) || !['full', 'summary', 'zip', 'reveal'].includes(mode ?? '')) {
@@ -229,7 +229,7 @@ Deno.serve(async (req) => {
   });
 
   const out = await pdf.save();
-  await audit('kyb_pack_downloaded', { format: mode === 'full' ? 'pdf_full' : 'pdf_summary', documents: mode === 'full' ? ordered.length : 0, skipped });
+  await audit(body.purpose === 'send' ? 'kyb_pack_generated' : 'kyb_pack_downloaded', { format: mode === 'full' ? 'pdf_full' : 'pdf_summary', documents: mode === 'full' ? ordered.length : 0, skipped });
   const fname = mode === 'full' ? `${base}.pdf` : `${base.replace('_KYB_Pack_', '_KYB_Summary_')}.pdf`;
   return new Response(out, { headers: { ...corsHeaders, 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${fname}"` } });
 });
