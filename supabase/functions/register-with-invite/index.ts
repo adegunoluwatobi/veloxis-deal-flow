@@ -39,7 +39,10 @@ Deno.serve(async (req) => {
           data: { name: inv.contact_name, full_name: inv.contact_name, role: "exporter" },
         },
       });
-      if (suErr || !su.user) return json({ error: "We couldn't create your account. Please contact Veloxis." }, 400);
+      if (suErr || !su.user) {
+        console.error("signUp failed", suErr?.status, suErr?.code, suErr?.message);
+        return json({ error: "We couldn't create your account. Please contact Veloxis." }, 400);
+      }
       userId = su.user.id;
     }
 
