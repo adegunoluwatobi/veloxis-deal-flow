@@ -83,11 +83,19 @@ export function ApplicationActivity({ exporterId, inviteId, refresh }: { exporte
   const [limit, setLimit] = useState(100);
   const load = useCallback(async () => {
     setFailure(''); setLoading(true);
-    let query = supabase.from('kyb_application_activity').select('id,event_type,actor_name,actor_id,details,created_at').order('created_at', { ascending: false });
-    query = inviteId ? query.or(`exporter_id.eq.${exporterId},invite_id.eq.${inviteId}`) : query.eq('exporter_id', exporterId);
-    const [{ data, error }, { data: links, error: linksError }] = await Promise.all([query, supabase.from('kyb_pack_links').select('id,expires_at,revoked_at').eq('exporter_id', exporterId).eq('delivery_status', 'sent')]);
-    if (error || linksError) setFailure(error?.message || linksError?.message || 'Could not load activity.');
-    else { setEvents(data ?? []); setPacks(links ?? []); }
+    const allEvents: Activity[] = [];
+    let activityError = '';
+    for (let offset = 0; ; offset += 500) {
+      let query = supabase.from('kyb_application_activity').select('id,event_type,actor_name,actor_id,details,created_at').order('created_at', { ascending: false }).order('id').range(offset, offset + 499);
+      query = inviteId ? query.or(`exporter_id.eq.${exporterId},invite_id.eq.${inviteId}`) : query.eq('exporter_id', exporterId);
+      const { data, error } = await query;
+      if (error) { activityError = error.message; break; }
+      allEvents.push(...(data ?? []));
+      if ((data?.length ?? 0) < 500) break;
+    }
+    const { data: links, error: linksError } = await supabase.from('kyb_pack_links').select('id,expires_at,revoked_at').eq('exporter_id', exporterId).eq('delivery_status', 'sent');
+    if (activityError || linksError) setFailure(activityError || linksError?.message || 'Could not load activity.');
+    else { setEvents(allEvents); setPacks(links ?? []); }
     setLoading(false);
   }, [exporterId, inviteId]);
   useEffect(() => { load(); }, [load, refresh]);

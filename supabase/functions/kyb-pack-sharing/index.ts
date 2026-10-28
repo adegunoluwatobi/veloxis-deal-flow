@@ -71,6 +71,8 @@ Deno.serve(async req => {
     const generated = await fetch(`${url}/functions/v1/exporter-pack`, { method: 'POST', headers: { Authorization: authorization, apikey: anon, 'Content-Type': 'application/json' }, body: JSON.stringify({ exporter_id: exp.id, mode: input.pack_type, purpose: 'send' }) });
     if (!generated.ok) return json({ error: 'Pack generation failed', status: generated.status, details: await generated.text() }, generated.status);
     const bytes = await generated.arrayBuffer();
+    const created = new Date();
+    const expiry = new Date(created.getTime() + PACK_LIFETIME_SECONDS * 1000).toISOString();
     const id = crypto.randomUUID();
     const path = `shared_kyb/${exp.id}/${id}.pdf`;
     const { error: uploadError } = await admin.storage.from(bucket).upload(path, bytes, { contentType: 'application/pdf', upsert: false });
@@ -78,8 +80,6 @@ Deno.serve(async req => {
     const { data: signed, error: signedError } = await admin.storage.from(bucket).createSignedUrl(path, PACK_LIFETIME_SECONDS);
     if (signedError || !signed) { await admin.storage.from(bucket).remove([path]); throw signedError ?? new Error('Could not sign pack'); }
     const token = Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2, '0')).join('');
-    const created = new Date();
-    const expiry = new Date(created.getTime() + PACK_LIFETIME_SECONDS * 1000).toISOString();
     const { data: profile } = await admin.from('profiles').select('name,email').eq('user_id', user.id).maybeSingle();
     const { error: insertError } = await admin.from('kyb_pack_links').insert({ id, exporter_id: exp.id, token_hash: await hash(token), storage_path: path, signed_url: signed.signedUrl, pack_type: input.pack_type, recipients: input.to, cc: input.cc, subject: input.subject, sent_by: user.id, sender_name: profile?.name || user.email || user.id, created_at: created.toISOString(), expires_at: expiry });
     if (insertError) { await admin.storage.from(bucket).remove([path]); throw insertError; }
