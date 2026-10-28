@@ -1,0 +1,1 @@
+- KYB Onboarding Invites store only a SHA-256 hash of the link token and are registered server-side via the `register-with-invite` function (email always taken from the invite); never call signUp from the client for invites. Why: the invited email must be impossible to change.
