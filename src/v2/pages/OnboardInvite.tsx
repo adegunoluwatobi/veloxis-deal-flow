@@ -66,7 +66,7 @@ export default function OnboardInvite() {
       setErrors({ form: msg });
       return;
     }
-    if (data.existing_account) {
+    if (data.existing_account || data.signed_in_ready) {
       const { error: sErr } = await supabase.auth.signInWithPassword({ email: data.email, password: pw });
       setBusy(false);
       if (sErr) { nav('/login', { replace: true }); return; }
