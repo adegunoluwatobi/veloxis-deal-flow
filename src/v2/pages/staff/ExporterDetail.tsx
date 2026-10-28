@@ -12,6 +12,7 @@ import { CheckCircle2, XCircle, FileText, Clock } from 'lucide-react';
 import AuditLogTable from '@/v2/components/AuditLogTable';
 import ReviewChain, { SingleReviewerBanner } from '@/v2/components/ReviewChain';
 import BoardResolutionReviewStep from '@/v2/components/BoardResolutionReviewStep';
+import { KybReviewSections, KybPackButtons, AssignBd } from '@/v2/components/KybReview';
 
 
 const DOC_LABEL: Record<string, string> = {
@@ -40,8 +41,8 @@ export default function StaffExporterDetail() {
     const [{ data: e }, { data: iv }, { data: d }, { data: dir }, { data: rev }, { data: rt }] = await Promise.all([
       supabase.from('v2_exporters').select('*').eq('id', id!).maybeSingle(),
       supabase.from('v2_invoices').select('id, invoice_number, invoice_amount, invoice_currency, status, maturity_date').eq('exporter_id', id!).order('created_at', { ascending: false }),
-      supabase.from('company_documents').select('id, original_filename, status, uploaded_at, reviewed_at, rejection_reason, document_type_id, document_types(code, label)').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
-      supabase.from('v2_exporter_directors').select('*').eq('exporter_id', id!).order('created_at', { ascending: true }),
+      supabase.from('company_documents').select('id, original_filename, status, uploaded_at, reviewed_at, rejection_reason, document_type_id, person_id, issue_date, document_types(code, label, sort_order)').eq('exporter_id', id!).order('uploaded_at', { ascending: false }),
+      supabase.from('v2_exporter_directors').select('*').eq('exporter_id', id!).order('is_primary', { ascending: false }).order('created_at', { ascending: true }),
       supabase.from('onboarding_reviews').select('stage, decision, note, created_at').eq('exporter_id', id!).order('created_at', { ascending: false }).limit(1),
       supabase.from('document_types').select('id, label, sort_order').eq('active', true).eq('level', 'company').eq('requirement', 'mandatory').order('sort_order'),
     ]);
@@ -148,12 +149,16 @@ export default function StaffExporterDetail() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl">{exp.company_name}</h1>
-        <p className="text-sm text-muted-foreground">
-          RC {exp.rc_number ?? '—'} · {exp.commodity ?? '—'} · Onboarding: <span className="text-accent">{exp.onboarding_status}</span>
-        </p>
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl">{exp.company_name}</h1>
+          <p className="text-sm text-muted-foreground">
+            RC {exp.company_registration_number ?? exp.rc_number ?? '—'} · {exp.commodity ?? '—'} · Onboarding: <span className="text-accent">{exp.onboarding_status}</span>
+          </p>
+        </div>
+        <KybPackButtons exporterId={id!} />
       </div>
+      {isSuperAdmin && <AssignBd exporterId={id!} current={exp.created_by} onSaved={load} />}
 
       {exp.single_reviewer_approved && (
         <SingleReviewerBanner reason={exp.single_reviewer_reason} at={exp.single_reviewer_at} />
@@ -287,94 +292,15 @@ export default function StaffExporterDetail() {
 
 
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <section className="card-elevated p-5 space-y-2 text-sm">
-          <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-2">Company</h3>
-          <Row label="Registration">{exp.company_registration_number ?? exp.rc_number ?? '—'}</Row>
-          <Row label="Country">{exp.country_of_incorporation ?? '—'}</Row>
-          <Row label="Incorporated">{exp.incorporation_date ?? '—'}</Row>
-          <Row label="Tax ID">{exp.tax_id ?? '—'}</Row>
-          <Row label="Email">{exp.email ?? '—'}</Row>
-          <Row label="Phone">{exp.phone ?? '—'}</Row>
-          <Row label="Address">{exp.address ?? '—'}</Row>
-          <div className="border-t border-border my-2" />
-          <h3 className="text-sm uppercase tracking-wider text-muted-foreground mt-3 mb-2">Director 1</h3>
-          <Row label="Name">{exp.director_name ?? '—'}</Row>
-          <Row label="ID">{[exp.director_id_type, exp.director_id_number].filter(Boolean).join(' · ') || '—'}</Row>
-          <Row label="DOB">{exp.director_dob ?? '—'}</Row>
-          <Row label="Nationality">{exp.director_nationality ?? '—'}</Row>
-          <Row label="Address">{exp.director_address ?? '—'}</Row>
-          {directors.map((d, i) => (
-            <div key={d.id}>
-              <div className="border-t border-border my-2" />
-              <h3 className="text-sm uppercase tracking-wider text-muted-foreground mt-3 mb-2">
-                Director {i + 2}{d.position ? ` · ${d.position}` : ''}
-              </h3>
-              <Row label="Name">{d.full_name}</Row>
-              <Row label="ID">{[d.id_type, d.id_number].filter(Boolean).join(' · ') || '—'}</Row>
-              <Row label="DOB">{d.dob ?? '—'}</Row>
-              <Row label="Nationality">{d.nationality ?? '—'}</Row>
-              <Row label="Email">{d.email ?? '—'}</Row>
-              <Row label="Phone">{d.phone ?? '—'}</Row>
-              <Row label="Address">{d.address ?? '—'}</Row>
-            </div>
-          ))}
-        </section>
+      <KybReviewSections
+        exp={exp}
+        people={directors}
+        docs={docs}
+        canVerifyDoc={canVerifyDoc}
+        busy={busy}
+        onSetStatus={setDocStatus}
+      />
 
-
-        <section className="card-elevated p-5">
-          <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-3">Onboarding documents</h3>
-          {docs.length === 0 && <p className="text-sm text-muted-foreground">No documents uploaded.</p>}
-          {docs.length > 0 && !canVerifyDoc && (
-            <p className="text-xs text-muted-foreground mb-3">Only Credit &amp; Compliance can approve or reject documents.</p>
-          )}
-          <div className="space-y-3">
-            {docs.map((d) => (
-              <div key={d.id} className="border-t border-border pt-3">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <button onClick={() => openDocument(d.id, 'company')} className="text-sm text-accent hover:underline inline-flex items-center gap-2">
-                      <FileText className="h-4 w-4 shrink-0" /> <span className="truncate">{d.original_filename || d.document_types?.label}</span>
-                    </button>
-                    <div className="text-xs text-muted-foreground">
-                      {d.document_types?.label ?? DOC_LABEL[d.document_types?.code] ?? '—'}
-                      {d.uploaded_at ? ` · uploaded ${new Date(d.uploaded_at).toLocaleDateString()}` : ''}
-                    </div>
-                  </div>
-                  <span className={`text-xs px-2 py-0.5 rounded shrink-0 ${d.status === 'verified' ? 'bg-primary/20 text-accent' : d.status === 'rejected' ? 'bg-destructive/20 text-destructive' : 'bg-muted text-muted-foreground'}`}>
-                    {d.status === 'verified' ? 'Approved' : d.status === 'rejected' ? 'Rejected' : 'Awaiting review'}
-                  </span>
-                </div>
-
-                {d.status === 'rejected' && d.rejection_reason && (
-                  <div className="mt-2 rounded border border-destructive/40 bg-destructive/10 p-2 text-xs">
-                    <span className="text-destructive font-medium">Reason shown to exporter: </span>{d.rejection_reason}
-                  </div>
-                )}
-
-                {canVerifyDoc && (
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    {d.status !== 'verified' && (
-                      <Button size="sm" disabled={busy} onClick={() => setDocStatus(d.id, 'verified')}>Approve</Button>
-                    )}
-                    {d.status !== 'rejected' && (
-                      <Button size="sm" variant="outline" disabled={busy} onClick={() => {
-                        const why = window.prompt('Why is this document being rejected? The exporter will see this reason:');
-                        if (!why || !why.trim()) return;
-                        setDocStatus(d.id, 'rejected', why.trim());
-                      }}>Reject</Button>
-                    )}
-                    {d.status !== 'pending' && (
-                      <Button size="sm" variant="ghost" disabled={busy} onClick={() => setDocStatus(d.id, 'pending')}>Reset to pending</Button>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-
-      </div>
 
       <section className="card-elevated p-5">
         <h3 className="text-sm uppercase tracking-wider text-muted-foreground mb-3">Invoices ({invoices.length})</h3>
