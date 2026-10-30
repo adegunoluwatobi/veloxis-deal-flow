@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
     }
     const { data: link } = await supabase.from('kyb_pack_links').select('exporter_id,sent_by,token_hash,recipients,cc,subject,pack_type,expires_at,revoked_at,delivery_status').eq('id', parsed.data.linkId).maybeSingle()
     const { data: roles } = await supabase.from('app_user_roles').select('role').eq('user_id', auth.user.id)
-    const { data: canView } = await supabase.rpc('v2_can_view_exporter', { p_exporter_id: link?.exporter_id, p_user_id: auth.user.id })
+    const { data: canView } = await supabase.rpc('v2_can_view_exporter', { _exporter_id: link?.exporter_id, _uid: auth.user.id })
     const tokenHash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(parsed.data.token)))).map(b => b.toString(16).padStart(2, '0')).join('')
     const { data: exporter } = await supabase.from('v2_exporters').select('company_name,onboarding_status').eq('id', link?.exporter_id || '').maybeSingle()
     if (!link || link.sent_by !== auth.user.id || !roles?.some(r => ['originator', 'credit_officer', 'approver', 'super_admin'].includes(r.role)) || !canView || link.token_hash !== tokenHash || link.revoked_at || Date.parse(link.expires_at) <= Date.now() || link.delivery_status !== 'pending' || link.recipients?.length !== 1 || link.cc?.length || link.recipients[0].toLowerCase() !== effectiveRecipient.toLowerCase() || exporter?.onboarding_status !== 'active') {
