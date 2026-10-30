@@ -82,10 +82,18 @@ Deno.serve(async req => {
     }
     // One event, one recipient. The common sender handles suppression and the required footer.
     const { data: result, error: emailError } = await admin.functions.invoke('send-transactional-email', {
+      headers: { Authorization: authorization },
       body: { templateName: 'kyb-pack-share', recipientEmail: input.to[0], idempotencyKey: `kyb-pack-${id}`,
         templateData: { linkId: id, token, message: input.message } },
     });
     if (emailError || !result?.success || !result?.queued) {
+      let failure = result?.reason || 'queue_failed';
+      if (emailError && 'context' in emailError && emailError.context instanceof Response) {
+        const response = await emailError.context.json().catch(() => ({}));
+        failure = response.code || response.error || failure;
+      }
+      // Never log the token, signed storage URL or request body.
+      console.error('Pack email queue rejected', { link_id: id, reason: failure });
       await admin.from('kyb_pack_links').update({ delivery_status: 'failed' }).eq('id', id);
       await admin.storage.from(bucket).remove([path]);
       return json({ error: result?.reason === 'email_suppressed' ? 'This recipient cannot receive app emails.' : 'Could not queue the pack email. Check More → Emails.' }, 503);
