@@ -51,7 +51,7 @@ export function RequireAuth({ children, allow }: { children: React.ReactNode; al
   const onboardingComplete = exporterOnboarding?.onboarding_status === 'active';
   // Pages that must never bounce to onboarding, otherwise the password gate above
   // and this gate ping-pong forever and the app renders a blank screen.
-  const ONBOARDING_EXEMPT = ['/portal/onboarding', '/portal/onboarding/status', '/portal/account', '/set-password'];
+  const ONBOARDING_EXEMPT = ['/portal/onboarding', '/portal/onboarding/status', '/portal/account', '/portal/notifications', '/set-password'];
   if (isExporter && !onboardingComplete && !ONBOARDING_EXEMPT.includes(loc.pathname)) {
     return <Navigate to="/portal/onboarding" replace />;
   }

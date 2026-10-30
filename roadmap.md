@@ -1,3 +1,5 @@
+- [ ] Verify and correct invite registration handoff, NIN approval requirements and pending-exporter notification access.
+- [ ] Verify email sender domain and delivery (requires owner DNS verification if still unverified).
 - [x] Add approved-only pack sending controls and seven-day revocable PDF link handling.
 - [x] Add append-only application activity, lifecycle capture, filters and revocation controls.
 - [x] Verify admin dialog, validation, Activity filters, protected columns, immutable rows, invalid links and security rule tests.
