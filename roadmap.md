@@ -1,3 +1,6 @@
+- [x] Correct confirmed invite-registration handoff and pending-exporter notification access; four regression tests pass. NIN finding is stale: current wizard requires ID evidence for all people.
+- [ ] Verify email delivery after owner fixes sender verification in More → Emails (notify.www.veloxis.co.uk provisioning failed).
+- [ ] Verify real invite registration and pending-exporter notification history signed in (no available test session; requester has no matching auth account).
 - [x] Add approved-only pack sending controls and seven-day revocable PDF link handling.
 - [x] Add append-only application activity, lifecycle capture, filters and revocation controls.
 - [x] Verify admin dialog, validation, Activity filters, protected columns, immutable rows, invalid links and security rule tests.

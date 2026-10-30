@@ -4,14 +4,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Lock, Eye, EyeOff, MailCheck, Loader2 } from 'lucide-react';
+import { Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { passwordError, PASSWORD_RULE_TEXT } from '@/v2/lib/kybInvite';
 
 type State =
   | { kind: 'loading' }
   | { kind: 'invalid'; message?: string }
-  | { kind: 'form'; email: string; company: string }
-  | { kind: 'check-inbox'; email: string };
+  | { kind: 'form'; email: string; company: string };
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
@@ -33,7 +32,6 @@ export default function OnboardInvite() {
   const [show, setShow] = useState(false);
   const [errors, setErrors] = useState<{ pw?: string; pw2?: string; form?: string }>({});
   const [busy, setBusy] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -42,12 +40,6 @@ export default function OnboardInvite() {
       else setState({ kind: 'invalid', message: data?.error });
     })();
   }, [token]);
-
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [cooldown]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,22 +58,11 @@ export default function OnboardInvite() {
       setErrors({ form: msg });
       return;
     }
-    if (data.existing_account || data.signed_in_ready) {
-      const { error: sErr } = await supabase.auth.signInWithPassword({ email: data.email, password: pw });
-      setBusy(false);
-      if (sErr) { nav('/login', { replace: true }); return; }
-      nav('/portal/onboarding', { replace: true });
-      return;
-    }
+    // Invite registration creates a confirmed account; no confirmation email is sent.
+    // Existing accounts retain their password and can use the sign-in fallback.
+    const { error: sErr } = await supabase.auth.signInWithPassword({ email: data.email, password: pw });
     setBusy(false);
-    setCooldown(60);
-    setState({ kind: 'check-inbox', email: data.email });
-  };
-
-  const resend = async () => {
-    if (state.kind !== 'check-inbox' || cooldown > 0) return;
-    await supabase.auth.resend({ type: 'signup', email: state.email, options: { emailRedirectTo: `${window.location.origin}/portal/onboarding` } });
-    setCooldown(60);
+    nav(sErr ? '/login' : '/portal/onboarding', { replace: true });
   };
 
   if (state.kind === 'loading') return <Shell><div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Checking your invitation…</div></Shell>;
@@ -95,18 +76,6 @@ export default function OnboardInvite() {
         <a className="text-primary underline" href="mailto:support@veloxis.co.uk">support@veloxis.co.uk</a>
       </div>
       <Link to="/login" className="mt-5 inline-block text-sm text-primary underline">Already have an account? Sign in</Link>
-    </Shell>
-  );
-
-  if (state.kind === 'check-inbox') return (
-    <Shell>
-      <MailCheck className="h-8 w-8 text-primary" />
-      <h1 className="mt-3 text-xl font-semibold">Check your inbox</h1>
-      <p className="mt-2 text-sm text-muted-foreground">We sent a confirmation link to <span className="font-medium text-foreground">{state.email}</span>. Click it to confirm your email and start onboarding.</p>
-      <Button variant="outline" className="mt-5 w-full" disabled={cooldown > 0} onClick={resend}>
-        {cooldown > 0 ? `Resend confirmation email (${cooldown}s)` : 'Resend confirmation email'}
-      </Button>
-      <Link to="/login" className="mt-4 inline-block text-sm text-primary underline">Go to sign in</Link>
     </Shell>
   );
 
