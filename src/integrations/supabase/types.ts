@@ -5100,6 +5100,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      v2_onboarding_submission_changed: {
+        Args: { p_new: string; p_old: string }
+        Returns: boolean
+      }
       v2_owns_exporter: {
         Args: { _exporter_id: string; _user_id: string }
         Returns: boolean
