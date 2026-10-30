@@ -122,19 +122,22 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
   if (templateName === 'kyb-pack-share') {
-    // Only the authenticated pack function may dispatch this template. Rebuild data from its event.
+    // Validate the staff session and persisted pack event; never trust client email data.
     const bearer = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '')
-    if (bearer !== supabaseServiceKey) {
+    const { data: auth, error: authError } = await supabase.auth.getUser(bearer)
+    if (authError || !auth.user) {
       return new Response(JSON.stringify({ error: 'Pack emails must be sent through the approved application' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
     const parsed = z.object({ linkId: z.string().uuid(), token: z.string().regex(/^[a-f0-9]{64}$/), message: z.string().trim().min(1).max(10000) }).safeParse(templateData)
     if (!parsed.success || typeof effectiveRecipient !== 'string') {
       return new Response(JSON.stringify({ error: 'Invalid pack email request' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
-    const { data: link } = await supabase.from('kyb_pack_links').select('exporter_id,token_hash,recipients,cc,subject,pack_type,expires_at,revoked_at,delivery_status').eq('id', parsed.data.linkId).maybeSingle()
+    const { data: link } = await supabase.from('kyb_pack_links').select('exporter_id,sent_by,token_hash,recipients,cc,subject,pack_type,expires_at,revoked_at,delivery_status').eq('id', parsed.data.linkId).maybeSingle()
+    const { data: roles } = await supabase.from('app_user_roles').select('role').eq('user_id', auth.user.id)
+    const { data: canView } = await supabase.rpc('v2_can_view_exporter', { _exporter_id: link?.exporter_id, _uid: auth.user.id })
     const tokenHash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(parsed.data.token)))).map(b => b.toString(16).padStart(2, '0')).join('')
     const { data: exporter } = await supabase.from('v2_exporters').select('company_name,onboarding_status').eq('id', link?.exporter_id || '').maybeSingle()
-    if (!link || link.token_hash !== tokenHash || link.revoked_at || Date.parse(link.expires_at) <= Date.now() || link.delivery_status !== 'pending' || link.recipients?.length !== 1 || link.cc?.length || link.recipients[0].toLowerCase() !== effectiveRecipient.toLowerCase() || exporter?.onboarding_status !== 'active') {
+    if (!link || link.sent_by !== auth.user.id || !roles?.some(r => ['originator', 'credit_officer', 'approver', 'super_admin'].includes(r.role)) || !canView || link.token_hash !== tokenHash || link.revoked_at || Date.parse(link.expires_at) <= Date.now() || link.delivery_status !== 'pending' || link.recipients?.length !== 1 || link.cc?.length || link.recipients[0].toLowerCase() !== effectiveRecipient.toLowerCase() || exporter?.onboarding_status !== 'active') {
       return new Response(JSON.stringify({ error: 'Pack email is not available' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
     templateData = { companyName: exporter.company_name, subject: link.subject, packType: link.pack_type, message: parsed.data.message,
