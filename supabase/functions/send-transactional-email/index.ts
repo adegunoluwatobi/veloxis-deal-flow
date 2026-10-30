@@ -1,6 +1,7 @@
 import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 
 // Configuration baked in at scaffold time — do NOT change these manually.
@@ -14,12 +15,6 @@ const SENDER_DOMAIN = "notify.www.veloxis.co.uk"
 // When display_from_root is enabled, this can be the root domain for cleaner branding,
 // even though actual sending uses the subdomain above.
 const FROM_DOMAIN = "notify.www.veloxis.co.uk"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type',
-}
 
 // Generate a cryptographically random 32-byte hex token
 function generateToken(): string {
@@ -124,6 +119,24 @@ Deno.serve(async (req) => {
 
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+  if (templateName === 'exporter-submission-review') {
+    const token = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '')
+    const { data: auth, error: authError } = await supabase.auth.getUser(token)
+    const notificationId = templateData.notificationId
+    if (authError || !auth.user || typeof notificationId !== 'string') {
+      return new Response(JSON.stringify({ error: 'Sign in to send this notification' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+    const { data: notification } = await supabase.from('notifications').select('user_id, type, link, title').eq('id', notificationId).maybeSingle()
+    const exporterId = notification?.link?.split('/')[3]
+    const { data: exporter } = await supabase.from('v2_exporters').select('owner_user_id, company_name').eq('id', exporterId || '').maybeSingle()
+    const { data: recipient } = await supabase.from('profiles').select('email, name').eq('user_id', notification?.user_id || '').maybeSingle()
+    if (notification?.type !== 'onboarding_review' || exporter?.owner_user_id !== auth.user.id || recipient?.email?.toLowerCase() !== effectiveRecipient.toLowerCase()) {
+      return new Response(JSON.stringify({ error: 'This submission notification is not available to you' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+    templateData = { companyName: exporter.company_name, recipientName: recipient.name, applicationUrl: `https://app.veloxis.co.uk${notification.link}`, resubmitted: notification.title === 'Exporter application resubmitted' }
+    idempotencyKey = `onboarding-review-${notificationId}`
+  }
 
   // 2. Check suppression list (fail-closed: if we can't verify, don't send)
   const { data: suppressed, error: suppressionError } = await supabase

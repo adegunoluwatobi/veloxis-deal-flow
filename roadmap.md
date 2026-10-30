@@ -2,3 +2,5 @@
 - [x] Add append-only application activity, lifecycle capture, filters and revocation controls.
 - [x] Verify admin dialog, validation, Activity filters, protected columns, immutable rows, invalid links and security rule tests.
 - [ ] Connect Resend, configure its verified Veloxis sender, and verify actual email delivery plus a sent-link download/revocation end-to-end (Resend connection declined).
+- [x] Add submission/resubmission notifications and individual app-email dispatch for the assigned/inviting BD, Credit & Compliance, and Super Admin; verify live timestamp rules.
+- [ ] Verify an actual exporter submission through reviewer dashboards and email inboxes (blocked by unverified sender domain; no real submission was made during testing).
