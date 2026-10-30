@@ -3,6 +3,7 @@ import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
+import { z } from 'npm:zod@3.25.76'
 
 // Configuration baked in at scaffold time — do NOT change these manually.
 // To update, re-run the email domain setup flow.
@@ -119,6 +120,27 @@ Deno.serve(async (req) => {
 
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+  if (templateName === 'kyb-pack-share') {
+    // Only the authenticated pack function may dispatch this template. Rebuild data from its event.
+    const bearer = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '')
+    if (bearer !== supabaseServiceKey) {
+      return new Response(JSON.stringify({ error: 'Pack emails must be sent through the approved application' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+    const parsed = z.object({ linkId: z.string().uuid(), token: z.string().regex(/^[a-f0-9]{64}$/), message: z.string().trim().min(1).max(10000) }).safeParse(templateData)
+    if (!parsed.success || typeof effectiveRecipient !== 'string') {
+      return new Response(JSON.stringify({ error: 'Invalid pack email request' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+    const { data: link } = await supabase.from('kyb_pack_links').select('exporter_id,token_hash,recipients,cc,subject,pack_type,expires_at,revoked_at,delivery_status').eq('id', parsed.data.linkId).maybeSingle()
+    const tokenHash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(parsed.data.token)))).map(b => b.toString(16).padStart(2, '0')).join('')
+    const { data: exporter } = await supabase.from('v2_exporters').select('company_name,onboarding_status').eq('id', link?.exporter_id || '').maybeSingle()
+    if (!link || link.token_hash !== tokenHash || link.revoked_at || Date.parse(link.expires_at) <= Date.now() || link.delivery_status !== 'pending' || link.recipients?.length !== 1 || link.cc?.length || link.recipients[0].toLowerCase() !== effectiveRecipient.toLowerCase() || exporter?.onboarding_status !== 'active') {
+      return new Response(JSON.stringify({ error: 'Pack email is not available' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+    templateData = { companyName: exporter.company_name, subject: link.subject, packType: link.pack_type, message: parsed.data.message,
+      downloadUrl: `${supabaseUrl}/functions/v1/kyb-pack-sharing?token=${parsed.data.token}`, expiresOn: new Date(link.expires_at).toUTCString() }
+    idempotencyKey = `kyb-pack-${parsed.data.linkId}`
+  }
 
   if (templateName === 'exporter-submission-review') {
     const token = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '')

@@ -4,6 +4,7 @@
 - [x] Add approved-only pack sending controls and seven-day revocable PDF link handling.
 - [x] Add append-only application activity, lifecycle capture, filters and revocation controls.
 - [x] Verify admin dialog, validation, Activity filters, protected columns, immutable rows, invalid links and security rule tests.
-- [ ] Connect Resend, configure its verified Veloxis sender, and verify actual email delivery plus a sent-link download/revocation end-to-end (Resend connection declined).
+- [x] Switch pack delivery to single-recipient Lovable Emails without CC; 12 pack tests pass and both updated sending functions are deployed.
+- [ ] Verify pack email delivery and download/revocation end-to-end (blocked by sender verification and unavailable authenticated session).
 - [x] Add submission/resubmission notifications and individual app-email dispatch for the assigned/inviting BD, Credit & Compliance, and Super Admin; verify live timestamp rules.
 - [ ] Verify an actual exporter submission through reviewer dashboards and email inboxes (blocked by unverified sender domain; no real submission was made during testing).

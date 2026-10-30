@@ -5,7 +5,6 @@ import { canSendPack, linkAvailable, PACK_LIFETIME_SECONDS, sendPackSchema } fro
 
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 const hash = async (token: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token)))).map(b => b.toString(16).padStart(2, '0')).join('');
-const escape = (text: string) => text.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] ?? c));
 const bucket = 'veloxis-documents';
 
 Deno.serve(async req => {
@@ -60,14 +59,6 @@ Deno.serve(async req => {
     if (expError || !exp) return json({ error: 'Forbidden' }, 403);
     if (!canSendPack(exp.onboarding_status)) return json({ error: 'Only approved applications can send a pack.' }, 409);
 
-    // Set these from the linked Resend connection's actual gateway/direct mode.
-    const key = Deno.env.get('RESEND_API_KEY');
-    const mode = Deno.env.get('RESEND_USE_GATEWAY');
-    const gatewayKey = Deno.env.get('LOVABLE_API_KEY');
-    const from = Deno.env.get('RESEND_FROM');
-    if (!key || !from || !['true', 'false'].includes(mode ?? '') || (mode === 'true' && !gatewayKey)) return json({ error: 'Resend pack delivery is not configured. Connect Resend and verify a Veloxis sender before sending.' }, 503);
-    if (!/@(?:[a-z0-9-]+\.)*veloxis\.co\.uk>?$/i.test(from)) return json({ error: 'A verified Veloxis sender address is required.' }, 503);
-
     const generated = await fetch(`${url}/functions/v1/exporter-pack`, { method: 'POST', headers: { Authorization: authorization, apikey: anon, 'Content-Type': 'application/json' }, body: JSON.stringify({ exporter_id: exp.id, mode: input.pack_type, purpose: 'send' }) });
     if (!generated.ok) return json({ error: 'Pack generation failed', status: generated.status, details: await generated.text() }, generated.status);
     const bytes = await generated.arrayBuffer();
@@ -89,24 +80,23 @@ Deno.serve(async req => {
       await admin.storage.from(bucket).remove([path]);
       return json({ error: 'The application is no longer approved.' }, 409);
     }
-    const downloadUrl = `${url}/functions/v1/kyb-pack-sharing?token=${token}`;
-    const expiresOn = new Date(expiry).toUTCString();
-    const emailBody = { from, to: input.to, ...(input.cc.length ? { cc: input.cc } : {}), subject: input.subject, html: `<p>${escape(input.message).replace(/\n/g, '<br>')}</p><p><a href="${escape(downloadUrl)}">Download ${input.pack_type === 'full' ? 'full KYB pack' : 'KYB summary'}</a></p><p>This secure link expires on ${escape(expiresOn)} (7 days) and may be revoked earlier by Veloxis.</p><p>Veloxis<br>Strictly Private &amp; Confidential</p>`, text: `${input.message}\n\nDownload: ${downloadUrl}\nExpires: ${expiresOn} (7 days). This link may be revoked earlier by Veloxis.\n\nVeloxis — Strictly Private & Confidential` };
-    const response = await fetch(mode === 'true' ? 'https://connector-gateway.lovable.dev/resend/emails' : 'https://api.resend.com/emails', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${mode === 'true' ? gatewayKey : key}`, ...(mode === 'true' ? { 'X-Connection-Api-Key': key } : {}), 'Idempotency-Key': id }, body: JSON.stringify(emailBody) });
-    if (!response.ok) {
-      const details = await response.text();
-      console.error(`Resend failed [${response.status}]: ${details}`);
+    // One event, one recipient. The common sender handles suppression and the required footer.
+    const { data: result, error: emailError } = await admin.functions.invoke('send-transactional-email', {
+      body: { templateName: 'kyb-pack-share', recipientEmail: input.to[0], idempotencyKey: `kyb-pack-${id}`,
+        templateData: { linkId: id, token, message: input.message } },
+    });
+    if (emailError || !result?.success || !result?.queued) {
       await admin.from('kyb_pack_links').update({ delivery_status: 'failed' }).eq('id', id);
       await admin.storage.from(bucket).remove([path]);
-      return json({ error: 'Resend could not send the pack', status: response.status, details }, response.status);
+      return json({ error: result?.reason === 'email_suppressed' ? 'This recipient cannot receive app emails.' : 'Could not queue the pack email. Check More → Emails.' }, 503);
     }
-    const result = await response.json();
-    const { error: recordError } = await admin.from('kyb_pack_links').update({ delivery_status: 'sent', sent_at: new Date().toISOString(), provider_message_id: result.id }).eq('id', id);
+    // Existing "sent" state means handed off for delivery, not confirmed receipt.
+    const { error: recordError } = await admin.from('kyb_pack_links').update({ delivery_status: 'sent', sent_at: new Date().toISOString() }).eq('id', id);
     if (recordError) {
       await admin.storage.from(bucket).remove([path]);
-      return json({ error: 'Email sent, but delivery could not be recorded. Its download link has been disabled.' }, 500);
+      return json({ error: 'Email queued, but its link could not be recorded and has been disabled.' }, 500);
     }
-    return json({ success: true, link_id: id, expires_at: expiry });
+    return json({ success: true, queued: true, link_id: id, expires_at: expiry });
   } catch (error) {
     console.error('KYB pack sharing failed', error instanceof Error ? error.message : 'Unknown error');
     return json({ error: 'Could not complete this pack request.' }, 500);

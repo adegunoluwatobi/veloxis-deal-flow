@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 export const recipientList = (value: string) => [...new Set(value.split(/[,;\s]+/).map(v => v.trim()).filter(Boolean))];
 export const packFormSchema = z.object({
-  to: z.array(z.string().email('Enter a valid email address.')).min(1, 'Add at least one recipient.').max(50),
-  cc: z.array(z.string().email('Enter a valid CC email address.')).max(50),
+  to: z.array(z.string().email('Enter a valid email address.')).length(1, 'Enter exactly one recipient.'),
+  cc: z.array(z.string()).max(0, 'CC is not available.').default([]),
   subject: z.string().trim().min(1, 'Enter a subject.').max(255).refine(v => !/[\r\n]/.test(v), 'Enter a single-line subject.'),
   message: z.string().trim().min(1, 'Enter a message.').max(10000),
   pack_type: z.enum(['full', 'summary']),

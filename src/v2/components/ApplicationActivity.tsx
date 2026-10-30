@@ -28,14 +28,13 @@ export function SendPack({ exporterId, companyName, onSent }: { exporterId: stri
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [to, setTo] = useState('');
-  const [cc, setCc] = useState('');
   const [subject, setSubject] = useState(`Exporter KYB Pack: ${companyName}`);
   const [message, setMessage] = useState(`Dear colleague,\n\nPlease find the secure download link to the exporter KYB pack for ${companyName} below, for your review.\n\nPlease treat these documents as strictly confidential.\n\nKind regards,\nVeloxis`);
   const [packType, setPackType] = useState<'full' | 'summary'>('full');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const send = async (event: React.FormEvent) => {
     event.preventDefault();
-    const result = packFormSchema.safeParse({ to: recipientList(to), cc: recipientList(cc), subject, message, pack_type: packType });
+    const result = packFormSchema.safeParse({ to: recipientList(to), cc: [], subject, message, pack_type: packType });
     if (!result.success) {
       const next: Record<string, string> = {};
       result.error.issues.forEach(i => { next[String(i.path[0])] ??= i.message; });
@@ -44,7 +43,7 @@ export function SendPack({ exporterId, companyName, onSent }: { exporterId: stri
     setErrors({}); setBusy(true);
     try {
       const data = await request({ action: 'send', exporter_id: exporterId, ...result.data });
-      toast({ title: 'Pack sent', description: `Download link expires ${new Date(data.expires_at).toLocaleString('en-GB')}.` });
+      toast({ title: 'Pack email queued', description: `Download link expires ${new Date(data.expires_at).toLocaleString('en-GB')}. Delivery starts after sender verification.` });
       setOpen(false); onSent();
     } catch (error) {
       toast({ title: 'Pack not sent', description: error instanceof Error ? error.message : 'Please try again.', variant: 'destructive' });
@@ -57,8 +56,7 @@ export function SendPack({ exporterId, companyName, onSent }: { exporterId: stri
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader><DialogTitle>Send KYB pack</DialogTitle></DialogHeader>
         <form onSubmit={send} noValidate className="space-y-4">
-          <div className="space-y-1"><Label htmlFor="pack-to">To *</Label><Input id="pack-to" value={to} onChange={e => setTo(e.target.value)} placeholder="name@company.com, colleague@company.com" aria-invalid={!!errors.to} aria-describedby={errors.to ? 'pack-to-error' : undefined} />{error('to')}</div>
-          <div className="space-y-1"><Label htmlFor="pack-cc">CC</Label><Input id="pack-cc" value={cc} onChange={e => setCc(e.target.value)} placeholder="name@company.com" aria-invalid={!!errors.cc} />{error('cc')}</div>
+          <div className="space-y-1"><Label htmlFor="pack-to">To *</Label><Input id="pack-to" type="email" value={to} onChange={e => setTo(e.target.value)} placeholder="name@company.com" aria-invalid={!!errors.to} aria-describedby={errors.to ? 'pack-to-error' : undefined} />{error('to')}</div>
           <div className="space-y-1"><Label htmlFor="pack-subject">Subject *</Label><Input id="pack-subject" value={subject} onChange={e => setSubject(e.target.value)} aria-invalid={!!errors.subject} />{error('subject')}</div>
           <div className="space-y-1"><Label htmlFor="pack-message">Message *</Label><Textarea id="pack-message" value={message} onChange={e => setMessage(e.target.value)} rows={7} aria-invalid={!!errors.message} />{error('message')}</div>
           <div className="space-y-1"><Label htmlFor="pack-type">Pack type</Label><Select value={packType} onValueChange={v => setPackType(v === 'summary' ? 'summary' : 'full')}><SelectTrigger id="pack-type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="full">Full pack</SelectItem><SelectItem value="summary">Summary only</SelectItem></SelectContent></Select></div>

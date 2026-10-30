@@ -49,8 +49,10 @@ import { template as maturityReminder1 } from './maturity-reminder-1.tsx'
 import { template as registrationLinkInvite } from './registration-link-invite.tsx'
 import { template as kybOnboardingInvite } from './kyb-onboarding-invite.tsx'
 import { template as exporterSubmissionReview } from './exporter-submission-review.tsx'
+import { template as kybPackShare } from './kyb-pack-share.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
+  'kyb-pack-share': kybPackShare,
   'exporter-submission-review': exporterSubmissionReview,
   'exporter-invitation': exporterInvitation,
   'exporter-accepted-invite': exporterAcceptedInvite,
