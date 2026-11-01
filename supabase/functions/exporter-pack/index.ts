@@ -4,6 +4,7 @@ import { PDFDocument, StandardFonts, rgb, PDFFont, PDFPage } from 'npm:pdf-lib@1
 import JSZip from 'npm:jszip@3.10.1';
 import logoAsset from './assets/veloxis-pack-logo.png.asset.json' with { type: 'json' };
 import { packPageLayout } from '../_shared/pack-page-layout.ts';
+import { isPackOmitted, packOriginalName } from '../_shared/pack-document-rules.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
@@ -30,8 +31,8 @@ Deno.serve(async (req) => {
   let body: { exporter_id?: string; mode?: string; field?: string; person_id?: string; purpose?: string };
   try { body = await req.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
   const { exporter_id, mode } = body;
-  if (!exporter_id || !uuidRe.test(exporter_id) || !['full', 'summary', 'zip', 'reveal'].includes(mode ?? '')) {
-    return json({ error: 'exporter_id (uuid) and mode (full|summary|zip|reveal) are required' }, 400);
+  if (!exporter_id || !uuidRe.test(exporter_id) || !['full', 'summary', 'zip', 'bundle', 'reveal'].includes(mode ?? '')) {
+    return json({ error: 'exporter_id (uuid) and mode (full|summary|zip|bundle|reveal) are required' }, 400);
   }
 
   const userClient = createClient(SUPABASE_URL, ANON_KEY, { global: { headers: { Authorization: authHeader } } });
@@ -77,8 +78,11 @@ Deno.serve(async (req) => {
     return json({ value });
   }
 
-  const excluded = (docs ?? []).filter((d: any) => d.scan_status !== 'clean');
-  const allDocs = (docs ?? []).filter((d: any) => d.scan_status === 'clean') as any[];
+  const omitted = (docs ?? []).filter((d: any) => isPackOmitted(exporter_id, d.id));
+  const considered = (docs ?? []).filter((d: any) => !isPackOmitted(exporter_id, d.id));
+  const excluded = considered.filter((d: any) => d.scan_status !== 'clean');
+  const allDocs = considered.filter((d: any) => d.scan_status === 'clean') as any[];
+  const fullPdf = mode === 'full' || mode === 'bundle';
   const personOf = (d: any) => d.person_id ?? (PERSON_CODES.includes(d.document_types?.code)
     ? (people ?? []).find((p: any) => p.is_primary)?.id ?? null : null);
   const ordered = [
@@ -91,29 +95,34 @@ Deno.serve(async (req) => {
   const date = new Date().toISOString().slice(0, 10);
   const base = `${safe(exp.company_name)}_${safe(rc)}_KYB_Pack_${date}`;
 
+  const cached = new Map<string, Uint8Array>();
   const download = async (path: string) => {
+    const existing = cached.get(path);
+    if (existing) return existing;
     const { data, error } = await admin.storage.from(BUCKET).download(path);
     if (error || !data) return null;
-    return new Uint8Array(await data.arrayBuffer());
+    const bytes = new Uint8Array(await data.arrayBuffer());
+    cached.set(path, bytes);
+    return bytes;
   };
 
-  // ---- ZIP of originals ----
-  if (mode === 'zip') {
+  const originalZip = async () => {
     const zip = new JSZip();
-    const used = new Set<string>();
-    for (const d of ordered) {
+    for (const [index, d] of ordered.entries()) {
       const bytes = await download(d.storage_path);
-      if (!bytes) return json({ error: `Could not download ${d.original_filename ?? 'a document'}. No incomplete ZIP was generated.` }, 422);
-      const folder = safe(d.document_types?.label ?? 'Other') || 'Other';
-      const who = personName(d);
-      let name = `${folder}/${who ? safe(who) + '_' : ''}${d.original_filename ?? 'file'}`;
-      let i = 2; while (used.has(name)) name = name.replace(/(\.[^.]+)?$/, `_${i++}$1`);
-      used.add(name);
-      zip.file(name, bytes);
+      if (!bytes) throw new Error(`Could not download ${d.original_filename ?? 'a document'}. No incomplete ZIP was generated.`);
+      zip.file(packOriginalName(index, d.document_types?.label ?? 'Document', personName(d), d.original_filename ?? 'file'), bytes);
     }
     if (excluded.length) zip.file('Excluded_documents.txt', excluded.map((d: any) => `${d.original_filename}: security scan ${d.scan_status}; not included.`).join('\n'));
+    return zip;
+  };
+  const omissions = omitted.map((d: any) => ({ id: d.id, reason: 'Owner-requested upload-specific pack omission; security flag unchanged' }));
+  // ---- ZIP of originals ----
+  if (mode === 'zip') {
+    let zip: JSZip;
+    try { zip = await originalZip(); } catch (error) { return json({ error: error instanceof Error ? error.message : 'Could not build ZIP.' }, 422); }
     const out = await zip.generateAsync({ type: 'uint8array', compression: 'STORE' });
-    await audit('kyb_pack_downloaded', { format: 'zip', files: used.size });
+    await audit('kyb_pack_downloaded', { format: 'zip', files: ordered.length, omissions });
     return new Response(out, { headers: { ...corsHeaders, 'Content-Type': 'application/zip', 'Content-Disposition': `attachment; filename="${base}.zip"` } });
   }
 
@@ -158,7 +167,7 @@ Deno.serve(async (req) => {
   coverRow('Current status', String(exp.onboarding_status) + (exp.bd_approved_at ? ' (BD approved)' : ''));
   coverRow('Generated', now.toISOString().replace('T', ' ').slice(0, 16) + ' UTC');
   coverRow('Generated by', generatedBy);
-  coverRow('Contents', mode === 'full' ? `Summary + ${ordered.length} document(s)` : 'Summary only');
+  coverRow('Contents', fullPdf ? `Summary + ${ordered.length} document(s)` : 'Summary only');
   if (excluded.length) coverRow('Not included', `${excluded.length} upload(s) awaiting security clearance; see attachment exceptions`);
   cover.drawRectangle({ x: 0, y: 65, width: W, height: 100, color: teal });
   text(cover, 'PRIVATE APPLICATION DOSSIER', M, 122, 12, bold, rgb(1, 1, 1));
@@ -216,7 +225,7 @@ Deno.serve(async (req) => {
 
   // Appended documents
   const skipped: string[] = [];
-  if (mode === 'full') {
+  if (fullPdf) {
     for (const d of ordered) {
       const div = pdf.addPage([W, H]);
       div.drawRectangle({ x: 0, y: H / 2 - 70, width: W, height: 140, color: teal });
@@ -260,7 +269,15 @@ Deno.serve(async (req) => {
   });
 
   const out = await pdf.save();
-  await audit(body.purpose === 'send' ? 'kyb_pack_generated' : 'kyb_pack_downloaded', { format: mode === 'full' ? 'pdf_full' : 'pdf_summary', documents: mode === 'full' ? ordered.length : 0, document_ids: mode === 'full' ? ordered.map((d) => d.id) : [], excluded: excluded.map((d: any) => ({ id: d.id, filename: d.original_filename, scan_status: d.scan_status })), skipped });
-  const fname = mode === 'full' ? `${base}.pdf` : `${base.replace('_KYB_Pack_', '_KYB_Summary_')}.pdf`;
+  if (mode === 'bundle') {
+    let zip: JSZip;
+    try { zip = await originalZip(); } catch (error) { return json({ error: error instanceof Error ? error.message : 'Could not build ZIP.' }, 422); }
+    zip.file(`${base}.pdf`, out);
+    const archive = await zip.generateAsync({ type: 'uint8array', compression: 'STORE' });
+    await audit('kyb_pack_downloaded', { format: 'zip_full_pack', files: ordered.length, document_ids: ordered.map((d) => d.id), omissions });
+    return new Response(archive, { headers: { ...corsHeaders, 'Content-Type': 'application/zip', 'Content-Disposition': `attachment; filename="${base}.zip"` } });
+  }
+  await audit(body.purpose === 'send' ? 'kyb_pack_generated' : 'kyb_pack_downloaded', { format: fullPdf ? 'pdf_full' : 'pdf_summary', documents: fullPdf ? ordered.length : 0, document_ids: fullPdf ? ordered.map((d) => d.id) : [], excluded: excluded.map((d: any) => ({ id: d.id, filename: d.original_filename, scan_status: d.scan_status })), omissions, skipped });
+  const fname = fullPdf ? `${base}.pdf` : `${base.replace('_KYB_Pack_', '_KYB_Summary_')}.pdf`;
   return new Response(out, { headers: { ...corsHeaders, 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${fname}"` } });
 });
