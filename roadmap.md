@@ -14,3 +14,4 @@
 - [x] Apply Mike’s upload-specific bank-statement pack omission without clearing its security flag; verified persisted omission audit and no PDF reference.
 - [x] Full-pack ZIP contains the 61-page PDF and 13 labelled individual originals; verified staff download and both director IDs, visually checked cover/register, and passed 20 tests.
 - [x] Add approved-only copyable seven-day full-pack ZIP links; verified staff creation/copy/download, PDF plus labelled originals, audited Activity and immediate revocation (410); 22 regression tests pass.
+- [ ] Add branded WhatsApp previews to copied ZIP links without exposing application details; verify public preview metadata and download/revocation.
