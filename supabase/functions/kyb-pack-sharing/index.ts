@@ -6,7 +6,7 @@ import { packDownloadFormat } from '../_shared/pack-lifecycle.ts';
 
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 const hash = async (token: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token)))).map(b => b.toString(16).padStart(2, '0')).join('');
-const bucket = 'veloxis-documents';
+const bucket = 'kyb-shared-packs';
 
 Deno.serve(async req => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -47,9 +47,10 @@ Deno.serve(async req => {
       if (!parsed.success) return json({ error: 'Invalid link' }, 400);
       const { data: path, error } = await caller.rpc('kyb_revoke_pack', { p_link_id: parsed.data.link_id });
       if (error) return json({ error: error.message }, 403);
+      const { data: revoked } = await admin.from('kyb_pack_links').select('storage_bucket').eq('id', parsed.data.link_id).single();
       // Deleting the uniquely generated object also invalidates its storage-signed URL.
       if (path) {
-        const { error: removeError } = await admin.storage.from(bucket).remove([path]);
+        const { error: removeError } = await admin.storage.from(revoked?.storage_bucket ?? 'veloxis-documents').remove([path]);
         if (removeError) console.error('Revoked object cleanup failed', removeError.message);
       }
       return json({ success: true });
@@ -76,7 +77,7 @@ Deno.serve(async req => {
     if (signedError || !signed) { await admin.storage.from(bucket).remove([path]); throw signedError ?? new Error('Could not sign pack'); }
     const token = Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2, '0')).join('');
     const { data: profile } = await admin.from('profiles').select('name,email').eq('user_id', user.id).maybeSingle();
-    const { error: insertError } = await admin.from('kyb_pack_links').insert({ id, exporter_id: exp.id, token_hash: await hash(token), storage_path: path, signed_url: signed.signedUrl, pack_type: input.pack_type, recipients: input.action === 'send' ? input.to : [], cc: input.action === 'send' ? input.cc : [], subject: input.action === 'send' ? input.subject : 'Full pack ZIP download link', sent_by: user.id, sender_name: profile?.name || user.email || user.id, created_at: created.toISOString(), expires_at: expiry });
+    const { error: insertError } = await admin.from('kyb_pack_links').insert({ id, exporter_id: exp.id, token_hash: await hash(token), storage_path: path, storage_bucket: bucket, signed_url: signed.signedUrl, pack_type: input.pack_type, recipients: input.action === 'send' ? input.to : [], cc: input.action === 'send' ? input.cc : [], subject: input.action === 'send' ? input.subject : 'Full pack ZIP download link', sent_by: user.id, sender_name: profile?.name || user.email || user.id, created_at: created.toISOString(), expires_at: expiry });
     if (insertError) { await admin.storage.from(bucket).remove([path]); throw insertError; }
     const { data: fresh } = await caller.from('v2_exporters').select('onboarding_status').eq('id', exp.id).single();
     if (!fresh || !canSendPack(fresh.onboarding_status)) {
