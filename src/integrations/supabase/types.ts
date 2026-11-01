@@ -2425,6 +2425,7 @@ export type Database = {
           sent_at: string | null
           sent_by: string
           signed_url: string
+          storage_bucket: string
           storage_path: string
           subject: string
           token_hash: string
@@ -2445,6 +2446,7 @@ export type Database = {
           sent_at?: string | null
           sent_by: string
           signed_url: string
+          storage_bucket?: string
           storage_path: string
           subject: string
           token_hash: string
@@ -2465,6 +2467,7 @@ export type Database = {
           sent_at?: string | null
           sent_by?: string
           signed_url?: string
+          storage_bucket?: string
           storage_path?: string
           subject?: string
           token_hash?: string
