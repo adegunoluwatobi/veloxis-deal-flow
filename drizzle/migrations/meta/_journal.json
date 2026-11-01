@@ -71,6 +71,13 @@
       "when": 1793558740467,
       "tag": "0009_kyb_shared_pack_storage",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793559311782,
+      "tag": "0010_mike_one_time_activation_resolution_exemption",
+      "breakpoints": true
     }
   ]
 }
