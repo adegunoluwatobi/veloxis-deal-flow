@@ -37,9 +37,9 @@ export function KybPackButtons({ exporterId }: { exporterId: string }) {
   const run = async (mode: 'full' | 'summary' | 'zip') => {
     setBusy(mode);
     try {
-      const res = await callPack({ exporter_id: exporterId, mode });
+      const res = await callPack({ exporter_id: exporterId, mode: mode === 'full' ? 'bundle' : mode });
       const cd = res.headers.get('Content-Disposition') ?? '';
-      const name = /filename="([^"]+)"/.exec(cd)?.[1] ?? `KYB_Pack.${mode === 'zip' ? 'zip' : 'pdf'}`;
+      const name = /filename="([^"]+)"/.exec(cd)?.[1] ?? `KYB_Pack.${mode === 'summary' ? 'pdf' : 'zip'}`;
       downloadBlob(await res.blob(), name);
     } catch (e: any) {
       toast({ title: 'Download failed', description: e.message, variant: 'destructive' });
@@ -52,7 +52,7 @@ export function KybPackButtons({ exporterId }: { exporterId: string }) {
   );
   return (
     <div className="flex flex-col sm:flex-row gap-2">
-      <B mode="full" label="Download full pack (PDF)" />
+      <B mode="full" label="Download full pack (ZIP)" />
       <B mode="summary" label="Download summary only (PDF)" />
       <B mode="zip" label="Download all files (ZIP)" />
     </div>
