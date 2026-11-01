@@ -50,6 +50,13 @@
       "when": 1793402900449,
       "tag": "0006_exporter_submission_alerts",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793555604832,
+      "tag": "0007_allow_onboarding_review_notifications",
+      "breakpoints": true
     }
   ]
 }
