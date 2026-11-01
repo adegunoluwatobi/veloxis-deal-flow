@@ -3,6 +3,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { z } from 'npm:zod@3.25.76';
 import { canSendPack, createPackLinkSchema, linkAvailable, PACK_LIFETIME_SECONDS, sendPackSchema } from '../_shared/pack-rules.ts';
 import { packDownloadFormat } from '../_shared/pack-lifecycle.ts';
+import { packShareUrl } from '../_shared/pack-share-url.ts';
 
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 const hash = async (token: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token)))).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -91,7 +92,7 @@ Deno.serve(async req => {
         await admin.storage.from(bucket).remove([path]);
         throw readyError;
       }
-      return json({ success: true, link_id: id, expires_at: expiry, download_url: `${url}/functions/v1/kyb-pack-sharing?token=${token}` });
+      return json({ success: true, link_id: id, expires_at: expiry, share_url: packShareUrl(token), download_url: `${url}/functions/v1/kyb-pack-sharing?token=${token}` });
     }
     if (input.action !== 'send') return json({ error: 'Invalid action' }, 400);
     // One event, one recipient. The common sender handles suppression and the required footer.
