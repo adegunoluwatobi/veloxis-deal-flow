@@ -48,11 +48,15 @@ Deno.serve(async (req) => {
   if (!visible) return json({ error: 'Forbidden' }, 403);
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
-  const audit = (action: string, metadata: Record<string, unknown>) =>
-    admin.from('document_audit_log').insert({
+  const audit = async (event: string, metadata: Record<string, unknown>) => {
+    const action = event === 'kyb_pack_generated' ? 'document_generated'
+      : event === 'kyb_pack_generation_failed' ? 'status_changed' : 'viewed';
+    const { error } = await admin.from('document_audit_log').insert({
       entity_type: 'exporter', entity_id: exporter_id, exporter_id, action,
-      actor_id: user.id, actor_role: roles.join(','), metadata: { at: new Date().toISOString(), ...metadata },
+      actor_id: user.id, actor_role: roles.join(','), metadata: { event, at: new Date().toISOString(), ...metadata },
     });
+    if (error) throw new Error('Could not record the secure pack audit. Please try again.');
+  };
 
   const [expResult, peopleResult, docsResult, profResult] = await Promise.all([
     admin.from('v2_exporters').select('*').eq('id', exporter_id).single(),
