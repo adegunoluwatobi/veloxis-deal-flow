@@ -14,4 +14,5 @@
 - [x] Apply Mike’s upload-specific bank-statement pack omission without clearing its security flag; verified persisted omission audit and no PDF reference.
 - [x] Full-pack ZIP contains the 61-page PDF and 13 labelled individual originals; verified staff download and both director IDs, visually checked cover/register, and passed 20 tests.
 - [x] Add approved-only copyable seven-day full-pack ZIP links; verified staff creation/copy/download, PDF plus labelled originals, audited Activity and immediate revocation (410); 22 regression tests pass.
-- [ ] Add branded WhatsApp previews to copied ZIP links without exposing application details; verify public preview metadata and download/revocation.
+- [x] Add branded social metadata and compact logo image to copied ZIP links, keeping tokens in fragments; verify crawler HTML, public landing page, Mike’s PDF plus 13 originals, and revocation (410); 16 tests pass.
+- [ ] Verify actual WhatsApp preview after publishing the new share page and image (live share page currently 404; publishing requires user request).
