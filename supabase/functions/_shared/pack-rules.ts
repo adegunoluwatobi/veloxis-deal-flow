@@ -9,3 +9,6 @@ export const sendPackSchema = z.object({
   message: z.string().trim().min(1).max(10000),
   pack_type: z.enum(['full', 'summary']),
 });
+export const createPackLinkSchema = z.object({
+  action: z.literal('create_link'), exporter_id: z.string().uuid(), pack_type: z.literal('bundle'),
+});

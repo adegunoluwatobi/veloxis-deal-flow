@@ -16,5 +16,5 @@ export const activityLabel = (event: string) => ({
   status_changed: 'Status changed', admin_email_changed: 'Admin email change',
   sensitive_field_revealed: 'Sensitive field revealed', kyb_pack_downloaded: 'Pack downloaded',
   kyb_pack_generated: 'Pack generated', shared_pack_downloaded: 'Shared pack downloaded',
-  pack_sent: 'Pack sent', pack_link_revoked: 'Pack link revoked', review_approved: 'Review approved', review_returned: 'Returned for correction',
+  pack_sent: 'Pack sent', pack_link_created: 'ZIP download link created', pack_link_revoked: 'Pack link revoked', review_approved: 'Review approved', review_returned: 'Returned for correction',
 }[event] ?? event.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase()));
