@@ -6,3 +6,4 @@
 - Pack sharing invokes the common app-email sender server-side; the sender validates the persisted pack event and rebuilds its email data. Why: clients cannot spoof pack links or bypass approval and recipient constraints.
 - Application activity is captured by database triggers in an immutable application-specific stream, preserving source timestamps and source IDs. Why: lifecycle, document and review paths cannot silently bypass the Activity tab.
 - Onboarding submission alerts originate from submission-timestamp transitions; each recipient notification dispatches one authenticated, server-validated app email. Why: autosaves stay quiet, reviewers are deduplicated, and client-supplied recipients cannot expose another application.
+- Notification type constraints must accept every type emitted by application triggers. Why: a rejected notification insert rolls back the exporter submission that generated it.
