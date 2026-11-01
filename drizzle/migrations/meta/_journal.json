@@ -57,6 +57,13 @@
       "when": 1793555604832,
       "tag": "0007_allow_onboarding_review_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793558263953,
+      "tag": "0008_kyb_full_pack_zip_links",
+      "breakpoints": true
     }
   ]
 }
