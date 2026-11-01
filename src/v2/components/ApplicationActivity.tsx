@@ -33,12 +33,12 @@ export function SendPack({ exporterId, companyName, onSent }: { exporterId: stri
   const [packType, setPackType] = useState<'full' | 'summary'>('full');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [creatingLink, setCreatingLink] = useState(false);
-  const [zipLink, setZipLink] = useState<{ url: string; expiry: string } | null>(null);
+  const [zipLink, setZipLink] = useState<{ url: string; downloadUrl: string; expiry: string } | null>(null);
   const createLink = async () => {
     setCreatingLink(true);
     try {
       const data = await request({ action: 'create_link', exporter_id: exporterId, pack_type: 'bundle' });
-      setZipLink({ url: data.download_url, expiry: data.expires_at });
+      setZipLink({ url: data.share_url ?? data.download_url, downloadUrl: data.download_url, expiry: data.expires_at });
       onSent();
     } catch (error) {
       toast({ title: 'Could not create ZIP link', description: error instanceof Error ? error.message : 'Please try again.', variant: 'destructive' });
@@ -74,7 +74,7 @@ export function SendPack({ exporterId, companyName, onSent }: { exporterId: stri
         <DialogHeader><DialogTitle>Full pack ZIP download link</DialogTitle></DialogHeader>
         <div className="space-y-2"><Label htmlFor="zip-download-link">Secure download link</Label><Input id="zip-download-link" readOnly value={zipLink?.url ?? ''} onFocus={e => e.currentTarget.select()} />
           <p className="text-sm text-muted-foreground">Expires {zipLink ? new Date(zipLink.expiry).toLocaleString('en-GB') : ''}. Confidential — anyone with this link can download the pack.</p></div>
-        <DialogFooter><Button variant="outline" asChild><a href={zipLink?.url}><Download className="mr-2 h-4 w-4" />Download ZIP</a></Button><Button onClick={copyLink}><Copy className="mr-2 h-4 w-4" />Copy link</Button></DialogFooter>
+        <DialogFooter><Button variant="outline" asChild><a href={zipLink?.downloadUrl}><Download className="mr-2 h-4 w-4" />Download ZIP</a></Button><Button onClick={copyLink}><Copy className="mr-2 h-4 w-4" />Copy link</Button></DialogFooter>
       </DialogContent>
     </Dialog>
     <Button size="sm" onClick={() => setOpen(true)}><Mail className="mr-2 h-4 w-4" />Send pack</Button>

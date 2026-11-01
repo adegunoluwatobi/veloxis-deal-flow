@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Veloxis — Secure KYB Pack</title>
+  <meta name="description" content="Secure access to a confidential Veloxis KYB review pack. Full PDF and individually labelled documents in one ZIP.">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Veloxis — Secure KYB Pack">
+  <meta property="og:description" content="Confidential KYB review pack. Download the full PDF and labelled supporting documents in one ZIP. Secure, time-limited access.">
+  <meta property="og:url" content="https://app.veloxis.co.uk/pack-share.html">
+  <meta property="og:image" content="https://app.veloxis.co.uk/veloxis-pack-preview.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Veloxis logo">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Veloxis — Secure KYB Pack">
+  <meta name="twitter:description" content="Confidential KYB review pack with secure, time-limited access.">
+  <meta name="twitter:image" content="https://app.veloxis.co.uk/veloxis-pack-preview.jpg">
+  <style>
+    :root { --background: #0a1e1c; --foreground: #f8faf9; --muted: #a4b9ad; --accent: #3de8b8; --accent-foreground: #0a1e1c; --border: #204139; --danger: #e05a5a; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--background); color: var(--foreground); font-family: Arial, sans-serif; line-height: 1.5; }
+    main { max-width: 680px; margin: auto; padding: 56px 24px; }
+    img { display: block; width: 100%; max-width: 460px; height: auto; margin-bottom: 32px; }
+    h1 { font-size: 28px; margin: 0 0 16px; }
+    p { color: var(--muted); }
+    a { display: inline-flex; align-items: center; gap: 10px; margin-top: 16px; padding: 12px 20px; border-radius: 6px; background: var(--accent); color: var(--accent-foreground); font-weight: bold; text-decoration: none; }
+    a:focus-visible { outline: 3px solid var(--foreground); outline-offset: 4px; }
+    footer { border-top: 1px solid var(--border); margin-top: 40px; padding-top: 20px; font-size: 14px; color: var(--muted); }
+    [hidden] { display: none; }
+    #error { color: var(--danger); }
+  </style>
+</head>
+<body>
+  <main>
+    <img src="/veloxis-pack-preview.jpg" alt="Veloxis">
+    <h1>Secure KYB pack</h1>
+    <p>Confidential application review pack: full PDF and individually labelled supporting documents.</p>
+    <a id="download" hidden rel="noreferrer">↓ Download full pack ZIP</a>
+    <p id="error" hidden>This link is invalid or incomplete. Please ask the sender for a new link.</p>
+    <footer>Private and confidential. Access expires after seven days and may be revoked by the sender.</footer>
+  </main>
+  <script>
+    const token = new URLSearchParams(location.hash.slice(1)).get('token');
+    // Fragments are not sent to social crawlers or the hosting server.
+    if (token && /^[a-f0-9]{64}$/.test(token)) {
+      const download = document.getElementById('download');
+      download.href = 'https://mesvzeqhqdokyysyfknn.supabase.co/functions/v1/kyb-pack-sharing?token=' + token;
+      download.hidden = false;
+    } else {
+      document.getElementById('error').hidden = false;
+    }
+  </script>
+</body>
+</html>
