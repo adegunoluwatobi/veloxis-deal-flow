@@ -2,10 +2,11 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { PDFDocument, StandardFonts, rgb, PDFFont, PDFPage } from 'npm:pdf-lib@1.17.1';
 import JSZip from 'npm:jszip@3.10.1';
+import logoAsset from './assets/veloxis-pack-logo.png.asset.json' with { type: 'json' };
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
-const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
+const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const BUCKET = 'veloxis-documents';
 const STAFF = ['originator', 'credit_officer', 'approver', 'super_admin'];
 const PERSON_CODES = ['director_id', 'proof_of_address', 'passport_photo'];
@@ -51,13 +52,15 @@ Deno.serve(async (req) => {
       actor_id: user.id, actor_role: roles.join(','), metadata: { at: new Date().toISOString(), ...metadata },
     });
 
-  const [{ data: exp }, { data: people }, { data: docs }, { data: prof }] = await Promise.all([
+  const [expResult, peopleResult, docsResult, profResult] = await Promise.all([
     admin.from('v2_exporters').select('*').eq('id', exporter_id).single(),
     admin.from('v2_exporter_directors').select('*').eq('exporter_id', exporter_id).order('is_primary', { ascending: false }).order('created_at'),
     admin.from('company_documents').select('id, storage_path, original_filename, issue_date, uploaded_at, status, person_id, scan_status, document_types(code, label, sort_order)')
-      .eq('exporter_id', exporter_id).eq('scan_status', 'clean').order('uploaded_at'),
+      .eq('exporter_id', exporter_id).order('uploaded_at'),
     admin.from('profiles').select('name, email').eq('user_id', user.id).maybeSingle(),
   ]);
+  if (expResult.error || peopleResult.error || docsResult.error) return json({ error: 'Could not load the application documents. Please try again.' }, 500);
+  const { data: exp } = expResult, { data: people } = peopleResult, { data: docs } = docsResult, { data: prof } = profResult;
   if (!exp) return json({ error: 'Not found' }, 404);
 
   // ---- Reveal a masked value (audited) ----
@@ -73,12 +76,14 @@ Deno.serve(async (req) => {
     return json({ value });
   }
 
-  const allDocs = (docs ?? []) as any[];
+  const excluded = (docs ?? []).filter((d: any) => d.scan_status !== 'clean');
+  const allDocs = (docs ?? []).filter((d: any) => d.scan_status === 'clean') as any[];
   const personOf = (d: any) => d.person_id ?? (PERSON_CODES.includes(d.document_types?.code)
     ? (people ?? []).find((p: any) => p.is_primary)?.id ?? null : null);
   const ordered = [
     ...allDocs.filter((d) => !personOf(d)).sort((a, b) => (a.document_types?.sort_order ?? 0) - (b.document_types?.sort_order ?? 0)),
     ...(people ?? []).flatMap((p: any) => allDocs.filter((d) => personOf(d) === p.id)),
+    ...allDocs.filter((d) => personOf(d) && !(people ?? []).some((p: any) => p.id === personOf(d))),
   ];
   const personName = (d: any) => (people ?? []).find((p: any) => p.id === personOf(d))?.full_name ?? null;
   const rc = exp.company_registration_number ?? exp.rc_number ?? 'NA';
@@ -97,7 +102,7 @@ Deno.serve(async (req) => {
     const used = new Set<string>();
     for (const d of ordered) {
       const bytes = await download(d.storage_path);
-      if (!bytes) continue;
+      if (!bytes) return json({ error: `Could not download ${d.original_filename ?? 'a document'}. No incomplete ZIP was generated.` }, 422);
       const folder = safe(d.document_types?.label ?? 'Other') || 'Other';
       const who = personName(d);
       let name = `${folder}/${who ? safe(who) + '_' : ''}${d.original_filename ?? 'file'}`;
@@ -105,6 +110,7 @@ Deno.serve(async (req) => {
       used.add(name);
       zip.file(name, bytes);
     }
+    if (excluded.length) zip.file('Excluded_documents.txt', excluded.map((d: any) => `${d.original_filename}: security scan ${d.scan_status}; not included.`).join('\n'));
     const out = await zip.generateAsync({ type: 'uint8array', compression: 'STORE' });
     await audit('kyb_pack_downloaded', { format: 'zip', files: used.size });
     return new Response(out, { headers: { ...corsHeaders, 'Content-Type': 'application/zip', 'Content-Disposition': `attachment; filename="${base}.zip"` } });
@@ -132,17 +138,30 @@ Deno.serve(async (req) => {
 
   // Cover
   const cover = pdf.addPage([W, H]);
-  cover.drawRectangle({ x: 0, y: H - 160, width: W, height: 160, color: teal });
-  text(cover, 'VELOXIS', M, H - 90, 32, bold, rgb(0.37, 1, 0.84));
-  text(cover, 'KYB / KYC Review Pack', M, H - 120, 14, font, rgb(1, 1, 1));
-  let y = H - 240;
-  const coverRow = (k: string, v: string) => { text(cover, k, M, y, 10, font, grey); text(cover, v || '-', M + 150, y, 12, bold); y -= 28; };
-  coverRow('Company', exp.company_name);
+  const logoResponse = await fetch(new URL(logoAsset.url, 'https://app.veloxis.co.uk'));
+  if (!logoResponse.ok) return json({ error: 'Could not load the pack logo. Please try again.' }, 500);
+  const logo = await pdf.embedPng(await logoResponse.arrayBuffer());
+  cover.drawImage(logo, { x: M, y: H - 120, width: 350, height: 350 * logo.height / logo.width });
+  cover.drawRectangle({ x: M, y: H - 157, width: W - M * 2, height: 2, color: teal });
+  text(cover, 'KYB / KYC REVIEW PACK', M, H - 202, 11, bold, teal);
+  let y = H - 260;
+  for (const line of wrap(exp.company_name, bold, 27, W - M * 2)) { text(cover, line, M, y, 27, bold, teal); y -= 34; }
+  y -= 38;
+  const coverRow = (k: string, v: string) => {
+    const lines = wrap(v || '-', bold, 11, W - M * 2 - 150);
+    text(cover, k, M, y, 10, font, grey);
+    lines.forEach((line, i) => text(cover, line, M + 150, y - i * 15, 11, bold));
+    y -= Math.max(32, lines.length * 15 + 12);
+  };
   coverRow('RC number', rc);
   coverRow('Current status', String(exp.onboarding_status) + (exp.bd_approved_at ? ' (BD approved)' : ''));
   coverRow('Generated', now.toISOString().replace('T', ' ').slice(0, 16) + ' UTC');
   coverRow('Generated by', generatedBy);
   coverRow('Contents', mode === 'full' ? `Summary + ${ordered.length} document(s)` : 'Summary only');
+  if (excluded.length) coverRow('Not included', `${excluded.length} upload(s) awaiting security clearance; see attachment exceptions`);
+  cover.drawRectangle({ x: 0, y: 65, width: W, height: 100, color: teal });
+  text(cover, 'PRIVATE APPLICATION DOSSIER', M, 122, 12, bold, rgb(1, 1, 1));
+  text(cover, 'Prepared for authorised compliance and funding review', M, 96, 10, font, rgb(0.37, 1, 0.84));
 
   // Summary tables
   let page = pdf.addPage([W, H]); y = H - M;
@@ -188,7 +207,11 @@ Deno.serve(async (req) => {
   });
   heading('Document register');
   ordered.forEach((d) => row(d.document_types?.label ?? 'Document',
-    `${d.original_filename ?? ''}${personName(d) ? ` (${personName(d)})` : ''} - ${d.status === 'verified' ? 'Approved' : d.status === 'rejected' ? 'Rejected' : 'Awaiting review'} - uploaded ${fmtDate(d.uploaded_at)}${d.issue_date ? `, issued ${fmtDate(d.issue_date)}` : ''}`));
+    `${d.original_filename ?? ''}${personName(d) ? ` (${personName(d)})` : ''}`));
+  if (excluded.length) {
+    heading('Attachment exceptions');
+    excluded.forEach((d: any) => row(d.original_filename ?? 'Document', `Not included: security scan ${d.scan_status}. Requires security review before inclusion.`));
+  }
 
   // Appended documents
   const skipped: string[] = [];
@@ -205,7 +228,14 @@ Deno.serve(async (req) => {
         if (!bytes) throw new Error('missing');
         if (name.endsWith('.pdf')) {
           const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
-          (await pdf.copyPages(src, src.getPageIndices())).forEach((pg) => pdf.addPage(pg));
+          if (!src.getPageCount()) throw new Error('empty');
+          // Frame every original page on A4 so the pack footer never obscures ID images.
+          for (const original of src.getPages()) {
+            const embedded = await pdf.embedPage(original);
+            const pg = pdf.addPage([W, H]);
+            const scale = Math.min((W - 40) / embedded.width, (H - 90) / embedded.height);
+            pg.drawPage(embedded, { x: (W - embedded.width * scale) / 2, y: 50 + (H - 90 - embedded.height * scale) / 2, width: embedded.width * scale, height: embedded.height * scale });
+          }
         } else if (/\.(jpe?g|png)$/.test(name)) {
           const img = name.endsWith('.png') ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
           const pg = pdf.addPage([W, H]);
@@ -214,7 +244,8 @@ Deno.serve(async (req) => {
         } else throw new Error('type');
       } catch {
         skipped.push(d.original_filename ?? d.id);
-        text(div, 'This file could not be embedded - see the ZIP download for the original.', M, H / 2 - 100, 10, font, grey);
+        await audit('kyb_pack_generation_failed', { document_id: d.id, filename: d.original_filename, format: 'pdf_full' });
+        return json({ error: `Could not attach ${d.original_filename ?? 'a document'}. No incomplete PDF was generated; download the original ZIP or replace this file.` }, 422);
       }
     }
   }
@@ -229,7 +260,7 @@ Deno.serve(async (req) => {
   });
 
   const out = await pdf.save();
-  await audit(body.purpose === 'send' ? 'kyb_pack_generated' : 'kyb_pack_downloaded', { format: mode === 'full' ? 'pdf_full' : 'pdf_summary', documents: mode === 'full' ? ordered.length : 0, skipped });
+  await audit(body.purpose === 'send' ? 'kyb_pack_generated' : 'kyb_pack_downloaded', { format: mode === 'full' ? 'pdf_full' : 'pdf_summary', documents: mode === 'full' ? ordered.length : 0, document_ids: mode === 'full' ? ordered.map((d) => d.id) : [], excluded: excluded.map((d: any) => ({ id: d.id, filename: d.original_filename, scan_status: d.scan_status })), skipped });
   const fname = mode === 'full' ? `${base}.pdf` : `${base.replace('_KYB_Pack_', '_KYB_Summary_')}.pdf`;
   return new Response(out, { headers: { ...corsHeaders, 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${fname}"` } });
 });
