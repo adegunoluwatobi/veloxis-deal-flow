@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { activityLabel, packFormSchema, recipientList } from '@/v2/lib/packSharing';
-import { Ban, History, Loader2, Mail } from 'lucide-react';
+import { Ban, Copy, Download, History, Link, Loader2, Mail } from 'lucide-react';
 
 async function request(body: Record<string, unknown>) {
   const { data, error } = await supabase.functions.invoke('kyb-pack-sharing', { body });
@@ -32,6 +32,23 @@ export function SendPack({ exporterId, companyName, onSent }: { exporterId: stri
   const [message, setMessage] = useState(`Dear colleague,\n\nPlease find the secure download link to the exporter KYB pack for ${companyName} below, for your review.\n\nPlease treat these documents as strictly confidential.\n\nKind regards,\nVeloxis`);
   const [packType, setPackType] = useState<'full' | 'summary'>('full');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [creatingLink, setCreatingLink] = useState(false);
+  const [zipLink, setZipLink] = useState<{ url: string; expiry: string } | null>(null);
+  const createLink = async () => {
+    setCreatingLink(true);
+    try {
+      const data = await request({ action: 'create_link', exporter_id: exporterId, pack_type: 'bundle' });
+      setZipLink({ url: data.download_url, expiry: data.expires_at });
+      onSent();
+    } catch (error) {
+      toast({ title: 'Could not create ZIP link', description: error instanceof Error ? error.message : 'Please try again.', variant: 'destructive' });
+    } finally { setCreatingLink(false); }
+  };
+  const copyLink = async () => {
+    if (!zipLink) return;
+    try { await navigator.clipboard.writeText(zipLink.url); toast({ title: 'ZIP download link copied' }); }
+    catch { toast({ title: 'Could not copy link', description: 'Select and copy the link below.', variant: 'destructive' }); }
+  };
   const send = async (event: React.FormEvent) => {
     event.preventDefault();
     const result = packFormSchema.safeParse({ to: recipientList(to), cc: [], subject, message, pack_type: packType });
@@ -51,6 +68,15 @@ export function SendPack({ exporterId, companyName, onSent }: { exporterId: stri
   };
   const error = (field: string) => errors[field] ? <p id={`pack-${field}-error`} className="text-xs text-destructive">{errors[field]}</p> : null;
   return <>
+    <Button size="sm" variant="outline" disabled={creatingLink} onClick={createLink}>{creatingLink ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Link className="mr-2 h-4 w-4" />}{creatingLink ? 'Creating ZIP link…' : 'Create ZIP link'}</Button>
+    <Dialog open={!!zipLink} onOpenChange={v => { if (!v) setZipLink(null); }}>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader><DialogTitle>Full pack ZIP download link</DialogTitle></DialogHeader>
+        <div className="space-y-2"><Label htmlFor="zip-download-link">Secure download link</Label><Input id="zip-download-link" readOnly value={zipLink?.url ?? ''} onFocus={e => e.currentTarget.select()} />
+          <p className="text-sm text-muted-foreground">Expires {zipLink ? new Date(zipLink.expiry).toLocaleString('en-GB') : ''}. Confidential — anyone with this link can download the pack.</p></div>
+        <DialogFooter><Button variant="outline" asChild><a href={zipLink?.url}><Download className="mr-2 h-4 w-4" />Download ZIP</a></Button><Button onClick={copyLink}><Copy className="mr-2 h-4 w-4" />Copy link</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
     <Button size="sm" onClick={() => setOpen(true)}><Mail className="mr-2 h-4 w-4" />Send pack</Button>
     <Dialog open={open} onOpenChange={v => { if (!busy) setOpen(v); }}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
@@ -91,7 +117,7 @@ export function ApplicationActivity({ exporterId, inviteId, refresh }: { exporte
       allEvents.push(...(data ?? []));
       if ((data?.length ?? 0) < 500) break;
     }
-    const { data: links, error: linksError } = await supabase.from('kyb_pack_links').select('id,expires_at,revoked_at').eq('exporter_id', exporterId).eq('delivery_status', 'sent');
+    const { data: links, error: linksError } = await supabase.from('kyb_pack_links').select('id,expires_at,revoked_at').eq('exporter_id', exporterId).in('delivery_status', ['sent', 'ready']);
     if (activityError || linksError) setFailure(activityError || linksError?.message || 'Could not load activity.');
     else { setEvents(allEvents); setPacks(links ?? []); }
     setLoading(false);
@@ -115,7 +141,7 @@ export function ApplicationActivity({ exporterId, inviteId, refresh }: { exporte
         return <li key={event.id} className="py-4 space-y-2">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1"><div><div className="font-medium">{activityLabel(event.event_type)}</div><div className="text-xs text-muted-foreground">{event.actor_name || (event.actor_id ? 'Staff member' : event.event_type === 'shared_pack_downloaded' ? 'Link recipient' : 'System')}</div></div><time className="text-xs text-muted-foreground shrink-0" dateTime={event.created_at}>{new Date(event.created_at).toLocaleString('en-GB')}</time></div>
           <dl className="space-y-1 text-sm">{Object.entries(details).filter(([key, value]) => !['link_id', 'at'].includes(key) && value !== null && value !== '').map(([key, value]) => <div key={key} className="flex flex-col sm:flex-row gap-1 sm:gap-3"><dt className="text-muted-foreground sm:w-32 shrink-0">{activityLabel(key)}</dt><dd className="break-all min-w-0">{readable(value)}</dd></div>)}</dl>
-          {event.event_type === 'pack_sent' && pack && <div className="flex flex-wrap items-center gap-3"><span className={`text-xs ${pack.revoked_at ? 'text-destructive' : 'text-muted-foreground'}`}>{pack.revoked_at ? `Revoked ${new Date(pack.revoked_at).toLocaleString('en-GB')}` : Date.parse(pack.expires_at) <= Date.now() ? 'Expired' : 'Link active'}</span>{!pack.revoked_at && Date.parse(pack.expires_at) > Date.now() && <Button size="sm" variant="outline" disabled={busy === pack.id} onClick={() => revoke(pack.id)}><Ban className="mr-2 h-4 w-4" />Revoke link</Button>}</div>}
+          {['pack_sent', 'pack_link_created'].includes(event.event_type) && pack && <div className="flex flex-wrap items-center gap-3"><span className={`text-xs ${pack.revoked_at ? 'text-destructive' : 'text-muted-foreground'}`}>{pack.revoked_at ? `Revoked ${new Date(pack.revoked_at).toLocaleString('en-GB')}` : Date.parse(pack.expires_at) <= Date.now() ? 'Expired' : 'Link active'}</span>{!pack.revoked_at && Date.parse(pack.expires_at) > Date.now() && <Button size="sm" variant="outline" disabled={busy === pack.id} onClick={() => revoke(pack.id)}><Ban className="mr-2 h-4 w-4" />Revoke link</Button>}</div>}
         </li>;
       })}</ol>
       {filtered.length > limit && <Button variant="outline" onClick={() => setLimit(v => v + 100)}>Load more</Button>}

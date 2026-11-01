@@ -1,11 +1,12 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { z } from 'npm:zod@3.25.76';
-import { canSendPack, linkAvailable, PACK_LIFETIME_SECONDS, sendPackSchema } from '../_shared/pack-rules.ts';
+import { canSendPack, createPackLinkSchema, linkAvailable, PACK_LIFETIME_SECONDS, sendPackSchema } from '../_shared/pack-rules.ts';
+import { packDownloadFormat } from '../_shared/pack-lifecycle.ts';
 
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 const hash = async (token: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token)))).map(b => b.toString(16).padStart(2, '0')).join('');
-const bucket = 'veloxis-documents';
+const bucket = 'kyb-shared-packs';
 
 Deno.serve(async req => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -30,7 +31,8 @@ Deno.serve(async req => {
       if (checkError || !current || !linkAvailable(current)) return json({ error: 'This download link has expired or been revoked.' }, 410);
       const { error: auditError } = await admin.rpc('kyb_append_activity', { p_exporter: link.exporter_id, p_invite: null, p_event: 'shared_pack_downloaded', p_actor: null, p_details: { link_id: link.id, pack_type: link.pack_type } });
       if (auditError) throw auditError;
-      return new Response(pdf.body, { headers: { ...corsHeaders, 'Content-Type': 'application/pdf', 'Content-Disposition': 'attachment; filename="Exporter_KYB_Pack.pdf"', 'Cache-Control': 'no-store, max-age=0', 'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff' } });
+      const format = packDownloadFormat(link.pack_type);
+      return new Response(pdf.body, { headers: { ...corsHeaders, 'Content-Type': format.contentType, 'Content-Disposition': `attachment; filename="${format.filename}"`, 'Cache-Control': 'no-store, max-age=0', 'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff' } });
     }
     if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
     const authorization = req.headers.get('Authorization') ?? '';
@@ -45,16 +47,19 @@ Deno.serve(async req => {
       if (!parsed.success) return json({ error: 'Invalid link' }, 400);
       const { data: path, error } = await caller.rpc('kyb_revoke_pack', { p_link_id: parsed.data.link_id });
       if (error) return json({ error: error.message }, 403);
+      const { data: revoked } = await admin.from('kyb_pack_links').select('storage_bucket').eq('id', parsed.data.link_id).single();
       // Deleting the uniquely generated object also invalidates its storage-signed URL.
       if (path) {
-        const { error: removeError } = await admin.storage.from(bucket).remove([path]);
+        const { error: removeError } = await admin.storage.from(revoked?.storage_bucket ?? 'veloxis-documents').remove([path]);
         if (removeError) console.error('Revoked object cleanup failed', removeError.message);
       }
       return json({ success: true });
     }
-    const parsed = sendPackSchema.safeParse(body);
+    const parsed = z.union([sendPackSchema, createPackLinkSchema]).safeParse(body);
     if (!parsed.success) return json({ error: 'Check the recipients, subject, message and pack type.', fields: parsed.error.flatten().fieldErrors }, 400);
     const input = parsed.data;
+    const linkOnly = input.action === 'create_link';
+    const format = packDownloadFormat(input.pack_type);
     const { data: exp, error: expError } = await caller.from('v2_exporters').select('id,company_name,onboarding_status').eq('id', input.exporter_id).maybeSingle();
     if (expError || !exp) return json({ error: 'Forbidden' }, 403);
     if (!canSendPack(exp.onboarding_status)) return json({ error: 'Only approved applications can send a pack.' }, 409);
@@ -65,14 +70,14 @@ Deno.serve(async req => {
     const created = new Date();
     const expiry = new Date(created.getTime() + PACK_LIFETIME_SECONDS * 1000).toISOString();
     const id = crypto.randomUUID();
-    const path = `shared_kyb/${exp.id}/${id}.pdf`;
-    const { error: uploadError } = await admin.storage.from(bucket).upload(path, bytes, { contentType: 'application/pdf', upsert: false });
+    const path = `shared_kyb/${exp.id}/${id}.${format.extension}`;
+    const { error: uploadError } = await admin.storage.from(bucket).upload(path, bytes, { contentType: format.contentType, upsert: false });
     if (uploadError) throw uploadError;
     const { data: signed, error: signedError } = await admin.storage.from(bucket).createSignedUrl(path, PACK_LIFETIME_SECONDS);
     if (signedError || !signed) { await admin.storage.from(bucket).remove([path]); throw signedError ?? new Error('Could not sign pack'); }
     const token = Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2, '0')).join('');
     const { data: profile } = await admin.from('profiles').select('name,email').eq('user_id', user.id).maybeSingle();
-    const { error: insertError } = await admin.from('kyb_pack_links').insert({ id, exporter_id: exp.id, token_hash: await hash(token), storage_path: path, signed_url: signed.signedUrl, pack_type: input.pack_type, recipients: input.to, cc: input.cc, subject: input.subject, sent_by: user.id, sender_name: profile?.name || user.email || user.id, created_at: created.toISOString(), expires_at: expiry });
+    const { error: insertError } = await admin.from('kyb_pack_links').insert({ id, exporter_id: exp.id, token_hash: await hash(token), storage_path: path, storage_bucket: bucket, signed_url: signed.signedUrl, pack_type: input.pack_type, recipients: input.action === 'send' ? input.to : [], cc: input.action === 'send' ? input.cc : [], subject: input.action === 'send' ? input.subject : 'Full pack ZIP download link', sent_by: user.id, sender_name: profile?.name || user.email || user.id, created_at: created.toISOString(), expires_at: expiry });
     if (insertError) { await admin.storage.from(bucket).remove([path]); throw insertError; }
     const { data: fresh } = await caller.from('v2_exporters').select('onboarding_status').eq('id', exp.id).single();
     if (!fresh || !canSendPack(fresh.onboarding_status)) {
@@ -80,6 +85,15 @@ Deno.serve(async req => {
       await admin.storage.from(bucket).remove([path]);
       return json({ error: 'The application is no longer approved.' }, 409);
     }
+    if (linkOnly) {
+      const { error: readyError } = await admin.from('kyb_pack_links').update({ delivery_status: 'ready' }).eq('id', id);
+      if (readyError) {
+        await admin.storage.from(bucket).remove([path]);
+        throw readyError;
+      }
+      return json({ success: true, link_id: id, expires_at: expiry, download_url: `${url}/functions/v1/kyb-pack-sharing?token=${token}` });
+    }
+    if (input.action !== 'send') return json({ error: 'Invalid action' }, 400);
     // One event, one recipient. The common sender handles suppression and the required footer.
     const { data: result, error: emailError } = await admin.functions.invoke('send-transactional-email', {
       headers: { Authorization: authorization },

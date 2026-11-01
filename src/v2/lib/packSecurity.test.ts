@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { canSendPack, linkAvailable, PACK_LIFETIME_SECONDS } from '../../../supabase/functions/_shared/pack-lifecycle';
+import { canSendPack, linkAvailable, packDownloadFormat, PACK_LIFETIME_SECONDS } from '../../../supabase/functions/_shared/pack-lifecycle';
 
 describe('Pack security rules', () => {
+  it('full-pack bundle links deliver a ZIP rather than a PDF', () => {
+    expect(packDownloadFormat('bundle')).toEqual({ extension: 'zip', contentType: 'application/zip', filename: 'Exporter_KYB_Full_Pack.zip' });
+  });
+  it('ZIP links work without queued email and remain revocable', () => {
+    const link = { revoked_at: null, expires_at: '2026-11-08T18:36:00Z', delivery_status: 'ready' };
+    const now = Date.parse('2026-11-01T18:36:00Z');
+    expect(linkAvailable(link, now)).toBe(true);
+    expect(linkAvailable({ ...link, revoked_at: '2026-11-01T18:36:00Z' }, now)).toBe(false);
+    expect(linkAvailable(link, Date.parse(link.expires_at))).toBe(false);
+  });
   it('only permits approved applications', () => {
     expect(canSendPack('active')).toBe(true);
     for (const status of ['pending', 'suspended', 'rejected', 'draft']) expect(canSendPack(status)).toBe(false);

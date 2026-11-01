@@ -1,0 +1,3 @@
+ALTER TABLE public.kyb_pack_links ADD COLUMN storage_bucket text NOT NULL DEFAULT 'veloxis-documents';
+ALTER TABLE public.kyb_pack_links ADD CONSTRAINT kyb_pack_storage_bucket_check CHECK (storage_bucket IN ('veloxis-documents','kyb-shared-packs'));
+COMMENT ON COLUMN public.kyb_pack_links.storage_bucket IS 'Private generated pack location; readable only server-side. kyb-shared-packs has no client storage policies, so access is only through the token-hashed sharing function.';
