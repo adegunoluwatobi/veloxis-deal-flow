@@ -9,5 +9,5 @@
 - [x] Add submission/resubmission notifications and individual app-email dispatch for the assigned/inviting BD, Credit & Compliance, and Super Admin; verify live timestamp rules.
 - [ ] Verify an actual exporter submission through reviewer dashboards and email inboxes (blocked by unverified sender domain; no real submission was made during testing).
 - [x] Correct Mike’s final submission failure: allow onboarding_review notifications; verify his real submission, three reviewer notifications, locked status after reload, and 20 passing regression tests.
-- [ ] Redesign KYB PDF cover using uploaded logo and simplify document register to document names.
-- [ ] Check Mike’s original attachments and verify complete PDF embedding; clearly report blocked or unreadable documents.
+- [x] Redesign KYB PDF cover using uploaded logo and simplify document register to document names; update favicon.
+- [x] Verify Mike’s 13 clean attachments in the 61-page PDF, including Michael’s ID on page 48; fix overlapping original-page footers, disclose the excluded flagged bank statement, verify staff download, and pass 14 tests.
