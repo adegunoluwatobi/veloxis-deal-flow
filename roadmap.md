@@ -8,3 +8,4 @@
 - [ ] Verify pack email delivery and download/revocation end-to-end (blocked by sender verification and unavailable authenticated session).
 - [x] Add submission/resubmission notifications and individual app-email dispatch for the assigned/inviting BD, Credit & Compliance, and Super Admin; verify live timestamp rules.
 - [ ] Verify an actual exporter submission through reviewer dashboards and email inboxes (blocked by unverified sender domain; no real submission was made during testing).
+- [ ] Diagnose and correct Mike’s final onboarding submission failure; verify resubmission without losing his saved details.
