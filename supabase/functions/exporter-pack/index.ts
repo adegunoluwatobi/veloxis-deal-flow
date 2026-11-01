@@ -3,6 +3,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { PDFDocument, StandardFonts, rgb, PDFFont, PDFPage } from 'npm:pdf-lib@1.17.1';
 import JSZip from 'npm:jszip@3.10.1';
 import logoAsset from './assets/veloxis-pack-logo.png.asset.json' with { type: 'json' };
+import { packPageLayout } from '../_shared/pack-page-layout.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
@@ -233,8 +234,7 @@ Deno.serve(async (req) => {
           for (const original of src.getPages()) {
             const embedded = await pdf.embedPage(original);
             const pg = pdf.addPage([W, H]);
-            const scale = Math.min((W - 40) / embedded.width, (H - 90) / embedded.height);
-            pg.drawPage(embedded, { x: (W - embedded.width * scale) / 2, y: 50 + (H - 90 - embedded.height * scale) / 2, width: embedded.width * scale, height: embedded.height * scale });
+            pg.drawPage(embedded, packPageLayout(embedded.width, embedded.height));
           }
         } else if (/\.(jpe?g|png)$/.test(name)) {
           const img = name.endsWith('.png') ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
