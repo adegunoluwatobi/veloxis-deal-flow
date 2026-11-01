@@ -13,4 +13,4 @@
 - [x] Verify Mike’s 13 clean attachments in the 61-page PDF, including Michael’s ID on page 48; fix overlapping original-page footers, disclose the excluded flagged bank statement, verify staff download, and pass 14 tests.
 - [x] Apply Mike’s upload-specific bank-statement pack omission without clearing its security flag; verified persisted omission audit and no PDF reference.
 - [x] Full-pack ZIP contains the 61-page PDF and 13 labelled individual originals; verified staff download and both director IDs, visually checked cover/register, and passed 20 tests.
-- [ ] Add approved-only copyable seven-day full-pack ZIP links with audited creation, download and immediate revocation; verify through staff UI.
+- [x] Add approved-only copyable seven-day full-pack ZIP links; verified staff creation/copy/download, PDF plus labelled originals, audited Activity and immediate revocation (410); 22 regression tests pass.
